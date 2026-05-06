@@ -6,10 +6,10 @@ MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
 ### 👶 Pediatric Nutrition Module
-- Assess nutritional needs in children
+- Assesses nutritional needs in children
 - Supports structured clinical decision-making
 - Based on practical nutrition workflows
 
@@ -22,12 +22,20 @@ MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition
 - Automates complex estimations to reduce clinical errors
 
 ### 🗂️ Food Database
-- Local food dataset (`foodData.js`)
-- Used for dietary planning and reference
+- Built-in food dataset for dietary planning and reference
+
+### 🔐 User Authentication
+- Secure email-based login and registration
+- Each user has an isolated, private account
+
+### ☁️ Cloud Sync
+- Patient data, calculations, and saved records stored securely in the cloud
+- Accessible across devices when signed in
+- Real-time presence and session tracking
 
 ### 📱 Progressive Web App (PWA)
-- Installable on mobile devices
-- Offline functionality via service worker (`sw.js`)
+- Installable on mobile and desktop
+- Offline functionality — works without an internet connection
 - Fast and responsive interface
 
 ---
@@ -39,6 +47,8 @@ MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition
 | Frontend | HTML, CSS, JavaScript |
 | Architecture | Modular JS files |
 | PWA | Service Worker + App Shell |
+| Authentication | Firebase Authentication |
+| Database | Cloud Firestore + Firebase Realtime Database |
 | Deployment | GitHub Pages / Netlify |
 
 ---
@@ -64,53 +74,12 @@ MiNutriQ/
 
 ## ⚙️ How It Works
 
-MiNutriQ follows a simplified clinical workflow:
-
-1. **Input** patient data
-2. **Select** module (e.g., pediatric, burn)
-3. **Process** — system runs calculations automatically
-4. **Output** — receive nutrition recommendations
-
----
-
-## 📲 Installation
-
-### Option 1: Run Locally
-
-```bash
-git clone https://github.com/edisontaimu9-ui/MiNutriQ-.git
-cd MiNutriQ-
-```
-
-Open `index.html` in your browser.
-
-### Option 2: Install as Mobile App
-
-1. Open the deployed app in **Chrome**
-2. Tap **"Add to Home Screen"**
-3. Use it like a native app
-
----
-
-## 🌐 Deployment
-
-### GitHub Pages
-
-1. Go to **Settings → Pages**
-2. Select the `main` branch
-3. Save and access your live link
-
-### Netlify *(Recommended)*
-
-1. Connect your GitHub repository
-2. Enable auto-deploy on push
-
----
-
-## 🔄 Offline & Updates
-
-- App works **offline** using `sw.js`
-- Updates require refreshing the app or reopening after a new deployment
+1. **Sign in** with your account
+2. **Input** patient data
+3. **Select** a module (e.g., pediatric, burn)
+4. **Process** — the system runs calculations automatically
+5. **Output** — receive nutrition recommendations
+6. **Save** — results sync to your account for future reference
 
 ---
 
