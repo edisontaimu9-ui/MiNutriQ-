@@ -1,46 +1,42 @@
-# 🥗 MiNutriQ
+🥗 MiNutriQ
 
 > **Clinical Nutrition Decision Support Tool — Progressive Web App**
 
-MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition students and healthcare professionals in performing clinical nutrition assessments and clinical decision-making, with a focus on pediatric nutrition and specialized cases.
+MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition students and healthcare professionals in performing clinical nutrition assessments and clinical decision-making, with a focus on pediatric nutrition, clinical nutrition: Critical care & Surgery,Enteral nutrition , Dietary assessment and meal planning.
 
----
+ 🚀 Features
 
-## 🚀 Features
-
-### 👶 Pediatric Nutrition Module
+ 👶 Pediatric Nutrition Module
 - Assesses nutritional needs in children
 - Supports structured clinical decision-making
 - Based on practical nutrition workflows
 
-### 🔥 Pediatric Burn Management
+🔥 Pediatric Burn Management
 - Calculates nutrition requirements for burn patients
 - Guides energy and nutrient planning
 
-### 🧮 Clinical Decision Engines
+🧮 Clinical Decision Engines
 - Integrated calculation logic for nutrition support
 - Automates complex estimations to reduce clinical errors
 
-### 🗂️ Food Database
+🗂️ Food Database
 - Built-in food dataset for dietary planning and reference
 
-### 🔐 User Authentication
+🔐 User Authentication
 - Secure email-based login and registration
 - Each user has an isolated, private account
 
-### ☁️ Cloud Sync
+ ☁️ Cloud Sync
 - Patient data, calculations, and saved records stored securely in the cloud
 - Accessible across devices when signed in
 - Real-time presence and session tracking
 
-### 📱 Progressive Web App (PWA)
+📱 Progressive Web App (PWA)
 - Installable on mobile and desktop
 - Offline functionality — works without an internet connection
 - Fast and responsive interface
 
----
-
-## 🛠️ Tech Stack
+🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -51,9 +47,7 @@ MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition
 | Database | Cloud Firestore + Firebase Realtime Database |
 | Deployment | GitHub Pages / Netlify |
 
----
-
-## 📂 Project Structure
+ 📂 Project Structure
 
 ```
 MiNutriQ/
@@ -69,10 +63,7 @@ MiNutriQ/
 │
 └── sw.js               # Service worker (offline support)
 ```
-
----
-
-## ⚙️ How It Works
+⚙️ How It Works
 
 1. **Sign in** with your account
 2. **Input** patient data
@@ -81,9 +72,7 @@ MiNutriQ/
 5. **Output** — receive nutrition recommendations
 6. **Save** — results sync to your account for future reference
 
----
-
-## 🎯 Purpose
+🎯 Purpose
 
 MiNutriQ is built to:
 
@@ -92,16 +81,13 @@ MiNutriQ is built to:
 - Provide accessible tools in **low-resource settings**
 - Align with **Nutrition Care Process (NCP)** concepts
 
----
-
-## ⚠️ Disclaimer
+ ⚠️ Disclaimer
 
 > This tool is for **educational and decision-support purposes only**.  
 > It does **not** replace professional clinical judgment.
 
----
 
-## 👨‍💻 Author
+👨‍💻 Author
 
 **Edison Taimu**  
 BSc Nutrition and Dietetics (Hons) | Malawi
