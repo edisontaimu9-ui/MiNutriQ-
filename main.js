@@ -8858,6 +8858,9 @@ function dbSwitchTab(tab) {
   }
   if (tab === 'enteral'  && !enInitialized)  enInit();
   if (tab === 'exchange' && !uctInitialized) uctInit();
+  // Restore export btn if switching away from PN panel
+  const _exportBtnR = document.getElementById('db-export-btn');
+  if (_exportBtnR) _exportBtnR.style.display = '';
 }
 
 // ══════════════════════════════════════════════════════════════
