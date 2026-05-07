@@ -1589,6 +1589,8 @@ function switchTab(tab) {
   if (tab === 'database') dbInit();
   if (tab === 'enteral')  { try { syncEnteralFromCalc(); } catch(e){} }
   if (tab === 'home')     renderHomePage();
+  // Render back button topbar for this tab
+  try { _updateTabTopbar(tab); } catch(e) {}
 }
 
 function renderHomePage() {

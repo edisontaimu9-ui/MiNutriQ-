@@ -7647,3 +7647,116 @@ function savePediToHistory(sectionId, label) {
   }
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   PEDI SUB-PANEL BACK NAVIGATION
+   Tracks population panel history and injects a back button bar
+   at the top of each .pedi-panel on switch.
+   ══════════════════════════════════════════════════════════════════════ */
+(function _installPediBackNav() {
+  'use strict';
+
+  const PEDI_LABELS = {
+    preterm:      '🍼 Preterm',
+    neonate:      '👶 Neonate',
+    infant_early: '🤱 Infant 0–6m',
+    infant_late:  '🥄 Infant 6–24m',
+    child_2to5:   '🧒 Child 2–5yr',
+    child_5to10:  '🏃 Child 5–10yr',
+    child_10to15: '🧑 Adolescent 10–17yr',
+  };
+
+  // History stack — seed with preterm (default on load)
+  var _pediHistory = ['preterm'];
+
+  // ── Inject back bar CSS once ──────────────────────────────────────
+  (function injectCSS() {
+    if (document.getElementById('pedi-back-nav-style')) return;
+    var s = document.createElement('style');
+    s.id = 'pedi-back-nav-style';
+    s.textContent = [
+      '.pedi-back-bar{',
+        'display:flex;align-items:center;justify-content:space-between;',
+        'padding:9px 14px;margin-bottom:12px;',
+        'border-bottom:1px solid var(--border);',
+        'background:var(--surface);',
+        'position:sticky;top:0;z-index:9;',
+        'min-height:42px;box-sizing:border-box;',
+      '}',
+      '.pedi-back-btn{',
+        'display:flex;align-items:center;gap:5px;',
+        'background:none;border:1px solid var(--border);border-radius:8px;',
+        'color:var(--text-dim);font-family:var(--mono);font-size:10px;',
+        'font-weight:600;letter-spacing:0.5px;padding:5px 11px;cursor:pointer;',
+        'transition:color .15s,border-color .15s,background .15s;',
+      '}',
+      '.pedi-back-btn:hover{',
+        'color:var(--blue);border-color:rgba(96,165,250,0.4);',
+        'background:rgba(96,165,250,0.06);',
+      '}',
+      '.pedi-back-label{',
+        'font-family:var(--cond,var(--mono));font-size:12px;font-weight:700;',
+        'letter-spacing:1.2px;color:var(--blue);text-transform:uppercase;',
+        'flex:1;text-align:center;',
+      '}',
+    ].join('');
+    (document.head || document.documentElement).appendChild(s);
+  })();
+
+  // ── Render the back bar into a panel ─────────────────────────────
+  function _renderPediBackBar(pop) {
+    // Remove any existing bar in all panels
+    document.querySelectorAll('.pedi-back-bar').forEach(function(el){ el.remove(); });
+
+    // No bar for first panel (nowhere to go back to)
+    if (_pediHistory.length < 2) return;
+
+    var panel = document.getElementById('pp-' + pop);
+    if (!panel) return;
+
+    var prev      = _pediHistory[_pediHistory.length - 2];
+    var prevLabel = PEDI_LABELS[prev] || prev;
+    var currLabel = PEDI_LABELS[pop]  || pop;
+
+    var bar = document.createElement('div');
+    bar.className = 'pedi-back-bar';
+    bar.innerHTML =
+      '<button class="pedi-back-btn" onclick="pediSetPop('' + prev + '')" title="Back to ' + prevLabel + '">' +
+        '← ' + prevLabel +
+      '</button>' +
+      '<span class="pedi-back-label">' + currLabel + '</span>' +
+      '<div style="width:60px"></div>';
+
+    panel.insertBefore(bar, panel.firstChild);
+  }
+
+  // ── Wrap pediSetPop ───────────────────────────────────────────────
+  function _wrapPediSetPop() {
+    var _orig = window.pediSetPop;
+    if (typeof _orig !== 'function') {
+      // pediNutrition.js not yet loaded — retry
+      setTimeout(_wrapPediSetPop, 100);
+      return;
+    }
+
+    window.pediSetPop = function(pop) {
+      // Push history (avoid consecutive duplicates)
+      if (_pediHistory[_pediHistory.length - 1] !== pop) {
+        _pediHistory.push(pop);
+        if (_pediHistory.length > 15) _pediHistory.shift();
+      }
+      // Call original (handles pills, panel show/hide, badge, etc.)
+      _orig.apply(this, arguments);
+      // Inject back bar after original runs
+      try { _renderPediBackBar(pop); } catch(e) {}
+    };
+  }
+
+  // Run after DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _wrapPediSetPop);
+  } else {
+    _wrapPediSetPop();
+  }
+
+})();
