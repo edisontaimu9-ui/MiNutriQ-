@@ -1527,7 +1527,7 @@ function initOfflineMode() {
 // MODULE: UI CONTROLS
 
 // ── TABS ─────────────────────────────────────────────────────
-const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "about": {"label": "About", "accent": "var(--text-dim)"}};
+const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "about": {"label": "About", "accent": "var(--text-dim)"}, "parenteral": {"label": "Parenteral Nutrition", "accent": "#a78bfa"}};
 
 // ── Tab history for Back button ─────────────────────────────────
 let _tabHistory = ['home'];
