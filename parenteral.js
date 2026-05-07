@@ -335,12 +335,12 @@ function _renderPN() {
     <div style="background:rgba(96,165,250,0.08);border-bottom:1px solid rgba(96,165,250,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#60a5fa">
       📋 MONITORING CHECKLIST
     </div>
-    <div style="padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:5px">
+    <div style="padding:10px;display:flex;flex-direction:column;gap:5px">
       ${[['Daily','Blood glucose q6h (initiation)'],['Daily','Fluid balance & urine output'],
          ['Daily','Electrolytes: Na, K, PO₄, Mg'],['Day 1–3','Triglycerides (if lipid given)'],
          ['Weekly','LFTs, albumin, pre-albumin'],['Weekly','FBC + coagulation (long-term fat)'],
          ['Weekly','Weight & nitrogen balance'],['PRN','Blood cultures if febrile']
-      ].map(function(r){ return `<div style="display:flex;align-items:flex-start;gap:5px;background:var(--surface3);border-radius:5px;padding:6px"><span style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);white-space:nowrap;margin-top:1px">${r[0]}</span><span style="font-size:10px;color:var(--text-dim)">${r[1]}</span></div>`; }).join('')}
+      ].map(function(r){ return `<div style="display:flex;align-items:center;gap:8px;background:var(--surface3);border-radius:6px;padding:7px 10px"><span style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);white-space:nowrap;min-width:46px;flex-shrink:0">${r[0]}</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4">${r[1]}</span></div>`; }).join('')}
     </div>
     <div style="padding:0 10px 10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.6">
       Ref: ASPEN/SCCM 2016 · ESPEN PN Guidelines 2018 · Kabiven PI (Fresenius Kabi) · NuTRIflex PI (B. Braun) · Clinimix E PI (Baxter 2010)
