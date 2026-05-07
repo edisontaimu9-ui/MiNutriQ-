@@ -1,4 +1,13 @@
 
+// ── calculateBMI guard — defined in pediNutrition.js; redefined here
+// so main.js is self-contained if load order ever changes.
+if (typeof calculateBMI !== 'function') {
+  function calculateBMI(weightKg, heightCm) {
+    const h = heightCm / 100;
+    return +(weightKg / (h * h)).toFixed(1);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MODULE: GLOBAL ERROR HANDLING
 // Catches unhandled JS errors and promise rejections.
