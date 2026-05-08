@@ -6780,6 +6780,15 @@ function pediSetPop(pop) {
 }
 
 // Initialise preterm tab on load
+// ── Expose shared utilities on window ──────────────────────────────
+// These are defined here but called in main.js, pediBurn.js, and parenteral.js.
+// Explicit window assignment ensures they survive any load-order variation.
+window.pediSetPop        = pediSetPop;
+window.calculateBMI      = calculateBMI;
+window.classifyAdultBMI  = classifyAdultBMI;
+window.parseGestationalAge = (typeof parseGestationalAge === 'function') ? parseGestationalAge : window.parseGestationalAge;
+window.calcUnified       = (typeof calcUnified === 'function') ? calcUnified : window.calcUnified;
+
 document.addEventListener('DOMContentLoaded', () => pediSetPop('preterm'));
 
 // Legacy compatibility
@@ -7721,7 +7730,7 @@ function savePediToHistory(sectionId, label) {
     var bar = document.createElement('div');
     bar.className = 'pedi-back-bar';
     bar.innerHTML =
-      '<button class="pedi-back-btn" onclick="pediSetPop('' + prev + '')" title="Back to ' + prevLabel + '">' +
+      '<button class="pedi-back-btn" onclick="pediSetPop(\'' + prev + '\')" title="Back to ' + prevLabel + '">' +
         '← ' + prevLabel +
       '</button>' +
       '<span class="pedi-back-label">' + currLabel + '</span>' +
@@ -7734,7 +7743,8 @@ function savePediToHistory(sectionId, label) {
   function _wrapPediSetPop() {
     var _orig = window.pediSetPop;
     if (typeof _orig !== 'function') {
-      // pediNutrition.js not yet loaded — retry
+      // Not yet on window — retry (should be set by the window exposure block above)
+      console.warn('[pediBackNav] pediSetPop not on window yet — retrying in 100ms');
       setTimeout(_wrapPediSetPop, 100);
       return;
     }
