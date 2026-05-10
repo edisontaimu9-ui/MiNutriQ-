@@ -783,7 +783,10 @@ window.calcNeonatab = function() {
     '</div>' +
   '</div>';
 
-  // Growth chart card
+  // ── Growth chart visualisation slot (filled by gcNeonateCharts after innerHTML set) ──
+  out += '<div id="gc-neonate-charts-slot"></div>';
+
+  // Growth chart card (z-score bars — below the canvas charts)
   if (wazR || hazR || hcfaR) {
     out += '<div class="card" style="margin-bottom:14px;border-color:rgba(29,233,212,0.25)">' +
       '<div class="card-header" style="background:rgba(29,233,212,0.05);border-bottom-color:rgba(29,233,212,0.15)">' +
@@ -914,6 +917,17 @@ window.calcNeonatab = function() {
   el.innerHTML = out;
   el.scrollIntoView({behavior:'smooth',block:'start'});
   var _ab=document.getElementById('nn-action-bar');if(_ab){_ab.style.display='flex';}
+
+  // ── Neonate growth chart visualisation (growthCharts.js) ─────────────
+  // gcNeonateCharts appends WHO WAZ / LAZ / HCFA canvas charts to el and
+  // flushes the Chart.js render queue. ageMo is decimal months; wtKg,
+  // lenCm, hcCm may be null if measurements were not entered.
+  try {
+    if (typeof gcNeonateCharts === 'function') {
+      gcNeonateCharts(el, ageMo, wtKg, lenCm, hcCm, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcNeonateCharts error:', e); }
+
   try { if (typeof logCalcToFirebase==='function') logCalcToFirebase({calcType:'pedi-neonate',module:'pedi'}); } catch(e) {}
 };
 
@@ -1327,6 +1341,9 @@ window.calcInfantEarlyTab = function() {
     '</div>'+
   '</div>';
 
+  // ── Growth chart visualisation slot (filled by gcInfantEarlyCharts after innerHTML set) ──
+  out2+='<div id="gc-infant-early-slot"></div>';
+
   out2+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.25)">'+
     '<div class="card-header" style="background:rgba(96,165,250,0.05);border-bottom-color:rgba(96,165,250,0.15)">'+
       '<div class="card-title" style="color:var(--blue)">GROWTH STATUS -- WHO 2006</div>'+
@@ -1459,6 +1476,14 @@ window.calcInfantEarlyTab = function() {
 
   el.scrollIntoView({behavior:'smooth',block:'start'});
   var _ab=document.getElementById('ie-action-bar');if(_ab){_ab.style.display='flex';}
+
+  // ── Infant 0–6m growth chart visualisation (growthCharts.js) ─────────
+  try {
+    if (typeof gcInfantEarlyCharts === 'function') {
+      gcInfantEarlyCharts(el, ageMo, wtKg, lenCm, hcCm, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcInfantEarlyCharts error:', e); }
+
   try { if (typeof logCalcToFirebase==='function') logCalcToFirebase({calcType:'pedi-infant-early',module:'pedi'}); } catch(e) {}
 };
 
@@ -1923,6 +1948,9 @@ window.calcInfantLateTab = function() {
     '</div>'+
   '</div>';
 
+  // Growth chart slot (filled by gcInfantLateCharts after innerHTML set)
+  outIl+='<div id="gc-infant-late-slot"></div>';
+
   // Growth chart
   outIl+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.25)">'+
     '<div class="card-header" style="background:rgba(52,211,153,0.05);border-bottom-color:rgba(52,211,153,0.15)">'+
@@ -2083,6 +2111,11 @@ window.calcInfantLateTab = function() {
 
     var _ab=document.getElementById('il-action-bar');if(_ab){_ab.style.display='flex';}
   try { if (typeof logCalcToFirebase==='function') logCalcToFirebase({calcType:'pedi-infant-late'+(isBurn?'-burn':''),module:'pedi'}); } catch(e){}
+  try {
+    if (typeof gcInfantLateCharts === 'function') {
+      gcInfantLateCharts(el, ageMo, wt, ht, hcCm, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcInfantLateCharts error:', e); }
 };
 
 // ── 5. calcChild2to5Tab — Child 2–5 years ─────────────────────────────
@@ -2617,6 +2650,8 @@ window.calcChild2to5Tab = function() {
     '</div>'+
   '</div>';
 
+  out5+='<div id="gc-child-2to5-slot"></div>';
+
   out5+='<div class="card" style="margin-bottom:14px;border-color:rgba(167,139,250,0.25)">'+
     '<div class="card-header" style="background:rgba(167,139,250,0.05);border-bottom-color:rgba(167,139,250,0.15)">'+
       '<div class="card-title" style="color:var(--purple)">GROWTH STATUS — WHO 2006</div>'+
@@ -2735,6 +2770,11 @@ window.calcChild2to5Tab = function() {
 
     var _ab=document.getElementById('c5-action-bar');if(_ab){_ab.style.display='flex';}
   try{if(typeof logCalcToFirebase==='function')logCalcToFirebase({calcType:'pedi-child2to5'+(isBurn?'-burn':''),module:'pedi'});}catch(e){}
+  try {
+    if (typeof gcChild2to5Charts === 'function') {
+      gcChild2to5Charts(el, ageMo, wt, ht, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcChild2to5Charts error:', e); }
 };
 
 // ── 6. calcChild5to10Tab — Child 5–10 years ───────────────────────────
@@ -3178,6 +3218,8 @@ window.calcChild5to10Tab = function() {
     '</div>'+
   '</div>';
 
+  out10+='<div id="gc-child-5to10-slot"></div>';
+
   out10+='<div class="card" style="margin-bottom:14px;border-color:rgba(29,233,212,0.25)">'+
     '<div class="card-header" style="background:rgba(29,233,212,0.05);border-bottom-color:rgba(29,233,212,0.15)">'+
       '<div class="card-title" style="color:var(--teal)">GROWTH STATUS — WHO 2007</div>'+
@@ -3294,6 +3336,11 @@ window.calcChild5to10Tab = function() {
 
     var _ab=document.getElementById('c10-action-bar');if(_ab){_ab.style.display='flex';}
   try{if(typeof logCalcToFirebase==='function')logCalcToFirebase({calcType:'pedi-child5to10'+(isBurn?'-burn':''),module:'pedi'});}catch(e){}
+  try {
+    if (typeof gcChild5to10Charts === 'function') {
+      gcChild5to10Charts(el, ageMo, wt, ht, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcChild5to10Charts error:', e); }
 };
 
 // ── 7. Complete standalone calcAdolescent10to17Tab ────────────────────
@@ -3956,6 +4003,9 @@ window.calcAdolescent10to17Tab = function() {
     '</div>'+
   '</div>';
 
+  // Growth chart slot (filled by gcAdolescentCharts after innerHTML set)
+  outAd+='<div id="gc-adolescent-slot"></div>';
+
   // Growth chart
   outAd+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.25)">'+
     '<div class="card-header" style="background:rgba(96,165,250,0.05);border-bottom-color:rgba(96,165,250,0.15)">'+
@@ -4087,6 +4137,11 @@ window.calcAdolescent10to17Tab = function() {
   el.scrollIntoView({behavior:'smooth',block:'start'});
     var _ab=document.getElementById('ad-action-bar');if(_ab){_ab.style.display='flex';}
   try{if(typeof logCalcToFirebase==='function')logCalcToFirebase({calcType:'pedi-adolescent'+(isBurn?'-burn':''),module:'pedi'});}catch(e){}
+  try {
+    if (typeof gcAdolescentCharts === 'function') {
+      gcAdolescentCharts(el, ageMo, wt, ht, sex);
+    }
+  } catch(e) { console.warn('[Oasis] gcAdolescentCharts error:', e); }
 };
 // Keep aliases in sync
 window.calcAdolescentTab       = window.calcAdolescent10to17Tab;
