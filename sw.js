@@ -1,5 +1,5 @@
 /**
- * sw.js — MiNutriQ Service Worker
+ * sw.js — Oasis Service Worker
  * ─────────────────────────────────────────────────────────────────────────
  * Extracted from index.html (was generated as a Blob URL at runtime).
  * Now registered as a real file: navigator.serviceWorker.register('/sw.js?v=VERSION')
@@ -18,7 +18,7 @@
 // ── Read version from query param (?v=1.2.5) injected at registration ──
 const _swParams   = new URL(self.location.href).searchParams;
 const SW_VERSION  = _swParams.get('v') || 'unknown';
-const CACHE       = 'minutriq-v' + SW_VERSION;
+const CACHE       = 'oasis-v' + SW_VERSION;
 
 // PRECACHE: use the SW scope root (the app shell URL) instead of the
 // page's location.href (which was only available via template literal).
@@ -32,7 +32,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MiNutriQ — Offline</title>
+<title>Oasis — Offline</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -161,7 +161,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
     <div class="icon-bg">📡</div>
   </div>
   <h1>You're Offline</h1>
-  <div class="badge">MiNutriQ</div>
+  <div class="badge">Oasis</div>
   <p>The app couldn't be reached from cache. Once you connect or reload, full functionality resumes instantly.</p>
   <div class="feats">
     <div class="feat"><div class="feat-dot"></div>All calculations run locally — no internet needed</div>
@@ -169,7 +169,7 @@ const OFFLINE_HTML = `<!DOCTYPE html>
     <div class="feat"><div class="feat-dot"></div>Meal plans &amp; history fully available offline</div>
   </div>
   <button class="btn" onclick="location.reload()">↺ Try Again</button>
-  <footer>MiNutriQ · Offline Fallback · By Edison Taimu</footer>
+  <footer>Oasis · Offline Fallback · By Edison Taimu</footer>
 </body>
 </html>`;
 
@@ -243,7 +243,7 @@ self.addEventListener('message', e => {
 
 // ── PUSH NOTIFICATIONS ─────────────────────────────────────────
 self.addEventListener('push', e => {
-  let payload = { title: 'MiNutriQ', body: 'You have a new notification.', tag: 'nt-default' };
+  let payload = { title: 'Oasis', body: 'You have a new notification.', tag: 'nt-default' };
   try { if (e.data) payload = { ...payload, ...e.data.json() }; } catch (_) {}
   e.waitUntil(
     self.registration.showNotification(payload.title, {

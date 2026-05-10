@@ -1,5 +1,5 @@
 /**
- * foodData.js — MiNutriQ Food Databases
+ * foodData.js — Oasis Food Databases
  * ─────────────────────────────────────────────────────────────
  * Extracted from index.html to keep the app modular.
  * Load this file BEFORE the main app script (index.html already does this).

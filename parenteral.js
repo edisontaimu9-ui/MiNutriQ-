@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   PARENTERAL NUTRITION MODULE  v2  |  MiNutriQ
+   PARENTERAL NUTRITION MODULE  v2  |  Oasis
    
    Changes v2:
    - PN BAG DATABASE moved into food database tab as 4th panel
@@ -243,7 +243,7 @@ function _renderPN() {
       style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
       💾 SAVE
     </button>
-    <button onclick="saveToPDF('pn-results','MiNutriQ — PN Prescription')"
+    <button onclick="saveToPDF('pn-results','Oasis — PN Prescription')"
       style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
@@ -507,7 +507,7 @@ function _buildPNTab() {
           <line x1="10" y1="13" x2="14" y2="13"/>
         </svg>
       </span>
-      <span class="tab-label">Parenteral</span>`;
+      <span class="tab-label">PN</span>`;
     nav.appendChild(btn);
   }
 

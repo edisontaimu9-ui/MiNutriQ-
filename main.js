@@ -116,7 +116,7 @@ if (typeof calculateBMI !== 'function') {
       '    <button class="nt-btn nt-btn-s" onclick="document.getElementById(\'nt-error-overlay\').remove()">Dismiss</button>',
       '  </div>',
       '  <div style="margin-top:14px;font-family:ui-monospace,monospace;font-size:8px;color:rgba(100,130,165,.45);letter-spacing:1px">',
-      '    MINUTRIQ · ERROR · ' + new Date().toISOString(),
+      '    OASIS · ERROR · ' + new Date().toISOString(),
       '  </div>',
       '</div>',
     ].join('');
@@ -135,7 +135,7 @@ if (typeof calculateBMI !== 'function') {
   window.onerror = function(msg, src, line, col, err) {
     if (_isSuppressed(msg, src)) return false;
     const entry = _record('onerror', msg, src, line, col, err);
-    console.error('[MiNutriQ] Uncaught error:', msg, src + ':' + line);
+    console.error('[Oasis] Uncaught error:', msg, src + ':' + line);
     // Defer so the DOM is ready
     if (document.body) {
       _createOverlay(entry);
@@ -155,7 +155,7 @@ if (typeof calculateBMI !== 'function') {
     // Ignore benign Firebase / network aborted rejections
     if (/permission-denied|unavailable|Failed to fetch|Load failed/i.test(msg)) return;
     _record('unhandledrejection', msg, src, 0, 0, reason instanceof Error ? reason : null);
-    console.warn('[MiNutriQ] Unhandled promise rejection:', msg);
+    console.warn('[Oasis] Unhandled promise rejection:', msg);
     // Don't overlay for promise rejections — too noisy; log only.
     ev.preventDefault();
   });
@@ -168,7 +168,7 @@ if (typeof calculateBMI !== 'function') {
       try {
         return fn.apply(this, arguments);
       } catch (err) {
-        console.error('[MiNutriQ][' + (moduleName || 'module') + '] Error:', err);
+        console.error('[Oasis][' + (moduleName || 'module') + '] Error:', err);
         if (typeof showToast === 'function') {
           showToast('⚠ ' + (moduleName || 'Module') + ' error — see console', 'error', 4000);
         }
@@ -402,8 +402,8 @@ const appState = {
   if (appleIconEl) appleIconEl.href = iconPNG192URL; // PNG for iOS home-screen
 
   const manifest = {
-    name: 'MiNutriQ',
-    short_name: 'MiNutriQ',
+    name: 'Oasis',
+    short_name: 'Oasis',
     description: 'Clinical nutrition decision support tool — Adult, Pediatric, Enteral, Meal Planner. Works offline.',
     start_url: '/',
     scope: '/',
@@ -474,7 +474,7 @@ const appState = {
       bar.setAttribute('role', 'alert');
       bar.innerHTML =
         '<span class="sw-update-icon">⬆</span>' +
-        '<span class="sw-update-text"><strong>MiNutriQ updated</strong> — reload to apply</span>' +
+        '<span class="sw-update-text"><strong>Oasis updated</strong> — reload to apply</span>' +
         '<button class="sw-update-reload" id="_sw-reload-btn">Reload</button>' +
         '<button class="sw-update-dismiss" id="_sw-dismiss-btn" aria-label="Dismiss">✕</button>';
       document.body.appendChild(bar);
@@ -551,7 +551,7 @@ const appState = {
     _hideInstallChip();
     _hideInstallBanner(true);
     _deferredPrompt = null;
-    if (typeof showToast === 'function') showToast('✅ MiNutriQ installed!', 'success');
+    if (typeof showToast === 'function') showToast('✅ Oasis installed!', 'success');
   });
 
   // ── Header chip ────────────────────────────────────────────
@@ -560,7 +560,7 @@ const appState = {
     const chip = document.createElement('button');
     chip.id = 'pwa-install-chip';
     chip.innerHTML = '⬇&nbsp;Install';
-    chip.setAttribute('aria-label', 'Install MiNutriQ');
+    chip.setAttribute('aria-label', 'Install Oasis');
     chip.style.cssText = [
       'font-family:var(--mono)', 'font-size:10px', 'font-weight:700', 'letter-spacing:.8px',
       'color:var(--teal)', 'background:rgba(29,233,212,0.08)',
@@ -648,7 +648,7 @@ const appState = {
         <div style="display:flex;flex-direction:column;gap:8px">
           ${stepRow(1, `Tap the <strong style="color:var(--teal)">Share</strong> button <span style="font-size:14px">⎙</span> in Safari's toolbar`)}
           ${stepRow(2, `Scroll down and tap <strong style="color:var(--teal)">Add to Home Screen</strong> <span style="font-size:14px">＋</span>`)}
-          ${stepRow(3, `Tap <strong style="color:var(--teal)">Add</strong> — MiNutriQ appears on your home screen`)}
+          ${stepRow(3, `Tap <strong style="color:var(--teal)">Add</strong> — Oasis appears on your home screen`)}
         </div>`;
     } else if (isIOS) {
       stepsHtml = `
@@ -670,7 +670,7 @@ const appState = {
         <div style="padding:18px 20px 14px;background:rgba(29,233,212,0.06);border-bottom:1px solid rgba(29,233,212,0.12);display:flex;align-items:center;gap:12px">
           <div style="width:44px;height:44px;border-radius:12px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚕</div>
           <div>
-            <div style="font-family:var(--cond);font-size:15px;font-weight:800;color:var(--text-bright);letter-spacing:1px">MiNutriQ</div>
+            <div style="font-family:var(--cond);font-size:15px;font-weight:800;color:var(--text-bright);letter-spacing:1px">Oasis</div>
             <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">INSTALL AS APP</div>
           </div>
           <button onclick="document.getElementById('pwa-install-modal').remove()" aria-label="Close" style="margin-left:auto;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .15s">✕</button>
@@ -792,7 +792,7 @@ window.ntTestNotification = async function() {
     showToast && showToast('Enable notifications first', 'info');
     return;
   }
-  await ntShowNotification('🔔 MiNutriQ', 'Push notifications are working correctly!', {
+  await ntShowNotification('🔔 Oasis', 'Push notifications are working correctly!', {
     tag:  'nt-test',
     data: { url: location.href },
   });
@@ -886,6 +886,26 @@ document.addEventListener('DOMContentLoaded', () => {
   _updateNotifSettingsUI(Notification.permission);
 });
 
+// ── BOTTOM NAV SCROLL FADE INDICATORS ────────────────────────
+window._bnavUpdateFades = function() {
+  const nav = document.getElementById('bottom-nav-scroll');
+  const fadeL = document.getElementById('bnav-fade-left');
+  const fadeR = document.getElementById('bnav-fade-right');
+  if (!nav || !fadeL || !fadeR) return;
+  const atLeft  = nav.scrollLeft <= 2;
+  const atRight = nav.scrollLeft >= (nav.scrollWidth - nav.clientWidth - 2);
+  fadeL.classList.toggle('visible', !atLeft);
+  fadeR.classList.toggle('visible', !atRight);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.getElementById('bottom-nav-scroll');
+  if (!nav) return;
+  nav.addEventListener('scroll', window._bnavUpdateFades, { passive: true });
+  // Initial check after modules have injected their tabs
+  setTimeout(window._bnavUpdateFades, 600);
+});
+
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -956,16 +976,16 @@ async function initFirebase() {
     // Monitor RTDB connection state (.info/connected)
     rtdb.ref('.info/connected').on('value', (snap) => {
       appState.rtdbConnected = snap.val() === true;
-      console.log('[MiNutriQ] RTDB connection:', appState.rtdbConnected ? 'online' : 'offline');
+      console.log('[Oasis] RTDB connection:', appState.rtdbConnected ? 'online' : 'offline');
     });
 
     // Enable offline persistence so the app works on flaky ward Wi-Fi
     await db.enablePersistence({ synchronizeTabs: true }).catch(err => {
       // Persistence may fail in private browsing — that's OK
       if (err.code === 'failed-precondition') {
-        console.warn('[MiNutriQ] Multi-tab persistence disabled — only one tab open at a time.');
+        console.warn('[Oasis] Multi-tab persistence disabled — only one tab open at a time.');
       } else if (err.code === 'unimplemented') {
-        console.warn('[MiNutriQ] Offline persistence not supported in this browser.');
+        console.warn('[Oasis] Offline persistence not supported in this browser.');
       }
     });
 
@@ -993,7 +1013,7 @@ async function initFirebase() {
 
 
   } catch (err) {
-    console.error('[MiNutriQ] Firebase init failed:', err);
+    console.error('[Oasis] Firebase init failed:', err);
     setStatus('offline', '💾 Offline — data saved locally (Firebase unavailable)');
   }
 }
@@ -1055,7 +1075,7 @@ async function _logSessionStart() {
     });
 
   } catch (err) {
-    console.warn('[MiNutriQ] Session log failed:', err);
+    console.warn('[Oasis] Session log failed:', err);
   }
 }
 
@@ -1155,7 +1175,7 @@ async function logCalcToFirebase(data) {
       lastModule: payload.module,
       lastSeen:   firebase.firestore.FieldValue.serverTimestamp(),
     }),
-  ]).catch(err => console.warn('[MiNutriQ] Firestore write failed:', err));
+  ]).catch(err => console.warn('[Oasis] Firestore write failed:', err));
 
   // 5. Mirror to RTDB — real-time calc summary + daily log entry
   updateRTDBCalculation(SESSION_ID, payload.energy_kcal, payload.module, payload.protein_g);
@@ -1400,7 +1420,7 @@ function _initUpdateWatcher() {
     } catch(e) {}
     _bannerShown = true;
     _showNTPUpdateBanner(payload.version, payload.notes || '');
-    console.log('[MiNutriQ] Update signal received:', payload.version, 'via', payload._channel || '?');
+    console.log('[Oasis] Update signal received:', payload.version, 'via', payload._channel || '?');
   }
 
   // ── Channel A: Firestore onSnapshot ────────────────────────────────
@@ -1411,7 +1431,7 @@ function _initUpdateWatcher() {
           _handle({ ...snap.data(), _channel: 'Firestore' });
         }
       }, (err) => {
-        console.warn('[MiNutriQ] app_version Firestore listener error:', err);
+        console.warn('[Oasis] app_version Firestore listener error:', err);
       });
     } catch (e) { /* silently ignore if Firestore not ready */ }
   }
@@ -1423,7 +1443,7 @@ function _initUpdateWatcher() {
         const val = snap.val();
         if (val) _handle({ ...val, _channel: 'RTDB' });
       }, (err) => {
-        console.warn('[MiNutriQ] app_version RTDB listener error:', err);
+        console.warn('[Oasis] app_version RTDB listener error:', err);
       });
     } catch (e) { /* silently ignore if RTDB not ready */ }
   }
@@ -1445,7 +1465,7 @@ function _initUpdateWatcher() {
 
 /**
  * Show a dismissable update banner at the top of the screen.
- * Styled to match MiNutriQ's dark clinical theme.
+ * Styled to match Oasis's dark clinical theme.
  * The banner injects itself into the DOM — no HTML scaffolding needed.
  *
  * @param {string} version  - new version string, e.g. "1.2.5"
@@ -1536,7 +1556,7 @@ function initOfflineMode() {
 // MODULE: UI CONTROLS
 
 // ── TABS ─────────────────────────────────────────────────────
-const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "about": {"label": "About", "accent": "var(--text-dim)"}, "parenteral": {"label": "Parenteral Nutrition", "accent": "#a78bfa"}};
+const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "about": {"label": "About", "accent": "var(--text-dim)"}, "parenteral": {"label": "Parenteral Nutrition", "accent": "#a78bfa"}, "anthro": {"label": "Anthropometry", "accent": "var(--teal)"}, "nfpe": {"label": "NFPE", "accent": "#f472b6"}};
 
 // ── Tab history for Back button ─────────────────────────────────
 let _tabHistory = ['home'];
@@ -1585,10 +1605,25 @@ function switchTab(tab) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
-  // Activate matching bottom-nav tab
+  // Activate matching bottom-nav tab + scroll it into view
   document.querySelectorAll('.bottom-nav .tab').forEach(t => {
-    if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
+    if (t.getAttribute('onclick') === `switchTab('${tab}')`) {
+      t.classList.add('active');
+      // Scroll active tab into view smoothly
+      try {
+        const nav = document.getElementById('bottom-nav-scroll');
+        if (nav) {
+          const tabLeft = t.offsetLeft;
+          const tabWidth = t.offsetWidth;
+          const navWidth = nav.offsetWidth;
+          const scrollTarget = tabLeft - (navWidth / 2) + (tabWidth / 2);
+          nav.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        }
+      } catch(e) {}
+    }
   });
+  // Update fade indicators after scroll settles
+  try { _bnavUpdateFades(); } catch(e) {}
 
   const el = document.getElementById('tab-' + tab);
   if (el) el.classList.add('active');
@@ -1913,7 +1948,7 @@ function exportDetailedReport() {
   const fluidLow  = Math.round(25 * parseFloat(d.weight));
   const fluidHigh = Math.round(30 * parseFloat(d.weight));
   const win = window.open('', '_blank', 'width=800,height=900');
-  win.document.write(`<!DOCTYPE html><html><head><title>MiNutriQ Report — ${new Date().toLocaleDateString()}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Oasis Report — ${new Date().toLocaleDateString()}</title>
 <style>
   body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}
   h1{font-size:18px;color:#005e52;border-bottom:2px solid #005e52;padding-bottom:8px;margin-bottom:18px}
@@ -1926,7 +1961,7 @@ function exportDetailedReport() {
   .val{font-weight:700;color:#005e52;font-size:14px}
   @media print{body{padding:12px}}
 </style></head><body>
-<h1>🩺 MiNutriQ — Nutrition Report</h1>
+<h1>🩺 Oasis — Nutrition Report</h1>
 <p style="color:#666;font-size:11px">Generated: ${new Date().toLocaleString()} &nbsp;|&nbsp; Session: ${SESSION_ID}</p>
 <h2>Patient Summary</h2>
 <table><tr><th>Field</th><th>Value</th></tr>
@@ -1947,7 +1982,7 @@ function exportDetailedReport() {
   <tr><td>Feeding Route</td><td>${d.route}</td><td></td></tr>
 </table>
 ${d.rfRisk >= 2 ? `<div class="warning">⚠ <strong>REFEEDING SYNDROME RISK (${d.rfRisk >= 2 ? 'HIGH' : 'MODERATE'}):</strong> Start at ${d.rfRisk >= 2 ? '5' : '10'} kcal/kg/day. IV Thiamine 200–300 mg BEFORE feeds. Monitor K⁺, PO₄, Mg²⁺ 2–3× daily.</div>` : ''}
-<div class="disclaimer">⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by MiNutriQ as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation. This document does not constitute a medical prescription.</div>
+<div class="disclaimer">⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation. This document does not constitute a medical prescription.</div>
 </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 400);
@@ -2015,7 +2050,7 @@ function exportHistoryCSV() {
 // ════════════════════════════════════════════════════════════════
 function saveToPDF(sectionId, title) {
   const section = sectionId ? document.getElementById(sectionId) : null;
-  const pdfTitle = title || 'MiNutriQ — Report';
+  const pdfTitle = title || 'Oasis — Report';
   const timestamp = new Date().toLocaleString();
 
   // Build print content
@@ -2075,7 +2110,7 @@ function saveToPDF(sectionId, title) {
 </head>
 <body>
   <div class="pdf-header">
-    <h1>🩺 MiNutriQ</h1>
+    <h1>🩺 Oasis</h1>
     <div class="pdf-meta">
       ${pdfTitle}<br>
       Generated: ${timestamp}
@@ -2083,10 +2118,10 @@ function saveToPDF(sectionId, title) {
   </div>
   ${html}
   <div class="pdf-disclaimer">
-    ⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by MiNutriQ as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation.
+    ⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation.
   </div>
   <div class="pdf-footer">
-    MiNutriQ · ASPEN 2016 / ASPEN 2022 · ESPEN 2019 · NICE CG32 · KDIGO · EASL · WHO<br>
+    Oasis · ASPEN 2016 / ASPEN 2022 · ESPEN 2019 · NICE CG32 · KDIGO · EASL · WHO<br>
     Developed by Edison Taimu · Kamuzu University of Health Sciences · Malawi
   </div>
 </body>
@@ -2751,7 +2786,7 @@ function rfAutoAssess() {
 //  Resolves all energy + protein conflicts between NutriCDE and
 //  NTGuidelineEngine. Both systems must consume ONLY this data source.
 //  Guidelines: ASPEN 2022 · ESPEN 2023 · KDOQI 2020 · KDIGO 2024 · NICE CG32
-//  Author: Edison Taimu — MiNutriQ v28 · KUHES / QECH Blantyre, Malawi
+//  Author: Edison Taimu — Oasis v28 · KUHES / QECH Blantyre, Malawi
 // ═══════════════════════════════════════════════════════════════════════════
 window.UnifiedNutritionGuidelineEngine = (function () {
   'use strict';
@@ -3008,7 +3043,7 @@ window.UnifiedNutritionGuidelineEngine = (function () {
 //  NutriCDE — Clinical Decision Engine  (Modular · Guideline-Based)
 //  Architecture: 9 independent modules, each callable standalone or combined
 //  Guidelines: consumed via UnifiedNutritionGuidelineEngine (single source)
-//  Author: Edison Taimu — MiNutriQ · KUHES / QECH Blantyre, Malawi
+//  Author: Edison Taimu — Oasis · KUHES / QECH Blantyre, Malawi
 // ═══════════════════════════════════════════════════════════════════════════
 const NutriCDE = (() => {
   'use strict';
@@ -3301,6 +3336,18 @@ const NutriCDE = (() => {
       if (tbsa > 0)       sArr.push(`burns ${tbsa}% TBSA — hypermetabolism and protein catabolism`);
       if (isRefeeding)    sArr.push(`refeeding syndrome risk: ${rfRiskLevel} — electrolyte shifts anticipated on refeeding`);
       if (icuPhase && icuPhase !== 'stable') sArr.push(`ICU phase: ${icuPhase} — altered metabolic demands`);
+
+      // ── NFPE Physical Exam Findings (live sync from NFPE tab) ───────────
+      (function _injectNFPEModule() {
+        const nfpe = window._nfpeFindings;
+        if (!nfpe || !nfpe.hasFindings) return;
+        if (nfpe.evidenceArr && nfpe.evidenceArr.length)
+          nfpe.evidenceArr.forEach(function(s) { sArr.push(s); });
+        if (nfpe.dxText) sArr.push(nfpe.dxText);
+        const edema = nfpe.abnormal && nfpe.abnormal.find(function(a){ return a.label === 'Edema'; });
+        if (edema && edema.score > 0)
+          sArr.push(`pitting oedema grade ${edema.score} — use dry/estimated weight for nutrition prescription`);
+      })();
 
       // Fallback
       if (sArr.length === 0)
@@ -4962,6 +5009,28 @@ function calculate() {
     if (tbsa > 0)       sArr.push(`burns ${tbsa}% TBSA — hypermetabolism and protein catabolism`);
     if (isRefeeding)    sArr.push(`refeeding syndrome risk: ${rfRiskLevel} — electrolyte shifts anticipated on refeeding`);
     if (icuPhase && icuPhase !== 'stable') sArr.push(`ICU phase: ${icuPhase} — altered metabolic demands`);
+
+    // ── NFPE Physical Exam Findings (live sync from NFPE tab) ─────────────
+    // Reads window._nfpeFindings published by nfpeScore() in the NFPE tab.
+    // Only injects when the user has assessed at least one abnormal domain.
+    (function _injectNFPE() {
+      const nfpe = window._nfpeFindings;
+      if (!nfpe || !nfpe.hasFindings) return;
+
+      // 1. Per-domain evidence strings (most specific — all abnormal domains)
+      if (nfpe.evidenceArr && nfpe.evidenceArr.length) {
+        nfpe.evidenceArr.forEach(function(s) { sArr.push(s); });
+      }
+
+      // 2. Overall malnutrition classification from NFPE (AND/ASPEN 2012)
+      if (nfpe.dxText) sArr.push(nfpe.dxText);
+
+      // 3. Edema flag — adds caveat about weight interpretation
+      const edema = nfpe.abnormal && nfpe.abnormal.find(function(a){ return a.label === 'Edema'; });
+      if (edema && edema.score > 0) {
+        sArr.push(`pitting oedema grade ${edema.score} — actual lean mass likely underestimated; use dry/estimated weight for nutrition prescription`);
+      }
+    })();
 
     // Fallback: if no abnormal findings detected, note requirements as baseline reference
     if (sArr.length === 0) {
@@ -8018,17 +8087,52 @@ function dbGetPer100(food) {
   };
 }
 
-function dbRender() {
-  const search = (document.getElementById('db-search')?.value || '').toLowerCase().trim();
-  const cat    = document.getElementById('db-cat')?.value || '';
-  const sort   = document.getElementById('db-sort')?.value || 'name';
-  const perMode= document.getElementById('db-per')?.value || '100';
+// ── GLOBAL FOOD SEARCH STATE ──────────────────────────────────────────────
+const _dbGlobalResults = { items: [], active: false };
 
-  let foods = MALAWI_FCT.filter(f => {
-    const nameMatch = !search || f.name.toLowerCase().includes(search);
-    const catMatch  = !cat    || f.cat === cat;
-    return nameMatch && catMatch;
-  });
+/**
+ * dbRender — Layered Food Search (Local → FDC → CalorieNinjas)
+ *
+ * When the user types a query:
+ *   1. Local MALAWI_FCT is searched immediately (sync, fuzzy via NTFoodSearch).
+ *   2. If local returns results, the table updates instantly.
+ *   3. If local returns nothing (or enrichment forced), async API layers fire.
+ *   4. API results are merged and appended to the table with a source badge.
+ *
+ * Category filter / sort / per-mode all still apply to local results.
+ * API results are shown in a separate "Global Results" section below the table.
+ */
+function dbRender() {
+  const search  = (document.getElementById('db-search')?.value || '').trim();
+  const cat     = document.getElementById('db-cat')?.value || '';
+  const sort    = document.getElementById('db-sort')?.value || 'name';
+  const perMode = document.getElementById('db-per')?.value || '100';
+  const searchN = search.toLowerCase();
+
+  // ── LOCAL FILTER (unchanged logic, now also uses NTFoodSearch synonyms) ──
+  let foods;
+  if (search.length >= 2 && typeof NTFoodSearch !== 'undefined') {
+    // Use fuzzy/synonym-aware local search
+    const localMatches = NTFoodSearch.searchLocal(search, 80);
+    // Also apply category filter to those results
+    foods = localMatches
+      .map(r => r._raw ?? r)                    // unwrap to original FCT entry
+      .filter(f => !cat || f.cat === cat);
+    // Fall back to plain includes for any FCT foods not caught by fuzzy
+    const localIds = new Set(foods.map(f => f.id));
+    const extras = MALAWI_FCT.filter(f =>
+      (!cat || f.cat === cat) &&
+      !localIds.has(f.id) &&
+      f.name.toLowerCase().includes(searchN)
+    );
+    foods = [...foods, ...extras];
+  } else {
+    foods = MALAWI_FCT.filter(f => {
+      const nameMatch = !searchN || f.name.toLowerCase().includes(searchN);
+      const catMatch  = !cat     || f.cat === cat;
+      return nameMatch && catMatch;
+    });
+  }
 
   // Sort
   if (sort === 'name')     foods.sort((a,b) => a.name.localeCompare(b.name));
@@ -8057,9 +8161,13 @@ function dbRender() {
   if (!foods.length) {
     tbody.innerHTML = '';
     if (noRes) noRes.style.display = '';
+    // Trigger global (API) search when local has nothing
+    if (search.length >= 2) _dbGlobalSearch(search);
     return;
   }
   if (noRes) noRes.style.display = 'none';
+  // Clear any previous global results panel
+  _dbClearGlobalPanel();
 
   // Update measure header
   const thMeasure = document.getElementById('db-th-measure');
@@ -8157,7 +8265,7 @@ function dbExportCSV() {
   const csv = [headers, ...rows].map(r => r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  a.download = 'MiNutriQ_FoodDatabase.csv';
+  a.download = 'Oasis_FoodDatabase.csv';
   a.click();
   showToast('✓ Database exported as CSV');
 }
@@ -8208,7 +8316,7 @@ function dbExportCSV() {
 // ══════════════════════════════════════════════════════════════════
 // Strategy: Firebase requires an email address for email/password auth.
 // We store the user's Staff ID / username and synthesise a stable
-// internal email: <sanitised-uid>@minutriq.app — never shown to the user.
+// internal email: <sanitised-uid>@oasis.app — never shown to the user.
 // The real Staff ID is stored in Firestore and localStorage as `uid`.
 
 const USER_KEY = 'nt_user_profile';
@@ -8217,7 +8325,7 @@ const USER_KEY = 'nt_user_profile';
 function _uidToEmail(uid) {
   // Sanitise: lowercase, replace non-alphanumeric (except . - _) with dots
   const safe = uid.trim().toLowerCase().replace(/[^a-z0-9.\-_]/g, '.');
-  return safe + '@minutriq.app';
+  return safe + '@oasis.app';
 }
 
 function _getAuth() {
@@ -8608,7 +8716,7 @@ function renderProfileCard() {
 
 // ── Sign out ──────────────────────────────────────────────────────
 function obSignOut() {
-  if (!confirm('Sign out of MiNutriQ?')) return;
+  if (!confirm('Sign out of Oasis?')) return;
   const auth = _getAuth();
   localStorage.removeItem(USER_KEY);
   localStorage.setItem('ob_has_signed_out', '1');
@@ -9307,7 +9415,7 @@ function enExportCSV() {
   });
   const csv = [headers, ...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = 'MiNutriQ_EnteralFormulas.csv'; a.click();
+  a.download = 'Oasis_EnteralFormulas.csv'; a.click();
   showToast('✓ Enteral database exported as CSV (with clinical tags)');
 }
 
@@ -10139,7 +10247,7 @@ function filterUctRef() {
 
 // ══════════════════════════════════════════════════════════════════════
 // LOW-RESOURCE & BLENDERIZED ENTERAL FEED MODULE
-// Malawi Context · Edison Taimu · MiNutriQ
+// Malawi Context · Edison Taimu · Oasis
 // ══════════════════════════════════════════════════════════════════════
 
 // ── Mode switcher ─────────────────────────────────────────────────────
@@ -11202,7 +11310,7 @@ function saveBlendRecord() {
 // ══════════════════════════════════════════════════════════════════════
 // AUTOMATIC MEAL PLAN GENERATOR
 // Malawi Context — Oral, Enteral, Mixed modes
-// Edison Taimu · MiNutriQ
+// Edison Taimu · Oasis
 // ══════════════════════════════════════════════════════════════════════
 
 let _ampMode = 'oral';
@@ -11923,7 +12031,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!text) { showToast('No results to copy yet', 'warning'); return; }
 
     // Prepend a header line for context
-    const header = `MiNutriQ — ${label || 'Results'}\n${'─'.repeat(48)}\n`;
+    const header = `Oasis — ${label || 'Results'}\n${'─'.repeat(48)}\n`;
     const fullText = header + text;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -12039,3 +12147,134 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GLOBAL FOOD SEARCH — API Fallback UI Helpers
+// Called by dbRender() when local DB has no match.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const _GS_PANEL_ID = 'db-global-results-panel';
+let   _GS_debounceTimer = null;
+
+/** Remove the global results panel if present */
+function _dbClearGlobalPanel() {
+  const el = document.getElementById(_GS_PANEL_ID);
+  if (el) el.remove();
+}
+
+/** Render a single unified food object into the global results panel */
+function _dbRenderGlobalResult(food) {
+  _dbClearGlobalPanel();
+
+  const sourceColors = {
+    local:         'var(--teal)',
+    FDC:           'var(--blue)',
+    CaloriesNinja: '#f59e0b',
+    combined:      'var(--green)',
+  };
+  const srcColor  = sourceColors[food.sourceUsed] || 'var(--text-dim)';
+  const srcLabel  = {
+    local:'Local DB', FDC:'USDA FDC', CaloriesNinja:'CalorieNinjas', combined:'Combined'
+  }[food.sourceUsed] || food.sourceUsed;
+
+  const confidence = Math.round((food.confidenceScore ?? 0) * 100);
+  const updated    = food.lastUpdated ? `<span style="color:var(--text-dim);font-size:9px">Updated: ${food.lastUpdated}</span>` : '';
+  const fiber      = food.fiber  != null ? `<div style="font-size:10px;color:var(--text-dim)">Fiber: <b>${food.fiber}g</b></div>` : '';
+  const sugar      = food.sugar  != null ? `<div style="font-size:10px;color:var(--text-dim)">Sugar: <b>${food.sugar}g</b></div>` : '';
+  const sodium     = food.sodium != null ? `<div style="font-size:10px;color:var(--text-dim)">Sodium: <b>${(food.sodium*1000).toFixed(0)}mg</b></div>` : '';
+
+  const panel = document.createElement('div');
+  panel.id    = _GS_PANEL_ID;
+  panel.style.cssText = 'margin-top:14px';
+  panel.innerHTML = `
+    <div class="card" style="border:1px solid ${srcColor}40">
+      <div class="card-header">
+        <div class="card-title" style="color:${srcColor}">🌐 Global Search Result</div>
+        <div class="card-badge" style="color:${srcColor};border-color:${srcColor}40">
+          ${srcLabel} · ${confidence}% match
+        </div>
+      </div>
+      <div class="card-body" style="padding:14px">
+        <div style="font-weight:700;font-size:14px;color:var(--text-bright);margin-bottom:6px">${food.name}</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:10px">${food.cat || ''} ${updated}</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center;margin-bottom:10px">
+          <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
+            <div style="font-size:18px;font-weight:700;color:var(--amber)">${food.kcal ?? '—'}</div>
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">kcal</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
+            <div style="font-size:18px;font-weight:700;color:var(--blue)">${food.pro ?? '—'}</div>
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">PRO g</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
+            <div style="font-size:18px;font-weight:700;color:var(--teal)">${food.cho ?? '—'}</div>
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">CHO g</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
+            <div style="font-size:18px;font-weight:700;color:var(--green)">${food.fat ?? '—'}</div>
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">FAT g</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
+            <div style="font-size:18px;font-weight:700;color:var(--text-dim)">${food.kj ?? '—'}</div>
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">kJ</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">${fiber}${sugar}${sodium}</div>
+        <div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+          Values per 100g · Source: ${srcLabel} · Confidence: ${confidence}%
+        </div>
+      </div>
+    </div>`;
+
+  // Insert after db-no-results
+  const noRes = document.getElementById('db-no-results');
+  if (noRes?.parentNode) {
+    noRes.parentNode.insertBefore(panel, noRes.nextSibling);
+  } else {
+    const tbody = document.getElementById('db-tbody');
+    tbody?.parentNode?.parentNode?.parentNode?.appendChild(panel);
+  }
+}
+
+/** Show loading state in global panel */
+function _dbShowGlobalLoading(query) {
+  _dbClearGlobalPanel();
+  const panel = document.createElement('div');
+  panel.id    = _GS_PANEL_ID;
+  panel.style.cssText = 'margin-top:14px';
+  panel.innerHTML = `
+    <div class="card" style="border:1px solid rgba(100,200,255,.2)">
+      <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
+        🔍 Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
+        <div style="margin-top:6px;font-size:9px">FoodData Central · CalorieNinjas</div>
+      </div>
+    </div>`;
+  const noRes = document.getElementById('db-no-results');
+  if (noRes?.parentNode) noRes.parentNode.insertBefore(panel, noRes.nextSibling);
+}
+
+/**
+ * Debounced global search — fires 600ms after user stops typing.
+ * Uses NTFoodSearch layered retrieval (FDC → CalorieNinjas).
+ */
+function _dbGlobalSearch(query) {
+  clearTimeout(_GS_debounceTimer);
+  if (!query || query.length < 2 || typeof NTFoodSearch === 'undefined') return;
+
+  _dbShowGlobalLoading(query);
+  _GS_debounceTimer = setTimeout(async () => {
+    try {
+      const result = await NTFoodSearch.search(query, { enrich: false });
+      if (!result) {
+        _dbClearGlobalPanel();
+        return;
+      }
+      // Only show if this query is still the active search
+      const currentQuery = (document.getElementById('db-search')?.value || '').trim();
+      if (currentQuery.toLowerCase() !== query.toLowerCase()) return;
+      _dbRenderGlobalResult(result);
+    } catch (_e) {
+      _dbClearGlobalPanel();
+    }
+  }, 600);
+}

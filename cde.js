@@ -1,6 +1,6 @@
 
 /* ═══════════════════════════════════════════════════════════════════
-   MINUTRIQ — CLINICAL DECISION ENGINE (CDE) v28
+   OASIS — CLINICAL DECISION ENGINE (CDE) v28
    
    Architecture (v28+):
    ┌─────────────────────────────────────────────────────────┐

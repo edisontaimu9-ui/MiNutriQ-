@@ -4095,7 +4095,10 @@ window.calcAdolescent16to17Tab = window.calcAdolescent10to17Tab;
 // ── 8. Hide burn panel on age-group switch ────────────────────────────
 (function() {
   var _origSet = window.pediSetPop;
-  if (typeof _origSet !== 'function') return;
+  if (typeof _origSet !== 'function') {
+    console.warn('[pediBurn] pediSetPop not found on window — burn panel switch disabled');
+    return;
+  }
   window.pediSetPop = function(pop) {
     _origSet.apply(this, arguments);
     var card = document.getElementById('pedi-burns-card');
