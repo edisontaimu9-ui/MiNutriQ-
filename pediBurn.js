@@ -4170,3 +4170,85 @@ window.calcAdolescent16to17Tab = window.calcAdolescent10to17Tab;
 })();
 
 })(); // end _installPediBurnModule
+
+// ── Preterm Route + Dextrose IV helpers ──────────────────────────────────────
+window.ptDexToggle = function() {
+  var onDex  = (document.querySelector('input[name="pt-on-dex"]:checked') || {value:'no'}).value === 'yes';
+  var fields = document.getElementById('pt-dex-fields');
+  if (fields) fields.style.display = onDex ? '' : 'none';
+};
+
+window.ptRouteChanged = function() {
+  var route   = (document.getElementById('pt-route') || {value:'full_en'}).value;
+  var syncRow = document.getElementById('pt-pn-sync-row');
+  if (syncRow) syncRow.style.display = (route === 'partial' || route === 'tpn') ? '' : 'none';
+};
+
+window.ptSyncToPN = function() {
+  // Preterm weight inputs are in GRAMS — convert to kg for PN module
+  var wtG   = parseFloat((document.getElementById('pt-wt')  || {}).value) || null;
+  var bwtG  = parseFloat((document.getElementById('pt-bwt') || {}).value) || null;
+  var wtKg  = wtG  ? wtG  / 1000 : (bwtG ? bwtG / 1000 : null);
+  var bwtKg = bwtG ? bwtG / 1000 : null;
+  var route = (document.getElementById('pt-route') || {value:'full_en'}).value;
+
+  // Pull nutrition targets from last calculation if available
+  var N = null;
+  try {
+    var gaStr  = ((document.getElementById('pt-ga') || {}).value || '').trim();
+    var sex    = (document.querySelector('input[name="pt-sex"]:checked') || {value:'male'}).value;
+    var phase  = (document.getElementById('pt-phase') || {value:'stable'}).value;
+    var stress = (document.getElementById('pt-stress') || {value:'none'}).value;
+    var therm  = (document.getElementById('pt-therm') || {value:'incubator'}).value;
+    var gaDec  = (typeof parseGestationalAge === 'function') ? parseGestationalAge(gaStr) : null;
+    if (wtKg && gaDec && typeof calcPretermNutrition === 'function') {
+      N = calcPretermNutrition({ gaDec:gaDec, bwtG:bwtG||wtG, wtG:wtG, phase:phase, route:route, stress:stress, therm:therm, sex:sex });
+    }
+  } catch(e) { /* ignore */ }
+
+  // fluidTotalMl = N.fluidTarget (mL/kg/day) × wtKg  OR  default 120 mL/kg
+  var fluidTotalMl = N ? Math.round(N.fluidTarget * wtKg) : (wtKg ? Math.round(120 * wtKg) : null);
+
+  var syncData = {
+    weight:        wtKg,                                           // kg
+    energy:        N && wtKg ? (N.kcalTarget * wtKg) : null,      // total kcal/day
+    protein:       N && wtKg ? (N.protTarget.hi * wtKg) : null,   // total g/day
+    fluid:         fluidTotalMl,                                   // mL/day — actual from N
+    fluidMlKg:     N ? N.fluidTarget : 120,                        // mL/kg/day for display
+    heightCm:      null,
+    rfRisk:        0,
+    source:        'preterm',
+  };
+
+  // Try the parenteral sync function
+  if (typeof window.syncToParenteral === 'function') {
+    window.syncToParenteral('pedi', syncData);
+  } else {
+    // Fallback: populate PN fields directly
+    var pnWt = document.getElementById('pn-weight');
+    if (pnWt && wtKg) pnWt.value = wtKg.toFixed(3);
+    if (wtKg && N) {
+      var pnKcal = document.getElementById('pn-kcal-kg');
+      var pnProt = document.getElementById('pn-prot-kg');
+      if (pnKcal) pnKcal.value = N.kcalTarget;
+      if (pnProt) pnProt.value = N.protTarget.hi;
+    }
+    var pnFluid = document.getElementById('pn-fluid-override');
+    if (!pnFluid) pnFluid = document.getElementById('pn-fluid');
+    if (pnFluid && fluidTotalMl) pnFluid.value = fluidTotalMl;
+    if (typeof pnUpdateFluid === 'function') pnUpdateFluid();
+    var popR = document.querySelector('input[name="pn-pop"][value="pedi"]');
+    if (popR) { popR.checked = true; popR.dispatchEvent(new Event('change')); }
+    var pnNote = document.getElementById('pn-pedi-note');
+    if (pnNote) pnNote.style.display = 'block';
+  }
+
+  // Navigate to PN tab
+  if (typeof openTab === 'function') { try { openTab('parenteral'); } catch(e) {} }
+  else {
+    var pnTab = document.getElementById('tab-parenteral') || document.querySelector('[data-tab="parenteral"]');
+    if (pnTab) pnTab.click();
+  }
+
+  if (typeof showToast === 'function') showToast('PN module pre-filled — set bag type and calculate', 'success');
+};

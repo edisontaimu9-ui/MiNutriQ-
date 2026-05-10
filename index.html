@@ -4888,10 +4888,19 @@
             <option value="catchup">Catch-Up Growth</option>
           </select></div>
         <div class="who-field"><label class="lbl">Feeding Route</label>
-          <select class="inp" id="pt-route">
+          <select class="inp" id="pt-route" onchange="ptRouteChanged()">
             <option value="trophic">Trophic / minimal EN</option>
+            <option value="partial">Enteral + PN (combined)</option>
             <option value="full_en" selected>Full Enteral (EN only)</option>
+            <option value="tpn">Full TPN (IV only)</option>
           </select></div>
+        <div class="who-field" id="pt-pn-sync-row" style="display:none">
+          <label class="lbl" style="color:#a78bfa">⟲ PN Module Sync</label>
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);padding:6px 0 2px">
+            Weights &amp; targets will auto-fill the PN calculator when you calculate.
+          </div>
+          <button type="button" onclick="ptSyncToPN()" style="width:100%;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.4);border-radius:7px;padding:7px 10px;color:#a78bfa;font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px">⟲ OPEN PN CALCULATOR NOW</button>
+        </div>
         <div class="who-field"><label class="lbl">Ventilatory Status</label>
           <select class="inp" id="pt-vent">
             <option value="vent">Mechanically ventilated</option>
@@ -4917,16 +4926,29 @@
         <div class="who-field"><label class="lbl">Starvation Days</label>
           <div class="unit-wrap"><input class="inp" id="pt-starv" type="number" min="0" max="60" step="1" placeholder="e.g. 3"><span class="unit-tag">days</span></div>
           </div>
-        <div class="who-field"><label class="lbl">Dextrose Conc. (for GIR)</label>
-          <select class="inp" id="pt-dex-pct">
-            <option value="5">D5W (5%)</option>
-            <option value="10" selected>D10W (10%)</option>
-            <option value="12.5">D12.5W (12.5%)</option>
-            <option value="15">D15W (15%)</option>
-          </select></div>
-        <div class="who-field"><label class="lbl">IV Rate (mL/kg/day)</label>
-          <div class="unit-wrap"><input class="inp" id="pt-iv-rate" type="number" min="0" max="200" step="1" placeholder="e.g. 80" oninput="ptAutoPhase()"><span class="unit-tag">mL/kg/d</span></div>
+        <div class="who-field"><label class="lbl">On Dextrose IV?</label>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+              <input type="radio" name="pt-on-dex" value="yes" style="accent-color:#f0b429" onchange="ptDexToggle()"> Yes
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+              <input type="radio" name="pt-on-dex" value="no" checked style="accent-color:#f0b429" onchange="ptDexToggle()"> No
+            </label>
           </div>
+        </div>
+        <div class="who-field" id="pt-dex-fields" style="display:none">
+          <label class="lbl">Dextrose IV Rate (mL/kg/day)</label>
+          <div class="unit-wrap"><input class="inp" id="pt-iv-rate" type="number" min="0" max="200" step="1" placeholder="e.g. 80" oninput="ptAutoPhase()"><span class="unit-tag">mL/kg/d</span></div>
+          <div style="margin-top:6px">
+            <label class="lbl" style="margin-bottom:3px;display:block">Dextrose Concentration</label>
+            <select class="inp" id="pt-dex-pct" style="width:100%">
+              <option value="5">D5W (5%)</option>
+              <option value="10" selected>D10W (10%)</option>
+              <option value="12.5">D12.5W (12.5%)</option>
+              <option value="15">D15W (15%)</option>
+            </select>
+          </div>
+        </div>
         <div class="who-field"><label class="lbl">Current EN Volume <span style="font-size:9px;opacity:.6">(for phase auto-class)</span></label>
           <div class="unit-wrap"><input class="inp" id="pt-en-vol" type="number" min="0" max="250" step="1" placeholder="e.g. 60" oninput="ptAutoPhase()"><span class="unit-tag">mL/kg/d</span></div>
           <div class="info-note" style="margin-top:4px;font-size:9px" id="pt-phase-auto-label">Enter EN volume → phase auto-classified</div></div>
