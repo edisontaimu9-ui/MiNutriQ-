@@ -1,8 +1,8 @@
-🥗 MiNutriQ
+🥗 Oasis 
 
 > **Clinical Nutrition Decision Support Tool — Progressive Web App**
 
-MiNutriQ is a lightweight Progressive Web App (PWA) designed to assist nutrition students and healthcare professionals in performing clinical nutrition assessments and clinical decision-making, with a focus on pediatric nutrition, clinical nutrition: Critical care & Surgery,Enteral nutrition , Dietary assessment and meal planning.
+Oasis is a lightweight Progressive Web App (PWA) designed to assist nutrition students and healthcare professionals in performing clinical nutrition assessments and clinical decision-making, with a focus on pediatric nutrition, clinical nutrition: Critical care & Surgery,Enteral nutrition , Dietary assessment and meal planning.
 
  🚀 Features
 
