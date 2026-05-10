@@ -67,9 +67,22 @@ function _syncFromModule(source) {
     if (document.getElementById('pn-prot-kg')) document.getElementById('pn-prot-kg').value = pr ? +(pr/wt).toFixed(2) : 1.2;
   }
 
-  // Set fluid (35 mL/kg adult default, 100 mL/kg pedi default)
-  var fluidDefault = wt * (source === 'pedi' ? 100 : 35);
-  if (document.getElementById('pn-fluid')) document.getElementById('pn-fluid').value = Math.round(fluidDefault);
+  // Set fluid — use actual value from source if provided, else population default
+  var fluidVal = parseFloat(data.fluid) || 0;
+  if (!fluidVal) {
+    fluidVal = wt * (source === 'pedi' ? 120 : 35);
+  }
+  // If syncing, set the override field and trigger fluid update
+  var fluidOverrideEl = document.getElementById('pn-fluid-override');
+  var fluidManualEl   = document.getElementById('pn-fluid-manual');
+  if (fluidOverrideEl) {
+    fluidOverrideEl.value = Math.round(fluidVal);
+    // Enable manual override mode so synced value is used
+    if (fluidManualEl) { fluidManualEl.checked = true; }
+  } else if (document.getElementById('pn-fluid')) {
+    document.getElementById('pn-fluid').value = Math.round(fluidVal);
+  }
+  if (typeof pnUpdateFluid === 'function') pnUpdateFluid();
 
   // Set population radio
   var popVal = source === 'pedi' ? 'pedi' : 'adult';
@@ -89,7 +102,8 @@ function _syncFromModule(source) {
   var badge = document.getElementById('pn-sync-badge');
   if (badge) {
     badge.textContent = '✓ Synced from ' + (source==='adult'?'Adult':'Pedi') +
-      ' — ' + (wt||'?') + 'kg · ' + (en||'?') + 'kcal · ' + (pr||'?') + 'g protein';
+      ' — ' + (wt||'?') + 'kg · ' + (en||'?') + 'kcal · ' + (pr||'?') + 'g protein' +
+      (fluidVal ? ' · ' + Math.round(fluidVal) + ' mL fluid' : '');
     badge.style.display = 'block';
   }
 
@@ -97,6 +111,81 @@ function _syncFromModule(source) {
 }
 
 // ── 3. CUSTOM TPN CALCULATION ────────────────────────────────────────
+// ── FLUID REQUIREMENTS ENGINE ─────────────────────────────────────────────
+// Population fluid rates (mL/kg/day) — Holliday-Segar + clinical defaults
+var PN_FLUID_RATES = {
+  adult:        { lo: 30, hi: 40, label: '30–40 mL/kg/day (adult standard)' },
+  pedi:         { lo: 100, hi: 120, label: '100–120 mL/kg/day (paediatric default)' },
+  preterm_elbw: { lo: 100, hi: 150, label: '100–150 mL/kg/day (ELBW/VLBW — ESPGHAN 2022)' },
+  preterm_lbw:  { lo: 140, hi: 160, label: '140–160 mL/kg/day (LBW stable)' },
+  neonate:      { lo: 140, hi: 170, label: '140–170 mL/kg/day (term neonate)' },
+  infant:       { lo: 120, hi: 150, label: '120–150 mL/kg/day (infant)' },
+};
+
+// Returns the fluid mL/day to use (override if checked, else auto)
+function pnGetFluid() {
+  var manual = document.getElementById('pn-fluid-manual')?.checked;
+  if (manual) {
+    return parseFloat(document.getElementById('pn-fluid-override')?.value) || 0;
+  }
+  // Auto: compute from weight + population
+  var wt  = parseFloat(document.getElementById('pn-weight')?.value) || 0;
+  var pop = document.querySelector('input[name="pn-pop"]:checked')?.value || 'adult';
+  if (!wt) return 0;
+  var rates = PN_FLUID_RATES[pop] || PN_FLUID_RATES.adult;
+  return Math.round(wt * ((rates.lo + rates.hi) / 2));
+}
+
+// Updates the fluid display; call on weight change, pop change, or override toggle
+function pnUpdateFluid() {
+  var wt      = parseFloat(document.getElementById('pn-weight')?.value) || 0;
+  var pop     = document.querySelector('input[name="pn-pop"]:checked')?.value || 'adult';
+  var manual  = document.getElementById('pn-fluid-manual')?.checked;
+  var rates   = PN_FLUID_RATES[pop] || PN_FLUID_RATES.adult;
+
+  // Auto row
+  var autoVal  = document.getElementById('pn-fluid-auto-val');
+  var autoNote = document.getElementById('pn-fluid-auto-note');
+  if (autoVal) {
+    if (wt > 0) {
+      var mid = Math.round(wt * ((rates.lo + rates.hi) / 2));
+      var lo  = Math.round(wt * rates.lo);
+      var hi  = Math.round(wt * rates.hi);
+      autoVal.textContent  = mid;
+      if (autoNote) autoNote.textContent = '(' + lo + '–' + hi + ' mL/day · ' + rates.label + ')';
+    } else {
+      autoVal.textContent  = '—';
+      if (autoNote) autoNote.textContent = 'Enter weight above';
+    }
+  }
+
+  // Override row visibility
+  var overrideRow = document.getElementById('pn-fluid-override-row');
+  if (overrideRow) overrideRow.style.display = manual ? '' : 'none';
+
+  // mL/kg back-calc for override field
+  var mlkgDisp = document.getElementById('pn-fluid-mlkg-display');
+  if (mlkgDisp && manual && wt > 0) {
+    var ov = parseFloat(document.getElementById('pn-fluid-override')?.value) || 0;
+    mlkgDisp.textContent = ov > 0 ? '= ' + (ov / wt).toFixed(1) + ' mL/kg/day' : '';
+  } else if (mlkgDisp) {
+    mlkgDisp.textContent = '';
+  }
+
+  // Active display
+  var actDisp = document.getElementById('pn-fluid-active-display');
+  if (actDisp) {
+    var active = pnGetFluid();
+    actDisp.textContent = active > 0
+      ? (manual ? '⚙ Override: ' : '✓ Using: ') + active + ' mL/day'
+      : '';
+    actDisp.style.color = manual ? '#f0b429' : 'var(--teal)';
+  }
+}
+// Expose on window so inline onchange/oninput handlers work regardless of load order
+window.pnGetFluid    = pnGetFluid;
+window.pnUpdateFluid = pnUpdateFluid;
+
 function _calcCustomTPN(params) {
   var totalKcal = params.totalKcal, proteinG = params.proteinG,
       fluidMl = params.fluidMl, mode = params.mode,
@@ -188,10 +277,13 @@ function _pnSaveToHistory() {
 
 // ── 6. CLEAR ─────────────────────────────────────────────────────────
 function _pnClear() {
-  ['pn-weight','pn-height','pn-fluid'].forEach(function(id) {
+  ['pn-weight','pn-height','pn-fluid-override'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
+  var manualCb = document.getElementById('pn-fluid-manual');
+  if (manualCb) manualCb.checked = false;
+  if (typeof pnUpdateFluid === 'function') pnUpdateFluid();
   var kcalEl = document.getElementById('pn-kcal-kg');
   if (kcalEl) kcalEl.value = '25';
   var protEl = document.getElementById('pn-prot-kg');
@@ -211,7 +303,7 @@ function _renderPN() {
   var ht     = parseFloat(document.getElementById('pn-height')?.value) || 0;
   var kcalKg = parseFloat(document.getElementById('pn-kcal-kg')?.value) || 25;
   var protKg = parseFloat(document.getElementById('pn-prot-kg')?.value) || 1.2;
-  var fluid  = parseFloat(document.getElementById('pn-fluid')?.value) || 0;
+  var fluid  = (typeof pnGetFluid === 'function') ? pnGetFluid() : (parseFloat(document.getElementById('pn-fluid-override')?.value) || parseFloat(document.getElementById('pn-fluid')?.value) || 0);
   var mode   = document.querySelector('input[name="pn-mode"]:checked')?.value || '3in1';
   var route  = document.querySelector('input[name="pn-route"]:checked')?.value || 'central';
   var firstDay = document.getElementById('pn-firstday')?.checked || false;
@@ -561,10 +653,10 @@ function _buildPNTab() {
   <div style="padding:0 16px;margin-bottom:12px">
     <div style="display:flex;gap:8px">
       <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
-        <input type="radio" name="pn-pop" value="adult" checked style="accent-color:#a78bfa" onchange="document.getElementById('pn-pedi-note').style.display='none'"> 🧑 Adult
+        <input type="radio" name="pn-pop" value="adult" checked style="accent-color:#a78bfa" onchange="document.getElementById('pn-pedi-note').style.display='none';if(typeof pnUpdateFluid==='function')pnUpdateFluid()"> 🧑 Adult
       </label>
       <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
-        <input type="radio" name="pn-pop" value="pedi" style="accent-color:#60a5fa" onchange="document.getElementById('pn-pedi-note').style.display='block';document.getElementById('pn-kcal-kg').value='80';document.getElementById('pn-prot-kg').value='2.5'"> 👶 Pediatric
+        <input type="radio" name="pn-pop" value="pedi" style="accent-color:#60a5fa" onchange="document.getElementById('pn-pedi-note').style.display='block';document.getElementById('pn-kcal-kg').value='80';document.getElementById('pn-prot-kg').value='2.5';if(typeof pnUpdateFluid==='function')pnUpdateFluid()"> 👶 Pediatric
       </label>
     </div>
     <div id="pn-pedi-note" style="display:none;margin-top:6px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:9px;color:#60a5fa;line-height:1.6">
@@ -582,7 +674,8 @@ function _buildPNTab() {
         <div>
           <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT (kg)</label>
           <input id="pn-weight" type="number" min="1" max="300" step="0.1" placeholder="kg"
-            style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
+            style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px"
+            oninput="if(typeof pnUpdateFluid==='function')pnUpdateFluid()">
         </div>
         <div>
           <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HEIGHT (cm) <span style="opacity:0.5">optional</span></label>
@@ -600,9 +693,31 @@ function _buildPNTab() {
             style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
         </div>
         <div style="grid-column:1/-1">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">TOTAL FLUID NEEDS (mL/day)</label>
-          <input id="pn-fluid" type="number" min="100" max="6000" step="50" placeholder="mL/day"
-            style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
+          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:6px">TOTAL FLUID NEEDS (mL/day)</label>
+          <!-- Auto-calculated row -->
+          <div id="pn-fluid-auto-row" style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.18);border-radius:7px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+            <div>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">AUTO · </span>
+              <span id="pn-fluid-auto-val" style="font-family:var(--mono);font-size:14px;font-weight:700;color:#60a5fa">—</span>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:4px">mL/day</span>
+              <span id="pn-fluid-auto-note" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:8px"></span>
+            </div>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+              <input type="checkbox" id="pn-fluid-manual" style="accent-color:#60a5fa" onchange="if(typeof pnUpdateFluid==='function')pnUpdateFluid()"> Override
+            </label>
+          </div>
+          <!-- Manual override input (hidden until checked) -->
+          <div id="pn-fluid-override-row" style="display:none">
+            <div style="display:flex;gap:6px;align-items:center">
+              <input id="pn-fluid-override" type="number" min="50" max="8000" step="10" placeholder="Enter mL/day"
+                style="flex:1;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1.5px solid rgba(96,165,250,0.5);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px"
+                oninput="if(typeof pnUpdateFluid==='function')pnUpdateFluid()">
+              <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap">mL/day</span>
+            </div>
+            <div id="pn-fluid-mlkg-display" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;padding-left:2px"></div>
+          </div>
+          <!-- Active fluid display (shown in both modes) -->
+          <div id="pn-fluid-active-display" style="font-family:var(--mono);font-size:9px;color:var(--teal);margin-top:5px;min-height:14px;padding-left:2px"></div>
         </div>
         <div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">PN TYPE</div>

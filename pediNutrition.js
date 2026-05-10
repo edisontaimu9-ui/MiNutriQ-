@@ -7845,7 +7845,7 @@ function calcAdolescent10to17Tab() {
     const diag    = DiagnosisEngine.classify(patient, growth);
     const zs = {};
     if (bmiaz && !bmiaz.error) zs['BMI-for-Age Z (WHO 2007)'] = bmiaz.z;
-    const bmiKey  = sex === 'male' ? 'bmiaz_boys' : 'bmiaz_girls';
+    const bmiKey  = sex === 'male' ? 'bmiaz_boys_5to19' : 'bmiaz_girls_5to19'; // WHO 2007 5–19yr table
     const chartId = 'ad-bmi-stable';
     const donutId = 'ad-donut-' + Date.now();
     const visuals = document.createElement('div');
@@ -7856,7 +7856,7 @@ function calcAdolescent10to17Tab() {
       ${VisualEngine.renderZScorePanel(zs)}
       <div class="card" style="margin-bottom:14px">
         <div class="card-header"><div class="card-title">BMI-FOR-AGE CHART</div><div class="card-badge">WHO 2007 · Adolescent</div></div>
-        <div class="card-body">${VisualEngine.renderWHOGrowthChart(chartId, { sex, ageMo, measureValue: bmi, tableKey: bmiKey, yLabel:'BMI (kg/m²)', indicator:'bmiaz' })}</div>
+        <div class="card-body"><div id="gc-adolescent-slot"></div></div>
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-header"><div class="card-title">ENERGY & MACRONUTRIENTS</div><div class="card-badge">Schofield 1985 · IOM DRI 2023 · CDE</div></div>
@@ -7872,6 +7872,11 @@ function calcAdolescent10to17Tab() {
         </div>
       </div>`;
     el.insertBefore(visuals, el.firstChild);
+    const gcSlot = el.querySelector('#gc-adolescent-slot')
+                 || document.getElementById('gc-adolescent-slot');
+    if (gcSlot && typeof gcAdolescentCharts === 'function') {
+      gcAdolescentCharts(gcSlot, ageMo, wt, ht, sex);
+    }
   }
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   var _ab=document.getElementById('ad-action-bar');if(_ab){_ab.style.display='flex';}
