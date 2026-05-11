@@ -5219,6 +5219,47 @@ function calculate() {
     const stmtEl = document.getElementById('pes-statement');
     if (stmtEl) stmtEl.innerHTML = pesBlocks.join('');
 
+    // ── Smart PES — supplemental disease-phase-aware PES ────────────────────
+    if (window.SmartPES) {
+      try {
+        const _smartCtx = {
+          dx:               diagnosis,
+          bmi:              bmi,
+          weight:           weight,
+          ibw:              ibw,
+          energy:           energy,
+          protein:          protein,
+          intakePct:        intakePct || null,
+          weightLossPct:    parseFloat(document.getElementById('wl-pct')?.value) || null,
+          albumin:          parseFloat(document.getElementById('la')?.value)       || null,
+          crp:              parseFloat(document.getElementById('lab-crp')?.value)  || null,
+          hba1c:            parseFloat(document.getElementById('lhba1c')?.value)   || null,
+          fastingGlucose:   parseFloat(document.getElementById('lg')?.value)       || null,
+          egfr:             parseFloat(document.getElementById('legfr')?.value)    || null,
+          phosphate:        parseFloat(document.getElementById('lp')?.value)       || null,
+          potassium:        parseFloat(document.getElementById('lk')?.value)       || null,
+          magnesium:        parseFloat(document.getElementById('lm')?.value)       || null,
+          icuPhase:         icuPhase  || null,
+          dayOfIllness:     parseFloat(document.getElementById('day-of-illness')?.value) || null,
+          comorbidities:    [],
+          screeningScore:   parseFloat(document.getElementById('screening-score')?.value) || null,
+          screeningTool:    document.getElementById('screening-tool')?.value       || null,
+          ascites:          document.getElementById('ascites')?.value === 'yes',
+          hepaticEncephalopathy: document.getElementById('hep-enc')?.value === 'yes',
+          childPugh:        document.getElementById('child-pugh')?.value           || null,
+          nyha:             parseFloat(document.getElementById('nyha')?.value)     || null,
+          ventilated:       document.getElementById('ventilation')?.value === 'mechanical',
+          hospitalised:     true,
+          tbsaPct:          tbsa || null,
+          daysPostOp:       parseFloat(document.getElementById('days-post-op')?.value) || null,
+          isPedi:           false,
+        };
+        const _smartResult = window.SmartPES.generateAdult(_smartCtx);
+        const _smartEl = document.getElementById('smart-pes-container');
+        if (_smartEl) _smartEl.innerHTML = _smartResult.html;
+      } catch(e) { console.warn('SmartPES adult error:', e); }
+    }
+
     window._pesGenerated = {
       statement: pesBlocks.map(b => b.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim()).join('\n\n'),
       count: pesBlocks.length

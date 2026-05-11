@@ -8008,6 +8008,24 @@ function calcUnifiedAll() {
               });
             }
           } catch(e) {}
+
+          // ── Smart PES — supplemental pedi PES ──────────────────────────────
+          if (window.SmartPES) {
+            try {
+              const _pediSmartCtx = {
+                dx:           lastPediCalcData.diagnosis,
+                bmi:          lastPediCalcData.bmi,
+                weight:       lastPediCalcData.weight,
+                energy:       lastPediCalcData.energy,
+                protein:      lastPediCalcData.protein,
+                comorbidities: [],
+                isPedi:       true,
+              };
+              const _pediSmartResult = window.SmartPES.generatePedi(_pediSmartCtx);
+              const _pediSmartEl = document.getElementById('smart-pes-pedi-container');
+              if (_pediSmartEl) _pediSmartEl.innerHTML = _pediSmartResult.html;
+            } catch(e) { console.warn('SmartPES pedi error:', e); }
+          }
         }
       } catch(err) { /* silent fail — don't break calc */ }
     };

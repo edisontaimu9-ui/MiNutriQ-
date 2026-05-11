@@ -2053,6 +2053,7 @@
       <div>
         <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;margin-bottom:6px">NUTRITION DIAGNOSIS — PES STATEMENTS</div>
         <div id="pes-statement" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="smart-pes-container"></div>
       </div>
       <div>
         <div style="font-family:var(--mono);font-size:8.5px;color:#ddeeff;letter-spacing:1.5px;margin-bottom:6px">CLINICAL NUTRITION INSIGHTS</div>
@@ -5886,6 +5887,9 @@
   <div id="ad-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('ad-results','Adolescent 10–17yr');document.getElementById('ad-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('ad-results','Oasis — Adolescent 10–17yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('ad-results').style.display='none';document.getElementById('ad-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-child_10to15 -->
 
+<!-- Smart PES — Pediatric output container (shared across all pedi populations) -->
+<div id="smart-pes-pedi-container"></div>
+
 
 
 <!-- ══ Hidden sub-module holders (legacy sub-calculators, kept for JS compatibility) ══ -->
@@ -7124,12 +7128,17 @@ function ntClear(scopeId, resultIds) {
         style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
         💾 SAVE NFPE
       </button>
+      <button onclick="window.SmartPES && window.SmartPES.generateFromNFPE()"
+        style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
+        📋 QUICK PES
+      </button>
       <button onclick="nfpeClear()"
         style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
         ↺ CLEAR
       </button>
     </div>
   </div>
+  <div id="nfpe-pes-output"></div>
 
   <!-- NFPE inline styles for option labels -->
   <style>
@@ -7952,6 +7961,8 @@ function ntClear(scopeId, resultIds) {
   window._lfsFDC = _lfsFDC;
 })();
 </script>
+
+<script src="pes.js"></script>
 
 </body>
 </html>
