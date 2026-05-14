@@ -6220,39 +6220,14 @@ const MEAL_NAMES = ['Breakfast','Mid-morning Snack','Lunch','Afternoon Snack','D
 let recallData = {}; // { mealIndex: [{type, exchanges, label, kcal, pro, cho, fat, kj, mode}] }
 let recallMode = 'exchange'; // 'exchange' or 'fct'
 
-// ── 24HR RECALL: tab-level database mode selector ─────────────────
-let _recallTabMode = null; // null | 'exchange' | 'fct'
+// ── 24HR RECALL: initialise on tab entry ──────────────────────────
+let _recallTabMode = 'fct';
 function recallSetMode(mode) {
-  _recallTabMode = mode;
-  const selector    = document.getElementById('recall-mode-selector');
-  const content     = document.getElementById('recall-content-section');
-  const badge       = document.getElementById('recall-mode-badge');
-  if (!selector || !content) return;
-  if (mode === 'exchange' || mode === 'fct') {
-    recallMode = mode; // sync with existing global used by setMealMode / addRecall*
-    selector.style.display = 'none';
-    content.style.display  = '';
-    if (badge) {
-      badge.textContent = mode === 'exchange' ? ' UCT EXCHANGE MODE' : ' MALAWI FCT MODE';
-      badge.style.borderColor = mode === 'exchange' ? 'rgba(29,233,212,0.3)' : 'rgba(240,180,41,0.35)';
-      badge.style.background  = mode === 'exchange' ? 'rgba(29,233,212,0.08)' : 'rgba(240,180,41,0.07)';
-      badge.style.color       = mode === 'exchange' ? 'var(--teal)' : 'var(--amber)';
-    }
-    // Render meals if not yet rendered, then apply mode to all cards
-    const container = document.getElementById('recall-meals');
-    if (!container) return;
-    if (container.children.length === 0) renderRecallMeals();
-    // Apply selected mode to all 6 meal cards
-    MEAL_NAMES.forEach((_, mi) => {
-      const exBtn  = document.getElementById(`meal-${mi}-btn-ex`);
-      const fctBtn = document.getElementById(`meal-${mi}-btn-fct`);
-      if (exBtn && fctBtn) setMealMode(mi, mode, null);
-    });
-  } else {
-    // null → back to selection screen
-    selector.style.display = '';
-    content.style.display  = 'none';
-  }
+  _recallTabMode = mode || 'fct';
+  recallMode = 'fct'; // default global mode
+  // Render meal cards if not yet rendered
+  const container = document.getElementById('recall-meals');
+  if (container && container.children.length === 0) renderRecallMeals();
 }
 
 function renderRecallMeals() {
@@ -6268,13 +6243,8 @@ function renderRecallMeals() {
         <div class="meal-title">${['','','','','',''][mi]} ${meal}</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)" id="meal-${mi}-kcal">0 kcal</div>
       </div>
-      <!-- Mode toggle -->
-      <div style="display:flex;gap:0;margin-bottom:10px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content">
-        <button onclick="setMealMode(${mi},'exchange',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:var(--teal-dim);color:#fff;cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-ex">UCT EXCHANGE</button>
-        <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fct">MALAWI FCT</button>
-      </div>
-      <!-- Exchange mode -->
-      <div id="meal-${mi}-exchange-row" class="recall-add-row">
+      <!-- Exchange mode (hidden — UCT Exchange removed from 24-Hour Recall) -->
+      <div id="meal-${mi}-exchange-row" class="recall-add-row" style="display:none">
         <div class="field-group">
           <label class="field-lbl"> Food Description</label>
           <input class="field-inp" id="meal-${mi}-desc" placeholder="e.g. Nsima with beans relish" style="font-size:11px">
@@ -6319,8 +6289,13 @@ function renderRecallMeals() {
           </button>
         </div>
       </div>
-      <!-- FCT mode -->
-      <div id="meal-${mi}-fct-row" style="display:none;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(56,100,168,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
+      <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA -->
+      <div style="display:flex;gap:0;margin-bottom:10px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content">
+        <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:var(--amber);color:#000;cursor:pointer;letter-spacing:1px;font-weight:700" id="meal-${mi}-btn-fct">MALAWI FCT</button>
+        <button onclick="setMealMode(${mi},'formula',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-formula">COMMERCIAL FORMULA</button>
+      </div>
+      <!-- FCT mode — default active -->
+      <div id="meal-${mi}-fct-row" style="display:block;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(56,100,168,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
         <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(240,180,41,0.2),transparent)"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
           <div class="field-group">
@@ -6374,6 +6349,59 @@ function renderRecallMeals() {
           </div>
         </div>
       </div>
+      <!-- Commercial Formula mode -->
+      <div id="meal-${mi}-formula-row" style="display:none;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(96,165,250,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
+        <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.2),transparent)"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+          <div class="field-group">
+            <label class="field-lbl"> Formula Category</label>
+            <select class="field-inp" id="meal-${mi}-formula-cat" onchange="filterFormulaItems(${mi})" style="font-size:11px">
+              <option value="">— All Categories —</option>
+              ${[...new Set(ENTERAL_DB.map(f=>f.cat))].map(c=>`<option value="${c}">${c}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-lbl"> Formula / ONS</label>
+            <select class="field-inp" id="meal-${mi}-formula-item" onchange="updateFormulaNutrients(${mi})" style="font-size:11px">
+              ${ENTERAL_DB.map((f,i)=>`<option value="${i}">${f.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+          <div class="field-group">
+            <label class="field-lbl"> Volume (mL)</label>
+            <input class="field-inp" id="meal-${mi}-formula-vol" type="number" value="200" min="10" step="10" style="font-size:11px" oninput="updateFormulaNutrients(${mi})">
+          </div>
+          <div class="field-group">
+            <label class="field-lbl"> Description</label>
+            <input class="field-inp" id="meal-${mi}-formula-desc" placeholder="e.g. Ensure Plus 200 mL" style="font-size:11px">
+          </div>
+          <div id="meal-${mi}-formula-info" style="font-family:var(--mono);font-size:9px;color:var(--blue);line-height:1.6;padding-bottom:4px"></div>
+          <div class="field-group" style="padding-top:18px">
+            <button onclick="addRecallFormula(${mi})" style="
+              display:flex;align-items:center;justify-content:center;gap:6px;
+              background:linear-gradient(135deg,rgba(96,165,250,0.22),rgba(96,165,250,0.10));
+              border:1.5px solid rgba(96,165,250,0.6);
+              color:var(--blue);
+              padding:9px 18px;
+              border-radius:9px;
+              cursor:pointer;
+              font-family:var(--mono);
+              font-size:10px;
+              font-weight:700;
+              letter-spacing:2px;
+              white-space:nowrap;
+              width:100%;
+              transition:all .18s;
+              box-shadow:0 2px 10px rgba(96,165,250,0.08);
+            "
+            onmouseover="this.style.background='linear-gradient(135deg,rgba(96,165,250,0.35),rgba(96,165,250,0.18))';this.style.borderColor='rgba(96,165,250,0.85)'"
+            onmouseout="this.style.background='linear-gradient(135deg,rgba(96,165,250,0.22),rgba(96,165,250,0.10))';this.style.borderColor='rgba(96,165,250,0.6)'">
+              <span style="font-size:13px;line-height:1">+</span> ADD
+            </button>
+          </div>
+        </div>
+      </div>
       <div id="meal-${mi}-items"></div>
     `;
     container.appendChild(div);
@@ -6384,12 +6412,85 @@ function renderRecallMeals() {
 }
 
 function setMealMode(mi, mode, btn) {
-  document.getElementById(`meal-${mi}-exchange-row`).style.display = mode==='exchange' ? '' : 'none';
-  document.getElementById(`meal-${mi}-fct-row`).style.display = mode==='fct' ? '' : 'none';
-  document.getElementById(`meal-${mi}-btn-ex`).style.background = mode==='exchange' ? 'var(--teal-dim)' : 'none';
-  document.getElementById(`meal-${mi}-btn-ex`).style.color = mode==='exchange' ? '#fff' : 'var(--text-dim)';
-  document.getElementById(`meal-${mi}-btn-fct`).style.background = mode==='fct' ? 'var(--amber)' : 'none';
-  document.getElementById(`meal-${mi}-btn-fct`).style.color = mode==='fct' ? '#000' : 'var(--text-dim)';
+  const exRow      = document.getElementById(`meal-${mi}-exchange-row`);
+  const fctRow     = document.getElementById(`meal-${mi}-fct-row`);
+  const formulaRow = document.getElementById(`meal-${mi}-formula-row`);
+  if (exRow)      exRow.style.display      = 'none';
+  if (fctRow)     fctRow.style.display     = mode === 'fct'     ? '' : 'none';
+  if (formulaRow) formulaRow.style.display = mode === 'formula' ? '' : 'none';
+  const fctBtn     = document.getElementById(`meal-${mi}-btn-fct`);
+  const formulaBtn = document.getElementById(`meal-${mi}-btn-formula`);
+  if (fctBtn) {
+    fctBtn.style.background = mode === 'fct' ? 'var(--amber)' : 'none';
+    fctBtn.style.color      = mode === 'fct' ? '#000' : 'var(--text-dim)';
+    fctBtn.style.fontWeight = mode === 'fct' ? '700' : 'normal';
+  }
+  if (formulaBtn) {
+    formulaBtn.style.background = mode === 'formula' ? 'var(--blue)' : 'none';
+    formulaBtn.style.color      = mode === 'formula' ? '#000' : 'var(--text-dim)';
+    formulaBtn.style.fontWeight = mode === 'formula' ? '700' : 'normal';
+  }
+}
+
+function filterFormulaItems(mi) {
+  const cat = document.getElementById(`meal-${mi}-formula-cat`).value;
+  const sel = document.getElementById(`meal-${mi}-formula-item`);
+  const filtered = cat ? ENTERAL_DB.filter(f => f.cat === cat) : ENTERAL_DB;
+  // Store original indices so we can retrieve correct ENTERAL_DB entry
+  sel.innerHTML = filtered.map(f => {
+    const idx = ENTERAL_DB.indexOf(f);
+    return `<option value="${idx}">${f.name}</option>`;
+  }).join('');
+  updateFormulaNutrients(mi);
+}
+
+function updateFormulaNutrients(mi) {
+  const sel  = document.getElementById(`meal-${mi}-formula-item`);
+  const vol  = parseFloat(document.getElementById(`meal-${mi}-formula-vol`)?.value) || 200;
+  const info = document.getElementById(`meal-${mi}-formula-info`);
+  if (!sel || !info) return;
+  const f = ENTERAL_DB[parseInt(sel.value)];
+  if (!f) { info.textContent = ''; return; }
+  const factor = vol / 100;
+  const kcal   = (f.kcalML * vol).toFixed(0);
+  const pro    = (f.pro  * factor).toFixed(1);
+  const cho    = (f.cho  * factor).toFixed(1);
+  const fat    = (f.fat  * factor).toFixed(1);
+  info.innerHTML = `<span style="color:var(--teal)">${kcal} kcal</span><br>${pro}g pro · ${cho}g CHO · ${fat}g fat`;
+  // Auto-fill description if empty
+  const descEl = document.getElementById(`meal-${mi}-formula-desc`);
+  if (descEl && !descEl.value) descEl.value = `${f.name} ${vol} mL`;
+}
+
+function addRecallFormula(mi) {
+  const sel   = document.getElementById(`meal-${mi}-formula-item`);
+  const vol   = parseFloat(document.getElementById(`meal-${mi}-formula-vol`)?.value) || 200;
+  const desc  = document.getElementById(`meal-${mi}-formula-desc`)?.value.trim();
+  if (!sel) return;
+  const f = ENTERAL_DB[parseInt(sel.value)];
+  if (!f) return;
+  const factor = vol / 100;
+  const item = {
+    label:  desc || `${f.name} ${vol} mL`,
+    source: 'formula',
+    kcal:   parseFloat((f.kcalML * vol).toFixed(1)),
+    pro:    parseFloat((f.pro  * factor).toFixed(1)),
+    cho:    parseFloat((f.cho  * factor).toFixed(1)),
+    fat:    parseFloat((f.fat  * factor).toFixed(1)),
+    fluid:  vol,
+    qty:    1,
+    detail: `${f.kcalML} kcal/mL · ${vol} mL · ${f.cat}`
+  };
+  if (!recallData[mi]) recallData[mi] = [];
+  recallData[mi].push(item);
+  renderMealItems(mi);
+  updateRecallTotals();
+  // Reset volume + desc
+  const volEl  = document.getElementById(`meal-${mi}-formula-vol`);
+  const descEl = document.getElementById(`meal-${mi}-formula-desc`);
+  if (volEl)  volEl.value  = '200';
+  if (descEl) descEl.value = '';
+  updateFormulaNutrients(mi);
 }
 
 function filterFctItems(mi) {
@@ -6495,25 +6596,35 @@ function renderMealItems(mi) {
       pro  = parseFloat((item.basePro  * item.qty).toFixed(1));
       item.kcal = kcal; item.pro = pro;
       colorDot = 'var(--amber)'; typeLabel = 'Malawi FCT';
+    } else if (item.source === 'formula') {
+      kcal = Math.round((item.kcal || 0) * (item.qty || 1));
+      pro  = parseFloat(((item.pro  || 0) * (item.qty || 1)).toFixed(1));
+      colorDot = 'var(--blue)';
+      // Short label: just the category (3rd part of detail)
+      const detailParts = (item.detail || '').split(' · ');
+      typeLabel = detailParts[2] || 'Formula';
     } else {
       const ex = EXCHANGE_TYPES[item.type];
-      kcal = Math.round(ex.kcal * item.exchanges * item.qty);
-      pro  = parseFloat((ex.pro * item.exchanges * item.qty).toFixed(1));
-      colorDot = ex.color; typeLabel = `${item.exchanges}× ${ex.label}`;
+      if (!ex) { kcal = 0; pro = 0; colorDot = 'var(--text-dim)'; typeLabel = item.type || 'Unknown'; }
+      else {
+        kcal = Math.round(ex.kcal * item.exchanges * item.qty);
+        pro  = parseFloat((ex.pro * item.exchanges * item.qty).toFixed(1));
+        colorDot = ex.color; typeLabel = `${item.exchanges}× ${ex.label}`;
+      }
     }
     mealKcal += kcal;
     const qty = item.qty || 1;
     return `<div class="recall-item-row" id="rrow-${mi}-${idx}">
-      <div style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0;margin-top:2px"></div>
-      <div style="flex:1;color:var(--text-bright)">${item.label}</div>
-      <div style="color:var(--text-dim);font-size:10px">${typeLabel}</div>
-      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+      <div style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
+      <div class="ri-label" title="${item.label}">${item.label}</div>
+      <div class="ri-type">${typeLabel}</div>
+      <div class="ri-qty">
         <button onclick="adjRecallQty(${mi},${idx},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:28px;text-align:center">${qty}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:22px;text-align:center">${qty}</span>
         <button onclick="adjRecallQty(${mi},${idx},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">+</button>
       </div>
-      <div style="color:${colorDot};min-width:70px;text-align:right;font-family:var(--mono)">${kcal} kcal</div>
-      <div style="color:var(--blue);min-width:55px;text-align:right;font-family:var(--mono)">${pro}g pro</div>
+      <div class="ri-kcal" style="color:${colorDot};font-family:var(--mono);font-size:11px">${kcal} kcal</div>
+      <div class="ri-pro" style="font-family:var(--mono);font-size:11px">${pro}g pro</div>
       <button class="recall-del" onclick="removeRecallItem(${mi},${idx})">✕</button>
     </div>`;
   }).join('');
@@ -6543,6 +6654,13 @@ function updateRecallTotals() {
         totPro  += (item.basePro ||item.pro  ||0)*q;
         totFat  += (item.baseFat ||item.fat  ||0)*q;
         exchangeCounts['fct'] = (exchangeCounts['fct']||0) + 1;
+      } else if (item.source === 'formula') {
+        const q = item.qty || 1;
+        totKcal += (item.kcal||0)*q;
+        totCho  += (item.cho ||0)*q;
+        totPro  += (item.pro ||0)*q;
+        totFat  += (item.fat ||0)*q;
+        exchangeCounts['formula'] = (exchangeCounts['formula']||0) + 1;
       } else {
         const ex = EXCHANGE_TYPES[item.type];
         const q = (item.exchanges||1) * (item.qty||1);
@@ -6694,7 +6812,9 @@ function updateRecallTotals() {
   // Exchange count grid
   document.getElementById('exchange-count-grid').innerHTML = Object.entries(exchangeCounts).map(([k,v])=>{
     if (k==='fct') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--amber);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">MALAWI FCT ITEMS</div></div>`;
+    if (k==='formula') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--blue);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">FORMULA ITEMS</div></div>`;
     const ex = EXCHANGE_TYPES[k];
+    if (!ex) return '';
     return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:${ex.color};font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">${ex.label.toUpperCase()}</div></div>`;
   }).join('');
 }

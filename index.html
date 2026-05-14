@@ -2218,7 +2218,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
       <div>
         <div style="font-family:var(--cond);font-size:18px;font-weight:700;letter-spacing:2px;color:var(--teal)">24-Hour Dietary Recall</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">UCT Exchange Lists · Malawi FCT (MoH) · Household Measures · Full dietary analysis vs requirements</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Malawi FCT (MoH) · Commercial Formulae · Household Measures · Full dietary analysis vs requirements</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="syncRecallFromCalc()" style="font-family:var(--mono);font-size:10px;color:var(--teal);background:rgba(29,233,212,.1);border:1px solid rgba(29,233,212,.3);border-radius:5px;padding:7px 14px;cursor:pointer;letter-spacing:1px">↻ SYNC FROM CALCULATOR</button>
@@ -2228,38 +2228,9 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
-         MODE SELECTOR — shown when no database mode is active
+         RECALL CONTENT
          ═══════════════════════════════════════════════════════════════ -->
-    <div id="recall-mode-selector" style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:32px 0 24px">
-      <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:3px;color:var(--text-dim);text-align:center">SELECT FOOD DATABASE</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-        <button onclick="recallSetMode('exchange')"
-          style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(29,233,212,0.5);background:rgba(29,233,212,0.07);color:var(--teal);cursor:pointer;transition:all .2s;min-width:180px"
-          onmouseover="this.style.background='rgba(29,233,212,0.16)'" onmouseout="this.style.background='rgba(29,233,212,0.07)'">
-          <span style="font-size:26px"></span>
-          <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">UCT EXCHANGE</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">UCT Exchange Lists 2014<br>Standardised exchange portions</span>
-        </button>
-        <button onclick="recallSetMode('fct')"
-          style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(240,180,41,0.45);background:rgba(240,180,41,0.06);color:var(--amber);cursor:pointer;transition:all .2s;min-width:180px"
-          onmouseover="this.style.background='rgba(240,180,41,0.14)'" onmouseout="this.style.background='rgba(240,180,41,0.06)'">
-          <span style="font-size:26px"></span>
-          <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">MALAWI FCT</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">Malawi Food Composition Table<br>Household measures · MoH</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════
-         RECALL CONTENT — shown after mode selected
-         ═══════════════════════════════════════════════════════════════ -->
-    <div id="recall-content-section" style="display:none">
-
-    <!-- Back / change mode button -->
-    <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px">
-      <button onclick="recallSetMode(null)" style="font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:6px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer">← CHANGE DATABASE</button>
-      <div id="recall-mode-badge" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:4px 14px;border-radius:20px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.3);color:var(--teal)"></div>
-    </div>
+    <div id="recall-content-section">
 
     <!-- Requirements Panel -->
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px">
@@ -2598,7 +2569,9 @@
     <div class="card-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="field-group">
-          <label class="lbl">Food Category</label>
+          <label class="lbl" style="display:flex;align-items:center;gap:5px">Food Category
+            <span id="uct-info-trigger" onclick="uctTooltipToggle(event)" style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(29,233,212,0.12);border:1px solid rgba(29,233,212,0.35);color:var(--teal);font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;line-height:1;user-select:none;flex-shrink:0;transition:background .15s" onmouseover="this.style.background='rgba(29,233,212,0.25)'" onmouseout="this.style.background='rgba(29,233,212,0.12)'">i</span>
+          </label>
           <select class="sel" id="mp-food-cat" onchange="filterMpFoods()">
             <option value="">— All Categories —</option>
             <option value="staples">Staples / Cereals (Malawi)</option>
@@ -8000,6 +7973,95 @@ function ntClear(scopeId, resultIds) {
 </script>
 
 <script src="pes.js"></script>
+
+<!-- ════════════ UCT EXCHANGE LIST TOOLTIP ════════════ -->
+<div id="uct-exchange-tooltip" role="tooltip" aria-live="polite" style="
+  display:none;
+  position:fixed;
+  z-index:9999;
+  max-width:310px;
+  background:var(--surface2,#1a1f2e);
+  border:1px solid rgba(29,233,212,0.35);
+  border-radius:10px;
+  padding:14px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.55);
+  font-family:var(--mono,'Courier New',monospace);
+  font-size:10.5px;
+  line-height:1.65;
+  color:var(--text,#e2e8f0);
+  pointer-events:auto;
+">
+  <div style="display:flex;align-items:flex-start;gap:10px">
+    <span style="font-size:17px;flex-shrink:0;margin-top:1px"></span>
+    <div>
+      <div style="font-family:var(--cond,'Arial Narrow',sans-serif);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal,#1de9d4);margin-bottom:7px">UCT EXCHANGE LIST</div>
+      <p style="margin:0 0 8px">The UCT Exchange List is a <strong style="color:var(--amber,#f0b429)">meal planning and patient education</strong> tool. It provides average macronutrient values per food group and is best used for designing exchange-based meal plans.</p>
+      <p style="margin:0;color:var(--text-dim,#94a3b8)">For precise nutrient intake analysis, use the <strong style="color:var(--amber,#f0b429)">Malawi FCT</strong> tab in the 24-Hour Dietary Recall module.</p>
+    </div>
+  </div>
+  <div style="margin-top:10px;text-align:right">
+    <button onclick="uctTooltipClose()" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;padding:4px 12px;border-radius:5px;border:1px solid rgba(29,233,212,0.3);background:rgba(29,233,212,0.08);color:var(--teal,#1de9d4);cursor:pointer">CLOSE</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var _tt  = null;
+  var _open = false;
+
+  function _getEl() { return document.getElementById('uct-exchange-tooltip'); }
+
+  window.uctTooltipToggle = function(e) {
+    e && e.stopPropagation();
+    if (_open) { uctTooltipClose(); return; }
+    uctTooltipOpen(e);
+  };
+
+  window.uctTooltipOpen = function(e) {
+    var el = _getEl();
+    if (!el) return;
+    el.style.display = 'block';
+    _open = true;
+    _position(e);
+    // Close on outside click
+    setTimeout(function(){
+      document.addEventListener('click', _outsideHandler, { once: true });
+    }, 0);
+  };
+
+  window.uctTooltipClose = function() {
+    var el = _getEl();
+    if (el) el.style.display = 'none';
+    _open = false;
+    document.removeEventListener('click', _outsideHandler);
+  };
+
+  function _outsideHandler(e) {
+    var el = _getEl();
+    if (el && !el.contains(e.target)) uctTooltipClose();
+  }
+
+  function _position(e) {
+    var el = _getEl();
+    if (!el) return;
+    var trigger = document.getElementById('uct-info-trigger');
+    var rect = trigger ? trigger.getBoundingClientRect() : { left: e ? e.clientX : 100, bottom: e ? e.clientY : 100, width: 0 };
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var ttW = 320, ttH = 180; // approx
+    var left = rect.left;
+    var top  = rect.bottom + 8;
+    if (left + ttW > vw - 12) left = vw - ttW - 12;
+    if (left < 8) left = 8;
+    if (top + ttH > vh - 12) top = (trigger ? trigger.getBoundingClientRect().top : top) - ttH - 8;
+    el.style.left = left + 'px';
+    el.style.top  = top  + 'px';
+  }
+
+  // Reposition on scroll/resize when open
+  window.addEventListener('scroll', function(){ if (_open) { uctTooltipClose(); } }, true);
+  window.addEventListener('resize', function(){ if (_open) uctTooltipClose(); });
+})();
+</script>
 
 </body>
 </html>
