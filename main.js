@@ -6652,12 +6652,26 @@ async function recallFdcSearch(mi) {
       return;
     }
     stEl.textContent = `${foods.length} result${foods.length > 1 ? 's' : ''} · per 100 g · select grams then ADD`;
-    resEl.innerHTML  = foods.map((f, i) => _recallFdcCard(f, i, mi)).join('');
+    resEl.innerHTML  =
+      `<div style="display:flex;justify-content:flex-end;margin-bottom:6px">` +
+      `<button onclick="clearRecallFdcResults(${mi})" style="font-family:var(--mono);font-size:8px;font-weight:700;padding:3px 10px;border-radius:5px;cursor:pointer;background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.3);letter-spacing:.5px">✕ CLOSE RESULTS</button>` +
+      `</div>` +
+      foods.map((f, i) => _recallFdcCard(f, i, mi)).join('');
     window[`_recallFdcHits_${mi}`] = foods;
   } catch (err) {
     stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
   }
 }
+
+window.clearRecallFdcResults = function(mi) {
+  const stEl  = document.getElementById(`meal-${mi}-fdc-status`);
+  const resEl = document.getElementById(`meal-${mi}-fdc-results`);
+  const qEl   = document.getElementById(`meal-${mi}-fdc-q`);
+  if (resEl) resEl.innerHTML = '';
+  if (stEl)  stEl.textContent = '';
+  if (qEl)   qEl.value = '';
+  window[`_recallFdcHits_${mi}`] = [];
+};
 
 function _recallFdcCard(food, i, mi) {
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

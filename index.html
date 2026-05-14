@@ -6233,10 +6233,24 @@
         return;
       }
       stEl.textContent = `${_mpFdcResults.length} result${_mpFdcResults.length > 1 ? 's' : ''} · per 100 g · set grams → choose meal → ADD`;
-      resEl.innerHTML  = _mpFdcResults.map((f, i) => _mpFdcCard(f, i)).join('');
+      resEl.innerHTML  =
+        `<div style="display:flex;justify-content:flex-end;margin-bottom:6px">` +
+        `<button onclick="clearMpFdcResults()" style="font-family:var(--mono);font-size:8px;font-weight:700;padding:3px 10px;border-radius:5px;cursor:pointer;background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.3);letter-spacing:.5px">✕ CLOSE RESULTS</button>` +
+        `</div>` +
+        _mpFdcResults.map((f, i) => _mpFdcCard(f, i)).join('');
     } catch(err){
       stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
     }
+  };
+
+  window.clearMpFdcResults = function(){
+    const stEl  = document.getElementById('mp-fdc-status');
+    const resEl = document.getElementById('mp-fdc-results');
+    const qEl   = document.getElementById('mp-fdc-q');
+    if (resEl) resEl.innerHTML = '';
+    if (stEl)  stEl.textContent = '';
+    if (qEl)   qEl.value = '';
+    _mpFdcResults = [];
   };
 
   function _mpFdcCard(food, i){
