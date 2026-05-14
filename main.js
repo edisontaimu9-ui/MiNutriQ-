@@ -6289,10 +6289,11 @@ function renderRecallMeals() {
           </button>
         </div>
       </div>
-      <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA -->
+      <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA | USDA FDC -->
       <div style="display:flex;gap:0;margin-bottom:10px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content">
         <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:var(--amber);color:#000;cursor:pointer;letter-spacing:1px;font-weight:700" id="meal-${mi}-btn-fct">MALAWI FCT</button>
         <button onclick="setMealMode(${mi},'formula',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-formula">COMMERCIAL FORMULA</button>
+        <button onclick="setMealMode(${mi},'fdc',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fdc">🌐 USDA FDC</button>
       </div>
       <!-- FCT mode — default active -->
       <div id="meal-${mi}-fct-row" style="display:block;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(56,100,168,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
@@ -6402,6 +6403,19 @@ function renderRecallMeals() {
           </div>
         </div>
       </div>
+      <!-- USDA FDC Online Search mode -->
+      <div id="meal-${mi}-fdc-row" style="display:none;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(96,165,250,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
+        <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.25),transparent)"></div>
+        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px">🌐 USDA FoodData Central — Live Search</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input class="field-inp" id="meal-${mi}-fdc-q" placeholder="Search USDA database (e.g. avocado, oatmeal)…"
+            style="flex:1;font-size:11px"
+            onkeydown="if(event.key==='Enter')recallFdcSearch(${mi})">
+          <button onclick="recallFdcSearch(${mi})" style="font-family:var(--mono);font-size:9px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);letter-spacing:1px">SEARCH</button>
+        </div>
+        <div id="meal-${mi}-fdc-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:6px;min-height:14px"></div>
+        <div id="meal-${mi}-fdc-results"></div>
+      </div>
       <div id="meal-${mi}-items"></div>
     `;
     container.appendChild(div);
@@ -6415,11 +6429,14 @@ function setMealMode(mi, mode, btn) {
   const exRow      = document.getElementById(`meal-${mi}-exchange-row`);
   const fctRow     = document.getElementById(`meal-${mi}-fct-row`);
   const formulaRow = document.getElementById(`meal-${mi}-formula-row`);
+  const fdcRow     = document.getElementById(`meal-${mi}-fdc-row`);
   if (exRow)      exRow.style.display      = 'none';
   if (fctRow)     fctRow.style.display     = mode === 'fct'     ? '' : 'none';
   if (formulaRow) formulaRow.style.display = mode === 'formula' ? '' : 'none';
+  if (fdcRow)     fdcRow.style.display     = mode === 'fdc'     ? '' : 'none';
   const fctBtn     = document.getElementById(`meal-${mi}-btn-fct`);
   const formulaBtn = document.getElementById(`meal-${mi}-btn-formula`);
+  const fdcBtn     = document.getElementById(`meal-${mi}-btn-fdc`);
   if (fctBtn) {
     fctBtn.style.background = mode === 'fct' ? 'var(--amber)' : 'none';
     fctBtn.style.color      = mode === 'fct' ? '#000' : 'var(--text-dim)';
@@ -6429,6 +6446,11 @@ function setMealMode(mi, mode, btn) {
     formulaBtn.style.background = mode === 'formula' ? 'var(--blue)' : 'none';
     formulaBtn.style.color      = mode === 'formula' ? '#000' : 'var(--text-dim)';
     formulaBtn.style.fontWeight = mode === 'formula' ? '700' : 'normal';
+  }
+  if (fdcBtn) {
+    fdcBtn.style.background = mode === 'fdc' ? 'rgba(96,165,250,0.18)' : 'none';
+    fdcBtn.style.color      = mode === 'fdc' ? '#60a5fa' : 'var(--text-dim)';
+    fdcBtn.style.fontWeight = mode === 'fdc' ? '700' : 'normal';
   }
 }
 
@@ -6583,6 +6605,163 @@ function removeRecallItem(mi, idx) {
   updateRecallTotals();
 }
 
+// ── USDA FDC SEARCH FOR RECALL ────────────────────────────────────────────
+const _FDC_KEY_RECALL = 'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ';
+const _recallFdcCache = {};
+
+async function recallFdcSearch(mi) {
+  const qEl   = document.getElementById(`meal-${mi}-fdc-q`);
+  const stEl  = document.getElementById(`meal-${mi}-fdc-status`);
+  const resEl = document.getElementById(`meal-${mi}-fdc-results`);
+  if (!qEl || !resEl) return;
+  const q = qEl.value.trim();
+  if (!q) return;
+  stEl.textContent = `Searching USDA FDC for "${q}"…`;
+  resEl.innerHTML  = '';
+
+  try {
+    let foods = _recallFdcCache[q.toLowerCase()];
+    if (!foods) {
+      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&api_key=${_FDC_KEY_RECALL}`;
+      const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error('FDC ' + r.status);
+      const d = await r.json();
+      const n = id => d.foods?.[0]?.foodNutrients; // placeholder — mapped per food below
+      foods = (d.foods || []).slice(0, 6).map(f => {
+        const get = id => f.foodNutrients?.find(x => x.nutrientId === id)?.value ?? null;
+        const kcal = get(1008) ?? get(2047);
+        return {
+          name:  f.description,
+          cat:   f.foodCategory || 'USDA',
+          kcal,
+          kj:    kcal != null ? +(kcal * 4.184).toFixed(0) : null,
+          pro:   get(1003),
+          cho:   get(1005),
+          fat:   get(1004),
+          fiber: get(1079),
+          sugar: get(2000),
+          sodium: get(1093) != null ? +(get(1093) / 1000).toFixed(3) : null,
+          sourceUsed: 'FDC',
+        };
+      });
+      _recallFdcCache[q.toLowerCase()] = foods;
+    }
+
+    if (!foods.length) {
+      stEl.textContent = 'No results — try a different spelling.';
+      return;
+    }
+    stEl.textContent = `${foods.length} result${foods.length > 1 ? 's' : ''} · per 100 g · select grams then ADD`;
+    resEl.innerHTML  = foods.map((f, i) => _recallFdcCard(f, i, mi)).join('');
+    window[`_recallFdcHits_${mi}`] = foods;
+  } catch (err) {
+    stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
+  }
+}
+
+function _recallFdcCard(food, i, mi) {
+  const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const fmt = (v, d = 1) => v != null ? (+(+v).toFixed(d)) : '—';
+  const extras = [];
+  if (food.fiber  != null) extras.push(`Fiber ${fmt(food.fiber)}g`);
+  if (food.sodium != null) extras.push(`Na ${fmt(food.sodium * 1000, 0)}mg`);
+  return `
+  <div style="background:var(--card,#131b26);border:1px solid rgba(96,165,250,0.18);border-radius:9px;overflow:hidden;margin-bottom:7px;animation:lfsUp .18s ease both;animation-delay:${i * 0.04}s">
+    <div style="height:2px;background:linear-gradient(90deg,rgba(96,165,250,0.5),var(--teal,#1de9d4))"></div>
+    <div style="padding:8px 12px 5px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(food.name)}">${esc(food.name)}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
+      </div>
+      <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)">
+      <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--teal)" id="rfv_${mi}_${i}_kcal">${fmt(food.kcal, 0)}</span>
+        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">kcal</span>
+      </div>
+      <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:#60a5fa" id="rfv_${mi}_${i}_pro">${fmt(food.pro)}g</span>
+        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">pro</span>
+      </div>
+      <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--amber,#f0b429)" id="rfv_${mi}_${i}_cho">${fmt(food.cho)}g</span>
+        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">carbs</span>
+      </div>
+      <div style="padding:6px 4px;text-align:center">
+        <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--orange,#fb923c)" id="rfv_${mi}_${i}_fat">${fmt(food.fat)}g</span>
+        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">fat</span>
+      </div>
+    </div>
+    ${extras.length ? `<div style="padding:4px 12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text-dim)">${extras.join(' · ')}</div>` : ''}
+    <div style="border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">per</span>
+      <input type="number" min="1" max="2000" value="100" id="rfg_${mi}_${i}"
+        style="width:54px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);outline:none;text-align:center"
+        oninput="recallFdcRecalc(${mi},${i})"
+        onfocus="this.style.borderColor='rgba(29,233,212,.5)'"
+        onblur="this.style.borderColor='var(--border)'"/>
+      <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">g</span>
+      <button onclick="addRecallFdcFood(${mi},${i})"
+        style="font-family:var(--mono);font-size:8.5px;font-weight:700;padding:3px 11px;border-radius:5px;cursor:pointer;margin-left:auto;background:rgba(29,233,212,.1);color:var(--teal,#1de9d4);border:1px solid rgba(29,233,212,.3);letter-spacing:.5px"
+        id="rfadd_${mi}_${i}">+ ADD TO RECALL</button>
+    </div>
+  </div>`;
+}
+
+window.recallFdcRecalc = function(mi, i) {
+  const hits = window[`_recallFdcHits_${mi}`];
+  if (!hits) return;
+  const food = hits[i]; if (!food) return;
+  const g = parseFloat(document.getElementById(`rfg_${mi}_${i}`)?.value) || 100;
+  const f = g / 100;
+  [['kcal', 0], ['pro', 1], ['cho', 1], ['fat', 1]].forEach(([k, d]) => {
+    const el = document.getElementById(`rfv_${mi}_${i}_${k}`);
+    if (!el || food[k] == null) return;
+    el.textContent = d === 0
+      ? String(+(food[k] * f).toFixed(0))
+      : (+(food[k] * f).toFixed(1)) + 'g';
+  });
+};
+
+window.addRecallFdcFood = function(mi, i) {
+  const hits = window[`_recallFdcHits_${mi}`];
+  if (!hits) return;
+  const food = hits[i]; if (!food) return;
+  const g = parseFloat(document.getElementById(`rfg_${mi}_${i}`)?.value) || 100;
+  const f = g / 100;
+  const item = {
+    mode:     'fct',
+    label:    `${food.name} — ${g}g (USDA FDC)`,
+    source:   'FDC',
+    baseKcal: food.kcal, basePro: food.pro, baseCho: food.cho, baseFat: food.fat, baseKj: food.kj,
+    kcal: food.kcal != null ? Math.round(food.kcal * f) : 0,
+    pro:  food.pro  != null ? parseFloat((food.pro  * f).toFixed(1)) : 0,
+    cho:  food.cho  != null ? parseFloat((food.cho  * f).toFixed(1)) : 0,
+    fat:  food.fat  != null ? parseFloat((food.fat  * f).toFixed(1)) : 0,
+    kj:   food.kj   != null ? Math.round(food.kj   * f) : 0,
+    exchanges: 1,
+    qty: 1,
+  };
+  if (!recallData[mi]) recallData[mi] = [];
+  recallData[mi].push(item);
+  renderMealItems(mi);
+  updateRecallTotals();
+  // Mark button
+  const btn = document.getElementById(`rfadd_${mi}_${i}`);
+  if (btn) {
+    btn.textContent = '✓ Added';
+    btn.style.color = 'var(--teal)';
+    btn.style.background = 'rgba(29,233,212,.18)';
+    btn.disabled = true;
+    setTimeout(() => {
+      if (btn) { btn.textContent = '+ ADD TO RECALL'; btn.style.color = 'var(--teal,#1de9d4)'; btn.style.background = 'rgba(29,233,212,.1)'; btn.disabled = false; }
+    }, 2000);
+  }
+  // Also offer to save to local DB
+  if (typeof NT_CustomFoods !== 'undefined') NT_CustomFoods.add(food);
+};
+
 function renderMealItems(mi) {
   const container = document.getElementById(`meal-${mi}-items`);
   if (!container) return;
@@ -6591,7 +6770,11 @@ function renderMealItems(mi) {
   let mealKcal = 0;
   container.innerHTML = items.map((item, idx) => {
     let kcal, pro, colorDot, typeLabel;
-    if (item.mode === 'fct') {
+    if (item.source === 'FDC') {
+      kcal = item.kcal ?? 0;
+      pro  = item.pro  ?? 0;
+      colorDot = '#60a5fa'; typeLabel = 'USDA FDC';
+    } else if (item.mode === 'fct') {
       kcal = Math.round(item.baseKcal * item.qty);
       pro  = parseFloat((item.basePro  * item.qty).toFixed(1));
       item.kcal = kcal; item.pro = pro;
@@ -6613,16 +6796,22 @@ function renderMealItems(mi) {
       }
     }
     mealKcal += kcal;
-    const qty = item.qty || 1;
+    const qty     = item.qty || 1;
+    const isFdc   = item.source === 'FDC';
+    const qtyCtrl = isFdc
+      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);white-space:nowrap">fixed g</span>`
+      : `<button onclick="adjRecallQty(${mi},${idx},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:22px;text-align:center">${qty}</span>
+        <button onclick="adjRecallQty(${mi},${idx},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">+</button>`;
+    const fdcBadge = isFdc
+      ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);flex-shrink:0;white-space:nowrap">USDA</span>`
+      : '';
     return `<div class="recall-item-row" id="rrow-${mi}-${idx}">
       <div style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
       <div class="ri-label" title="${item.label}">${item.label}</div>
+      ${fdcBadge}
       <div class="ri-type">${typeLabel}</div>
-      <div class="ri-qty">
-        <button onclick="adjRecallQty(${mi},${idx},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:22px;text-align:center">${qty}</span>
-        <button onclick="adjRecallQty(${mi},${idx},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">+</button>
-      </div>
+      <div class="ri-qty">${qtyCtrl}</div>
       <div class="ri-kcal" style="color:${colorDot};font-family:var(--mono);font-size:11px">${kcal} kcal</div>
       <div class="ri-pro" style="font-family:var(--mono);font-size:11px">${pro}g pro</div>
       <button class="recall-del" onclick="removeRecallItem(${mi},${idx})">✕</button>
@@ -6646,7 +6835,14 @@ function updateRecallTotals() {
   const exchangeCounts = {};
   Object.keys(recallData).forEach(mi => {
     (recallData[mi]||[]).forEach(item => {
-      if (item.mode === 'fct') {
+      if (item.source === 'FDC') {
+        totKcal += item.kcal  || 0;
+        totKj   += item.kj   || 0;
+        totCho  += item.cho  || 0;
+        totPro  += item.pro  || 0;
+        totFat  += item.fat  || 0;
+        exchangeCounts['fdc'] = (exchangeCounts['fdc']||0) + 1;
+      } else if (item.mode === 'fct') {
         const q = item.qty || 1;
         totKcal += (item.baseKcal||item.kcal||0)*q;
         totKj   += (item.baseKj  ||item.kj  ||0)*q;
@@ -7101,7 +7297,10 @@ function renderMpMeals() {
   grid.innerHTML = '';
   MP_MEAL_NAMES.forEach((mname, mi) => {
     const items = mpData[mi] || [];
-    const mealKcal = items.reduce((s,i) => s + Math.round((i.baseKcal||i.kcal||0)*(i.qty||1)), 0);
+    const mealKcal = items.reduce((s, i) => {
+      if (i.source === 'FDC') return s + (i.kcal || 0);
+      return s + Math.round((i.baseKcal||i.kcal||0)*(i.qty||1));
+    }, 0);
     const div = document.createElement('div');
     div.className = 'card';
     div.style.marginBottom = '10px';
@@ -7115,17 +7314,25 @@ function renderMpMeals() {
         ${items.length === 0
           ? '<div style="color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:6px 0">No items added yet</div>'
           : items.map((item, ii) => {
-              const q   = item.qty || 1;
-              const kcal = Math.round((item.baseKcal||item.kcal||0) * q);
-              const pro  = parseFloat(((item.basePro||item.pro||0) * q).toFixed(1));
+              const isFdc  = item.source === 'FDC';
+              const q      = item.qty || 1;
+              const kcal   = isFdc ? (item.kcal || 0) : Math.round((item.baseKcal||item.kcal||0) * q);
+              const pro    = isFdc ? (item.pro  || 0) : parseFloat(((item.basePro||item.pro||0) * q).toFixed(1));
+              const badge  = isFdc
+                ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);white-space:nowrap;flex-shrink:0">USDA</span>`
+                : '';
+              const qtyCtrl = isFdc
+                ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);min-width:76px;text-align:center">fixed g</span>`
+                : `<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                    <button onclick="adjMpQty(${mi},${ii},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">−</button>
+                    <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:28px;text-align:center">${q}</span>
+                    <button onclick="adjMpQty(${mi},${ii},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">+</button>
+                  </div>`;
               return `<div class="recall-item-row">
-                <div style="flex:1;color:var(--text-bright);font-family:var(--mono);font-size:11px">${item.desc}</div>
-                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-                  <button onclick="adjMpQty(${mi},${ii},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">−</button>
-                  <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:28px;text-align:center">${q}</span>
-                  <button onclick="adjMpQty(${mi},${ii},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">+</button>
-                </div>
-                <div style="color:var(--teal);min-width:72px;text-align:right;font-family:var(--mono);font-size:11px">${kcal} kcal</div>
+                <div style="flex:1;color:var(--text-bright);font-family:var(--mono);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.desc}</div>
+                ${badge}
+                ${qtyCtrl}
+                <div style="color:${isFdc?'#60a5fa':'var(--teal)'};min-width:72px;text-align:right;font-family:var(--mono);font-size:11px">${kcal} kcal</div>
                 <div style="color:var(--blue);min-width:55px;text-align:right;font-family:var(--mono);font-size:11px">${pro}g pro</div>
                 <button class="recall-del" onclick="removeMpItem(${mi},${ii})">✕</button>
               </div>`;

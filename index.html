@@ -2639,6 +2639,34 @@
     </div>
   </div>
 
+  <!-- USDA FDC Online Search for Meal Planner -->
+  <div class="card" style="margin-bottom:18px;border-color:rgba(96,165,250,0.2)">
+    <div class="card-header" style="cursor:pointer" onclick="mpFdcToggle()">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
+        🌐 Search USDA FoodData Central
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400">— food not in local database?</span>
+      </div>
+      <span id="mp-fdc-chevron" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto;transition:transform .2s">▼</span>
+    </div>
+    <div id="mp-fdc-panel" style="display:none">
+      <div class="card-body">
+        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:10px;line-height:1.6">
+          Search the USDA database for any food not found in the Malawi FCT or UCT Exchange List.
+          Results are per 100 g — set your gram amount, choose a meal slot, then ADD.
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input class="inp" id="mp-fdc-q" placeholder="e.g. avocado, peanut butter, brown rice…"
+            style="flex:1;font-size:11px"
+            onkeydown="if(event.key==='Enter')mpFdcSearch()">
+          <button onclick="mpFdcSearch()" style="font-family:var(--mono);font-size:9px;font-weight:700;padding:7px 16px;border-radius:7px;cursor:pointer;white-space:nowrap;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);letter-spacing:1px">SEARCH</button>
+        </div>
+        <div id="mp-fdc-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:6px;min-height:14px"></div>
+        <div id="mp-fdc-results"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Meal Plan Grid -->
   <div id="mp-meals-grid"></div>
 
@@ -6145,6 +6173,188 @@
 </script>
 
 <script src="main.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   MEAL PLANNER — USDA FDC ONLINE SEARCH
+   Handles mpFdcToggle, mpFdcSearch, mpFdcRecalc, addMpFdcFood
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  const _FDC_KEY_MP = 'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ';
+  let _mpFdcResults = [];
+  let _mpFdcOpen    = false;
+
+  window.mpFdcToggle = function(){
+    _mpFdcOpen = !_mpFdcOpen;
+    const panel   = document.getElementById('mp-fdc-panel');
+    const chevron = document.getElementById('mp-fdc-chevron');
+    if (panel)   panel.style.display = _mpFdcOpen ? '' : 'none';
+    if (chevron) chevron.style.transform = _mpFdcOpen ? 'rotate(180deg)' : '';
+    if (_mpFdcOpen) setTimeout(()=>document.getElementById('mp-fdc-q')?.focus(), 80);
+  };
+
+  window.mpFdcSearch = async function(){
+    const qEl   = document.getElementById('mp-fdc-q');
+    const stEl  = document.getElementById('mp-fdc-status');
+    const resEl = document.getElementById('mp-fdc-results');
+    if (!qEl || !resEl) return;
+    const q = qEl.value.trim(); if (!q) return;
+    stEl.textContent = `Searching USDA FDC for "${q}"…`;
+    resEl.innerHTML  = '';
+    _mpFdcResults    = [];
+
+    try {
+      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&api_key=${_FDC_KEY_MP}`;
+      const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error('FDC ' + r.status);
+      const d = await r.json();
+      _mpFdcResults = (d.foods || []).slice(0, 6).map(f => {
+        const get  = id => f.foodNutrients?.find(x => x.nutrientId === id)?.value ?? null;
+        const kcal = get(1008) ?? get(2047);
+        return {
+          name:  f.description,
+          cat:   f.foodCategory || 'USDA',
+          kcal,
+          kj:    kcal != null ? +(kcal * 4.184).toFixed(0) : null,
+          pro:   get(1003),
+          cho:   get(1005),
+          fat:   get(1004),
+          fiber: get(1079),
+          sugar: get(2000),
+          sodium: get(1093) != null ? +(get(1093) / 1000).toFixed(3) : null,
+          sourceUsed: 'FDC',
+        };
+      });
+
+      if (!_mpFdcResults.length){
+        stEl.textContent = 'No results — try a different spelling.';
+        return;
+      }
+      stEl.textContent = `${_mpFdcResults.length} result${_mpFdcResults.length > 1 ? 's' : ''} · per 100 g · set grams → choose meal → ADD`;
+      resEl.innerHTML  = _mpFdcResults.map((f, i) => _mpFdcCard(f, i)).join('');
+    } catch(err){
+      stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
+    }
+  };
+
+  function _mpFdcCard(food, i){
+    const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fmt = (v, d=1) => v != null ? (+(+v).toFixed(d)) : '—';
+    const extras = [];
+    if (food.fiber  != null) extras.push(`Fiber ${fmt(food.fiber)}g`);
+    if (food.sodium != null) extras.push(`Na ${fmt(food.sodium * 1000, 0)}mg`);
+    return `
+    <div style="background:var(--card,#131b26);border:1px solid rgba(96,165,250,0.18);border-radius:9px;overflow:hidden;margin-bottom:8px;animation:lfsUp .18s ease both;animation-delay:${i * 0.04}s">
+      <div style="height:2px;background:linear-gradient(90deg,rgba(96,165,250,0.5),var(--teal,#1de9d4))"></div>
+      <div style="padding:8px 12px 5px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(food.name)}">${esc(food.name)}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)">
+        <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--teal)" id="mpfv_${i}_kcal">${fmt(food.kcal,0)}</span>
+          <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">kcal</span>
+        </div>
+        <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:#60a5fa" id="mpfv_${i}_pro">${fmt(food.pro)}g</span>
+          <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">pro</span>
+        </div>
+        <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--amber,#f0b429)" id="mpfv_${i}_cho">${fmt(food.cho)}g</span>
+          <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">carbs</span>
+        </div>
+        <div style="padding:6px 4px;text-align:center">
+          <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--orange,#fb923c)" id="mpfv_${i}_fat">${fmt(food.fat)}g</span>
+          <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">fat</span>
+        </div>
+      </div>
+      ${extras.length ? `<div style="padding:4px 12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text-dim)">${extras.join(' · ')}</div>` : ''}
+      <div style="border-top:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">per</span>
+        <input type="number" min="1" max="2000" value="100" id="mpfg_${i}"
+          style="width:54px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);outline:none;text-align:center"
+          oninput="mpFdcRecalc(${i})"
+          onfocus="this.style.borderColor='rgba(29,233,212,.5)'"
+          onblur="this.style.borderColor='var(--border)'"/>
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">g &nbsp;→&nbsp; Meal:</span>
+        <select id="mpfm_${i}" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:9.5px;color:var(--text)">
+          <option value="0">Breakfast</option>
+          <option value="1">Mid-morning</option>
+          <option value="2">Lunch</option>
+          <option value="3">Afternoon Snack</option>
+          <option value="4">Dinner</option>
+          <option value="5">Evening Snack</option>
+        </select>
+        <button onclick="addMpFdcFood(${i})"
+          style="font-family:var(--mono);font-size:8.5px;font-weight:700;padding:3px 11px;border-radius:5px;cursor:pointer;margin-left:auto;background:rgba(29,233,212,.1);color:var(--teal,#1de9d4);border:1px solid rgba(29,233,212,.3);letter-spacing:.5px;white-space:nowrap"
+          id="mpfadd_${i}">+ ADD TO PLAN</button>
+      </div>
+    </div>`;
+  }
+
+  window.mpFdcRecalc = function(i){
+    const food = _mpFdcResults[i]; if (!food) return;
+    const g = parseFloat(document.getElementById('mpfg_' + i)?.value) || 100;
+    const f = g / 100;
+    [['kcal',0],['pro',1],['cho',1],['fat',1]].forEach(([k, d]) => {
+      const el = document.getElementById('mpfv_' + i + '_' + k);
+      if (!el || food[k] == null) return;
+      el.textContent = d === 0
+        ? String(+(food[k] * f).toFixed(0))
+        : (+(food[k] * f).toFixed(1)) + 'g';
+    });
+  };
+
+  window.addMpFdcFood = function(i){
+    const food = _mpFdcResults[i]; if (!food) return;
+    const g  = parseFloat(document.getElementById('mpfg_' + i)?.value) || 100;
+    const mi = parseInt(document.getElementById('mpfm_' + i)?.value) || 0;
+    const f  = g / 100;
+    const baseKcal = food.kcal ?? 0;
+    const basePro  = food.pro  ?? 0;
+    const baseCho  = food.cho  ?? 0;
+    const baseFat  = food.fat  ?? 0;
+    const baseKj   = food.kj   ?? 0;
+    if (typeof mpData === 'undefined') { console.error('mpData not ready'); return; }
+    if (!mpData[mi]) mpData[mi] = [];
+    mpData[mi].push({
+      desc:     `${food.name} — ${g}g (USDA FDC)`,
+      name:     food.name,
+      portion:  `${g} g`,
+      qty:      1,
+      source:   'FDC',
+      baseKcal, basePro, baseCho, baseFat, baseKj,
+      kcal: Math.round(baseKcal * f),
+      pro:  parseFloat((basePro  * f).toFixed(1)),
+      cho:  parseFloat((baseCho  * f).toFixed(1)),
+      fat:  parseFloat((baseFat  * f).toFixed(1)),
+      kj:   Math.round(baseKj   * f),
+    });
+    if (typeof renderMpMeals   === 'function') renderMpMeals();
+    if (typeof updateMpTotals  === 'function') updateMpTotals();
+    if (typeof showToast       === 'function') showToast('Added: ' + food.name + ' — ' + g + 'g', 'success');
+    // Also silently save to custom foods so it appears in future local searches
+    if (typeof NT_CustomFoods !== 'undefined') NT_CustomFoods.add(food);
+    // Mark button
+    const btn = document.getElementById('mpfadd_' + i);
+    if (btn){
+      btn.textContent = '✓ Added';
+      btn.style.color = 'var(--teal)';
+      btn.style.background = 'rgba(29,233,212,.2)';
+      btn.disabled = true;
+      setTimeout(()=>{
+        if(btn){ btn.textContent='+ ADD TO PLAN'; btn.style.color='var(--teal,#1de9d4)'; btn.style.background='rgba(29,233,212,.1)'; btn.disabled=false; }
+      }, 2200);
+    }
+  };
+
+})();
+</script>
 
 <script>
 /* Orientation lock — standalone, injected after all app scripts */

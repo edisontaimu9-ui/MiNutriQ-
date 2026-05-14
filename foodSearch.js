@@ -437,6 +437,7 @@
     searchLocal: searchLocal,
     clearCache:  clearCache,
     _synonymMap: SYNONYM_MAP,  // exposed for debugging only
+    _fdcSearch:  _searchFDC,   // public FDC-only search for explicit import UI
   };
 
 })(typeof window !== 'undefined' ? window : this);
