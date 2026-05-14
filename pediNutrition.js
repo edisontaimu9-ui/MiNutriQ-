@@ -3404,6 +3404,152 @@ function renderRefeedingScreen(R) {
 
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UNIFIED CALCULATOR HELPER FUNCTIONS
+// These are called from calcUnified(), ucRender(), and related functions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Auto-update age display when DOB changes on the Unified Calculator form. */
+function ucAutoAge() {
+  const dobEl  = document.getElementById('uc-dob');
+  const admEl  = document.getElementById('uc-admit');
+  const ageEl  = document.getElementById('uc-age-display');
+  if (!dobEl || !dobEl.value) return;
+  const ref  = (admEl && admEl.value) ? new Date(admEl.value + 'T00:00:00') : new Date();
+  const born = new Date(dobEl.value + 'T00:00:00');
+  const days = Math.floor((ref - born) / 86400000);
+  if (days < 0) return;
+  const mo = days / 30.4375;
+  let label;
+  if (mo < 1)       label = days + ' days';
+  else if (mo < 24) label = mo.toFixed(1) + ' months';
+  else              label = (mo / 12).toFixed(1) + ' years';
+  if (ageEl) ageEl.textContent = label;
+  if (typeof ucUpdateAdmissionVisibility === 'function') ucUpdateAdmissionVisibility();
+}
+
+/**
+ * Flag a lab value against a normal range.
+ * Returns { icon, col } used by labRow() in ucRender().
+ */
+function ucFlagLab(val, lo, hi) {
+  if (val === null || isNaN(val)) return { icon: '—', col: 'var(--text-dim)' };
+  if (val < lo) return { icon: '▼ Low',  col: 'var(--red)'   };
+  if (val > hi) return { icon: '▲ High', col: 'var(--amber)' };
+  return           { icon: '✓ Normal', col: 'var(--green)' };
+}
+
+/**
+ * Compute Holliday-Segar fluid requirements for a given weight (kg).
+ * Returns { total (mL/day), perKg (mL/kg/day), rate (mL/hr) }.
+ */
+function ucFluidDetail(wt) {
+  if (!wt || isNaN(wt)) return { total: null, perKg: null, rate: null };
+  let total;
+  if      (wt <= 10)  total = wt * 100;
+  else if (wt <= 20)  total = 1000 + (wt - 10) * 50;
+  else                total = 1500 + (wt - 20) * 20;
+  total = Math.round(total);
+  return {
+    total,
+    perKg: Math.round(total / wt),
+    rate:  Math.round(total / 24)
+  };
+}
+
+/**
+ * Calculate macro gram targets from TEE and age-appropriate IOM AMDRs.
+ * Returns { cho, fat, pro } each with { g, pct }, plus label.
+ */
+function ucMacroGrams(tee, ageMo) {
+  if (!tee || isNaN(tee)) return null;
+  // IOM AMDR midpoints by age group
+  let cho, fat, pro;
+  if      (ageMo < 12)  { cho = 0.52; fat = 0.42; pro = 0.06; }  // infants: EAR-based
+  else if (ageMo < 48)  { cho = 0.55; fat = 0.35; pro = 0.10; }  // 1–3yr
+  else if (ageMo < 108) { cho = 0.55; fat = 0.30; pro = 0.15; }  // 4–8yr
+  else if (ageMo < 168) { cho = 0.55; fat = 0.30; pro = 0.15; }  // 9–13yr
+  else                  { cho = 0.55; fat = 0.28; pro = 0.17; }  // 14–18yr
+  const mid = pct => ({ g: Math.round(tee * pct / (pct === fat ? 9 : 4)), pct: Math.round(pct * 100) });
+  return {
+    cho:   mid(cho),
+    fat:   { g: Math.round(tee * fat / 9), pct: Math.round(fat * 100) },
+    pro:   mid(pro),
+    label: ageMo < 12 ? 'Infant EAR-based' : 'IOM AMDR'
+  };
+}
+
+/**
+ * Return a MUAC interpretation band object: { label, icon, colour, note }.
+ * Based on WHO/CMAM thresholds (MUAC in mm, age in months).
+ */
+function ucMuacBand(muacMm, ageMo) {
+  if (!muacMm || isNaN(muacMm)) return null;
+  const cm = muacMm / 10;
+  if (ageMo >= 6 && ageMo < 60) {
+    // Standard WHO 6–59m thresholds
+    if (cm < 11.5) return { label: 'SAM', icon: '🔴', colour: 'var(--red)',   note: 'MUAC <11.5 cm — Severe Acute Malnutrition' };
+    if (cm < 12.5) return { label: 'MAM', icon: '🟠', colour: 'var(--amber)', note: 'MUAC 11.5–12.4 cm — Moderate Acute Malnutrition' };
+    return          { label: 'Normal', icon: '🟢', colour: 'var(--green)', note: 'MUAC ≥12.5 cm — Within normal range' };
+  }
+  // Older children: approximate thresholds
+  if (cm < 13.5) return { label: 'At risk',  icon: '🟠', colour: 'var(--amber)', note: 'Low MUAC for age — monitor closely' };
+  return          { label: 'Adequate', icon: '🟢', colour: 'var(--green)', note: 'MUAC within acceptable range' };
+}
+
+/**
+ * Compute weight velocity with direction, colour, and target label.
+ * Returns { gKgDay, direction, colour, val, unit, diffG, days, targetLabel } or null.
+ */
+function ucVelocity(wt, prevWt, days, ageMo, isPreterm, bwCat) {
+  if (!wt || !prevWt || !days || days <= 0) return null;
+  const diffG  = Math.round((wt - prevWt) * 1000);
+  const gKgDay = (diffG / days / prevWt).toFixed(1);
+  const up     = diffG > 0;
+  const colour = up ? 'var(--green)' : diffG < 0 ? 'var(--red)' : 'var(--text-dim)';
+  // Target label by age/category
+  let targetLabel = '';
+  if (isPreterm) {
+    const targets = { ELBW: '15–20 g/kg/day', VLBW: '15–20 g/kg/day', LBW: '10–20 g/kg/day' };
+    targetLabel = 'Target: ' + (targets[bwCat] || '10–20 g/kg/day') + ' (AAP/ESPGHAN preterm)';
+  } else if (ageMo < 3)    targetLabel = 'Target: 26–31 g/day (WHO 0–3m)';
+  else if (ageMo < 6)      targetLabel = 'Target: 17–18 g/day (WHO 3–6m)';
+  else if (ageMo < 12)     targetLabel = 'Target: 12–13 g/day (WHO 6–12m)';
+  else                     targetLabel = 'Expected: 1.5–3 kg/year (WHO 1–5yr)';
+  return {
+    gKgDay, diffG, days,
+    direction: up ? '▲ Gaining' : diffG < 0 ? '▼ Losing' : '→ Stable',
+    colour,
+    val:  Math.abs(diffG),
+    unit: 'g',
+    targetLabel
+  };
+}
+
+/**
+ * Return a CSS colour string for a WHO z-score value.
+ */
+function ucZColour(z) {
+  if (z === null || isNaN(z)) return 'var(--text-dim)';
+  if (z < -3 || z > 3)       return 'var(--red)';
+  if (z < -2 || z > 2)       return 'var(--amber)';
+  return 'var(--green)';
+}
+
+/**
+ * Render a small inline z-score gauge bar as an HTML string.
+ */
+function ucZGauge(z) {
+  if (z === null || isNaN(z)) return '';
+  const clamped = Math.max(-4, Math.min(4, z));
+  const pct     = ((clamped + 4) / 8) * 100;
+  const col     = ucZColour(z);
+  return `<div style="position:relative;height:8px;border-radius:4px;background:rgba(56,100,168,0.15);overflow:hidden">
+    <div style="position:absolute;left:0;top:0;height:100%;width:${pct.toFixed(1)}%;background:${col};border-radius:4px;transition:width .3s"></div>
+    <div style="position:absolute;left:50%;top:0;height:100%;width:1px;background:rgba(255,255,255,0.3)"></div>
+  </div>`;
+}
+
 // MAIN CALCULATION ENGINE
 function calcUnified() {
   // ── Read inputs ──

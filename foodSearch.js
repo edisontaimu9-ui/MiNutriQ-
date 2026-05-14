@@ -134,21 +134,36 @@
 
   /** Token-based fuzzy score (0–1, higher = better match) */
   function _fuzzyScore(query, target) {
-    const qTokens = _norm(query).split(' ').filter(Boolean);
-    const tNorm   = _norm(target);
-    if (!qTokens.length) return 0;
+    // Fix 1: deduplicate query tokens to prevent double-scoring
+    const uniqueTokens = [...new Set(_norm(query).split(' ').filter(Boolean))];
+    const tNorm        = _norm(target);
+    if (!uniqueTokens.length) return 0;
 
-    let score = 0;
-    for (const tok of qTokens) {
+    const isMultiWord  = uniqueTokens.length > 1;
+    const totalLen     = uniqueTokens.reduce((s, t) => s + t.length, 0);
+
+    let score         = 0;
+    let exactTokenHits = 0;
+
+    for (const tok of uniqueTokens) {
       if (tNorm.includes(tok)) {
-        score += tok.length / qTokens.reduce((s, t) => s + t.length, 0);
-      } else {
-        // Partial Levenshtein for single-token queries
+        score += tok.length / totalLen;
+        exactTokenHits++;
+      } else if (!isMultiWord) {
+        // Fix 2: Levenshtein/fuzzy matching only for single-word queries
         const tTokens = tNorm.split(' ');
         const minDist = Math.min(...tTokens.map(tt => _lev(tok, tt)));
         if (minDist <= 2) score += (1 - minDist / (tok.length + 1)) * 0.5;
       }
+      // For multi-word queries, non-matching tokens contribute nothing
     }
+
+    // Fix 2 (cont.): for multi-word queries, require at least half of unique
+    // tokens to match exactly — otherwise the result is a false positive
+    if (isMultiWord && exactTokenHits < Math.ceil(uniqueTokens.length / 2)) {
+      return 0;
+    }
+
     return Math.min(score, 1);
   }
 
@@ -191,10 +206,13 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1 — LOCAL DATABASE SEARCH
+  // LAYER 1 — LOCAL DATABASE SEARCH (Malawi FCT only)
+  // UCT Exchange List is intentionally excluded from general search — it is a
+  // diabetic carbohydrate exchange system and is only surfaced through its own
+  // dedicated clinical tools (Exchange List reference, meal planner, etc.).
   // ══════════════════════════════════════════════════════════════════════════
 
-  function _searchLocal(terms) {
+  function _searchLocal(terms, limit = 10) {
     const db = (typeof MALAWI_FCT !== 'undefined') ? MALAWI_FCT : [];
     if (!db.length) return [];
 
@@ -205,17 +223,18 @@
         const score = _fuzzyScore(term, food.name);
         if (score > best) best = score;
       }
-      if (best >= 0.3) {
+      if (best >= 0.45) {
         results.push({ food, score: best });
       }
     }
     results.sort((a, b) => b.score - a.score);
-    return results.slice(0, 5).map(r => {
+    return results.slice(0, limit).map(r => {
       const macros = _per100(r.food);
       return {
         ...r.food,
         ...macros,
         sourceUsed:      'local',
+        dbSource:        'Malawi FCT',
         confidenceScore: +r.score.toFixed(2),
         lastUpdated:     null,
         _raw:            r.food,
@@ -397,10 +416,12 @@
    * @param  {number} [limit=8]
    * @returns {Array}
    */
-  function searchLocal(query, limit = 8) {
+  function searchLocal(query, limit = 10) {
     if (!query || query.trim().length < 2) return [];
     const terms = _expandQuery(query);
-    return _searchLocal(terms).slice(0, limit);
+    // Pass limit into _searchLocal so both DBs get proportional representation
+    // before the final slice — avoids Malawi FCT always filling all slots.
+    return _searchLocal(terms, limit);
   }
 
   /**

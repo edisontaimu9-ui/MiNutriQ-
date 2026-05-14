@@ -103,13 +103,13 @@ if (typeof calculateBMI !== 'function') {
       '</style>',
       '<div class="nt-ec">',
       '  <div class="nt-eh">',
-      '    <span class="nt-ei">⚠️</span>',
+      '    <span class="nt-ei"></span>',
       '    <div>',
       '      <div class="nt-et">Unexpected Error</div>',
       '      <div class="nt-em">' + _esc(entry.msg || 'An unexpected error occurred.') + '</div>',
       '    </div>',
       '  </div>',
-      entry.src ? '<div class="nt-es">📍 ' + _esc(entry.src) + (entry.line ? ' : ' + entry.line : '') + '</div>' : '',
+      entry.src ? '<div class="nt-es"> ' + _esc(entry.src) + (entry.line ? ' : ' + entry.line : '') + '</div>' : '',
       entry.stack ? '<details><summary style="font-family:ui-monospace,monospace;font-size:9px;color:rgba(100,130,165,.6);cursor:pointer;margin-top:8px">Show stack trace</summary><div class="nt-ed">' + _esc(entry.stack) + '</div></details>' : '',
       '  <div class="nt-ebtns">',
       '    <button class="nt-btn nt-btn-p" onclick="location.reload()">↺ Reload App</button>',
@@ -170,7 +170,7 @@ if (typeof calculateBMI !== 'function') {
       } catch (err) {
         console.error('[Oasis][' + (moduleName || 'module') + '] Error:', err);
         if (typeof showToast === 'function') {
-          showToast('⚠ ' + (moduleName || 'Module') + ' error — see console', 'error', 4000);
+          showToast(' ' + (moduleName || 'Module') + ' error — see console', 'error', 4000);
         }
         _record('module', err.message, moduleName, 0, 0, err);
       }
@@ -551,7 +551,7 @@ const appState = {
     _hideInstallChip();
     _hideInstallBanner(true);
     _deferredPrompt = null;
-    if (typeof showToast === 'function') showToast('✅ Oasis installed!', 'success');
+    if (typeof showToast === 'function') showToast(' Oasis installed!', 'success');
   });
 
   // ── Header chip ────────────────────────────────────────────
@@ -653,7 +653,7 @@ const appState = {
     } else if (isIOS) {
       stepsHtml = `
         <div style="font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.7;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:14px">
-          ⚠ Open this page in <strong>Safari</strong> to install on iPhone/iPad.<br>
+           Open this page in <strong>Safari</strong> to install on iPhone/iPad.<br>
           Chrome on iOS does not support web app installation.
         </div>`;
     } else {
@@ -668,7 +668,7 @@ const appState = {
     modal.innerHTML = `
       <div style="width:100%;max-width:440px;background:#0f172a;border:1px solid rgba(29,233,212,0.25);border-radius:16px;overflow:hidden;box-shadow:0 -8px 48px rgba(0,0,0,0.6);animation:pwa-slide-up .3s cubic-bezier(.22,1,.36,1)">
         <div style="padding:18px 20px 14px;background:rgba(29,233,212,0.06);border-bottom:1px solid rgba(29,233,212,0.12);display:flex;align-items:center;gap:12px">
-          <div style="width:44px;height:44px;border-radius:12px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚕</div>
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"></div>
           <div>
             <div style="font-family:var(--cond);font-size:15px;font-weight:800;color:var(--text-bright);letter-spacing:1px">Oasis</div>
             <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">INSTALL AS APP</div>
@@ -768,7 +768,7 @@ window.ntRequestNotifications = async function() {
     _ntPushPref({ enabled: true });
     const reg = await navigator.serviceWorker.ready;
     await _ensurePushSubscription(reg).catch(() => {});
-    showToast && showToast('🔔 Notifications enabled!', 'success');
+    showToast && showToast(' Notifications enabled!', 'success');
   } else if (permission === 'denied') {
     showToast && showToast('Notifications blocked — enable in browser settings', 'info');
   }
@@ -783,7 +783,7 @@ window.ntDisableNotifications = async function() {
     if (sub) await sub.unsubscribe();
   } catch(_) {}
   _updateNotifSettingsUI(Notification.permission);
-  showToast && showToast('🔕 Notifications disabled', 'info');
+  showToast && showToast(' Notifications disabled', 'info');
 };
 
 /** Send a test notification to confirm everything is working */
@@ -792,7 +792,7 @@ window.ntTestNotification = async function() {
     showToast && showToast('Enable notifications first', 'info');
     return;
   }
-  await ntShowNotification('🔔 Oasis', 'Push notifications are working correctly!', {
+  await ntShowNotification(' Oasis', 'Push notifications are working correctly!', {
     tag:  'nt-test',
     data: { url: location.href },
   });
@@ -850,10 +850,10 @@ function _updateNotifSettingsUI(permission) {
   if (!statusEl) return;   // UI not rendered yet
 
   if (permission === 'denied') {
-    statusEl.textContent  = '🚫 Blocked by browser';
+    statusEl.textContent  = ' Blocked by browser';
     statusEl.style.color  = 'var(--red,#fb7185)';
   } else if (enabled) {
-    statusEl.textContent  = '✅ Enabled';
+    statusEl.textContent  = ' Enabled';
     statusEl.style.color  = 'var(--green,#4ade80)';
   } else {
     statusEl.textContent  = '○ Off';
@@ -1014,7 +1014,7 @@ async function initFirebase() {
 
   } catch (err) {
     console.error('[Oasis] Firebase init failed:', err);
-    setStatus('offline', '💾 Offline — data saved locally (Firebase unavailable)');
+    setStatus('offline', ' Offline — data saved locally (Firebase unavailable)');
   }
 }
 
@@ -1501,7 +1501,7 @@ function _showNTPUpdateBanner(version, notes) {
   const safeNotes = notes && notes !== '—' ? ` — ${notes.slice(0, 120)}` : '';
 
   banner.innerHTML = `
-    <span style="font-size:16px;line-height:1">🔔</span>
+    <span style="font-size:16px;line-height:1"></span>
     <div style="flex:1;line-height:1.5">
       <strong style="color:var(--teal,#1de9d4)">Update v${version} available</strong>
       <span style="color:rgba(200,216,240,0.75)">${safeNotes}</span>
@@ -1549,7 +1549,7 @@ function _showNTPUpdateBanner(version, notes) {
 
 // Alias so the old call-site works regardless of mode
 function initOfflineMode() {
-  setStatus('offline', '💾 Local Storage — All data saved on this device');
+  setStatus('offline', ' Local Storage — All data saved on this device');
   renderHistory();
 }
 
@@ -1738,10 +1738,10 @@ const PRESET_PILLS = [
   { id:'icu',          label:'ICU' },
   { id:'ward',         label:'General Ward' },
   { id:'sepsis',       label:'Sepsis' },
-  { id:'ards',         label:'🫁 ARDS' },
+  { id:'ards',         label:' ARDS' },
   { id:'burns',        label:'Burns' },
   { id:'pancreatitis', label:'Pancreatitis' },
-  { id:'trauma',       label:'🩹 Trauma' },
+  { id:'trauma',       label:' Trauma' },
   { id:'renal',        label:'Renal (CRRT)' },
 ];
 
@@ -1961,7 +1961,7 @@ function exportDetailedReport() {
   .val{font-weight:700;color:#005e52;font-size:14px}
   @media print{body{padding:12px}}
 </style></head><body>
-<h1>🩺 Oasis — Nutrition Report</h1>
+<h1> Oasis — Nutrition Report</h1>
 <p style="color:#666;font-size:11px">Generated: ${new Date().toLocaleString()} &nbsp;|&nbsp; Session: ${SESSION_ID}</p>
 <h2>Patient Summary</h2>
 <table><tr><th>Field</th><th>Value</th></tr>
@@ -1981,8 +1981,8 @@ function exportDetailedReport() {
   <tr><td>Estimated Fluid Need</td><td class="val">${fluidLow}–${fluidHigh} mL/day</td><td>25–30 mL/kg/day (${d.weight} kg)</td></tr>
   <tr><td>Feeding Route</td><td>${d.route}</td><td></td></tr>
 </table>
-${d.rfRisk >= 2 ? `<div class="warning">⚠ <strong>REFEEDING SYNDROME RISK (${d.rfRisk >= 2 ? 'HIGH' : 'MODERATE'}):</strong> Start at ${d.rfRisk >= 2 ? '5' : '10'} kcal/kg/day. IV Thiamine 200–300 mg BEFORE feeds. Monitor K⁺, PO₄, Mg²⁺ 2–3× daily.</div>` : ''}
-<div class="disclaimer">⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation. This document does not constitute a medical prescription.</div>
+${d.rfRisk >= 2 ? `<div class="warning"> <strong>REFEEDING SYNDROME RISK (${d.rfRisk >= 2 ? 'HIGH' : 'MODERATE'}):</strong> Start at ${d.rfRisk >= 2 ? '5' : '10'} kcal/kg/day. IV Thiamine 200–300 mg BEFORE feeds. Monitor K⁺, PO₄, Mg²⁺ 2–3× daily.</div>` : ''}
+<div class="disclaimer"> <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation. This document does not constitute a medical prescription.</div>
 </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 400);
@@ -2032,6 +2032,20 @@ function clearHistory() {
   renderHistory();
   try { renderActivityStrip(); } catch(e) {}
   showToast('History cleared');
+}
+
+/** Export all history entries as a JSON download. */
+function exportHistory() {
+  const hist = DataService.get('history') || [];
+  if (!hist.length) { showToast('No history to export', 'warning'); return; }
+  const blob = new Blob([JSON.stringify(hist, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: 'nutri_history.json' });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('History exported as JSON', 'success');
 }
 
 /** Export all history entries as a CSV download. */
@@ -2110,7 +2124,7 @@ function saveToPDF(sectionId, title) {
 </head>
 <body>
   <div class="pdf-header">
-    <h1>🩺 Oasis</h1>
+    <h1> Oasis</h1>
     <div class="pdf-meta">
       ${pdfTitle}<br>
       Generated: ${timestamp}
@@ -2118,7 +2132,7 @@ function saveToPDF(sectionId, title) {
   </div>
   ${html}
   <div class="pdf-disclaimer">
-    ⚠ <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation.
+     <strong>Clinical Decision Support Only.</strong> This report is generated by Oasis as a clinical decision support aid. All prescriptions and dietary interventions must be reviewed and authorised by a qualified dietitian or clinician before implementation.
   </div>
   <div class="pdf-footer">
     Oasis · ASPEN 2016 / ASPEN 2022 · ESPEN 2019 · NICE CG32 · KDIGO · EASL · WHO<br>
@@ -2538,6 +2552,17 @@ function loadSettingsUI(){
   document.querySelectorAll('.font-swatch').forEach(sw=>sw.style.border='2px solid transparent');
   const ftEl=document.getElementById('font-'+(s.font||'system'));
   if(ftEl) ftEl.style.border='2px solid var(--teal)';
+  // Restore unit preference chips
+  const savedWt = s.defWtUnit || 'kg';
+  const savedHt = s.defHtUnit || 'cm';
+  const wtEl = document.getElementById('def-wt-unit');
+  const htEl = document.getElementById('def-ht-unit');
+  if (wtEl) wtEl.value = savedWt;
+  if (htEl) htEl.value = savedHt;
+  document.getElementById('wt-chip-kg')?.classList.toggle('active', savedWt === 'kg');
+  document.getElementById('wt-chip-lb')?.classList.toggle('active', savedWt === 'lb');
+  document.getElementById('ht-chip-cm')?.classList.toggle('active', savedHt === 'cm');
+  document.getElementById('ht-chip-in')?.classList.toggle('active', savedHt === 'in');
 }
 
 // ── Auto-save settings (debounced, silent) ───────────────────────
@@ -2559,6 +2584,11 @@ function autoSaveSettings() {
       if (pgEl) s.defProteinGuide = pgEl.value;
       const fontSel = document.getElementById('font-select');
       if (fontSel && fontSel.value) s.font = fontSel.value;
+      // Unit preferences
+      const wtUnitEl = document.getElementById('def-wt-unit');
+      if (wtUnitEl) s.defWtUnit = wtUnitEl.value;
+      const htUnitEl = document.getElementById('def-ht-unit');
+      if (htUnitEl) s.defHtUnit = htUnitEl.value;
       s.wallpaper = s.wallpaper || 'none';
       s.font      = s.font      || 'system';
       s.accent    = s.accent    || 'cyan';
@@ -2602,6 +2632,39 @@ function autoSaveSettings() {
   }, 600); // 600ms debounce
 }
 
+// ── Unit Preference (Weight & Height chips in Settings drawer) ───
+// Called by the kg/lb and cm/in chip buttons. Updates chip active
+// states and immediately persists via DataService — no debounce
+// needed since the user made a deliberate discrete choice.
+function applyUnitPref() {
+  try {
+    const wt = document.getElementById('def-wt-unit')?.value || 'kg';
+    const ht = document.getElementById('def-ht-unit')?.value || 'cm';
+
+    // Chip active states
+    document.getElementById('wt-chip-kg')?.classList.toggle('active', wt === 'kg');
+    document.getElementById('wt-chip-lb')?.classList.toggle('active', wt === 'lb');
+    document.getElementById('ht-chip-cm')?.classList.toggle('active', ht === 'cm');
+    document.getElementById('ht-chip-in')?.classList.toggle('active', ht === 'in');
+
+    // Persist — merge into currentSettings and save
+    currentSettings = currentSettings || {};
+    currentSettings.defWtUnit = wt;
+    currentSettings.defHtUnit = ht;
+    DataService.save('settings', currentSettings);
+
+    // Autosave indicator feedback
+    const ind = document.getElementById('sdr-autosave-ind');
+    if (ind) {
+      ind.style.opacity = '1';
+      clearTimeout(ind._t);
+      ind._t = setTimeout(() => { ind.style.opacity = '0'; }, 1800);
+    }
+  } catch (e) {
+    console.warn('[Settings] applyUnitPref:', e);
+  }
+}
+
 function saveSettings(){
   const s={...currentSettings};
   ['tog-compact','tog-statusbar','tog-scroll','tog-analytics'].forEach(id=>{const el=document.getElementById(id);if(el)s[id]=el.checked;});
@@ -2611,6 +2674,11 @@ function saveSettings(){
   // Persist font and wallpaper from currentSettings (set by applyFont/applyWallpaper)
   // Also sync from the font-select dropdown if it was changed without clicking a swatch
   const fontSel=document.getElementById('font-select'); if(fontSel && fontSel.value) s.font=fontSel.value;
+  // Unit preferences
+  const wtUnitEl = document.getElementById('def-wt-unit');
+  if (wtUnitEl) s.defWtUnit = wtUnitEl.value;
+  const htUnitEl = document.getElementById('def-ht-unit');
+  if (htUnitEl) s.defHtUnit = htUnitEl.value;
   s.wallpaper = s.wallpaper || 'none';
   s.font      = s.font      || 'system';
   s.accent    = s.accent    || 'cyan';
@@ -2724,11 +2792,11 @@ function rfAutoAssess() {
   if (highAny > 0 || medCount >= 2) {
     riskLevel = 'HIGH RISK'; riskColor = 'var(--red)';
     riskBg = 'rgba(255,64,96,.12)';
-    riskText = '🚨 REFEEDING SYNDROME HIGH RISK';
+    riskText = ' REFEEDING SYNDROME HIGH RISK';
   } else if (medCount === 1 || (medCount >= 1 && addCount >= 1) || addCount >= 2) {
     riskLevel = 'MODERATE RISK'; riskColor = 'var(--amber)';
     riskBg = 'rgba(255,184,48,.10)';
-    riskText = '⚠ MODERATE REFEEDING RISK';
+    riskText = ' MODERATE REFEEDING RISK';
   } else if (addCount === 1) {
     riskLevel = 'LOW–MODERATE'; riskColor = '#7aA0c8';
     riskBg = 'rgba(77,159,255,.08)';
@@ -2741,7 +2809,7 @@ function rfAutoAssess() {
   } else {
     riskLevel = 'LOW RISK'; riskColor = 'var(--green)';
     riskBg = 'rgba(0,230,118,.08)';
-    riskText = '✅ LOW REFEEDING RISK';
+    riskText = ' LOW REFEEDING RISK';
   }
 
   const badge = document.getElementById('rf-live-badge');
@@ -3125,7 +3193,7 @@ const NutriCDE = (() => {
       if (['ckd_g3a','ckd_g3b','ckd_g4','ckd_g5','ckd','hd','pd'].includes(renal))
         notes.push('Higher CHO % helps spare protein for tissue maintenance (protein-sparing effect). Avoid simple sugars — glucose load worsens CKD-related insulin resistance. Restrict K⁺ in CHO food choices.');
       if (glucose && glucose > 10)
-        notes.push(`⚠ BGL ${glucose} mmol/L — Hyperglycaemia active. Reduce CHO density. Initiate insulin protocol. NICE-SUGAR target: 6.1–10 mmol/L.`);
+        notes.push(` BGL ${glucose} mmol/L — Hyperglycaemia active. Reduce CHO density. Initiate insulin protocol. NICE-SUGAR target: 6.1–10 mmol/L.`);
       if (hepatic === 'severe')
         notes.push('Late Evening Snack (LES) mandatory — prevents overnight protein catabolism (EASL 2019). Complex CHO preferred; avoid prolonged fasting >4h. BCAA supplement if encephalopathy persists despite adequate protein.');
       if (bmi >= 30)
@@ -3455,7 +3523,7 @@ const NutriCDE = (() => {
       // ── BIOCHEMICAL ──────────────────────────────────────────────────────
       if (isRefeeding) {
         const rfFreq = rfRiskLevel === 'HIGH' ? F.Q6H : F.Q12H;
-        d.biochemical.push({ param:'Serum phosphate', freq: rfFreq, note:'🚨 Priority — hypophosphataemia is the hallmark of refeeding syndrome. HOLD feeds if PO₄ < 0.6 mmol/L. Target ≥ 0.8 mmol/L before advancing calories.' });
+        d.biochemical.push({ param:'Serum phosphate', freq: rfFreq, note:' Priority — hypophosphataemia is the hallmark of refeeding syndrome. HOLD feeds if PO₄ < 0.6 mmol/L. Target ≥ 0.8 mmol/L before advancing calories.' });
         d.biochemical.push({ param:'Serum potassium', freq: rfFreq, note:'Intracellular shift during refeeding → hypokalaemia → life-threatening arrhythmia. Target 3.5–5.0 mmol/L.' });
         d.biochemical.push({ param:'Serum magnesium', freq: rfFreq, note:'Hypomagnesaemia renders hypokalaemia refractory to replacement. Correct before advancing feeds. Target ≥ 0.75 mmol/L.' });
         d.biochemical.push({ param:'Thiamine status / clinical assessment', freq: F.STAT, note:'Administer IV thiamine 200–300 mg BEFORE any feed is commenced in HIGH risk. Do not wait for lab result.' });
@@ -3606,13 +3674,13 @@ const NutriCDE = (() => {
     renderSafetyFlags(flags) {
       if (!flags || !flags.length) return '';
       const sevMap = {
-        DANGER:  { bg:'rgba(255,64,96,.1)',  border:'rgba(255,64,96,.45)',  col:'#ff4060', icon:'🚨' },
-        WARNING: { bg:'rgba(255,184,48,.08)',border:'rgba(255,184,48,.4)',  col:'#ffb830', icon:'⚠'  },
-        INFO:    { bg:'rgba(29,233,212,.07)',border:'rgba(29,233,212,.3)', col:'#1de9d4', icon:'💡' }
+        DANGER:  { bg:'rgba(255,64,96,.1)',  border:'rgba(255,64,96,.45)',  col:'#ff4060', icon:'' },
+        WARNING: { bg:'rgba(255,184,48,.08)',border:'rgba(255,184,48,.4)',  col:'#ffb830', icon:''  },
+        INFO:    { bg:'rgba(29,233,212,.07)',border:'rgba(29,233,212,.3)', col:'#1de9d4', icon:'' }
       };
       return `
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ff4060;text-transform:uppercase;margin-bottom:4px">🛡 CLINICAL SAFETY — ${flags.length} ALERT${flags.length>1?'S':''}</div>
+        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ff4060;text-transform:uppercase;margin-bottom:4px"> CLINICAL SAFETY — ${flags.length} ALERT${flags.length>1?'S':''}</div>
         ${flags.map(f => {
           const s = sevMap[f.severity] || sevMap.INFO;
           return `<div style="background:${s.bg};border:1px solid ${s.border};border-left:4px solid ${s.col};border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:10px;line-height:1.7">
@@ -3626,16 +3694,16 @@ const NutriCDE = (() => {
     // Energy-protein coupling badge
     renderCouplingBadge(coupling) {
       if (coupling.status === 'OK')
-        return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:4px 10px">✅ NPC:N ${coupling.npCalNRatio} kcal/g N — Adequate energy-protein coupling</div>`;
+        return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:4px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — Adequate energy-protein coupling</div>`;
       const col = coupling.severity === 'CRITICAL' ? '#ff4060' : '#ffb830';
-      return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:${col};background:rgba(255,184,48,.09);border:1px solid rgba(255,184,48,.35);border-radius:5px;padding:5px 10px">⚠ NPC:N ${coupling.npCalNRatio} kcal/g N — ${coupling.severity}: protein may be oxidised for energy</div>`;
+      return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:${col};background:rgba(255,184,48,.09);border:1px solid rgba(255,184,48,.35);border-radius:5px;padding:5px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — ${coupling.severity}: protein may be oxidised for energy</div>`;
     },
 
     // Macro contextual notes
     renderMacroNotes(notes) {
       if (!notes || !notes.length) return '';
       return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-        ${notes.map(n => `<div style="font-family:var(--mono);font-size:10px;color:var(--text);background:rgba(29,233,212,.05);border:1px solid rgba(29,233,212,.15);border-radius:5px;padding:8px 12px;line-height:1.6">💡 ${n}</div>`).join('')}
+        ${notes.map(n => `<div style="font-family:var(--mono);font-size:10px;color:var(--text);background:rgba(29,233,212,.05);border:1px solid rgba(29,233,212,.15);border-radius:5px;padding:8px 12px;line-height:1.6"> ${n}</div>`).join('')}
       </div>`;
     },
 
@@ -3646,11 +3714,11 @@ const NutriCDE = (() => {
 
       // Domain config: id, label, colour accent, icon
       const domainDefs = [
-        { key:'anthropometric', label:'Anthropometric',  col:'#1de9d4', icon:'📐' },
-        { key:'biochemical',    label:'Biochemical',     col:'#60a5fa', icon:'🧪' },
-        { key:'clinical',       label:'Clinical',        col:'#fb923c', icon:'🩺' },
-        { key:'dietary',        label:'Dietary Intake',  col:'#a78bfa', icon:'🍽' },
-        { key:'others',         label:'Other',           col:'#34d399', icon:'📋' },
+        { key:'anthropometric', label:'Anthropometric',  col:'#1de9d4', icon:'' },
+        { key:'biochemical',    label:'Biochemical',     col:'#60a5fa', icon:'' },
+        { key:'clinical',       label:'Clinical',        col:'#fb923c', icon:'' },
+        { key:'dietary',        label:'Dietary Intake',  col:'#a78bfa', icon:'' },
+        { key:'others',         label:'Other',           col:'#34d399', icon:'' },
       ];
 
       // Frequency tag renderer
@@ -3797,7 +3865,7 @@ function calculate() {
   if (validationErrors.length > 0) {
     const alertsBox = document.getElementById('alerts-box');
     if (alertsBox) {
-      alertsBox.innerHTML = `<div class="alert danger"><span class="ai">⛔</span><div>
+      alertsBox.innerHTML = `<div class="alert danger"><span class="ai"></span><div>
         <strong>Invalid input detected. Please check patient measurements.</strong><br>
         ${validationErrors.map(e => `• ${e}`).join('<br>')}
       </div></div>`;
@@ -3908,7 +3976,7 @@ function calculate() {
     if(rfRiskLevel==='HIGH'){
       energyLabel='Energy restricted due to high refeeding risk (≤5 kcal/kg/day). Gradual advancement required.';
     } else {
-      energyLabel+=' ⚠ Refeeding cap (10 kcal/kg — MODERATE risk)';
+      energyLabel+='  Refeeding cap (10 kcal/kg — MODERATE risk)';
     }
   }
   const netEnergy=Math.max(0,energy-ivGluc-propofolKcal);
@@ -4031,11 +4099,11 @@ function calculate() {
     if (diagnosis==='burns')       return { cho:{lo:50,hi:65,note:'High CHO to meet caloric demands; max 5 mg/kg/min glucose'},  fat:{lo:15,hi:30,note:'Moderate fat; MCT/LCT mix; avoid excess (immunosuppressive)'}, limitNote:'Omega-3 supplementation recommended in burns. Max glucose oxidation rate ≤5 mg/kg/min.' };
     if (diagnosis==='sepsis')      return { cho:{lo:40,hi:55,note:'Moderate CHO — avoid overfeeding; insulin resistance common'},    fat:{lo:25,hi:40,note:'Moderate fat; omega-3 may benefit immune modulation'},     limitNote:'Avoid hyperglycaemia (>10 mmol/L). Insulin resistance is expected.' };
     if (diagnosis==='neuro')       return { cho:{lo:50,hi:60,note:'Standard CHO; glucose preferred substrate for injured brain'},   fat:{lo:20,hi:35,note:'Standard fat'},                                              limitNote:'Ketogenic diets being studied in TBI; not routine. Maintain normoglycaemia.' };
-    if (diagnosis==='pancreatitis')return { cho:{lo:50,hi:60,note:'Standard or jejunal EN; limit if hypertriglyceridaemia'},        fat:{lo:15,hi:25,note:'⚠ Restrict fat if serum TG >5.6 mmol/L; prefer MCT'},       limitNote:'If TG >5.6 mmol/L: strict fat restriction, MCT oil only. Jejunal EN preferred over PN.' };
+    if (diagnosis==='pancreatitis')return { cho:{lo:50,hi:60,note:'Standard or jejunal EN; limit if hypertriglyceridaemia'},        fat:{lo:15,hi:25,note:' Restrict fat if serum TG >5.6 mmol/L; prefer MCT'},       limitNote:'If TG >5.6 mmol/L: strict fat restriction, MCT oil only. Jejunal EN preferred over PN.' };
     if (renal==='ckd'||renal==='aki_no_rrt') return { cho:{lo:50,hi:65,note:'Higher CHO to spare protein; avoid simple sugars in DM'},fat:{lo:20,hi:30,note:'Standard fat; restrict P-containing lipids'},              limitNote:'Restrict K⁺, PO₄, Na⁺. Avoid high-K and high-P foods. Energy dense formula preferred.' };
     if (renal==='aki_rrt'||renal==='hd')  return { cho:{lo:45,hi:55,note:'Moderate CHO; glycaemic control critical on HD'},         fat:{lo:25,hi:35,note:'Standard fat'},                                              limitNote:'Higher protein needed (1.5–2.5 g/kg). Supplement water-soluble vitamins lost in dialysate.' };
     if (hepatic==='severe')        return { cho:{lo:45,hi:60,note:'Standard CHO; complex carbs preferred; avoid prolonged fasting'},fat:{lo:25,hi:35,note:'MCT-enriched if steatorrhoea; standard otherwise'},          limitNote:'Late evening snack (LES) recommended. Complex CHO preferred. BCAA supplement if encephalopathy.' };
-    if (diagnosis==='copd')        return { cho:{lo:35,hi:50,note:'⚠ Reduced CHO — high CHO raises RQ, worsens CO₂ retention'},   fat:{lo:30,hi:45,note:'Higher fat — reduces CO₂ production vs CHO'},               limitNote:'Calorie-dense, low-volume formula. High-fat/low-CHO enteral formula (e.g. Pulmocare).' };
+    if (diagnosis==='copd')        return { cho:{lo:35,hi:50,note:' Reduced CHO — high CHO raises RQ, worsens CO₂ retention'},   fat:{lo:30,hi:45,note:'Higher fat — reduces CO₂ production vs CHO'},               limitNote:'Calorie-dense, low-volume formula. High-fat/low-CHO enteral formula (e.g. Pulmocare).' };
     if (diagnosis==='cardiac')     return { cho:{lo:45,hi:55,note:'Standard CHO; complex carbs, low refined sugar'},               fat:{lo:20,hi:30,note:'Restrict saturated fat <7%; prefer MUFA/PUFA'},             limitNote:'Na restriction 1.5–2g/day. Fluid restriction if heart failure. Omega-3 supplementation.' };
     if (['ascvd','coronary_hd','cvd_high_risk'].includes(diagnosis))
       return { cho:{lo:45,hi:55,note:'Complex CHO, low GI; avoid refined sugars + white starch'},
@@ -4050,7 +4118,7 @@ function calculate() {
                fat:{lo:25,hi:35,note:'SFA <5–6%E strictly · Trans fat: eliminate · Replace with MUFA/PUFA'},
                limitNote:'SFA <5–6%E is primary LDL target. Plant sterols/stanols 2–3 g/day add 5–15% LDL reduction. Soluble fiber specifically binds bile acids → ↓ LDL. Dietary cholesterol: no strict limit (guidelines 2020) — but limit high-SFA cholesterol foods contextually. Source: Krause 16th ed. Ch. 33 / AHA 2019.' };
     if (diagnosis==='hypertriglyc')
-      return { cho:{lo:40,hi:50,note:'⚠ Reduced CHO — refined sugars + refined starch worsen TG; choose low GI whole foods'},
+      return { cho:{lo:40,hi:50,note:' Reduced CHO — refined sugars + refined starch worsen TG; choose low GI whole foods'},
                fat:{lo:25,hi:35,note:'Emphasise omega-3 (EPA+DHA) ≥2 g/day · Avoid SFA excess'},
                limitNote:'Omega-3 (EPA+DHA) ↓ TG 20–50%. Eliminate alcohol — major TG driver. Weight loss 5–10% significantly reduces TG. Avoid sugar-sweetened beverages completely. If TG >5.6 mmol/L (>500 mg/dL): fat restriction ≤15%E, MCT oil substitution, monitor for pancreatitis risk. Source: Krause 16th ed. Ch. 33 / AHA 2019.' };
     if (diagnosis==='low_hdl')
@@ -4088,11 +4156,11 @@ function calculate() {
     if (diagnosis==='iron_overload') return {
       cho:{lo:50,hi:65,note:'Higher plant-based CHO — whole grains, legumes reduce heme iron load'},
       fat:{lo:20,hi:30,note:'Reduce meat fat — shift to plant oils; avoid excessive saturated fat (liver disease risk)'},
-      limitNote:'⚠ RESTRICT: meat, fish, poultry (heme iron). Avoid: vitamin C supplements, iron-fortified foods, iron-containing supplements, alcohol. Plant-based diet preferred. Phytates (whole grains, legumes) naturally inhibit iron absorption — beneficial. Medical treatment: phlebotomy or chelation (deferoxamine/deferasirox).' };
+      limitNote:' RESTRICT: meat, fish, poultry (heme iron). Avoid: vitamin C supplements, iron-fortified foods, iron-containing supplements, alcohol. Plant-based diet preferred. Phytates (whole grains, legumes) naturally inhibit iron absorption — beneficial. Medical treatment: phlebotomy or chelation (deferoxamine/deferasirox).' };
     if (diagnosis==='anemia_chronic_dis') return {
       cho:{lo:45,hi:60,note:'Standard CHO — adjust for underlying disease (CKD, DM, liver disease)'},
       fat:{lo:20,hi:35,note:'Standard fat — adjust per underlying condition'},
-      limitNote:'⚠ Do NOT supplement iron — ferritin is normal or elevated. ACD is driven by hepcidin-mediated iron sequestration (inflammatory state), not iron deficiency. Treat underlying disease. ESAs or transfusion only in severe refractory cases. Differentiate from IDA using soluble transferrin receptors (STFR): elevated in IDA, normal in ACD.' };
+      limitNote:' Do NOT supplement iron — ferritin is normal or elevated. ACD is driven by hepcidin-mediated iron sequestration (inflammatory state), not iron deficiency. Treat underlying disease. ESAs or transfusion only in severe refractory cases. Differentiate from IDA using soluble transferrin receptors (STFR): elevated in IDA, normal in ACD.' };
     if (diagnosis==='sports_anemia') return {
       cho:{lo:50,hi:60,note:'Adequate CHO — carbohydrate timing important for performance; refuel post-exercise'},
       fat:{lo:20,hi:35,note:'Standard fat — omega-3 may support anti-inflammatory recovery'},
@@ -4200,7 +4268,7 @@ function calculate() {
     document.getElementById('recall-target-fluid').value = _fld;
     if(document.getElementById('recall-wt')) document.getElementById('recall-wt').value = parseFloat(weight).toFixed(1);
     const rss = document.getElementById('recall-sync-status');
-    if(rss) rss.innerHTML='<span style="color:var(--green)">✅ Auto-synced from Calculator</span>';
+    if(rss) rss.innerHTML='<span style="color:var(--green)"> Auto-synced from Calculator</span>';
     updateRecallTotals();
   } catch(e){}
   try { syncMealPlanFromCalc(); } catch(e){}
@@ -4264,7 +4332,7 @@ function calculate() {
     <tr><td>Continuous rate</td><td class="c-t">${enRate} mL/hr</td></tr>
     <tr><td>Starter rate (Day 1)</td><td class="c-a">${Math.round(enRate*0.5)} mL/hr</td></tr>
     <tr><td>Target rate</td><td>${isRefeeding && rfRiskLevel==='HIGH' ? `${enRate} mL/hr — advance slowly over 4–7 days due to high refeeding risk` : `${enRate} mL/hr (Day 2–3)`}</td></tr>`:''}
-    <tr><td>Initiation</td><td class="c-a">${isRefeeding?'⚠ Slow — refeeding precautions':'Standard protocol'}</td></tr>
+    <tr><td>Initiation</td><td class="c-a">${isRefeeding?' Slow — refeeding precautions':'Standard protocol'}</td></tr>
     ${route==='enteral'?`<tr><td>EN tolerance</td><td>Routine gastric residual volume (GRV) monitoring is not recommended. Assess only if clinical signs of intolerance are present (vomiting, distension, aspiration risk) (ASPEN/SCCM 2016).</td></tr>`:''}
     <tr><td>BGL target</td><td>6.1–10.0 mmol/L</td></tr>
     <tr><td>Reassess</td><td>Every 24–48h</td></tr>`;
@@ -4280,7 +4348,7 @@ function calculate() {
   if (macroBarsEl) {
     if (isRefeeding && rfRiskLevel === 'HIGH') {
       macroBarsEl.innerHTML = `<div style="grid-column:1/-1;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--red);line-height:1.6">
-        ⚠ Macronutrient percentage targets are not displayed during high-refeeding-risk phase. Energy delivery is intentionally restricted (≤5 kcal/kg/day). Protein is prioritised over total energy. Macro distribution becomes clinically relevant once energy is advanced to ≥15 kcal/kg/day (Day 5–7 onwards).
+         Macronutrient percentage targets are not displayed during high-refeeding-risk phase. Energy delivery is intentionally restricted (≤5 kcal/kg/day). Protein is prioritised over total energy. Macro distribution becomes clinically relevant once energy is advanced to ≥15 kcal/kg/day (Day 5–7 onwards).
       </div>`;
     } else {
     // Protein-first: show residual-based CHO and fat percentages
@@ -4339,7 +4407,7 @@ function calculate() {
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-bright);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.gLo}${m.gLo !== m.gHi ? '–'+m.gHi : ''} g/day</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.5;word-break:break-word">${m.note}</div>
       </div>`).join('') +
-      (macroRanges.limitNote ? `<div style="grid-column:1/-1;background:rgba(255,184,48,.07);border:1px solid rgba(255,184,48,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--amber);line-height:1.6">⚠ ${macroRanges.limitNote}</div>` : '');
+      (macroRanges.limitNote ? `<div style="grid-column:1/-1;background:rgba(255,184,48,.07);border:1px solid rgba(255,184,48,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--amber);line-height:1.6"> ${macroRanges.limitNote}</div>` : '');
     } // end else (not HIGH refeeding)
   }
 
@@ -4373,19 +4441,19 @@ function calculate() {
       ['Trans Fat',               'c-r', 'Eliminate completely — no safe level (raises LDL, lowers HDL)'],
       ['Total Fat Type',          '',    'Replace SFA with MUFA (olive oil, avocado, nuts) + PUFA (omega-3, sunflower)'],
       ['Soluble Fibre Target',    'c-t', '25–30 g/day total · 10–25 g soluble (oats, psyllium, barley, legumes)'],
-      ['Sodium Limit',            _bpHigh?'c-r':'', _bpHigh ? '⚠ ≤1500 mg/day — BP elevated · DASH diet recommended' : '≤2400 mg/day (optimal: 1500 mg/day with hypertension)'],
+      ['Sodium Limit',            _bpHigh?'c-r':'', _bpHigh ? ' ≤1500 mg/day — BP elevated · DASH diet recommended' : '≤2400 mg/day (optimal: 1500 mg/day with hypertension)'],
       ['Omega-3 (EPA+DHA)',       'c-t', '≥2 servings fatty fish/week · Oily fish: salmon, sardines, mackerel, herring' + (_tgHigh ? ' · If TG elevated: 2–4 g/day supplement may be indicated' : '')],
       ['Plant Sterols/Stanols',   '',    '2 g/day (margarine, supplements) — reduces LDL by 5–15% additionally'],
       ['Dietary Pattern',         'c-t', ['ascvd','coronary_hd','cvd_high_risk','familial_hc'].includes(diagnosis) ? 'Mediterranean diet (primary recommendation) or DASH diet' : diagnosis==='hypertension' ? 'DASH diet (primary) — high fruit, veg, whole grain, low-fat dairy · Low sodium' : 'Mediterranean or DASH dietary pattern as framework'],
       ['Physical Activity',       'c-t', '≥150 min/week moderate-intensity OR ≥75 min/week vigorous aerobic activity'],
-      ['Weight Goal',             _obese?'c-r':_overweight?'':'' , _obese ? '⚠ Weight reduction priority — improves LDL, HDL, TG, BP, hs-CRP simultaneously' : _overweight ? 'Weight management recommended — target BMI <25 kg/m²' : 'Maintain healthy weight · BMI ' + bmi.toFixed(1) + ' kg/m²'],
+      ['Weight Goal',             _obese?'c-r':_overweight?'':'' , _obese ? ' Weight reduction priority — improves LDL, HDL, TG, BP, hs-CRP simultaneously' : _overweight ? 'Weight management recommended — target BMI <25 kg/m²' : 'Maintain healthy weight · BMI ' + bmi.toFixed(1) + ' kg/m²'],
     ];
 
     // ── Conditional triggers ───────────────────────────────────────
     const _cvdTriggers = [];
     if (_ldlHigh)  _cvdTriggers.push({ label:'↑ LDL → CVD Nutrition Intervention', cls:'c-r',
       action:'Aggressive SFA restriction (<5–6%E) · Soluble fiber ≥25 g/day · Plant sterols 2 g/day · Statin discussion indicated' });
-    if (_tgVeryHigh) _cvdTriggers.push({ label:'⚠ TG ≥500 mg/dL — Pancreatitis Risk', cls:'c-r',
+    if (_tgVeryHigh) _cvdTriggers.push({ label:' TG ≥500 mg/dL — Pancreatitis Risk', cls:'c-r',
       action:'Fat restriction ≤15–20%E total · MCT oil substitution · Eliminate alcohol · Monitor for acute pancreatitis' });
     else if (_tgHigh) _cvdTriggers.push({ label:'↑ TG → Anti-TG Intervention', cls:'c-r',
       action:'Eliminate sugar-sweetened beverages + refined CHO · Omega-3 ≥2 g/day · Restrict alcohol · Weight loss' });
@@ -4428,13 +4496,13 @@ function calculate() {
       </div>
       <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px">Lifestyle Intervention Plan</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px">
-        <div class="pi"><span class="k">Omega-3 Fatty Acids</span><span class="v c-t">${_tgHigh ? '⚠ 2–4 g/day EPA+DHA (supplement) + oily fish ≥2×/week' : 'Oily fish ≥2 servings/week (salmon, sardines, mackerel)'}</span></div>
+        <div class="pi"><span class="k">Omega-3 Fatty Acids</span><span class="v c-t">${_tgHigh ? ' 2–4 g/day EPA+DHA (supplement) + oily fish ≥2×/week' : 'Oily fish ≥2 servings/week (salmon, sardines, mackerel)'}</span></div>
         <div class="pi"><span class="k">Dietary Fibre</span><span class="v c-t">${_ldlHigh ? '≥30 g/day — prioritise soluble fibre (psyllium, oats, legumes)' : '25–30 g/day total'}</span></div>
         <div class="pi"><span class="k">Plant Sterols</span><span class="v">${_ldlHigh ? '2–3 g/day (fortified margarine, supplements) — ↓ LDL 5–15%' : '2 g/day if LDL-lowering needed'}</span></div>
-        <div class="pi"><span class="k">Potassium-rich Foods</span><span class="v ${_bpHigh?'c-t':''}">${_bpHigh ? '⚠ Prioritise: banana, sweet potato, legumes, spinach, yoghurt (target 4700 mg/day)' : 'Encourage: fruits, vegetables, legumes, dairy'}</span></div>
-        <div class="pi"><span class="k">Antioxidants</span><span class="v">${_crpHigh ? '⚠ Increase: berries, dark vegetables, green tea, extra virgin olive oil (anti-inflammatory)' : 'Fruits, vegetables, EVOO, green tea — dietary sources'}</span></div>
-        <div class="pi"><span class="k">Alcohol</span><span class="v ${_tgHigh?'c-r':''}">${_tgHigh ? '⛔ AVOID — major TG-raising agent' : diagnosis==='hypertension' ? '≤1 drink/day (women) / ≤2/day (men)' : 'Limit to ≤1–2 drinks/day if at all'}</span></div>
-        <div class="pi"><span class="k">Added Sugars / SSBs</span><span class="v c-r">${_tgHigh ? '⛔ Eliminate — primary dietary driver of TG elevation' : 'Restrict: <10%E · No sugar-sweetened beverages'}</span></div>
+        <div class="pi"><span class="k">Potassium-rich Foods</span><span class="v ${_bpHigh?'c-t':''}">${_bpHigh ? ' Prioritise: banana, sweet potato, legumes, spinach, yoghurt (target 4700 mg/day)' : 'Encourage: fruits, vegetables, legumes, dairy'}</span></div>
+        <div class="pi"><span class="k">Antioxidants</span><span class="v">${_crpHigh ? ' Increase: berries, dark vegetables, green tea, extra virgin olive oil (anti-inflammatory)' : 'Fruits, vegetables, EVOO, green tea — dietary sources'}</span></div>
+        <div class="pi"><span class="k">Alcohol</span><span class="v ${_tgHigh?'c-r':''}">${_tgHigh ? ' AVOID — major TG-raising agent' : diagnosis==='hypertension' ? '≤1 drink/day (women) / ≤2/day (men)' : 'Limit to ≤1–2 drinks/day if at all'}</span></div>
+        <div class="pi"><span class="k">Added Sugars / SSBs</span><span class="v c-r">${_tgHigh ? ' Eliminate — primary dietary driver of TG elevation' : 'Restrict: <10%E · No sugar-sweetened beverages'}</span></div>
         <div class="pi"><span class="k">Ultra-Processed Foods</span><span class="v c-r">Avoid — high SFA, trans fat, Na, added sugar simultaneously</span></div>
         <div class="pi"><span class="k">Exercise Rx</span><span class="v c-t">≥150 min/week moderate (brisk walk, swimming) or ≥75 min/week vigorous — ↑ HDL + ↓ TG + ↓ BP + weight management</span></div>
         <div class="pi"><span class="k">Source</span><span class="v" style="color:var(--text-dim)">Krause &amp; Mahan 16th ed. Ch. 33 (Kris-Etherton et al.) · AHA/ACC 2019 · JNC8 · IOM DRI</span></div>
@@ -4443,48 +4511,48 @@ function calculate() {
     if (rMicros) rMicros.innerHTML = `
     <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:10px">Micronutrient Considerations</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px">
-      <div class="pi"><span class="k">Thiamine (B1)</span><span class="v c-t">${isRefeeding?'⚠ IV 200–300 mg BEFORE feeds':diagnosis==='pernicious_anemia'?'Adequate — B12 & folate priority':'1–2 mg/day'}</span></div>
+      <div class="pi"><span class="k">Thiamine (B1)</span><span class="v c-t">${isRefeeding?' IV 200–300 mg BEFORE feeds':diagnosis==='pernicious_anemia'?'Adequate — B12 & folate priority':'1–2 mg/day'}</span></div>
       <div class="pi"><span class="k">Iron</span><span class="v ${diagnosis==='iron_overload'?'c-r':diagnosis==='anemia_chronic_dis'?'c-r':diagnosis==='sickle_cell'?'c-r':diagnosis==='iron_def_anemia'?'c-t':''}">${
         diagnosis==='iron_def_anemia'?'120 mg elemental/day × 3–6 months (oral ferrous)':
-        diagnosis==='iron_overload'?'⛔ AVOID iron supplements':
-        diagnosis==='anemia_chronic_dis'?'⛔ Do NOT supplement iron (ACD)':
-        diagnosis==='sickle_cell'?'⛔ No iron supplement (unless IDA confirmed)':
+        diagnosis==='iron_overload'?' AVOID iron supplements':
+        diagnosis==='anemia_chronic_dis'?' Do NOT supplement iron (ACD)':
+        diagnosis==='sickle_cell'?' No iron supplement (unless IDA confirmed)':
         diagnosis==='thalassemia'?'Non-transfused: low-iron diet; transfused: chelation':
         diagnosis==='sports_anemia'?'Supplement only if true IDA confirmed by labs':
         'Routine monitoring'}</span></div>
       <div class="pi"><span class="k">Folate / Folic acid</span><span class="v c-t">${
         diagnosis==='megaloblastic_folate'?'400–1000 mcg/day (+ rule out B12 deficiency)':
-        diagnosis==='sickle_cell'?'⚠ 400–600 mcg/day (elevated RBC turnover)':
+        diagnosis==='sickle_cell'?' 400–600 mcg/day (elevated RBC turnover)':
         diagnosis==='thalassemia'?'High folate diet essential (high RBC turnover)':
         diagnosis==='pernicious_anemia'?'400 mcg/day diet — Do NOT give folate alone without B12':
         diagnosis==='iron_def_anemia'?'400 mcg/day (RDA)':
         isRefeeding?'400 mcg/day':'400 mcg/day (RDA)'}</span></div>
       <div class="pi"><span class="k">Vitamin B12</span><span class="v">${
-        diagnosis==='pernicious_anemia'?'⚠ IM/SC 100 mcg/week → monthly; or oral 1000 mcg/day':
+        diagnosis==='pernicious_anemia'?' IM/SC 100 mcg/week → monthly; or oral 1000 mcg/day':
         diagnosis==='megaloblastic_folate'?'Check serum B12 before treating folate deficiency':
         diagnosis==='sickle_cell'?'Monitor — homocysteine often elevated (low B6)':
         '2.4 mcg/day (RDA); check if vegan/elderly/metformin'}</span></div>
       <div class="pi"><span class="k">Vitamin C</span><span class="v ${diagnosis==='iron_overload'?'c-r':''}">${
         diagnosis==='burns'?'500–1000 mg/day':
         diagnosis==='iron_def_anemia'?'50–200 mg with each meal (enhances Fe absorption)':
-        diagnosis==='iron_overload'?'⛔ AVOID — increases iron absorption':
+        diagnosis==='iron_overload'?' AVOID — increases iron absorption':
         diagnosis==='sickle_cell'?'Dietary only; avoid supplements (increase iron absorption)':
         diagnosis==='thalassemia'?'From food only; avoid supplements above RDA':
         diagnosis==='anemia_chronic_dis'?'Dietary sources only; avoid high-dose supplements':
         '75–90 mg/day'}</span></div>
       <div class="pi"><span class="k">Zinc</span><span class="v">${
         diagnosis==='burns'?'220 mg/day (burns)':
-        diagnosis==='sickle_cell'?'⚠ Supplement — plus RDA copper (zinc–copper competition)':
+        diagnosis==='sickle_cell'?' Supplement — plus RDA copper (zinc–copper competition)':
         diagnosis==='thalassemia'?'Supplement (growth support, immune function)':
         '2.5–5 mg/day'}</span></div>
       <div class="pi"><span class="k">Copper</span><span class="v">${
         diagnosis==='sickle_cell'?'At least RDA (zinc competes for Cu absorption sites)':
         '0.9 mg/day (RDA)'}</span></div>
       <div class="pi"><span class="k">Selenium</span><span class="v">${diagnosis==='sepsis'||diagnosis==='burns'?'500–1000 mcg/day':diagnosis==='thalassemia'?'Supplement (oxidative stress)':'20–70 mcg/day'}</span></div>
-      <div class="pi"><span class="k">Vitamin D + Calcium</span><span class="v">${diagnosis==='thalassemia'||diagnosis==='sickle_cell'?'⚠ Supplement — bone health (marrow expansion / deficiency risk)':'Routine monitoring'}</span></div>
+      <div class="pi"><span class="k">Vitamin D + Calcium</span><span class="v">${diagnosis==='thalassemia'||diagnosis==='sickle_cell'?' Supplement — bone health (marrow expansion / deficiency risk)':'Routine monitoring'}</span></div>
       <div class="pi"><span class="k">Pyridoxine (B6)</span><span class="v">${diagnosis==='sickle_cell'?'Monitor — low B6 associated with elevated homocysteine in SCD':'Routine monitoring'}</span></div>
       <div class="pi"><span class="k">Omega-3 / Fish oil</span><span class="v">${diagnosis==='ards'||diagnosis==='sepsis'?'1–2 g EPA/DHA/day — consider':diagnosis==='burns'||diagnosis==='cardiac'?'Recommended':diagnosis==='sickle_cell'?'Consider — anti-inflammatory (note: may enhance iron absorption in fish-based sources)':'Not routinely rec.'}</span></div>
-      <div class="pi"><span class="k">Phosphate</span><span class="v">${isRefeeding?'⚠ Monitor closely + replace PRN':'Routine monitoring'}</span></div>
+      <div class="pi"><span class="k">Phosphate</span><span class="v">${isRefeeding?' Monitor closely + replace PRN':'Routine monitoring'}</span></div>
     </div>`;
   }
 
@@ -4516,18 +4584,18 @@ function calculate() {
 
   // ── ALERTS ─────────────────────────────────────────────────────
   let alerts='';
-  if(rfRiskLevel==='HIGH')alerts+=`<div class="alert danger"><span class="ai">🚨</span><div><strong>REFEEDING SYNDROME — HIGH RISK:</strong> Start ≤5 kcal/kg/day (${Math.round(5*wCalc)} kcal). IV Thiamine 200–300 mg BEFORE feeds. Electrolytes 2–3× daily. See Refeeding Panel below.</div></div>`;
-  if(rfRiskLevel==='HIGH')alerts+=`<div class="alert danger" style="border-color:rgba(251,113,133,.5)"><span class="ai">📅</span><div><strong>REFEEDING ADVANCEMENT PROTOCOL (NICE CG32 2006):</strong><br>
+  if(rfRiskLevel==='HIGH')alerts+=`<div class="alert danger"><span class="ai"></span><div><strong>REFEEDING SYNDROME — HIGH RISK:</strong> Start ≤5 kcal/kg/day (${Math.round(5*wCalc)} kcal). IV Thiamine 200–300 mg BEFORE feeds. Electrolytes 2–3× daily. See Refeeding Panel below.</div></div>`;
+  if(rfRiskLevel==='HIGH')alerts+=`<div class="alert danger" style="border-color:rgba(251,113,133,.5)"><span class="ai"></span><div><strong>REFEEDING ADVANCEMENT PROTOCOL (NICE CG32 2006):</strong><br>
     ▸ Day 1: ${Math.round(5*wCalc)} kcal/day (5 kcal/kg) — correct K⁺, PO₄, Mg²⁺ BEFORE starting<br>
     ▸ Day 2–3: ${Math.round(10*wCalc)} kcal/day (10 kcal/kg) — monitor electrolytes every 6–12h<br>
     ▸ Day 4–5: ${Math.round(15*wCalc)} kcal/day (15 kcal/kg) — continue daily electrolyte checks<br>
     ▸ Day 5–7: ${Math.round(Math.min(20*wCalc, energy))} kcal/day (full requirement) — only if electrolytes remain stable<br>
     IV Thiamine 200–300 mg must be given BEFORE any carbohydrate-containing feed is commenced.
   </div></div>`;
-  else if(rfRiskLevel==='MODERATE')alerts+=`<div class="alert warning"><span class="ai">⚠</span><div><strong>REFEEDING RISK — MODERATE:</strong> Start at 10 kcal/kg/day (${Math.round(10*wCalc)} kcal). Thiamine 100–200 mg/day × 10 days. Daily electrolytes × 5 days.</div></div>`;
-  if(propofol>0)alerts+=`<div class="alert warning"><span class="ai">💉</span><div><strong>Propofol Calories: ${Math.round(propofolKcal)} kcal/day</strong> (${propofol} mg/kg/hr × ${weight.toFixed(1)} kg × 24h × 1.1 kcal/mL). <strong>Adjusted Energy Target: ${Math.round(netEnergy)} kcal/day</strong> after subtracting propofol calories.</div></div>`;
-  alerts+=`<div class="alert info"><span class="ai">💧</span><div><strong>Estimated Daily Fluid Need: ${fluidLow}–${fluidHigh} mL/day</strong> (25–30 mL/kg × ${weight.toFixed(1)} kg). Adjust for fluid status: ${fluidSt}.</div></div>`;
-  if(icuPhase==='early')alerts+=`<div class="alert info"><span class="ai">📊</span><div><strong>ICU Acute Phase (0–72 hours): Hypocaloric feeding with early protein delivery recommended.</strong> Initiate at 15–20 kcal/kg; advance to full target from Day 4 as tolerated (ASPEN/SCCM 2022 · ESPEN ICU 2019).</div></div>`;
+  else if(rfRiskLevel==='MODERATE')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>REFEEDING RISK — MODERATE:</strong> Start at 10 kcal/kg/day (${Math.round(10*wCalc)} kcal). Thiamine 100–200 mg/day × 10 days. Daily electrolytes × 5 days.</div></div>`;
+  if(propofol>0)alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>Propofol Calories: ${Math.round(propofolKcal)} kcal/day</strong> (${propofol} mg/kg/hr × ${weight.toFixed(1)} kg × 24h × 1.1 kcal/mL). <strong>Adjusted Energy Target: ${Math.round(netEnergy)} kcal/day</strong> after subtracting propofol calories.</div></div>`;
+  alerts+=`<div class="alert info"><span class="ai"></span><div><strong>Estimated Daily Fluid Need: ${fluidLow}–${fluidHigh} mL/day</strong> (25–30 mL/kg × ${weight.toFixed(1)} kg). Adjust for fluid status: ${fluidSt}.</div></div>`;
+  if(icuPhase==='early')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>ICU Acute Phase (0–72 hours): Hypocaloric feeding with early protein delivery recommended.</strong> Initiate at 15–20 kcal/kg; advance to full target from Day 4 as tolerated (ASPEN/SCCM 2022 · ESPEN ICU 2019).</div></div>`;
   if(diagnosis==='burns'&&tbsa>0){
     const _burnEqName = {
       curreri:    'Curreri (1974)',
@@ -4539,28 +4607,28 @@ function calculate() {
     };
     const _appliedEq = document.querySelector('input[name="burn_eq"]:checked')?.value || 'curreri';
     const _eqLabel   = _burnEqName[_appliedEq] || _appliedEq;
-    alerts+=`<div class="alert warning"><span class="ai">🔥</span><div><strong>BURNS NUTRITION — ${_eqLabel} applied.</strong> Start EN within 6h. High-protein formula. Glutamine 0.3–0.5 g/kg/day. Vit C 500–1000 mg/day, Zinc 220 mg/day. Reassess energy needs every 24–48h.</div></div>`;
+    alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>BURNS NUTRITION — ${_eqLabel} applied.</strong> Start EN within 6h. High-protein formula. Glutamine 0.3–0.5 g/kg/day. Vit C 500–1000 mg/day, Zinc 220 mg/day. Reassess energy needs every 24–48h.</div></div>`;
   }
-  if(renal==='aki_no_rrt')alerts+=`<div class="alert warning"><span class="ai">🫘</span><div><strong>AKI WITHOUT RRT (KDIGO):</strong> Protein 0.8–1.2 g/kg/day. Do NOT restrict protein to delay RRT. Renal formula. Monitor BUN, Cr, electrolytes closely.</div></div>`;
-  if(renal==='aki_rrt')alerts+=`<div class="alert info"><span class="ai">💉</span><div><strong>AKI ON CRRT/RRT (KDIGO):</strong> Target 1.5–2.5 g/kg/day. CRRT losses add ~10–15 g amino acids/day — factor into prescription.</div></div>`;
-  if(lg&&lg>10)alerts+=`<div class="alert warning"><span class="ai">🍬</span><div><strong>HYPERGLYCAEMIA (${lg} mmol/L):</strong> Target 6.1–10.0 mmol/L (NICE-SUGAR). Insulin protocol + reassess CHO delivery.</div></div>`;
-  if(hepatic==='severe')alerts+=`<div class="alert warning"><span class="ai">🫀</span><div><strong>HEPATIC FAILURE (EASL/ESPEN):</strong> Do NOT restrict protein — worsens sarcopenia & encephalopathy. BCAA-enriched formula. Dry weight for calculations. Monitor ammonia.</div></div>`;
+  if(renal==='aki_no_rrt')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>AKI WITHOUT RRT (KDIGO):</strong> Protein 0.8–1.2 g/kg/day. Do NOT restrict protein to delay RRT. Renal formula. Monitor BUN, Cr, electrolytes closely.</div></div>`;
+  if(renal==='aki_rrt')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>AKI ON CRRT/RRT (KDIGO):</strong> Target 1.5–2.5 g/kg/day. CRRT losses add ~10–15 g amino acids/day — factor into prescription.</div></div>`;
+  if(lg&&lg>10)alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>HYPERGLYCAEMIA (${lg} mmol/L):</strong> Target 6.1–10.0 mmol/L (NICE-SUGAR). Insulin protocol + reassess CHO delivery.</div></div>`;
+  if(hepatic==='severe')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>HEPATIC FAILURE (EASL/ESPEN):</strong> Do NOT restrict protein — worsens sarcopenia & encephalopathy. BCAA-enriched formula. Dry weight for calculations. Monitor ammonia.</div></div>`;
   // ── Diabetes MNT alerts (Krause & Mahan 16th ed., Ch. 30 · ADA 2024) ──
-  if(diagnosis==='dm1'){alerts+=`<div class="alert info"><span class="ai">🍬</span><div><strong>TYPE 1 DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2024):</strong> Absolute insulin deficiency from autoimmune β-cell destruction. <strong>Insulin-to-CHO ratio:</strong> I:CR = 500 ÷ TDD (e.g., TDD 50 units → 1 unit covers 10 g CHO). Integrate insulin regimen with preferred eating schedule — do NOT restrict food to control glucose; adjust insulin instead. <strong>CHO counting:</strong> 1 serving = 15 g CHO; target 3–5 consistent meals/day. Low-GI foods preferred (GI <55); eliminate SSBs. <strong>Glycaemic targets:</strong> HbA1c <7% (<53 mmol/mol); pre-meal 4.4–7.2 mmol/L; peak post-meal <10 mmol/L. <strong>Protein:</strong> 1.0–1.5 g/kg/day (no restriction unless DKD confirmed by albuminuria). <strong>Hypoglycaemia (BG <3.9 mmol/L):</strong> treat with 15 g glucose tablets; recheck 10–15 min; repeat if still low. <strong>Sick-day:</strong> Do NOT stop insulin — need may increase. Target 150–200 g CHO/day (45–50 g q3–4h). Test ketones if BG >13.9 mmol/L. <strong>Exercise:</strong> +15 g CHO per 30–60 min moderate activity; reduce rapid-acting insulin 1–2 units if activity >45 min. Risk of late-onset hypoglycaemia 24–30h post-exercise. <strong>Screen for:</strong> Celiac disease (gluten-free diet if biopsy-confirmed), Hashimoto thyroiditis, Addison disease. <strong>Cardioprotective:</strong> ↓ SFA/TFA; ↑ MUFA/PUFA; fatty fish ≥2×/week; Na ≤2300 mg/day. Alcohol with food only — delayed nocturnal hypoglycaemia risk (Krause Ch. 30 / ADA 2021).</div></div>`;}
-  if(diagnosis==='dm2'){alerts+=`<div class="alert warning"><span class="ai">🍬</span><div><strong>TYPE 2 DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2024):</strong> Progressive insulin resistance + β-cell failure. MNT by RDN reduces HbA1c 0.3–2.0%. <strong>Weight:</strong> 5–10% weight loss (if BMI >25) → consistent A1C improvement; Mediterranean-style diet achieved −6.2 kg with A1C benefit. <strong>Eating patterns:</strong> Mediterranean, DASH, low-CHO, plant-based — all acceptable; individualise to metabolic goals, culture, and food security. <strong>CHO:</strong> Consistent daily total grams; low-GI sources; ≥25 g fibre/day (women) / ≥38 g/day (men) — soluble fibre ↓ LDL and FBG. Eliminate SSBs. No sucrose restriction required if total CHO budget respected. <strong>Protein:</strong> 1.0–1.5 g/kg/day; 20–30% kcal may increase satiety. Protein does not acutely raise BG in well-controlled T2DM. <strong>Fat:</strong> ↓ SFA/TFA; ↑ MUFA (Mediterranean pattern — olive oil, avocado, nuts); fatty fish ≥2×/week. No supplemental omega-3 for CVD prevention. <strong>Sodium:</strong> ≤2300 mg/day; further individualised reduction if hypertension. <strong>Dyslipidaemia:</strong> ↓ SFA/TFA; viscous fibre 25–30 g/day; plant sterols/stanols 2 g/day; omega-3 foods. <strong>Metformin monitoring:</strong> Check B12 annually (10–30% develop deficiency → peripheral neuropathy risk); supplement 1000 mcg/day if deficient. <strong>Hypoglycaemia (insulin/secretagogue):</strong> 15 g glucose; recheck 10–15 min. <strong>Gastroparesis (if present):</strong> Small frequent meals; low fat/fibre; semi-liquid or liquid if solids not tolerated; post-meal insulin timing adjustment. <strong>Exercise:</strong> ≥150 min/week moderate aerobic; resistance ×2/week; no >2 consecutive rest days. Source: Jones J, Krause & Mahan 16th ed. Ch. 30 · ADA 2024.</div></div>`;}
-  if(diagnosis==='pregnancy_gest_dm'){alerts+=`<div class="alert warning"><span class="ai">🤰</span><div><strong>GESTATIONAL DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2021):</strong> Diagnosis at 24–28 weeks gestation (1-step 75-g OGTT or 2-step 50-g screen + 100-g OGTT). <strong>CHO-controlled meal plan:</strong> Minimum 175 g CHO/day distributed across 3 small-moderate meals + 2–4 snacks. Avoid prolonged fasting (>10 h between bedtime snack and breakfast). <strong>Breakfast:</strong> Limit to ~30 g CHO — morning cortisol and growth hormone elevate AM insulin resistance most; add protein to breakfast for satiety without glucose spike. <strong>Late evening snack mandatory</strong> — prevents accelerated overnight ketosis. Monitor urine/blood ketones (ketonaemia associated with fetal brain injury). <strong>Blood glucose targets:</strong> Fasting <5.3 mmol/L (95 mg/dL) · 1-h post-meal <7.8 mmol/L (140 mg/dL) · 2-h post-meal <6.7 mmol/L (120 mg/dL) · HbA1c 6–6.5% (42–48 mmol/mol). <strong>Pharmacotherapy:</strong> Add insulin, metformin, or glyburide if BG exceeds targets on ≥2 occasions in 1–2 weeks without explanation. Insulin preferred — does not cross placenta. <strong>Exercise:</strong> Brisk 15–30 min walk after meals improves postprandial glucose; safe in uncomplicated pregnancy. <strong>Gestational weight gain:</strong> Same targets as non-diabetic pregnancy (IOM 2009); no intentional weight loss during pregnancy. <strong>Nutrients:</strong> Folate ≥600 mcg/day; Iron 27 mg/day; Calcium 1000 mg/day (DRI pregnancy). <strong>Postpartum:</strong> Screen at 4–12 weeks with 75-g OGTT; thereafter every 1–3 years for T2DM. Encourage breastfeeding — reduces future T2DM risk. Women with GDM history have 35–70% risk of T2DM within 10–15 years. Source: Jones J, Krause & Mahan 16th ed. Ch. 30 / ADA 2021 / IOM DRI.</div></div>`;}
+  if(diagnosis==='dm1'){alerts+=`<div class="alert info"><span class="ai"></span><div><strong>TYPE 1 DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2024):</strong> Absolute insulin deficiency from autoimmune β-cell destruction. <strong>Insulin-to-CHO ratio:</strong> I:CR = 500 ÷ TDD (e.g., TDD 50 units → 1 unit covers 10 g CHO). Integrate insulin regimen with preferred eating schedule — do NOT restrict food to control glucose; adjust insulin instead. <strong>CHO counting:</strong> 1 serving = 15 g CHO; target 3–5 consistent meals/day. Low-GI foods preferred (GI <55); eliminate SSBs. <strong>Glycaemic targets:</strong> HbA1c <7% (<53 mmol/mol); pre-meal 4.4–7.2 mmol/L; peak post-meal <10 mmol/L. <strong>Protein:</strong> 1.0–1.5 g/kg/day (no restriction unless DKD confirmed by albuminuria). <strong>Hypoglycaemia (BG <3.9 mmol/L):</strong> treat with 15 g glucose tablets; recheck 10–15 min; repeat if still low. <strong>Sick-day:</strong> Do NOT stop insulin — need may increase. Target 150–200 g CHO/day (45–50 g q3–4h). Test ketones if BG >13.9 mmol/L. <strong>Exercise:</strong> +15 g CHO per 30–60 min moderate activity; reduce rapid-acting insulin 1–2 units if activity >45 min. Risk of late-onset hypoglycaemia 24–30h post-exercise. <strong>Screen for:</strong> Celiac disease (gluten-free diet if biopsy-confirmed), Hashimoto thyroiditis, Addison disease. <strong>Cardioprotective:</strong> ↓ SFA/TFA; ↑ MUFA/PUFA; fatty fish ≥2×/week; Na ≤2300 mg/day. Alcohol with food only — delayed nocturnal hypoglycaemia risk (Krause Ch. 30 / ADA 2021).</div></div>`;}
+  if(diagnosis==='dm2'){alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>TYPE 2 DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2024):</strong> Progressive insulin resistance + β-cell failure. MNT by RDN reduces HbA1c 0.3–2.0%. <strong>Weight:</strong> 5–10% weight loss (if BMI >25) → consistent A1C improvement; Mediterranean-style diet achieved −6.2 kg with A1C benefit. <strong>Eating patterns:</strong> Mediterranean, DASH, low-CHO, plant-based — all acceptable; individualise to metabolic goals, culture, and food security. <strong>CHO:</strong> Consistent daily total grams; low-GI sources; ≥25 g fibre/day (women) / ≥38 g/day (men) — soluble fibre ↓ LDL and FBG. Eliminate SSBs. No sucrose restriction required if total CHO budget respected. <strong>Protein:</strong> 1.0–1.5 g/kg/day; 20–30% kcal may increase satiety. Protein does not acutely raise BG in well-controlled T2DM. <strong>Fat:</strong> ↓ SFA/TFA; ↑ MUFA (Mediterranean pattern — olive oil, avocado, nuts); fatty fish ≥2×/week. No supplemental omega-3 for CVD prevention. <strong>Sodium:</strong> ≤2300 mg/day; further individualised reduction if hypertension. <strong>Dyslipidaemia:</strong> ↓ SFA/TFA; viscous fibre 25–30 g/day; plant sterols/stanols 2 g/day; omega-3 foods. <strong>Metformin monitoring:</strong> Check B12 annually (10–30% develop deficiency → peripheral neuropathy risk); supplement 1000 mcg/day if deficient. <strong>Hypoglycaemia (insulin/secretagogue):</strong> 15 g glucose; recheck 10–15 min. <strong>Gastroparesis (if present):</strong> Small frequent meals; low fat/fibre; semi-liquid or liquid if solids not tolerated; post-meal insulin timing adjustment. <strong>Exercise:</strong> ≥150 min/week moderate aerobic; resistance ×2/week; no >2 consecutive rest days. Source: Jones J, Krause & Mahan 16th ed. Ch. 30 · ADA 2024.</div></div>`;}
+  if(diagnosis==='pregnancy_gest_dm'){alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>GESTATIONAL DIABETES MELLITUS — MNT (Krause Ch. 30 · ADA 2021):</strong> Diagnosis at 24–28 weeks gestation (1-step 75-g OGTT or 2-step 50-g screen + 100-g OGTT). <strong>CHO-controlled meal plan:</strong> Minimum 175 g CHO/day distributed across 3 small-moderate meals + 2–4 snacks. Avoid prolonged fasting (>10 h between bedtime snack and breakfast). <strong>Breakfast:</strong> Limit to ~30 g CHO — morning cortisol and growth hormone elevate AM insulin resistance most; add protein to breakfast for satiety without glucose spike. <strong>Late evening snack mandatory</strong> — prevents accelerated overnight ketosis. Monitor urine/blood ketones (ketonaemia associated with fetal brain injury). <strong>Blood glucose targets:</strong> Fasting <5.3 mmol/L (95 mg/dL) · 1-h post-meal <7.8 mmol/L (140 mg/dL) · 2-h post-meal <6.7 mmol/L (120 mg/dL) · HbA1c 6–6.5% (42–48 mmol/mol). <strong>Pharmacotherapy:</strong> Add insulin, metformin, or glyburide if BG exceeds targets on ≥2 occasions in 1–2 weeks without explanation. Insulin preferred — does not cross placenta. <strong>Exercise:</strong> Brisk 15–30 min walk after meals improves postprandial glucose; safe in uncomplicated pregnancy. <strong>Gestational weight gain:</strong> Same targets as non-diabetic pregnancy (IOM 2009); no intentional weight loss during pregnancy. <strong>Nutrients:</strong> Folate ≥600 mcg/day; Iron 27 mg/day; Calcium 1000 mg/day (DRI pregnancy). <strong>Postpartum:</strong> Screen at 4–12 weeks with 75-g OGTT; thereafter every 1–3 years for T2DM. Encourage breastfeeding — reduces future T2DM risk. Women with GDM history have 35–70% risk of T2DM within 10–15 years. Source: Jones J, Krause & Mahan 16th ed. Ch. 30 / ADA 2021 / IOM DRI.</div></div>`;}
   // ── Haematological alerts (Krause & Mahan 16th ed., Ch. 32) ──
-  if(diagnosis==='iron_def_anemia')alerts+=`<div class="alert info"><span class="ai">🩸</span><div><strong>IRON DEFICIENCY ANEMIA (Krause Ch. 32):</strong> Priority — dietary iron enhancement. Heme iron (meat, fish, poultry, liver) ~15% absorbable; nonheme iron (legumes, veg) 3–8%. Include vitamin C at every meal. Separate tea, coffee, milk, high-fibre foods from iron-rich meals by ≥1 hour. Oral ferrous iron × 3–6 months (120 mg elemental/day adults). Continue 4–6 months after Hb normalises to replete stores. Coordinate with physician.</div></div>`;
-  if(diagnosis==='megaloblastic_folate')alerts+=`<div class="alert warning"><span class="ai">🟢</span><div><strong>FOLATE-DEFICIENCY ANEMIA (Krause Ch. 32):</strong> ⚠ Rule out B12 deficiency BEFORE treating — folate corrects the anemia but MASKS irreversible B12 neurologic damage. Folate RDA: 400 mcg/day (adults), 600 mcg/day (pregnancy). Fresh/raw fruits and dark green vegetables daily — heat destroys folate. Symptomatic improvement within 24–48h; full haematologic recovery ~1 month.</div></div>`;
-  if(diagnosis==='pernicious_anemia')alerts+=`<div class="alert warning"><span class="ai">💉</span><div><strong>PERNICIOUS ANEMIA / B12 DEFICIENCY (Krause Ch. 32):</strong> B12 IM/SC 100 mcg weekly → monthly maintenance. Large oral B12 (1000 mcg/day) effective even without intrinsic factor (passive diffusion). High-protein diet (1.5 g/kg) for RBC regeneration. Check IF antibody (IFAB) + parietal cell antibodies (PCA). Metformin use: 10–30% have reduced B12 absorption — supplement. Age >50: crystalline B12 (fortified cereals or supplements) to bypass atrophic gastritis. RDA: 2.4 mcg/day.</div></div>`;
-  if(diagnosis==='anemia_chronic_dis')alerts+=`<div class="alert danger"><span class="ai">⛔</span><div><strong>ANEMIA OF CHRONIC DISEASE — DO NOT SUPPLEMENT IRON (Krause Ch. 32):</strong> Ferritin is normal or elevated; hepcidin traps iron in macrophages. Iron supplementation is inappropriate. Treat the underlying inflammatory/infectious disorder. Differentiate from IDA using soluble transferrin receptors (STFR): elevated in IDA, normal in ACD. ESAs or transfusion only in severe refractory cases.</div></div>`;
-  if(diagnosis==='sickle_cell')alerts+=`<div class="alert warning"><span class="ai">🔴</span><div><strong>SICKLE CELL DISEASE (Krause Ch. 32 / CDC 2020):</strong> High calorie + protein for hypermetabolism from haemolysis. Folate 400–600 mcg/day (elevated RBC turnover). Zinc supplement + copper (co-supplement — zinc competes for Cu absorption). Fluid 2–3 L/day + low-sodium diet. Multivitamin/mineral 50–150% RDA — NOT iron. Avoid iron-fortified foods, vitamin C supplements, and alcohol (all increase iron absorption). SCD ≠ IDA — do NOT supplement iron unless lab-confirmed.</div></div>`;
-  if(diagnosis==='thalassemia')alerts+=`<div class="alert info"><span class="ai">⚙</span><div><strong>THALASSEMIA (Krause Ch. 32):</strong> NON-TRANSFUSED: moderately low-iron diet — limit red meat, iron-fortified foods; avoid multivitamins with iron or vitamin C above RDA. TRANSFUSED: chelation therapy (deferoxamine/deferasirox) required — no iron restriction needed. High folate, vitamins A, C, zinc, copper, selenium. Ca + Vit D for bone health. Increase calories to address growth impairment.</div></div>`;
-  if(diagnosis==='iron_overload')alerts+=`<div class="alert danger"><span class="ai">⛔</span><div><strong>IRON OVERLOAD / HEMOCHROMATOSIS (Krause Ch. 32 / NIDDK 2020):</strong> ⚠ AVOID: iron supplements, vitamin C supplements, iron-fortified foods, alcohol. Reduce meat, fish, poultry — plant-based diet preferred. Phytates (whole grains, legumes) inhibit iron absorption — beneficial. Medical treatment: weekly phlebotomy × 2–3 years; chelation if non-hereditary. Risk: hepatomegaly, diabetes, cardiac disease, colorectal cancer if untreated.</div></div>`;
-  if(diagnosis==='sports_anemia')alerts+=`<div class="alert info"><span class="ai">🏃</span><div><strong>SPORTS ANEMIA — PHYSIOLOGIC (Krause Ch. 32):</strong> Hemodilution from aerobic training — ADVANTAGEOUS adaptation, does not impair performance. Do NOT supplement iron without confirmed IDA (CBC + ferritin + serum iron + TIBC + % saturation). Iron-rich diet + adequate protein. Separate inhibitors (tea, coffee, antacids, H2-blockers) from iron-rich meals. High-risk groups: females, vegetarians, endurance athletes — periodic monitoring.</div></div>`;
+  if(diagnosis==='iron_def_anemia')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>IRON DEFICIENCY ANEMIA (Krause Ch. 32):</strong> Priority — dietary iron enhancement. Heme iron (meat, fish, poultry, liver) ~15% absorbable; nonheme iron (legumes, veg) 3–8%. Include vitamin C at every meal. Separate tea, coffee, milk, high-fibre foods from iron-rich meals by ≥1 hour. Oral ferrous iron × 3–6 months (120 mg elemental/day adults). Continue 4–6 months after Hb normalises to replete stores. Coordinate with physician.</div></div>`;
+  if(diagnosis==='megaloblastic_folate')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>FOLATE-DEFICIENCY ANEMIA (Krause Ch. 32):</strong>  Rule out B12 deficiency BEFORE treating — folate corrects the anemia but MASKS irreversible B12 neurologic damage. Folate RDA: 400 mcg/day (adults), 600 mcg/day (pregnancy). Fresh/raw fruits and dark green vegetables daily — heat destroys folate. Symptomatic improvement within 24–48h; full haematologic recovery ~1 month.</div></div>`;
+  if(diagnosis==='pernicious_anemia')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>PERNICIOUS ANEMIA / B12 DEFICIENCY (Krause Ch. 32):</strong> B12 IM/SC 100 mcg weekly → monthly maintenance. Large oral B12 (1000 mcg/day) effective even without intrinsic factor (passive diffusion). High-protein diet (1.5 g/kg) for RBC regeneration. Check IF antibody (IFAB) + parietal cell antibodies (PCA). Metformin use: 10–30% have reduced B12 absorption — supplement. Age >50: crystalline B12 (fortified cereals or supplements) to bypass atrophic gastritis. RDA: 2.4 mcg/day.</div></div>`;
+  if(diagnosis==='anemia_chronic_dis')alerts+=`<div class="alert danger"><span class="ai"></span><div><strong>ANEMIA OF CHRONIC DISEASE — DO NOT SUPPLEMENT IRON (Krause Ch. 32):</strong> Ferritin is normal or elevated; hepcidin traps iron in macrophages. Iron supplementation is inappropriate. Treat the underlying inflammatory/infectious disorder. Differentiate from IDA using soluble transferrin receptors (STFR): elevated in IDA, normal in ACD. ESAs or transfusion only in severe refractory cases.</div></div>`;
+  if(diagnosis==='sickle_cell')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>SICKLE CELL DISEASE (Krause Ch. 32 / CDC 2020):</strong> High calorie + protein for hypermetabolism from haemolysis. Folate 400–600 mcg/day (elevated RBC turnover). Zinc supplement + copper (co-supplement — zinc competes for Cu absorption). Fluid 2–3 L/day + low-sodium diet. Multivitamin/mineral 50–150% RDA — NOT iron. Avoid iron-fortified foods, vitamin C supplements, and alcohol (all increase iron absorption). SCD ≠ IDA — do NOT supplement iron unless lab-confirmed.</div></div>`;
+  if(diagnosis==='thalassemia')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>THALASSEMIA (Krause Ch. 32):</strong> NON-TRANSFUSED: moderately low-iron diet — limit red meat, iron-fortified foods; avoid multivitamins with iron or vitamin C above RDA. TRANSFUSED: chelation therapy (deferoxamine/deferasirox) required — no iron restriction needed. High folate, vitamins A, C, zinc, copper, selenium. Ca + Vit D for bone health. Increase calories to address growth impairment.</div></div>`;
+  if(diagnosis==='iron_overload')alerts+=`<div class="alert danger"><span class="ai"></span><div><strong>IRON OVERLOAD / HEMOCHROMATOSIS (Krause Ch. 32 / NIDDK 2020):</strong>  AVOID: iron supplements, vitamin C supplements, iron-fortified foods, alcohol. Reduce meat, fish, poultry — plant-based diet preferred. Phytates (whole grains, legumes) inhibit iron absorption — beneficial. Medical treatment: weekly phlebotomy × 2–3 years; chelation if non-hereditary. Risk: hepatomegaly, diabetes, cardiac disease, colorectal cancer if untreated.</div></div>`;
+  if(diagnosis==='sports_anemia')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>SPORTS ANEMIA — PHYSIOLOGIC (Krause Ch. 32):</strong> Hemodilution from aerobic training — ADVANTAGEOUS adaptation, does not impair performance. Do NOT supplement iron without confirmed IDA (CBC + ferritin + serum iron + TIBC + % saturation). Iron-rich diet + adequate protein. Separate inhibitors (tea, coffee, antacids, H2-blockers) from iron-rich meals. High-risk groups: females, vegetarians, endurance athletes — periodic monitoring.</div></div>`;
 
   // ── Lower GI / IBD alerts (Krause 16th Ch. 28 / ECCO-ESPEN IBD 2023) ──
-  if(diagnosis==='constipation')alerts+=`<div class="alert info"><span class="ai">🟤</span><div><strong>CONSTIPATION — MNT (Krause 16th Ch. 28):</strong><br>
+  if(diagnosis==='constipation')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>CONSTIPATION — MNT (Krause 16th Ch. 28):</strong><br>
   • <strong>Fibre:</strong> Increase to 25–38 g/day gradually (to minimise bloating). Soluble fibre (oats, psyllium, legumes, fruit) softens stool; insoluble fibre (wholegrains, bran, vegetables) accelerates transit.<br>
   • <strong>Fluid:</strong> Minimum 2 L/day — fibre requires water to function; inadequate fluid worsens constipation.<br>
   • <strong>Physical activity:</strong> Regular aerobic activity stimulates colonic motility.<br>
@@ -4568,7 +4636,7 @@ function calculate() {
   • <strong>Probiotics:</strong> Bifidobacterium lactis may modestly improve frequency (limited evidence).<br>
   • <em>Source: Krause & Mahan 16th ed., Ch. 28 (Mahan & Raymond, 2022)</em></div></div>`;
 
-  if(diagnosis==='diarrhoea_acute')alerts+=`<div class="alert warning"><span class="ai">💧</span><div><strong>DIARRHOEA — MNT (WHO / Krause 16th Ch. 28):</strong><br>
+  if(diagnosis==='diarrhoea_acute')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>DIARRHOEA — MNT (WHO / Krause 16th Ch. 28):</strong><br>
   • <strong>ORS:</strong> Oral rehydration solution (Na 75 mmol/L, K 20 mmol/L, glucose 75 mmol/L, osmolarity 245 mOsm/L per WHO formula) — cornerstone of management.<br>
   • <strong>Fibre:</strong> Moderate soluble fibre (pectin, psyllium, banana, oats) absorbs water and bulks stool. Avoid insoluble fibre during acute phase.<br>
   • <strong>Avoid:</strong> Excess sugar alcohols (sorbitol, mannitol), fructose, lactose if intolerant — osmotic diarrhoea triggers.<br>
@@ -4577,7 +4645,7 @@ function calculate() {
   • <strong>Electrolytes:</strong> Monitor Na, K, Mg, Zn — supplement as indicated.<br>
   • <em>Source: WHO ORS 2006; Krause & Mahan 16th ed., Ch. 28</em></div></div>`;
 
-  if(diagnosis==='aad_cdiff')alerts+=`<div class="alert danger"><span class="ai">🦠</span><div><strong>ANTIBIOTIC-ASSOCIATED DIARRHOEA / C. DIFFICILE — MNT (IDSA/SHEA CDI 2021):</strong><br>
+  if(diagnosis==='aad_cdiff')alerts+=`<div class="alert danger"><span class="ai"></span><div><strong>ANTIBIOTIC-ASSOCIATED DIARRHOEA / C. DIFFICILE — MNT (IDSA/SHEA CDI 2021):</strong><br>
   • <strong>Rehydration:</strong> Aggressive fluid + electrolyte replacement (ORS or IV). Monitor Na, K, Mg, Cl.<br>
   • <strong>Probiotics:</strong> Saccharomyces boulardii most evidence for AAD prevention; Lactobacillus cautiously in immunocompetent patients. Do NOT use probiotics in severely immunocompromised.<br>
   • <strong>FMT (Faecal Microbiota Transplant):</strong> Recommended for ≥2 CDI recurrences — highly effective (~90% cure rate). Route: colonoscopy, nasojejunal, or capsule.<br>
@@ -4585,7 +4653,7 @@ function calculate() {
   • <strong>Avoid:</strong> High-sugar diet (feeds C. difficile), prolonged gut rest, unnecessary antibiotics.<br>
   • <em>Source: IDSA/SHEA CDI Guidelines 2021; McDonald et al. Clin Infect Dis 2018;66(7):e1–e48</em></div></div>`;
 
-  if(diagnosis==='coeliac')alerts+=`<div class="alert warning"><span class="ai">🌾</span><div><strong>COELIAC DISEASE — MNT (ESPGHAN 2020 / BSG 2014):</strong><br>
+  if(diagnosis==='coeliac')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>COELIAC DISEASE — MNT (ESPGHAN 2020 / BSG 2014):</strong><br>
   • <strong>Gluten-free diet (GFD):</strong> Strict lifelong elimination of wheat, rye, barley, and contaminated oats. No safe threshold — even trace amounts cause mucosal damage.<br>
   • <strong>Cross-contamination:</strong> Separate utensils, toasters, cutting boards. Dedicated GF cooking surfaces. Scrutinise food labels — hidden gluten in sauces, medications, supplements.<br>
   • <strong>Micronutrient supplementation:</strong> Iron (IDA very common — screen ferritin), Calcium 1000–1200 mg/day, Vitamin D 1000–2000 IU/day, folate, B12, zinc, magnesium.<br>
@@ -4594,7 +4662,7 @@ function calculate() {
   • <strong>Refractory CD:</strong> If no mucosal recovery on strict GFD × 12 months → investigate RCD type I/II (specialist gastroenterology).<br>
   • <em>Source: ESPGHAN/NASPGHAN Coeliac Guidelines 2020; BSG Adult Coeliac 2014; Husby et al., J Pediatr Gastroenterol Nutr 2020</em></div></div>`;
 
-  if(diagnosis==='lactose_intolerance')alerts+=`<div class="alert info"><span class="ai">🥛</span><div><strong>LACTOSE INTOLERANCE — MNT (Krause 16th Ch. 28 / NIH Consensus):</strong><br>
+  if(diagnosis==='lactose_intolerance')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>LACTOSE INTOLERANCE — MNT (Krause 16th Ch. 28 / NIH Consensus):</strong><br>
   • <strong>Threshold:</strong> Most individuals tolerate 12 g lactose/day (≈240 mL cow's milk) without symptoms. Restrict according to individual tolerance — not universal elimination.<br>
   • <strong>Lactose-free dairy:</strong> Equivalent nutritional value (calcium, protein, Vit D). Preferred over complete dairy elimination.<br>
   • <strong>Better-tolerated options:</strong> Hard aged cheeses (cheddar, parmesan — <1 g lactose/serving), yoghurt with live cultures (lactase from bacteria).<br>
@@ -4603,7 +4671,7 @@ function calculate() {
   • <strong>Do not:</strong> Routinely eliminate ALL dairy — increases osteoporosis risk unnecessarily.<br>
   • <em>Source: Krause & Mahan 16th ed., Ch. 28; NIH Consensus Development Conference 2010</em></div></div>`;
 
-  if(diagnosis==='ibs')alerts+=`<div class="alert info"><span class="ai">🌿</span><div><strong>IRRITABLE BOWEL SYNDROME — MNT (NICE IBS 2017 / Monash FODMAP):</strong><br>
+  if(diagnosis==='ibs')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>IRRITABLE BOWEL SYNDROME — MNT (NICE IBS 2017 / Monash FODMAP):</strong><br>
   • <strong>Low-FODMAP diet:</strong> Phase 1 — Eliminate fermentable oligosaccharides (fructans, GOS), disaccharides (lactose), monosaccharides (excess fructose), polyols (sorbitol, mannitol, xylitol) × 4–8 weeks. Phase 2 — Systematic reintroduction of each FODMAP subgroup to identify individual triggers. Phase 3 — Long-term personalised diet.<br>
   • <strong>Probiotics:</strong> Bifidobacterium infantis 35624 and Lactobacillus rhamnosus GG show benefit for IBS-D. Symptom-specific selection. Trial for ≥4 weeks.<br>
   • <strong>Fibre:</strong> Soluble fibre (psyllium, oats) preferred over insoluble (bran) — bran may worsen bloating/pain. Adequate fluid with fibre essential.<br>
@@ -4612,7 +4680,7 @@ function calculate() {
   • <strong>IBS-C:</strong> Psyllium, lactulose, PEG laxatives. <strong>IBS-D:</strong> Loperamide, peppermint oil capsules.<br>
   • <em>Source: NICE CG61 IBS 2017; Monash University FODMAP; Gibson PR & Shepherd SJ, Gastroenterology 2010</em></div></div>`;
 
-  if(diagnosis==='sibo')alerts+=`<div class="alert warning"><span class="ai">🦠</span><div><strong>SMALL INTESTINAL BACTERIAL OVERGROWTH — MNT (ACG SIBO 2020):</strong><br>
+  if(diagnosis==='sibo')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>SMALL INTESTINAL BACTERIAL OVERGROWTH — MNT (ACG SIBO 2020):</strong><br>
   • <strong>Low-FODMAP diet:</strong> Reduces fermentable substrate for bacteria — relieves bloating, distension, diarrhoea during active SIBO and post-treatment maintenance.<br>
   • <strong>Antibiotic therapy:</strong> Rifaximin 550 mg TID × 14 days — evidence-based, minimal systemic absorption, low resistance risk. Alternatives: metronidazole, tetracycline, co-amoxiclav.<br>
   • <strong>Elemental diet:</strong> 2–3 weeks of elemental/semi-elemental formula (Vivonex, Tolerex) in severe/refractory cases — reduces bacterial load via substrate deprivation. Equivalent efficacy to antibiotics in some studies.<br>
@@ -4621,14 +4689,14 @@ function calculate() {
   • <strong>Address underlying cause:</strong> Motility disorders (prokinetics — erythromycin, prucalopride), anatomical abnormality (surgical review), hypochlorhydria (review PPIs).<br>
   • <em>Source: ACG SIBO Clinical Guideline 2020; Pimentel M et al., Am J Gastroenterol 2020;115(2):165–178</em></div></div>`;
 
-  if(diagnosis==='ibd')alerts+=`<div class="alert warning"><span class="ai">🌿</span><div><strong>IBD (GENERAL) — MNT (ECCO/ESPEN IBD 2023):</strong><br>
+  if(diagnosis==='ibd')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>IBD (GENERAL) — MNT (ECCO/ESPEN IBD 2023):</strong><br>
   • Individualised dietary approach — no universal IBD diet. Screen with MUST/NRS-2002 at every visit.<br>
   • Supplement: Iron (IV preferred if Hb <100 g/L or oral intolerance), Folate, B12, Vit D 1000–2000 IU/day, Calcium, Zinc, Magnesium.<br>
   • EN preferred over PN. PN only if gut failure, obstruction, or EN contraindicated.<br>
   • Omega-3 supplementation: anti-inflammatory potential — not definitive for remission maintenance but generally safe.<br>
   • <em>Source: ECCO/ESPEN IBD Clinical Guidelines 2023 (Bischoff et al., Clin Nutr 2023;42:1705–1784)</em></div></div>`;
 
-  if(diagnosis==='crohns')alerts+=`<div class="alert warning"><span class="ai">🌿</span><div><strong>CROHN'S DISEASE — MNT (ECCO/ESPEN IBD 2023):</strong><br>
+  if(diagnosis==='crohns')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>CROHN'S DISEASE — MNT (ECCO/ESPEN IBD 2023):</strong><br>
   • <strong>Fibre:</strong> Low-residue / low-fibre (<10 g/day) during active flares or with strictures. Liberalise in remission. Avoid high-fibre foods if small bowel stricture present.<br>
   • <strong>Enteral Nutrition:</strong> EN preferred over PN wherever bowel is functional. Exclusive enteral nutrition (EEN) induces remission in paediatric CD (~80% remission rate) — consider in adults where steroid avoidance desired. Semi-elemental or polymeric formula — comparable efficacy.<br>
   • <strong>PN indications:</strong> Complete bowel obstruction, high-output fistula, short bowel, severe active CD where EN is not feasible.<br>
@@ -4642,7 +4710,7 @@ function calculate() {
   • <strong>Osteoporosis risk:</strong> Steroids + malabsorption — Ca 1200 mg + Vit D 1000–2000 IU/day + DXA monitoring.<br>
   • <em>Source: ECCO/ESPEN IBD 2023; Bischoff et al., Clin Nutr 2023;42:1705–1784</em></div></div>`;
 
-  if(diagnosis==='uc')alerts+=`<div class="alert warning"><span class="ai">🌿</span><div><strong>ULCERATIVE COLITIS — MNT (ECCO/ESPEN IBD 2023):</strong><br>
+  if(diagnosis==='uc')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>ULCERATIVE COLITIS — MNT (ECCO/ESPEN IBD 2023):</strong><br>
   • <strong>During flares:</strong> Maintain nutrition — no routine dietary restriction. Low-fibre diet if cramping severe; liquid diet or EN if very active. Do NOT fast unnecessarily.<br>
   • <strong>Hydration:</strong> Critical during active disease — high stool water/electrolyte losses (Na, K, Mg, Cl).<br>
   • <strong>Probiotics:</strong> VSL#3 (multi-strain: 8 species) has strongest evidence for UC remission maintenance and prevention of pouchitis (post-colectomy IPAA). Escherichia coli Nissle 1917 — equivalent to mesalazine for UC remission maintenance.<br>
@@ -4651,7 +4719,7 @@ function calculate() {
   • <strong>Post-colectomy (IPAA):</strong> Low-fibre initially; high fluid intake; avoid high-output foods (raw vegetables, fruits, spicy food) initially then liberalise. Monitor B12, fat-soluble vitamins.<br>
   • <em>Source: ECCO/ESPEN IBD 2023; Bischoff et al., Clin Nutr 2023;42:1705–1784</em></div></div>`;
 
-  if(diagnosis==='diverticulosis')alerts+=`<div class="alert info"><span class="ai">🟤</span><div><strong>DIVERTICULOSIS — MNT (ACG 2021 / Krause 16th Ch. 28):</strong><br>
+  if(diagnosis==='diverticulosis')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>DIVERTICULOSIS — MNT (ACG 2021 / Krause 16th Ch. 28):</strong><br>
   • <strong>High-fibre diet:</strong> ≥25–38 g/day increases stool bulk and reduces intraluminal colonic pressure — primary strategy to prevent diverticulitis formation and progression.<br>
   • <strong>Fluid:</strong> ≥2 L/day — essential for fibre to function effectively.<br>
   • <strong>Nuts, seeds, popcorn:</strong> No evidence to avoid — historical advice now explicitly refuted by ACG 2021. A prospective study (HSPH) found higher nut/popcorn consumption REDUCED diverticulitis risk.<br>
@@ -4660,7 +4728,7 @@ function calculate() {
   • <strong>Obesity/constipation:</strong> Both independently increase risk — weight management and bowel habit regularity are key preventive strategies.<br>
   • <em>Source: ACG Diverticular Disease Guidelines 2021; Strate LL et al., Gastroenterology 2021;160:1099–1149</em></div></div>`;
 
-  if(diagnosis==='diverticulitis')alerts+=`<div class="alert warning"><span class="ai">🟤</span><div><strong>ACUTE DIVERTICULITIS — MNT (ACG 2021 / NICE 2019):</strong><br>
+  if(diagnosis==='diverticulitis')alerts+=`<div class="alert warning"><span class="ai"></span><div><strong>ACUTE DIVERTICULITIS — MNT (ACG 2021 / NICE 2019):</strong><br>
   • <strong>Acute phase (mild, outpatient):</strong> Clear liquid diet or low-fibre diet (<10 g/day) for 2–4 days based on symptom severity. Oral antibiotics per local protocol. IV fluids if admitted.<br>
   • <strong>Severe (hospitalised):</strong> NPO + IV fluids ± bowel rest. IV antibiotics. PN only if prolonged NPO (>5–7 days) or post-surgical.<br>
   • <strong>Perforation/peritonitis:</strong> NPO + surgical emergency. Post-op EN when bowel function returns.<br>
@@ -4669,7 +4737,7 @@ function calculate() {
   • <strong>Elective surgery:</strong> Consider after ≥2 recurrent attacks — peri-operative nutrition per ESPEN Surgery 2021 guidelines.<br>
   • <em>Source: ACG Diverticular Disease 2021; NICE NG147 2019; Strate LL et al., Gastroenterology 2021</em></div></div>`;
 
-  if(diagnosis==='microscopic_colitis')alerts+=`<div class="alert info"><span class="ai">🔬</span><div><strong>MICROSCOPIC COLITIS — MNT (AGA 2016 / ESPEN IBD):</strong><br>
+  if(diagnosis==='microscopic_colitis')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>MICROSCOPIC COLITIS — MNT (AGA 2016 / ESPEN IBD):</strong><br>
   • <strong>Diagnosis:</strong> Chronic watery, non-bloody diarrhoea with normal colonoscopy appearance — confirmed by colonic biopsy (collagenous or lymphocytic colitis).<br>
   • <strong>Trigger elimination:</strong> NSAIDs (especially diclofenac, ibuprofen, naproxen — strongest association), PPIs (omeprazole, lansoprazole), SSRIs (sertraline, paroxetine), metformin, statins — review all medications systematically.<br>
   • <strong>Dietary triggers:</strong> Caffeine, alcohol, smoking — avoid or eliminate. Lactose-free trial if lactase deficiency suspected. FODMAP assessment if IBS-like symptoms co-exist.<br>
@@ -4678,7 +4746,7 @@ function calculate() {
   • <strong>Monitoring:</strong> Weight, electrolytes, albumin, Vit D, bone density (chronic steroid use increases osteoporosis risk).<br>
   • <em>Source: AGA Technical Review Microscopic Colitis 2016; Miehlke S et al., United European Gastroenterol J 2021;9(3):283–354</em></div></div>`;
 
-  if(diagnosis==='colostomy')alerts+=`<div class="alert info"><span class="ai">💧</span><div><strong>COLOSTOMY — MNT (ESPEN / Krause 16th Ch. 28):</strong><br>
+  if(diagnosis==='colostomy')alerts+=`<div class="alert info"><span class="ai"></span><div><strong>COLOSTOMY — MNT (ESPEN / Krause 16th Ch. 28):</strong><br>
   • <strong>Early post-op (6–8 weeks):</strong> Low-fibre diet initially — avoid high-fibre, high-residue foods to reduce stoma output and risk of blockage. Then gradually increase fibre as tolerated.<br>
   • <strong>Fluid:</strong> Adequate hydration — colostomy output is more formed than ileostomy; electrolyte losses less extreme but still require monitoring.<br>
   • <strong>Gas-forming foods:</strong> Trial elimination if problematic — cabbage, onions, beans, carbonated drinks. Highly individual.<br>
@@ -4743,16 +4811,16 @@ function calculate() {
   const labRows = [];
   // FBC
   if(lhb)  labRows.push({g:'FBC',         n:`Haemoglobin (Hb) [${sex==='female'?'F':'M'}]`,v:lhb,lo:hbLo,hi:hbHi,u:'g/dL',note:lhb<hbLo?'Anaemia — assess iron/folate/B12, nutritional intake':lhb>hbHi?'Polycythaemia':'Normal'});
-  if(lwbc)  labRows.push({g:'FBC',         n:'WBC (White Cell Count)',     v:lwbc, lo:4.0, hi:11.0,  u:'×10⁹/L', note: lwbc>12?'Leukocytosis — infection/inflammation; metabolic rate ↑': lwbc<4.0?'⚠ Leucopaenia — immunocompromised; neutropenic diet precautions':'Normal'});
-  if(lneut) labRows.push({g:'FBC',         n:'Neutrophils',                v:lneut,lo:2.0, hi:7.5,   u:'×10⁹/L', note: lneut<0.5?'🚨 Severe neutropaenia — neutropenic diet; strict food safety':lneut<2.0?'Neutropaenia — infection risk elevated':'Normal'});
-  if(lplatelets) labRows.push({g:'FBC',    n:'Platelets',                  v:lplatelets,lo:150,hi:400,u:'×10⁹/L',note: lplatelets<50?'⚠ Severe thrombocytopaenia — risk of bleeding; monitor in refeeding': lplatelets<150?'Thrombocytopaenia — sepsis, malaria, liver failure, HIV':lplatelets>400?'Reactive thrombocytosis — infection/inflammation':'Normal'});
+  if(lwbc)  labRows.push({g:'FBC',         n:'WBC (White Cell Count)',     v:lwbc, lo:4.0, hi:11.0,  u:'×10⁹/L', note: lwbc>12?'Leukocytosis — infection/inflammation; metabolic rate ↑': lwbc<4.0?' Leucopaenia — immunocompromised; neutropenic diet precautions':'Normal'});
+  if(lneut) labRows.push({g:'FBC',         n:'Neutrophils',                v:lneut,lo:2.0, hi:7.5,   u:'×10⁹/L', note: lneut<0.5?' Severe neutropaenia — neutropenic diet; strict food safety':lneut<2.0?'Neutropaenia — infection risk elevated':'Normal'});
+  if(lplatelets) labRows.push({g:'FBC',    n:'Platelets',                  v:lplatelets,lo:150,hi:400,u:'×10⁹/L',note: lplatelets<50?' Severe thrombocytopaenia — risk of bleeding; monitor in refeeding': lplatelets<150?'Thrombocytopaenia — sepsis, malaria, liver failure, HIV':lplatelets>400?'Reactive thrombocytosis — infection/inflammation':'Normal'});
   if(lmcv)  labRows.push({g:'FBC',         n:'MCV (Mean Cell Volume)',     v:lmcv, lo:80,  hi:100,   u:'fL',      note: lmcv<80?'Microcytosis — iron deficiency, thalassaemia; iron-rich foods': lmcv>100?'Macrocytosis — B12/folate deficiency; supplement':'Normal'});
   if(lcrp)  labRows.push({g:'FBC',         n:'CRP (C-reactive protein)',   v:lcrp, lo:0,   hi:5,     u:'mg/L',    note: lcrp>100?'Severe inflammation — nutritional biomarkers unreliable; prioritise clinical assessment': lcrp>10?'Elevated — caution interpreting albumin/pre-albumin':'Within range'});
   // Electrolytes
-  if(lk)   labRows.push({g:'Electrolytes', n:'Potassium (K⁺)',       v:lk,   lo:3.5,  hi:5.0,   u:'mmol/L',  note: lk<3.5?'⚠ Replace IV/oral before feeding (risk refeeding)': lk>5.5?'⚠ Hyperkalaemia — restrict K⁺, reassess intake':'Within range'});
-  if(lp)   labRows.push({g:'Electrolytes', n:'Phosphate (PO₄)',      v:lp,   lo:0.75, hi:1.50,  u:'mmol/L',  note: lp<0.75?'🚨 REPLACE BEFORE FEEDING — high refeeding risk': lp<1.0?'Borderline low — monitor q12h': lp>1.50?'Hyperphosphataemia — reduce phosphate intake':'Within range'});
-  if(lm)   labRows.push({g:'Electrolytes', n:'Magnesium (Mg²⁺)',     v:lm,   lo:0.70, hi:1.05,  u:'mmol/L',  note: lm<0.70?'⚠ Replace IV (MgSO₄ 1–2g IV)': lm>1.05?'Hypermagnesaemia':'Within range'});
-  if(lna)  labRows.push({g:'Electrolytes', n:'Sodium (Na⁺)',         v:lna,  lo:136,  hi:145,   u:'mmol/L',  note: lna<130?'⚠ Severe hyponatraemia — fluid restrict; cautious correction': lna<136?'Hyponatraemia — assess volume status': lna>150?'⚠ Hypernatraemia — free water deficit; assess fluid need':'Within range'});
+  if(lk)   labRows.push({g:'Electrolytes', n:'Potassium (K⁺)',       v:lk,   lo:3.5,  hi:5.0,   u:'mmol/L',  note: lk<3.5?' Replace IV/oral before feeding (risk refeeding)': lk>5.5?' Hyperkalaemia — restrict K⁺, reassess intake':'Within range'});
+  if(lp)   labRows.push({g:'Electrolytes', n:'Phosphate (PO₄)',      v:lp,   lo:0.75, hi:1.50,  u:'mmol/L',  note: lp<0.75?' REPLACE BEFORE FEEDING — high refeeding risk': lp<1.0?'Borderline low — monitor q12h': lp>1.50?'Hyperphosphataemia — reduce phosphate intake':'Within range'});
+  if(lm)   labRows.push({g:'Electrolytes', n:'Magnesium (Mg²⁺)',     v:lm,   lo:0.70, hi:1.05,  u:'mmol/L',  note: lm<0.70?' Replace IV (MgSO₄ 1–2g IV)': lm>1.05?'Hypermagnesaemia':'Within range'});
+  if(lna)  labRows.push({g:'Electrolytes', n:'Sodium (Na⁺)',         v:lna,  lo:136,  hi:145,   u:'mmol/L',  note: lna<130?' Severe hyponatraemia — fluid restrict; cautious correction': lna<136?'Hyponatraemia — assess volume status': lna>150?' Hypernatraemia — free water deficit; assess fluid need':'Within range'});
   if(lca)  labRows.push({g:'Electrolytes', n:'Calcium (Ca²⁺ total)', v:lca,  lo:2.15, hi:2.55,  u:'mmol/L',  note: lca<2.15?'Hypocalcaemia — supplement Ca, check Mg/Vit D': lca>2.55?'Hypercalcaemia — limit Ca intake, hydration':'Within range'});
   if(lcl)  labRows.push({g:'Electrolytes', n:'Chloride (Cl⁻)',       v:lcl,  lo:98,   hi:106,   u:'mmol/L',  note: lcl<98?'Hypochloraemia — ?vomiting, NG losses': lcl>106?'Hyperchloraemia — monitor acid-base':'Within range'});
   // Nutritional biomarkers
@@ -4760,20 +4828,20 @@ function calculate() {
   if(lpre) labRows.push({g:'Nutrition',    n:'Pre-albumin (Transthyretin)',v:lpre,lo:0.20,hi:0.40,u:'g/L',  note: lpre<0.10?'Severe depletion — poor short-term nutritional status': lpre<0.20?'Low — assess nutritional intake adequacy':'Adequate short-term nutritional marker'});
   if(ltransferrin) labRows.push({g:'Nutrition', n:'Transferrin',      v:ltransferrin,lo:2.0,hi:3.6,u:'g/L', note: ltransferrin<2.0?'Low — malnutrition or anaemia of chronic disease': ltransferrin>3.6?'High — iron deficiency anaemia?':'Within range'});
   // Metabolic
-  if(lg)   labRows.push({g:'Metabolic',    n:'Blood Glucose',         v:lg,   lo:3.9,  hi:10.0,  u:'mmol/L',  note: lg<3.9?'🚨 HYPOGLYCAEMIA — treat urgently; hold insulin; check dextrose': lg>10?'⚠ Hyperglycaemia — target 6.1–10.0 mmol/L (NICE-SUGAR); insulin protocol':'ICU glycaemic target met'});
+  if(lg)   labRows.push({g:'Metabolic',    n:'Blood Glucose',         v:lg,   lo:3.9,  hi:10.0,  u:'mmol/L',  note: lg<3.9?' HYPOGLYCAEMIA — treat urgently; hold insulin; check dextrose': lg>10?' Hyperglycaemia — target 6.1–10.0 mmol/L (NICE-SUGAR); insulin protocol':'ICU glycaemic target met'});
   if(lhba1c)labRows.push({g:'Metabolic',   n:'HbA1c',                 v:lhba1c,lo:4.0,hi:5.6,   u:'%',       note: lhba1c>10?'Poor long-term control — adjust CHO target, diabetic formula': lhba1c>6.5?'Diagnosed DM — monitor BGL closely, target 6.1–10 mmol/L': lhba1c>5.7?'Pre-diabetic — low-GI diet, portion control':'Normal'});
-  if(ltrig) labRows.push({g:'Metabolic',   n:'Triglycerides',         v:ltrig,lo:0,   hi:1.7,   u:'mmol/L',  note: ltrig>5.6?'⚠ Severe hypertriglyceridaemia — withhold lipid-based feeds (propofol, lipid PN)': ltrig>2.3?'Elevated — reduce fat intake, avoid lipid PN overload':'Acceptable for lipid feeding'});
+  if(ltrig) labRows.push({g:'Metabolic',   n:'Triglycerides',         v:ltrig,lo:0,   hi:1.7,   u:'mmol/L',  note: ltrig>5.6?' Severe hypertriglyceridaemia — withhold lipid-based feeds (propofol, lipid PN)': ltrig>2.3?'Elevated — reduce fat intake, avoid lipid PN overload':'Acceptable for lipid feeding'});
   if(lchol) labRows.push({g:'Metabolic',   n:'Total Cholesterol',     v:lchol,lo:0,   hi:5.2,   u:'mmol/L',  note: lchol<2.0?'Very low — malnutrition marker, refeeding risk': lchol>6.2?'High — low saturated fat diet recommended':'Within target'});
   // Renal
   if(lc)   labRows.push({g:'Renal',        n:'Creatinine',            v:lc,   lo:60,  hi:120,   u:'µmol/L',  note: lc>500?'Severe renal failure — protein restriction, renal formula, RRT consideration': lc>120?'Elevated — assess AKI stage (KDIGO), adjust protein':'Normal renal function'});
   if(legfr) labRows.push({g:'Renal',       n:'eGFR',                  v:legfr,lo:60,  hi:120,   u:'mL/min',  note: legfr<15?'Stage 5 CKD — renal formula, specialist dietitian': legfr<30?'Stage 4 CKD — protein 0.6–0.8 g/kg IBW, restrict K/P/Na': legfr<60?'Stage 3 CKD — monitor protein, electrolytes':'Normal'});
   if(lurea) labRows.push({g:'Renal',       n:'Urea',                  v:lurea,lo:2.5, hi:7.5,   u:'mmol/L',  note: lurea>20?'Elevated — high protein catabolism or GI bleed; review protein target': lurea<2.5?'Low — ?liver disease, low protein intake':'Within range'});
   // Hepatic
-  if(lalt)  labRows.push({g:'Hepatic / LFT', n:'ALT',                   v:lalt, lo:7,   hi:56,    u:'U/L',     note: lalt>200?'⚠ Significant hepatocellular damage — review EN tolerance, LFT trend': lalt>56?'Elevated — consider BCAA formula if hepatic failure':'Normal'});
-  if(last)  labRows.push({g:'Hepatic / LFT', n:'AST',                   v:last, lo:10,  hi:40,    u:'U/L',     note: last>120?'⚠ Significant hepatic damage — monitor LFT trend, review EN formula': last>40?'Elevated — monitor LFT trend':'Normal'});
+  if(lalt)  labRows.push({g:'Hepatic / LFT', n:'ALT',                   v:lalt, lo:7,   hi:56,    u:'U/L',     note: lalt>200?' Significant hepatocellular damage — review EN tolerance, LFT trend': lalt>56?'Elevated — consider BCAA formula if hepatic failure':'Normal'});
+  if(last)  labRows.push({g:'Hepatic / LFT', n:'AST',                   v:last, lo:10,  hi:40,    u:'U/L',     note: last>120?' Significant hepatic damage — monitor LFT trend, review EN formula': last>40?'Elevated — monitor LFT trend':'Normal'});
   if(lalp)  labRows.push({g:'Hepatic / LFT', n:'ALP',                   v:lalp, lo:44,  hi:147,   u:'U/L',     note: lalp>300?'Markedly elevated — ?cholestasis; restrict fat, consider MCT oil': lalp>147?'Elevated — cholestasis/bone disease':'Normal'});
-  if(lbili) labRows.push({g:'Hepatic / LFT', n:'Total Bilirubin',       v:lbili,lo:3,   hi:21,    u:'µmol/L',  note: lbili>100?'⚠ Severe cholestasis — fat-restricted diet, fat-soluble vitamin supplementation': lbili>21?'Elevated — monitor liver function, assess EN formula fat content':'Normal'});
-  if(linr)  labRows.push({g:'Hepatic / LFT', n:'INR',                   v:linr, lo:0.8, hi:1.2,   u:'ratio',   note: linr>2.5?'⚠ Severely impaired coagulation — Vit K, FFP; severe liver disease': linr>1.5?'Elevated — fat-soluble vitamin deficiency possible; supplement Vit K':'Normal'});
+  if(lbili) labRows.push({g:'Hepatic / LFT', n:'Total Bilirubin',       v:lbili,lo:3,   hi:21,    u:'µmol/L',  note: lbili>100?' Severe cholestasis — fat-restricted diet, fat-soluble vitamin supplementation': lbili>21?'Elevated — monitor liver function, assess EN formula fat content':'Normal'});
+  if(linr)  labRows.push({g:'Hepatic / LFT', n:'INR',                   v:linr, lo:0.8, hi:1.2,   u:'ratio',   note: linr>2.5?' Severely impaired coagulation — Vit K, FFP; severe liver disease': linr>1.5?'Elevated — fat-soluble vitamin deficiency possible; supplement Vit K':'Normal'});
 
   const labCard=document.getElementById('r-lab-card');
   if(labRows.length){
@@ -4797,14 +4865,14 @@ function calculate() {
     if (typeof ntShowNotification === 'function' && typeof _ntPushPref === 'function') {
       const pref = _ntPushPref();
       if (pref.enabled && Notification.permission === 'granted') {
-        // Collect critical rows (those with 🚨 in note)
-        const criticals = labRows.filter(r => r.note && r.note.includes('🚨'));
-        const warnings  = labRows.filter(r => r.note && r.note.includes('⚠'));
+        // Collect critical rows (those with  in note)
+        const criticals = labRows.filter(r => r.note && r.note.includes(''));
+        const warnings  = labRows.filter(r => r.note && r.note.includes(''));
         if (criticals.length) {
           const nameTag = (typeof patientName !== 'undefined' && patientName) ? ` — ${patientName}` : '';
           const labSummary = criticals.map(r => `${r.n}: ${r.v} ${r.u}`).join(', ');
           ntShowNotification(
-            `🚨 Critical Lab Value${criticals.length > 1 ? 's' : ''}${nameTag}`,
+            ` Critical Lab Value${criticals.length > 1 ? 's' : ''}${nameTag}`,
             labSummary,
             { tag: 'nt-critical-lab', requireInteraction: true, data: { url: location.href } }
           );
@@ -4812,7 +4880,7 @@ function calculate() {
           const nameTag = (typeof patientName !== 'undefined' && patientName) ? ` — ${patientName}` : '';
           const labSummary = warnings.slice(0,2).map(r => `${r.n}: ${r.v} ${r.u}`).join(', ');
           ntShowNotification(
-            `⚠ Lab Warning${warnings.length > 1 ? 's' : ''}${nameTag}`,
+            ` Lab Warning${warnings.length > 1 ? 's' : ''}${nameTag}`,
             labSummary,
             { tag: 'nt-warn-lab', data: { url: location.href } }
           );
@@ -5270,63 +5338,63 @@ function calculate() {
 
     // 1. Nutrition status
     if (bmi < 16) {
-      insights.push({ icon:'🔴', col:'#fca5a5', text:`Severely underweight (BMI ${bmi.toFixed(1)}) — high risk of refeeding complications; initiate nutrition support cautiously with close electrolyte monitoring.` });
+      insights.push({ icon:'', col:'#fca5a5', text:`Severely underweight (BMI ${bmi.toFixed(1)}) — high risk of refeeding complications; initiate nutrition support cautiously with close electrolyte monitoring.` });
     } else if (bmi < 18.5) {
-      insights.push({ icon:'🟡', col:'#fcd34d', text:`Underweight (BMI ${bmi.toFixed(1)}) — prioritise energy-dense foods/formulas. Target weight gain of 0.5–1 kg/week where appropriate.` });
+      insights.push({ icon:'', col:'#fcd34d', text:`Underweight (BMI ${bmi.toFixed(1)}) — prioritise energy-dense foods/formulas. Target weight gain of 0.5–1 kg/week where appropriate.` });
     } else if (bmi >= 30 && !isCritical) {
-      insights.push({ icon:'🟡', col:'#fcd34d', text:`Obesity (BMI ${bmi.toFixed(1)}) — use hypocaloric high-protein strategy: 11–14 kcal/kg actual weight; protein ≥ 2 g/kg IBW (ASPEN Obesity Guidelines 2013).` });
+      insights.push({ icon:'', col:'#fcd34d', text:`Obesity (BMI ${bmi.toFixed(1)}) — use hypocaloric high-protein strategy: 11–14 kcal/kg actual weight; protein ≥ 2 g/kg IBW (ASPEN Obesity Guidelines 2013).` });
     } else {
-      insights.push({ icon:'🟢', col:'#6ee7b7', text:`BMI ${bmi.toFixed(1)} kg/m² — ${bmiCat}. Weight-based energy and protein targets applied at ${kcalPerKg} kcal/kg/day using ${energyLabel.split('·')[0].trim()}.` });
+      insights.push({ icon:'', col:'#6ee7b7', text:`BMI ${bmi.toFixed(1)} kg/m² — ${bmiCat}. Weight-based energy and protein targets applied at ${kcalPerKg} kcal/kg/day using ${energyLabel.split('·')[0].trim()}.` });
     }
     // GLIM 2019 — sarcopenic obesity clarification
     if (bmi >= 30 && (isRefeeding || ['malnutrition_severe','malnutrition_moderate'].includes(dx) || (diagnosis && diagnosis.includes('malnutrition')))) {
-      insights.push({ icon:'⚠️', col:'#fb923c', text:`Malnutrition diagnosed despite obesity (sarcopenic obesity) based on reduced intake, inflammation, and muscle loss (GLIM 2019). BMI ≥30 does NOT exclude malnutrition. Protein and micronutrient deficits may coexist with excess adiposity. High-protein prescription (≥1.5 g/kg IBW) is critical to preserve lean mass.` });
+      insights.push({ icon:'', col:'#fb923c', text:`Malnutrition diagnosed despite obesity (sarcopenic obesity) based on reduced intake, inflammation, and muscle loss (GLIM 2019). BMI ≥30 does NOT exclude malnutrition. Protein and micronutrient deficits may coexist with excess adiposity. High-protein prescription (≥1.5 g/kg IBW) is critical to preserve lean mass.` });
     }
 
     // 2. Refeeding risk
     if (isRefeeding) {
       if (rfRiskLevel === 'HIGH') {
-        insights.push({ icon:'🚨', col:'#fca5a5', text:`Refeeding syndrome risk: HIGH — energy capped at ≤5 kcal/kg/day; advance per protocol over 4–7 days. Correct K⁺ to ≥3.5 mmol/L, PO₄, and Mg²⁺ BEFORE commencing feeding. Monitor electrolytes daily (NICE CG32 2006).` });
-        insights.push({ icon:'🔴', col:'#fca5a5', text:`Permissive underfeeding: protein (${pRange}) is prioritised over total energy in early refeeding phase. Advance protein toward 1.5–2.0 g/kg as energy increases from Day 3 onwards.` });
+        insights.push({ icon:'', col:'#fca5a5', text:`Refeeding syndrome risk: HIGH — energy capped at ≤5 kcal/kg/day; advance per protocol over 4–7 days. Correct K⁺ to ≥3.5 mmol/L, PO₄, and Mg²⁺ BEFORE commencing feeding. Monitor electrolytes daily (NICE CG32 2006).` });
+        insights.push({ icon:'', col:'#fca5a5', text:`Permissive underfeeding: protein (${pRange}) is prioritised over total energy in early refeeding phase. Advance protein toward 1.5–2.0 g/kg as energy increases from Day 3 onwards.` });
       } else if (rfRiskLevel === 'MODERATE') {
-        insights.push({ icon:'⚠️', col:'#fcd34d', text:`Refeeding syndrome risk: MODERATE — start at 50% target calories, increase over 2–3 days. Check electrolytes at 12h and 24h after commencing nutrition support (NICE CG32 2006).` });
+        insights.push({ icon:'', col:'#fcd34d', text:`Refeeding syndrome risk: MODERATE — start at 50% target calories, increase over 2–3 days. Check electrolytes at 12h and 24h after commencing nutrition support (NICE CG32 2006).` });
       }
     }
 
     // 3. Protein adequacy
     const gPerKg = parseFloat(protPerKg);
     if (isRefeeding && rfRiskLevel === 'HIGH') {
-      insights.push({ icon:'💊', col:'#a78bfa', text:`Protein: ${protein.toFixed(1)} g/day (${protPerKg} g/kg IBW) — conservatively initiated per NICE CG32. Range: ${pRange}. Advance toward 1.5–2.0 g/kg as energy increases from Day 3. ${pGuideline}.` });
+      insights.push({ icon:'', col:'#a78bfa', text:`Protein: ${protein.toFixed(1)} g/day (${protPerKg} g/kg IBW) — conservatively initiated per NICE CG32. Range: ${pRange}. Advance toward 1.5–2.0 g/kg as energy increases from Day 3. ${pGuideline}.` });
     } else if (gPerKg >= 1.5) {
-      insights.push({ icon:'💊', col:'#a78bfa', text:`High-protein prescription: ${protein.toFixed(1)} g/day (${protPerKg} g/kg) — justified by ${pGuideline}. Monitor for nitrogen accumulation in renal impairment (BUN, urea).` });
+      insights.push({ icon:'', col:'#a78bfa', text:`High-protein prescription: ${protein.toFixed(1)} g/day (${protPerKg} g/kg) — justified by ${pGuideline}. Monitor for nitrogen accumulation in renal impairment (BUN, urea).` });
     } else if (gPerKg < 1.0 && !isRenal) {
-      insights.push({ icon:'⚠️', col:'#fcd34d', text:`Protein target ${protein.toFixed(1)} g/day (${protPerKg} g/kg) is below 1.0 g/kg — consider increasing unless renal restriction applies. ESPEN 2019 recommends ≥ 1.2 g/kg for hospital patients.` });
+      insights.push({ icon:'', col:'#fcd34d', text:`Protein target ${protein.toFixed(1)} g/day (${protPerKg} g/kg) is below 1.0 g/kg — consider increasing unless renal restriction applies. ESPEN 2019 recommends ≥ 1.2 g/kg for hospital patients.` });
     } else {
-      insights.push({ icon:'💊', col:'#a78bfa', text:`Protein target: ${protein.toFixed(1)} g/day (${protPerKg} g/kg) — aligned with ${pGuideline}. Range: ${pRange}.` });
+      insights.push({ icon:'', col:'#a78bfa', text:`Protein target: ${protein.toFixed(1)} g/day (${protPerKg} g/kg) — aligned with ${pGuideline}. Range: ${pRange}.` });
     }
 
     // 4. Feeding route / ICU
     if (isCritical && route !== 'enteral') {
-      insights.push({ icon:'🩺', col:'#60a5fa', text:`Enteral nutrition preferred in critical illness — initiate within 24–48h of ICU admission if haemodynamically stable (ESPEN ICU 2019, ASPEN/SCCM 2016).` });
+      insights.push({ icon:'', col:'#60a5fa', text:`Enteral nutrition preferred in critical illness — initiate within 24–48h of ICU admission if haemodynamically stable (ESPEN ICU 2019, ASPEN/SCCM 2016).` });
     } else if (route === 'enteral') {
       if (isRefeeding && rfRiskLevel === 'HIGH') {
-        insights.push({ icon:'🩺', col:'#60a5fa', text:`Advance enteral feeding slowly over 4–7 days due to high refeeding risk. Routine GRV monitoring is not recommended; assess tolerance clinically (vomiting, distension, aspiration risk). (NICE CG32 2006 · ASPEN/SCCM 2016)` });
+        insights.push({ icon:'', col:'#60a5fa', text:`Advance enteral feeding slowly over 4–7 days due to high refeeding risk. Routine GRV monitoring is not recommended; assess tolerance clinically (vomiting, distension, aspiration risk). (NICE CG32 2006 · ASPEN/SCCM 2016)` });
       } else {
-        insights.push({ icon:'🩺', col:'#60a5fa', text:`Enteral route selected — target full rate within 48–72h. Routine GRV monitoring is not recommended; assess tolerance clinically (ASPEN/SCCM 2016).` });
+        insights.push({ icon:'', col:'#60a5fa', text:`Enteral route selected — target full rate within 48–72h. Routine GRV monitoring is not recommended; assess tolerance clinically (ASPEN/SCCM 2016).` });
       }
     }
 
     // 5. Burns-specific
     if (dx === 'burns' && tbsa > 0) {
       const burnKcalKg = (energy / weight).toFixed(0);
-      insights.push({ icon:'🔥', col:'#fb923c', text:`Burns ${tbsa}% TBSA — estimated need ${Math.round(energy)} kcal/day (${burnKcalKg} kcal/kg). Initiate EN within 6h of injury; nasojejunal feeding preferred if gastric ileus. Protein 1.5–2.5 g/kg. Reassess weekly as wound healing progresses (ESPEN Burns 2013).` });
+      insights.push({ icon:'', col:'#fb923c', text:`Burns ${tbsa}% TBSA — estimated need ${Math.round(energy)} kcal/day (${burnKcalKg} kcal/kg). Initiate EN within 6h of injury; nasojejunal feeding preferred if gastric ileus. Protein 1.5–2.5 g/kg. Reassess weekly as wound healing progresses (ESPEN Burns 2013).` });
     }
 
     // 6. Renal-specific
     if (isRenal && renal === 'aki_rrt') {
-      insights.push({ icon:'💉', col:'#34d399', text:`Patient on RRT/CRRT — protein target 1.7–2.5 g/kg to offset dialysis losses. Energy 25–30 kcal/kg. Avoid phosphate- and potassium-restricted formula unless labs indicate (KDIGO 2012 / ESPEN AKI 2023).` });
+      insights.push({ icon:'', col:'#34d399', text:`Patient on RRT/CRRT — protein target 1.7–2.5 g/kg to offset dialysis losses. Energy 25–30 kcal/kg. Avoid phosphate- and potassium-restricted formula unless labs indicate (KDIGO 2012 / ESPEN AKI 2023).` });
     } else if (isRenal && (renal === 'ckd_g4' || renal === 'ckd_g5')) {
-      insights.push({ icon:'💉', col:'#34d399', text:`Advanced CKD (G4–G5) — protein restriction 0.6–0.8 g/kg only if no dialysis. Restrict phosphate (< 800 mg/day), potassium, and sodium as per labs. Supplement with ketoanalogues if available (KDIGO 2024).` });
+      insights.push({ icon:'', col:'#34d399', text:`Advanced CKD (G4–G5) — protein restriction 0.6–0.8 g/kg only if no dialysis. Restrict phosphate (< 800 mg/day), potassium, and sodium as per labs. Supplement with ketoanalogues if available (KDIGO 2024).` });
     }
 
     // Render insights
@@ -5465,28 +5533,28 @@ function glimAutoAssess() {
 
   if (!d.phenotypicMet && !d.etiologicMet) {
     diagnosis  = 'Well Nourished';
-    badgeColor = '#34d399'; bgColor = 'rgba(52,211,153,0.08)'; bdColor = 'rgba(52,211,153,0.45)'; diagColor = '#34d399'; diagIcon = '✅';
-    badge.textContent = '✅ WELL NOURISHED';
+    badgeColor = '#34d399'; bgColor = 'rgba(52,211,153,0.08)'; bdColor = 'rgba(52,211,153,0.45)'; diagColor = '#34d399'; diagIcon = '';
+    badge.textContent = ' WELL NOURISHED';
     badge.style.background = 'rgba(52,211,153,0.15)'; badge.style.color = '#34d399'; badge.style.borderColor = 'rgba(52,211,153,0.5)';
   } else if (d.phenotypicMet && !d.etiologicMet) {
     diagnosis  = 'Phenotypic criteria met — Etiologic criteria needed to confirm malnutrition';
-    badgeColor = '#60a5fa'; bgColor = 'rgba(96,165,250,0.07)'; bdColor = 'rgba(96,165,250,0.45)'; diagColor = '#60a5fa'; diagIcon = '⚠️';
-    badge.textContent = '⚠️ ETIOLOGIC NEEDED';
+    badgeColor = '#60a5fa'; bgColor = 'rgba(96,165,250,0.07)'; bdColor = 'rgba(96,165,250,0.45)'; diagColor = '#60a5fa'; diagIcon = '';
+    badge.textContent = ' ETIOLOGIC NEEDED';
     badge.style.background = 'rgba(96,165,250,0.15)'; badge.style.color = '#60a5fa'; badge.style.borderColor = 'rgba(96,165,250,0.5)';
   } else if (!d.phenotypicMet && d.etiologicMet) {
     diagnosis  = 'Etiologic criteria met — Phenotypic criteria needed to confirm malnutrition';
-    badgeColor = '#60a5fa'; bgColor = 'rgba(96,165,250,0.07)'; bdColor = 'rgba(96,165,250,0.45)'; diagColor = '#60a5fa'; diagIcon = '⚠️';
-    badge.textContent = '⚠️ PHENOTYPIC NEEDED';
+    badgeColor = '#60a5fa'; bgColor = 'rgba(96,165,250,0.07)'; bdColor = 'rgba(96,165,250,0.45)'; diagColor = '#60a5fa'; diagIcon = '';
+    badge.textContent = ' PHENOTYPIC NEEDED';
     badge.style.background = 'rgba(96,165,250,0.15)'; badge.style.color = '#60a5fa'; badge.style.borderColor = 'rgba(96,165,250,0.5)';
   } else if (d.isMalnourished && d.isSevere) {
     diagnosis  = 'Malnutrition — Stage 2 (Severe)' + (d.etiology ? ' related to ' + d.etiology : '');
-    badgeColor = '#ef4444'; bgColor = 'rgba(239,68,68,0.08)'; bdColor = 'rgba(239,68,68,0.5)'; diagColor = '#ef4444'; diagIcon = '🔴';
-    badge.textContent = '🔴 SEVERE MALNUTRITION';
+    badgeColor = '#ef4444'; bgColor = 'rgba(239,68,68,0.08)'; bdColor = 'rgba(239,68,68,0.5)'; diagColor = '#ef4444'; diagIcon = '';
+    badge.textContent = ' SEVERE MALNUTRITION';
     badge.style.background = 'rgba(239,68,68,0.2)'; badge.style.color = '#ef4444'; badge.style.borderColor = 'rgba(239,68,68,0.6)';
   } else if (d.isMalnourished) {
     diagnosis  = 'Malnutrition — Stage 1 (Moderate)' + (d.etiology ? ' related to ' + d.etiology : '');
-    badgeColor = '#f0b429'; bgColor = 'rgba(240,180,41,0.08)'; bdColor = 'rgba(240,180,41,0.5)'; diagColor = '#f0b429'; diagIcon = '🟠';
-    badge.textContent = '🟠 MODERATE MALNUTRITION';
+    badgeColor = '#f0b429'; bgColor = 'rgba(240,180,41,0.08)'; bdColor = 'rgba(240,180,41,0.5)'; diagColor = '#f0b429'; diagIcon = '';
+    badge.textContent = ' MODERATE MALNUTRITION';
     badge.style.background = 'rgba(240,180,41,0.2)'; badge.style.color = '#f0b429'; badge.style.borderColor = 'rgba(240,180,41,0.6)';
   } else {
     badge.textContent = 'NOT ASSESSED';
@@ -5534,7 +5602,7 @@ function glimAutoAssess() {
     + '<div style="font-size:10px;line-height:1.8">' + etioRows.join('<br>') + '</div>'
     + '</div>'
     + '</div>'
-    + '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:8px">⚖️ Cederholm T et al. GLIM criteria for the diagnosis of malnutrition. Clin Nutr 2019;38:1–9. Screen first with MNA / NRS-2002 / MUST before applying GLIM.</div>';
+    + '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:8px"> Cederholm T et al. GLIM criteria for the diagnosis of malnutrition. Clin Nutr 2019;38:1–9. Screen first with MNA / NRS-2002 / MUST before applying GLIM.</div>';
 }
 
 function renderGLIMResult() {
@@ -5550,25 +5618,25 @@ function renderGLIMResult() {
     diagLabel  = 'Severe Malnutrition';
     diagSub    = 'Stage 2 — GLIM 2019';
     stage      = d.etiology ? 'Related to ' + d.etiology.charAt(0).toUpperCase() + d.etiology.slice(1) : 'Etiology not specified';
-    stageBadge = '🔴 STAGE 2 — SEVERE';
+    stageBadge = ' STAGE 2 — SEVERE';
     headerBg   = 'rgba(239,68,68,0.12)'; borderCol = 'rgba(239,68,68,0.55)'; iconCol = '#ef4444';
   } else if (d.isMalnourished) {
     diagLabel  = 'Moderate Malnutrition';
     diagSub    = 'Stage 1 — GLIM 2019';
     stage      = d.etiology ? 'Related to ' + d.etiology.charAt(0).toUpperCase() + d.etiology.slice(1) : 'Etiology not specified';
-    stageBadge = '🟠 STAGE 1 — MODERATE';
+    stageBadge = ' STAGE 1 — MODERATE';
     headerBg   = 'rgba(240,180,41,0.10)'; borderCol = 'rgba(240,180,41,0.55)'; iconCol = '#f0b429';
   } else if (d.phenotypicMet || d.etiologicMet) {
     diagLabel  = 'At Risk';
     diagSub    = 'Criteria partially met — GLIM 2019';
     stage      = d.phenotypicMet ? 'Phenotypic criteria met — etiologic assessment required' : 'Etiologic criteria met — phenotypic assessment required';
-    stageBadge = '⚠️ CRITERIA INCOMPLETE';
+    stageBadge = ' CRITERIA INCOMPLETE';
     headerBg   = 'rgba(96,165,250,0.08)'; borderCol = 'rgba(96,165,250,0.45)'; iconCol = '#60a5fa';
   } else {
     diagLabel  = 'Well Nourished';
     diagSub    = 'No malnutrition criteria met — GLIM 2019';
     stage      = 'Continue monitoring — reassess if clinical status changes';
-    stageBadge = '✅ WELL NOURISHED';
+    stageBadge = ' WELL NOURISHED';
     headerBg   = 'rgba(52,211,153,0.08)'; borderCol = 'rgba(52,211,153,0.45)'; iconCol = '#34d399';
   }
 
@@ -5584,7 +5652,7 @@ function renderGLIMResult() {
   var wlStatus = d.p1Sev ? 'Severe' : d.p1Mod ? 'Moderate' : 'Not met';
   var wlColor  = d.p1Sev ? '#ef4444' : d.p1Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">📉 Weight Loss</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Weight Loss</td>'
     + '<td style="padding:6px 12px;color:#fff;font-size:10px">' + wlText + '</td>'
     + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + wlColor + '">' + wlStatus + '</td>'
     + '</tr>';
@@ -5593,7 +5661,7 @@ function renderGLIMResult() {
   var bmiStatus = d.p2Sev ? 'Severe' : d.p2Mod ? 'Moderate' : 'Not met';
   var bmiColor  = d.p2Sev ? '#ef4444' : d.p2Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">📏 Low BMI</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Low BMI</td>'
     + '<td style="padding:6px 12px;color:#fff;font-size:10px">' + bmiText + '</td>'
     + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + bmiColor + '">' + bmiStatus + '</td>'
     + '</tr>';
@@ -5601,13 +5669,13 @@ function renderGLIMResult() {
   var mmStatus = d.p3Sev ? 'Severe' : d.p3Mod ? 'Moderate' : 'Not reported';
   var mmColor  = d.p3Sev ? '#ef4444' : d.p3Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">💪 Muscle Mass</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Muscle Mass</td>'
     + '<td style="padding:6px 12px;color:#fff;font-size:10px">BIA / DEXA / anthropometry</td>'
     + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + mmColor + '">' + mmStatus + '</td>'
     + '</tr>';
 
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">🍽️ Reduced Intake</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Reduced Intake</td>'
     + '<td style="padding:6px 12px;color:#fff;font-size:10px">≤50% EER &gt;1 wk or GI malabsorption</td>'
     + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + (d.e1 ? '#34d399' : '#a8c8e8') + '">' + (d.e1 ? '✓ Met' : '✗ Not ticked') + '</td>'
     + '</tr>';
@@ -5628,7 +5696,7 @@ function renderGLIMResult() {
   card.innerHTML = '<div style="background:#0c1830;border:2px solid ' + borderCol + ';border-radius:12px;overflow:hidden">'
     + '<div style="background:' + headerBg + ';border-bottom:1px solid ' + borderCol + ';padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
     + '<div style="display:flex;align-items:center;gap:10px">'
-    + '<span style="font-size:20px">⚖️</span>'
+    + '<span style="font-size:20px"></span>'
     + '<div>'
     + '<div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:' + iconCol + ';text-transform:uppercase">GLIM 2019 — Nutrition Assessment</div>'
     + '<div style="font-family:-apple-system,system-ui,sans-serif;font-size:19px;font-weight:800;color:' + iconCol + ';letter-spacing:0.5px">' + diagLabel + '</div>'
@@ -5646,7 +5714,7 @@ function renderGLIMResult() {
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>'
     + '<div style="padding:10px 18px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);border-top:1px solid rgba(56,100,168,0.2)">'
-    + '📚 Cederholm T, Jensen GL, Correia MITD, et al. GLIM criteria for the diagnosis of malnutrition. <em>JPEN J Parenter Enteral Nutr.</em> 2019;43(1):32–40. &nbsp;|&nbsp; Screen first with NRS-2002, MNA, or MUST → diagnose with GLIM → grade severity → plan intervention.'
+    + ' Cederholm T, Jensen GL, Correia MITD, et al. GLIM criteria for the diagnosis of malnutrition. <em>JPEN J Parenter Enteral Nutr.</em> 2019;43(1):32–40. &nbsp;|&nbsp; Screen first with NRS-2002, MNA, or MUST → diagnose with GLIM → grade severity → plan intervention.'
     + '</div></div>';
 }
 
@@ -6053,25 +6121,25 @@ function syncNpoToRFAndGLIM() {
 
   if (npoDaysHint) {
     if (!npoDays) { npoDaysHint.textContent = ''; }
-    else if (npoDays >= 10) { npoDaysHint.textContent = '🔴 ≥10d → HIGH refeeding risk (rf-h3)'; npoDaysHint.style.color = '#ef4444'; }
-    else if (npoDays >= 5)  { npoDaysHint.textContent = '🟠 ≥5d → MODERATE risk (rf-m3)';         npoDaysHint.style.color = '#f0b429'; }
-    else                    { npoDaysHint.textContent = '🟢 <5 days — monitor intake';              npoDaysHint.style.color = '#34d399'; }
+    else if (npoDays >= 10) { npoDaysHint.textContent = ' ≥10d → HIGH refeeding risk (rf-h3)'; npoDaysHint.style.color = '#ef4444'; }
+    else if (npoDays >= 5)  { npoDaysHint.textContent = ' ≥5d → MODERATE risk (rf-m3)';         npoDaysHint.style.color = '#f0b429'; }
+    else                    { npoDaysHint.textContent = ' <5 days — monitor intake';              npoDaysHint.style.color = '#34d399'; }
   }
   if (intakePctHint) {
     if (intakePct === null) { intakePctHint.textContent = ''; }
-    else if (intakePct <= 25)  { intakePctHint.textContent = '🔴 Critical intake deficit → GLIM etiologic'; intakePctHint.style.color = '#ef4444'; }
-    else if (intakePct <= 50)  { intakePctHint.textContent = '🟠 ≤50% EER → GLIM intake criterion triggered'; intakePctHint.style.color = '#f0b429'; }
-    else if (intakePct <= 75)  { intakePctHint.textContent = '🟡 Reduced intake — monitor closely'; intakePctHint.style.color = '#f0b429'; }
-    else                       { intakePctHint.textContent = '🟢 Adequate intake'; intakePctHint.style.color = '#34d399'; }
+    else if (intakePct <= 25)  { intakePctHint.textContent = ' Critical intake deficit → GLIM etiologic'; intakePctHint.style.color = '#ef4444'; }
+    else if (intakePct <= 50)  { intakePctHint.textContent = ' ≤50% EER → GLIM intake criterion triggered'; intakePctHint.style.color = '#f0b429'; }
+    else if (intakePct <= 75)  { intakePctHint.textContent = ' Reduced intake — monitor closely'; intakePctHint.style.color = '#f0b429'; }
+    else                       { intakePctHint.textContent = ' Adequate intake'; intakePctHint.style.color = '#34d399'; }
   }
   if (giHint) {
     const giMsg = {
       'normal':        '',
-      'partial':       '🟡 Partial absorption — consider supplementation',
-      'malabsorption': '🔴 Malabsorption → GLIM intake + RF risk triggered',
-      'ileus':         '🔴 GI dysmotility → enteral feeding approach requires clinical review',
-      'fistula':       '🔴 High-output fistula → track losses, advance feeds cautiously',
-      'post_op':       '🟠 Post-surgical — advance feeds cautiously'
+      'partial':       ' Partial absorption — consider supplementation',
+      'malabsorption': ' Malabsorption → GLIM intake + RF risk triggered',
+      'ileus':         ' GI dysmotility → enteral feeding approach requires clinical review',
+      'fistula':       ' High-output fistula → track losses, advance feeds cautiously',
+      'post_op':       ' Post-surgical — advance feeds cautiously'
     };
     giHint.textContent = giMsg[giFunc] || '';
     giHint.style.color = giIsImpaired ? '#ef4444' : giIsPartial ? '#f0b429' : '#34d399';
@@ -6165,7 +6233,7 @@ function recallSetMode(mode) {
     selector.style.display = 'none';
     content.style.display  = '';
     if (badge) {
-      badge.textContent = mode === 'exchange' ? '🔄 UCT EXCHANGE MODE' : '🌽 MALAWI FCT MODE';
+      badge.textContent = mode === 'exchange' ? ' UCT EXCHANGE MODE' : ' MALAWI FCT MODE';
       badge.style.borderColor = mode === 'exchange' ? 'rgba(29,233,212,0.3)' : 'rgba(240,180,41,0.35)';
       badge.style.background  = mode === 'exchange' ? 'rgba(29,233,212,0.08)' : 'rgba(240,180,41,0.07)';
       badge.style.color       = mode === 'exchange' ? 'var(--teal)' : 'var(--amber)';
@@ -6197,7 +6265,7 @@ function renderRecallMeals() {
     div.id = `meal-${mi}`;
     div.innerHTML = `
       <div class="meal-header">
-        <div class="meal-title">${['','','☀','','','⭐'][mi]} ${meal}</div>
+        <div class="meal-title">${['','','','','',''][mi]} ${meal}</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)" id="meal-${mi}-kcal">0 kcal</div>
       </div>
       <!-- Mode toggle -->
@@ -6208,17 +6276,17 @@ function renderRecallMeals() {
       <!-- Exchange mode -->
       <div id="meal-${mi}-exchange-row" class="recall-add-row">
         <div class="field-group">
-          <label class="field-lbl">🍽 Food Description</label>
+          <label class="field-lbl"> Food Description</label>
           <input class="field-inp" id="meal-${mi}-desc" placeholder="e.g. Nsima with beans relish" style="font-size:11px">
         </div>
         <div class="field-group">
-          <label class="field-lbl">⚖ Exchange Type</label>
+          <label class="field-lbl"> Exchange Type</label>
           <select class="field-inp" id="meal-${mi}-type" onchange="populateUctFoodList(${mi})" style="font-size:11px">
             ${Object.entries(EXCHANGE_TYPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
           </select>
         </div>
         <div class="field-group">
-          <label class="field-lbl">🔍 UCT Food Lookup</label>
+          <label class="field-lbl"> UCT Food Lookup</label>
           <select class="field-inp" id="meal-${mi}-uct-food" onchange="uctFoodSelect(${mi})" style="font-size:10px;color:var(--text-dim)">
             <option value="">— Pick from UCT Exchange List —</option>
           </select>
@@ -6256,14 +6324,14 @@ function renderRecallMeals() {
         <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(240,180,41,0.2),transparent)"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
           <div class="field-group">
-            <label class="field-lbl">📂 Food Category</label>
+            <label class="field-lbl"> Food Category</label>
             <select class="field-inp" id="meal-${mi}-fct-cat" onchange="filterFctItems(${mi})" style="font-size:11px">
               <option value="">— All Categories —</option>
               ${FCT_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
             </select>
           </div>
           <div class="field-group">
-            <label class="field-lbl">🌽 Food Item (Malawi FCT)</label>
+            <label class="field-lbl"> Food Item (Malawi FCT)</label>
             <select class="field-inp" id="meal-${mi}-fct-food" onchange="updateFctPortions(${mi})" style="font-size:11px">
               ${MALAWI_FCT.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}
             </select>
@@ -6271,7 +6339,7 @@ function renderRecallMeals() {
         </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end">
           <div class="field-group">
-            <label class="field-lbl">🥄 Household Measure / Portion</label>
+            <label class="field-lbl"> Household Measure / Portion</label>
             <select class="field-inp" id="meal-${mi}-fct-portion" style="font-size:11px">
               <option>—</option>
             </select>
@@ -6539,10 +6607,10 @@ function updateRecallTotals() {
       if (!target) return '';
       const pct    = Math.min(Math.round(actual/target*100), 200);
       const deficit= Math.round(target - actual);
-      const status = pct >= 90 && pct <= 115 ? ['✅ Adequate','var(--green)']
-                   : pct < 70  ? ['❌ Deficient','var(--red)']
-                   : pct < 90  ? ['⚠ Low','var(--amber)']
-                   : ['⚠ Excess','var(--amber)'];
+      const status = pct >= 90 && pct <= 115 ? [' Adequate','var(--green)']
+                   : pct < 70  ? [' Deficient','var(--red)']
+                   : pct < 90  ? [' Low','var(--amber)']
+                   : [' Excess','var(--amber)'];
       const barW   = Math.min(pct, 100);
       const barCol = status[1];
       return `<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">
@@ -6587,7 +6655,7 @@ function updateRecallTotals() {
           ${aRow('','Energy (kcal)', totKcal, targetKcal, 'kcal', 'Primary fuel')}
           ${aRow('','Carbohydrate (g)', totCho, targetCho, 'g', choPctEnergy+'% of energy intake')}
           ${aRow('','Protein (g)', totPro, targetPro, 'g', proPctEnergy+'% of energy intake')}
-          ${aRow('🫒','Fat (g)', totFat, targetFat, 'g', fatPctEnergy+'% of energy intake')}
+          ${aRow('','Fat (g)', totFat, targetFat, 'g', fatPctEnergy+'% of energy intake')}
           ${aRow('','Energy from CHO (kcal)', choKcal, targetCho?targetCho*4:0, 'kcal', 'CHO × 4')}
           ${aRow('','Energy from Protein (kcal)', proKcal, targetPro?targetPro*4:0, 'kcal', 'Pro × 4')}
           ${aRow('','Energy from Fat (kcal)', fatKcal, targetFat?targetFat*9:0, 'kcal', 'Fat × 9')}
@@ -6600,10 +6668,10 @@ function updateRecallTotals() {
         Reference: 45–65% CHO · 10–35% protein · 20–35% fat (DRI/IOM AMDR) ·
         Total energy as calculated: ${totKcal} kcal ·
         ${targetKcal ? (totKcal >= targetKcal*0.9 && totKcal <= targetKcal*1.1 ?
-          '<span style="color:var(--green)">✅ Energy intake within 10% of target</span>' :
+          '<span style="color:var(--green)"> Energy intake within 10% of target</span>' :
           totKcal < targetKcal*0.9 ?
-          '<span style="color:var(--red)">❌ Energy deficit: '+Math.round(targetKcal-totKcal)+' kcal/day</span>' :
-          '<span style="color:var(--amber)">⚠ Energy excess: '+Math.round(totKcal-targetKcal)+' kcal/day</span>') : ''}
+          '<span style="color:var(--red)"> Energy deficit: '+Math.round(targetKcal-totKcal)+' kcal/day</span>' :
+          '<span style="color:var(--amber)"> Energy excess: '+Math.round(totKcal-targetKcal)+' kcal/day</span>') : ''}
       </div>
     `;
   } else if (analysisPanel) {
@@ -6665,7 +6733,7 @@ function syncRecallFromCalc(sourceKey) {
   if (d.weight) document.getElementById('recall-wt').value = parseFloat(d.weight).toFixed(1);
 
   const statusEl = document.getElementById('recall-sync-status');
-  if (statusEl) statusEl.innerHTML = `<span style="color:var(--green)">✅ Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any field to override</span>`;
+  if (statusEl) statusEl.innerHTML = `<span style="color:var(--green)"> Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any field to override</span>`;
   updateRecallTotals();
   showToast(`✓ Recall targets synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'}`, 'success');
 }
@@ -6685,7 +6753,7 @@ function recallAutoTargets() {
   document.getElementById('recall-target-fat').value   = fat;
   document.getElementById('recall-target-fluid').value = fluid;
   const statusEl = document.getElementById('recall-sync-status');
-  if(statusEl) statusEl.innerHTML = '<span style="color:var(--amber)">📐 Auto-estimated from weight ('+wt+' kg) — adjust per clinical context</span>';
+  if(statusEl) statusEl.innerHTML = '<span style="color:var(--amber)"> Auto-estimated from weight ('+wt+' kg) — adjust per clinical context</span>';
   updateRecallTotals();
 }
 
@@ -6744,7 +6812,7 @@ function clearRecall() {
 
 
 let mpData = {}; // { mealIndex: [{name, portion, kcal, pro, cho, fat, kj}] }
-const MP_MEAL_NAMES = [' Breakfast',' Mid-morning','☀ Lunch',' Afternoon Snack',' Dinner','⭐ Evening Snack'];
+const MP_MEAL_NAMES = [' Breakfast',' Mid-morning',' Lunch',' Afternoon Snack',' Dinner',' Evening Snack'];
 let mpRequirements = { kcal: 0, pro: 0, fluid: 2000 };
 
 function syncMealPlanFromCalc(sourceKey) {
@@ -6775,14 +6843,14 @@ function syncMealPlanFromCalc(sourceKey) {
     document.getElementById('mp-target-pro').value   = Math.round(_pro);
     document.getElementById('mp-target-fat').value   = _fat;
     document.getElementById('mp-target-fluid').value = mpRequirements.fluid;
-    document.getElementById('mp-calc-status').innerHTML = `<span style="color:var(--green)">✅ Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any field to override</span>`;
+    document.getElementById('mp-calc-status').innerHTML = `<span style="color:var(--green)"> Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any field to override</span>`;
     const rke = document.getElementById('recall-target-kcal');
     const rpe = document.getElementById('recall-target-pro');
     if (rke) rke.value = Math.round(d.energy);
     if (rpe) rpe.value = Math.round(d.protein);
     showToast(`✓ Meal plan synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'}`, 'success');
   } else {
-    document.getElementById('mp-calc-status').innerHTML = '<span style="color:var(--amber)">⚠ Run calculator first to sync</span>';
+    document.getElementById('mp-calc-status').innerHTML = '<span style="color:var(--amber)"> Run calculator first to sync</span>';
   }
   updateMpTotals();
 }
@@ -7001,7 +7069,7 @@ function updateMpTotals() {
     mpDistEl.innerHTML=`
       <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)">Carbohydrate</span><span style="color:var(--amber)">${choPct}% (${totCho}g · ${totCho*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${choPct}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div></div>
       <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)">Protein</span><span style="color:var(--blue)">${proPct}% (${totPro}g · ${totPro*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${proPct}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div></div>
-      <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)">🫒 Fat</span><span style="color:var(--green)">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)"> Fat</span><span style="color:var(--green)">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
     `;
   }
   // Gap alert
@@ -7009,7 +7077,7 @@ function updateMpTotals() {
   if(tk && totKcal < tk*0.75) {
     const deficit = tk - totKcal;
     gap.style.display='';
-    gap.innerHTML=`<div class="alert warning"><span class="ai">⚠</span><div>Energy gap: <strong>${deficit} kcal</strong> below target. Consider adding ONS or increasing portion sizes. ${tp && totPro < tp*0.75 ? `Protein gap: ${Math.round(tp-totPro)}g.` : ''}</div></div>`;
+    gap.innerHTML=`<div class="alert warning"><span class="ai"></span><div>Energy gap: <strong>${deficit} kcal</strong> below target. Consider adding ONS or increasing portion sizes. ${tp && totPro < tp*0.75 ? `Protein gap: ${Math.round(tp-totPro)}g.` : ''}</div></div>`;
     document.getElementById('mp-ons-card').style.display='';
     document.getElementById('mp-ons-text').innerHTML=`<div style="margin-bottom:6px;color:var(--teal)">Suggested ONS to bridge the ${deficit} kcal gap:</div><div>• Fresubin Energy 200mL × ${Math.ceil(deficit/300)} bottle(s) = ~${Math.ceil(deficit/300)*300} kcal, ${Math.ceil(deficit/300)*11.2}g protein</div><div>• Ensure Plus 237mL × ${Math.ceil(deficit/350)} carton(s) = ~${Math.ceil(deficit/350)*350} kcal, ${Math.ceil(deficit/350)*13}g protein</div><div style="color:var(--text-dim);margin-top:6px">Prescribe ONS between meals, not as meal replacement.</div>`;
   } else {
@@ -7149,7 +7217,7 @@ const FORMULA_RECOMMENDATIONS = {
   // ── Malnutrition / Wasting ─────────────────────────────────────
   sam:             { formula:'fresubin_orig_fibre',   reason:'Standard polymeric formula. Start low (50–75 kcal/kg/day) to avoid refeeding syndrome. WHO Phase 1→2 approach.',    badge:'MALNUT', color:'var(--amber)' },
   mam:             { formula:'fresubin_orig_fibre',   reason:'Standard polymeric formula. Advance gradually. RUTF/F-100 equivalent if oral feeding possible.',                    badge:'MALNUT', color:'var(--amber)' },
-  refeeding_risk:  { formula:'nutrison_std',          reason:'⚠ START LOW: 5–10 kcal/kg/day. IV Thiamine 200–300 mg BEFORE feeds. Advance slowly over 5–7 days. Monitor PO₄/K⁺/Mg²⁺.',badge:'RF RISK', color:'var(--red)' },
+  refeeding_risk:  { formula:'nutrison_std',          reason:' START LOW: 5–10 kcal/kg/day. IV Thiamine 200–300 mg BEFORE feeds. Advance slowly over 5–7 days. Monitor PO₄/K⁺/Mg²⁺.',badge:'RF RISK', color:'var(--red)' },
   anorexia:        { formula:'nutrison_std',          reason:'Start very low (200–400 kcal/day). Increase by 200 kcal every 3–5 days. Monitor electrolytes for refeeding risk.',   badge:'MALNUT', color:'var(--amber)' },
 
   // ── GI / Malabsorption ─────────────────────────────────────────
@@ -7263,14 +7331,14 @@ function syncEnteralFromCalc(sourceKey) {
   document.getElementById('en-src-offset').value = Math.round(d.energy - netKcal);
 
   const enStatus = document.getElementById('en-sync-status');
-  if (enStatus) enStatus.innerHTML = `<span style="color:var(--green)">✅ Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any value to override</span>`;
+  if (enStatus) enStatus.innerHTML = `<span style="color:var(--green)"> Synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'} — edit any value to override</span>`;
 
   const diag  = d.diagnosis || 'general';
   const renal = d.renalRaw || d.renal     || 'normal';  // use raw key for formula lookup
   const hep   = d.hepatic   || 'none';
   autoSelectFormula(diag, renal, hep);
 
-  showToast(`✅ Enteral data synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'}`, 'success');
+  showToast(` Enteral data synced from ${CALC_SOURCES[sourceKey]?.label || 'Calculator'}`, 'success');
 }
 
 function onFormulaChange(manualOverride) {
@@ -7364,13 +7432,13 @@ function enCalc() {
     <tr><td>Formula</td><td class="c-t">${formulaName}</td></tr>
     <tr><td>Protein per litre</td><td>${proPerL} g/L</td></tr>
     ${formulaCho ? `<tr><td>CHO / Fat</td><td style="color:var(--text-dim)">${formulaCho} g/L CHO · ${formulaFat} g/L fat</td></tr>` : ''}
-    ${formulaOsm ? `<tr><td>Osmolarity</td><td style="color:${formulaOsm > 400 ? 'var(--amber)' : 'var(--green)'}">${formulaOsm} mOsm/L ${formulaOsm > 400 ? '⚠ high — monitor GI tolerance' : '✓ iso-osmolar'}</td></tr>` : ''}
+    ${formulaOsm ? `<tr><td>Osmolarity</td><td style="color:${formulaOsm > 400 ? 'var(--amber)' : 'var(--green)'}">${formulaOsm} mOsm/L ${formulaOsm > 400 ? ' high — monitor GI tolerance' : '✓ iso-osmolar'}</td></tr>` : ''}
     ${formulaFibre !== null ? `<tr><td>Fibre</td><td>${formulaFibre === 0 ? 'Fibre-free' : formulaFibre + ' g/L → ' + (formulaFibre*(volDay/1000)).toFixed(1) + ' g/day'}</td></tr>` : ''}
     <tr><td>Volume prescribed</td><td>${volDay} mL/day (${(volDay/1000).toFixed(2)} L)</td></tr>
     <tr><td>Protein provided</td><td style="color:${proColor};font-weight:700">${proProvided} g/day</td></tr>
     <tr><td>Protein target</td><td>${proNeed} g/day</td></tr>
     <tr><td>Protein gap</td><td style="color:${proGap>0?'var(--red)':'var(--green)'}">${proGap > 0 ? '+'+proGap+'g deficit — consider protein modular or adjust formula' : 'Met ✓'}</td></tr>
-    ${proGap > 0 ? '<tr><td colspan="2" style="color:var(--amber);font-size:10px">⚠ Add protein modular (e.g. Protifar) OR switch to higher-protein formula and recalculate</td></tr>' : ''}
+    ${proGap > 0 ? '<tr><td colspan="2" style="color:var(--amber);font-size:10px"> Add protein modular (e.g. Protifar) OR switch to higher-protein formula and recalculate</td></tr>' : ''}
   `;
 
   // Fluid table
@@ -7384,7 +7452,7 @@ function enCalc() {
   `;
 
   // Step 12: Final prescription
-  const rfWarning = isRefeeding ? '<div style="color:var(--amber)">⚠ REFEEDING PROTOCOL: Start at 10–20 kcal/kg. IV Thiamine 200–300mg BEFORE feeding. Increase slowly. Monitor electrolytes 2–3× daily.</div>' : '';
+  const rfWarning = isRefeeding ? '<div style="color:var(--amber)"> REFEEDING PROTOCOL: Start at 10–20 kcal/kg. IV Thiamine 200–300mg BEFORE feeding. Increase slowly. Monitor electrolytes 2–3× daily.</div>' : '';
   document.getElementById('en-prescription').innerHTML = `
     <div>Formula: <strong style="color:var(--teal)">${formulaName}</strong> · ${conc} kcal/mL · ${proPerL}g protein/L${formulaOsm ? ' · ' + formulaOsm + ' mOsm/L' : ''}</div>
     ${formulaNote ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">ℹ ${formulaNote}</div>` : ''}
@@ -7400,9 +7468,9 @@ function enCalc() {
 
   // Alerts
   let alerts = '';
-  if (rate > 150) alerts += `<div class="alert warning"><span class="ai">⚠</span><div>Rate ${rate} mL/hr exceeds recommended max of 150 mL/hr for adults. Consider a higher concentration formula or volume-based ordering.</div></div>`;
-  if (isRefeeding) alerts += `<div class="alert danger"><span class="ai">🚨</span><div><strong>REFEEDING SYNDROME PRECAUTIONS ACTIVE:</strong> Start at 10–20 kcal/kg. IV Thiamine 200–300mg BEFORE starting feeds. Restrict fluid &lt;2L/day. Monitor K⁺, PO₄, Mg²⁺ 2–3× daily. Increase to goal over 5–7 days.</div></div>`;
-  if (!proMet) alerts += `<div class="alert info"><span class="ai">💉</span><div>Protein not fully met by formula alone (${proProvided}g provided vs ${proNeed}g needed). Options: (1) Switch to higher-protein formula, (2) Add protein modular supplement, (3) Accept if patient is in early ICU phase.</div></div>`;
+  if (rate > 150) alerts += `<div class="alert warning"><span class="ai"></span><div>Rate ${rate} mL/hr exceeds recommended max of 150 mL/hr for adults. Consider a higher concentration formula or volume-based ordering.</div></div>`;
+  if (isRefeeding) alerts += `<div class="alert danger"><span class="ai"></span><div><strong>REFEEDING SYNDROME PRECAUTIONS ACTIVE:</strong> Start at 10–20 kcal/kg. IV Thiamine 200–300mg BEFORE starting feeds. Restrict fluid &lt;2L/day. Monitor K⁺, PO₄, Mg²⁺ 2–3× daily. Increase to goal over 5–7 days.</div></div>`;
+  if (!proMet) alerts += `<div class="alert info"><span class="ai"></span><div>Protein not fully met by formula alone (${proProvided}g provided vs ${proNeed}g needed). Options: (1) Switch to higher-protein formula, (2) Add protein modular supplement, (3) Accept if patient is in early ICU phase.</div></div>`;
   document.getElementById('en-alerts').innerHTML = alerts;
 
   document.getElementById('en-results').style.display = '';
@@ -7465,7 +7533,7 @@ function burnEquationPreview() {
 
   // Build colour coding — flag Curreri as potentially high vs ESPEN
   const rows = [
-    { name:'Curreri (1974)',      ref:'ASPEN · Adults',                    val:curreri,    formula:`25×kg + 40×%TBSA`,           note:tbsa>40?'⚠ May overestimate for large burns':'Standard adult formula', pop:'adult' },
+    { name:'Curreri (1974)',      ref:'ASPEN · Adults',                    val:curreri,    formula:`25×kg + 40×%TBSA`,           note:tbsa>40?' May overestimate for large burns':'Standard adult formula', pop:'adult' },
     { name:'Curreri Modified',   ref:'Modified practice',                 val:curreriMod, formula:`25×kg + 30×%TBSA`,           note:'Conservative ceiling — reduces overfeeding risk', pop:'adult' },
     { name:'Davies & Liljedahl', ref:'European · 1971',                   val:davies,     formula:`20×kg + 70×%TBSA`,           note:'Commonly used in European practice', pop:'adult' },
     { name:'Toronto Formula',    ref:'Allard 1990 · Day-specific',        val:toronto,    formula:`−4343 + 10.5×TBSA + 114×T°C − 4.5×day${burnDays}`, note:`Day ${burnDays} post-burn. Most validated for acute phase.`, pop:'adult' },
@@ -7518,134 +7586,134 @@ function burnEquationPreview() {
 // ── DIAGNOSIS HINTS (shown beneath the select) ───────────────
 const DIAGNOSIS_HINTS = {
   // ICU
-  sepsis:           '⚡ SCCM/ASPEN · 1.5–2.0 g/kg protein · EN within 24–48 h',
-  sepsis_severe:    '🚨 Multi-organ · Permissive underfeeding early phase · 1.5–2.0 g/kg',
-  trauma:           '🩹 ESPEN ICU · 1.5–2.0 g/kg · High protein from Day 1',
+  sepsis:           ' SCCM/ASPEN · 1.5–2.0 g/kg protein · EN within 24–48 h',
+  sepsis_severe:    ' Multi-organ · Permissive underfeeding early phase · 1.5–2.0 g/kg',
+  trauma:           ' ESPEN ICU · 1.5–2.0 g/kg · High protein from Day 1',
   burns:            'ESPEN Burns 2013 (Rousseau et al.) · Adults 1.5–2.0 g/kg · Children up to 3.0 g/kg · Burns calculator shown below',
-  ards:             '🫁 SCCM/ASPEN · 1.5–2.0 g/kg IBW · Avoid excess CHO',
-  cardiac:          '❤️ ESPEN · 1.2–1.5 g/kg · Monitor fluid balance',
-  neuro:            '🧠 ASPEN-SCCM 2016 [1] · BTF 4th ed 2017 [60] · Lee & Oh, Brain Neurorehabil 2022 [78] · 1.5–2.0 g/kg ABW · EN within 24–48 h',
-  stroke:           '🧠 ESPEN Neurology 2018 · 1.2–1.5 g/kg · Screen ALL for dysphagia before oral intake',
-  pancreatitis:     '🟡 ESPEN 2020 · 1.2–1.5 g/kg · Early jejunal EN preferred',
+  ards:             ' SCCM/ASPEN · 1.5–2.0 g/kg IBW · Avoid excess CHO',
+  cardiac:          ' ESPEN · 1.2–1.5 g/kg · Monitor fluid balance',
+  neuro:            ' ASPEN-SCCM 2016 [1] · BTF 4th ed 2017 [60] · Lee & Oh, Brain Neurorehabil 2022 [78] · 1.5–2.0 g/kg ABW · EN within 24–48 h',
+  stroke:           ' ESPEN Neurology 2018 · 1.2–1.5 g/kg · Screen ALL for dysphagia before oral intake',
+  pancreatitis:     ' ESPEN 2020 · 1.2–1.5 g/kg · Early jejunal EN preferred',
   general_icu:      'ASPEN/ESPEN · 1.2–2.0 g/kg depending on phase',
-  post_op:          '⚕️ ESPEN Surgery 2021 [80] / 2025 [81] · 1.2–1.5 g/kg · Early EN within 24 h',
-  mechanical_vent:  '🫁 Prolonged MV · 1.5–2.5 g/kg IBW · Protein first',
+  post_op:          ' ESPEN Surgery 2021 [80] / 2025 [81] · 1.2–1.5 g/kg · Early EN within 24 h',
+  mechanical_vent:  ' Prolonged MV · 1.5–2.5 g/kg IBW · Protein first',
   // Renal
-  aki_no_rrt:       '💧 KDIGO · 0.8–1.2 g/kg · Do NOT restrict protein to delay RRT',
-  aki_rrt:          '💧 KDIGO/ESPEN · 1.5–2.5 g/kg · CRRT losses +10–15 g AA/day',
-  ckd:              '🫘 KDOQI 2020 G3.0.1 · 0.55–0.60 g/kg IBW (non-diabetic) · 0.6–0.8 g/kg (diabetic) · 25–35 kcal/kg',
-  hd:               '🫘 KDOQI 2020 G3.0.3 · 1.0–1.2 g/kg DW · 25–35 kcal/kg · Compensate dialytic losses',
-  pd:               '🫘 KDOQI 2020 G3.0.3 · 1.0–1.2 g/kg DW (KDOQI) · ISPD/ESPEN Renal 2021 allow 1.2–1.5 g/kg for peritoneal losses',
-  nephrotic:        '🫘 NKF/KDIGO consensus · 0.8–1.0 g/kg + urinary losses · Not in KDOQI 2020 · Low-sodium diet',
-  renal_transplant: '🫘 Post-transplant · 1.3–1.5 g/kg · Immunosuppression side-effects',
+  aki_no_rrt:       ' KDIGO · 0.8–1.2 g/kg · Do NOT restrict protein to delay RRT',
+  aki_rrt:          ' KDIGO/ESPEN · 1.5–2.5 g/kg · CRRT losses +10–15 g AA/day',
+  ckd:              ' KDOQI 2020 G3.0.1 · 0.55–0.60 g/kg IBW (non-diabetic) · 0.6–0.8 g/kg (diabetic) · 25–35 kcal/kg',
+  hd:               ' KDOQI 2020 G3.0.3 · 1.0–1.2 g/kg DW · 25–35 kcal/kg · Compensate dialytic losses',
+  pd:               ' KDOQI 2020 G3.0.3 · 1.0–1.2 g/kg DW (KDOQI) · ISPD/ESPEN Renal 2021 allow 1.2–1.5 g/kg for peritoneal losses',
+  nephrotic:        ' NKF/KDIGO consensus · 0.8–1.0 g/kg + urinary losses · Not in KDOQI 2020 · Low-sodium diet',
+  renal_transplant: ' Post-transplant · 1.3–1.5 g/kg · Immunosuppression side-effects',
   // Pulmonary
-  copd:             '🌬 BTS/ESPEN · 1.2–1.5 g/kg · High fat, low CHO reduces CO₂ load',
-  copd_exac:        '🌬 ESPEN · 1.5 g/kg · High energy, low CHO · NIV/O₂ support',
-  pneumonia:        '🦠 ESPEN · 1.2–1.5 g/kg · Treat infection, support with adequate nutrition',
-  cf:               '🫁 CF Trust · 120–150% RDA energy · High fat + fat-soluble vitamins',
-  pulmonary_htn:    '💛 Low sodium · Fluid restriction · 1.0–1.2 g/kg protein',
-  lung_cancer:      '🎗 ESPEN Onco · 1.2–1.5 g/kg · Address cachexia early',
+  copd:             ' BTS/ESPEN · 1.2–1.5 g/kg · High fat, low CHO reduces CO₂ load',
+  copd_exac:        ' ESPEN · 1.5 g/kg · High energy, low CHO · NIV/O₂ support',
+  pneumonia:        ' ESPEN · 1.2–1.5 g/kg · Treat infection, support with adequate nutrition',
+  cf:               ' CF Trust · 120–150% RDA energy · High fat + fat-soluble vitamins',
+  pulmonary_htn:    ' Low sodium · Fluid restriction · 1.0–1.2 g/kg protein',
+  lung_cancer:      ' ESPEN Onco · 1.2–1.5 g/kg · Address cachexia early',
   // Infectious
-  hiv:              '🔴 WHO/ESPEN · 1.2–1.5 g/kg · +10% energy stable, +20–30% if OI',
-  hiv_active:       '🔴 WHO · 1.5–2.0 g/kg · +50% energy in active OI · Address micronutrients',
-  tb:               '🟤 WHO · 1.2–1.5 g/kg · +20–30% energy · Pyridoxine B6 with INH',
-  tb_mdr:           '🟤 WHO · 1.5 g/kg · Extended treatment, higher micronutrient needs',
-  malaria:          '🦟 WHO · 1.2 g/kg · High fever = +13% energy per °C above 37',
-  typhoid:          '🌡 WHO · 1.2–1.5 g/kg · Fever-adjusted energy · Gut rest if perforation risk',
-  meningitis:       '🧠 ESPEN ICU 2023 · 1.5–2.0 g/kg · High metabolic stress · Early EN via NGT',
-  covid:            '⚡ ESPEN COVID · 1.3 g/kg min · Consider HPF enteral formula',
+  hiv:              ' WHO/ESPEN · 1.2–1.5 g/kg · +10% energy stable, +20–30% if OI',
+  hiv_active:       ' WHO · 1.5–2.0 g/kg · +50% energy in active OI · Address micronutrients',
+  tb:               ' WHO · 1.2–1.5 g/kg · +20–30% energy · Pyridoxine B6 with INH',
+  tb_mdr:           ' WHO · 1.5 g/kg · Extended treatment, higher micronutrient needs',
+  malaria:          ' WHO · 1.2 g/kg · High fever = +13% energy per °C above 37',
+  typhoid:          ' WHO · 1.2–1.5 g/kg · Fever-adjusted energy · Gut rest if perforation risk',
+  meningitis:       ' ESPEN ICU 2023 · 1.5–2.0 g/kg · High metabolic stress · Early EN via NGT',
+  covid:            ' ESPEN COVID · 1.3 g/kg min · Consider HPF enteral formula',
   // GI / Hepatic
-  hepatic:          '🟤 ESPEN/EASL · 1.2–1.5 g/kg DW · Never restrict protein',
-  hepatic_severe:   '🟤 ESPEN 2019 · 1.0–1.5 g/kg DW · BCAA if encephalopathy · LES snack',
-  ibd:              '🌿 ECCO/ESPEN · 1.2–1.5 g/kg · EN preferred in Crohn\'s · Address deficiencies',
-  short_bowel:      '⚗️ ESPEN HEN · 1.5–2.0 g/kg · High output losses · PN if <100 cm SB',
-  gi_fistula:       '⚗️ ESPEN · 1.5–2.0 g/kg · PN often required · Track output losses',
-  dysphagia:        '🍵 ESPEN · 1.2–1.5 g/kg · Texture modified / EN if aspiration risk',
-  gi_cancer:        '🎗 ESPEN Onco · 1.2–1.5 g/kg · Peri-op immunonutrition (arginine/EPA)',
-  gi_obstruction:   '⛔ PN until obstruction resolved · Then transition to EN/oral',
-  malabsorption:    '⚗️ ESPEN · 1.5 g/kg · Semi-elemental formula · Fat-soluble vitamins',
-  ileostomy:        '💧 ESPEN · 1.2–1.5 g/kg · High sodium/fluid losses · Monitor Mg, Zn',
-  colostomy:        '💧 ESPEN · 1.2–1.5 g/kg · Lower electrolyte losses than ileostomy · Individualise fibre · Monitor hydration',
-  constipation:     '🟤 Krause 16th Ch. 28 · High fibre 25–38 g/day · Fluids >2 L/day · Soluble + insoluble fibre · Avoid laxative dependence',
-  diarrhoea_acute:  '💧 WHO/Krause 16th Ch. 28 · ORS · Moderate soluble fibre · Avoid lactose/fructose/sugar alcohols if intolerant · Probiotics in selected cases',
-  aad_cdiff:        '🦠 IDSA/SHEA CDI 2021 · Rehydration first · Probiotics cautiously (Lactobacillus/Saccharomyces) · FMT for recurrent CDI · PN/EN if severe',
-  coeliac:          '🌾 ESPGHAN/BSG Coeliac 2020 · Strict lifelong GFD · Fe, Ca, Vit D, multivitamin · Temporary low lactose/FODMAP if symptomatic · Cross-contamination prevention',
-  lactose_intolerance: '🥛 Krause 16th Ch. 28 · Restrict lactose per tolerance · Lactose-free dairy · Lactase enzyme supplements · Ensure Ca + Vit D adequacy',
-  ibs:              '🌿 NICE IBS 2017 / Monash FODMAP · Low-FODMAP diet 4–8 wks then reintroduce · Probiotics/prebiotics cautiously · Stress reduction · Individualised food tolerance',
-  sibo:             '🦠 ACG SIBO 2020 · Low-FODMAP approach · Antibiotic (rifaximin) course · Elemental diet severe cases · B12 + fat-soluble vitamin supplementation · Digestive enzymes',
-  crohns:           '🌿 ECCO/ESPEN IBD 2023 · Low fibre during flares/strictures · EN preferred (EEN in paeds) · PN if severe/obstruction · Monitor B12, fat-soluble vitamins, Fe, folate, Vit D',
-  uc:               '🌿 ECCO/ESPEN IBD 2023 · Individualised diet during flares · Hydration support · Probiotics (VSL#3) may benefit pouchitis/UC remission · Fe, folate, Vit D supplementation',
-  diverticulosis:   '🟤 Krause 16th Ch. 28 / NICE 2019 · High-fibre diet ≥25 g/day · Adequate fluids · Regular bowel habits · No evidence against nuts/seeds',
-  diverticulitis:   '🟤 NICE 2019 / ACG Diverticulitis 2021 · Liquid or low-fibre diet during acute flare · Gradual return to high-fibre after recovery · Antibiotics per severity',
-  microscopic_colitis: '🔬 AGA Microscopic Colitis 2016 · Maintain hydration + nutrition status · Avoid NSAID/PPI/metformin triggers · Budesonide first-line · Diet supportive as per IBD',
+  hepatic:          ' ESPEN/EASL · 1.2–1.5 g/kg DW · Never restrict protein',
+  hepatic_severe:   ' ESPEN 2019 · 1.0–1.5 g/kg DW · BCAA if encephalopathy · LES snack',
+  ibd:              ' ECCO/ESPEN · 1.2–1.5 g/kg · EN preferred in Crohn\'s · Address deficiencies',
+  short_bowel:      ' ESPEN HEN · 1.5–2.0 g/kg · High output losses · PN if <100 cm SB',
+  gi_fistula:       ' ESPEN · 1.5–2.0 g/kg · PN often required · Track output losses',
+  dysphagia:        ' ESPEN · 1.2–1.5 g/kg · Texture modified / EN if aspiration risk',
+  gi_cancer:        ' ESPEN Onco · 1.2–1.5 g/kg · Peri-op immunonutrition (arginine/EPA)',
+  gi_obstruction:   ' PN until obstruction resolved · Then transition to EN/oral',
+  malabsorption:    ' ESPEN · 1.5 g/kg · Semi-elemental formula · Fat-soluble vitamins',
+  ileostomy:        ' ESPEN · 1.2–1.5 g/kg · High sodium/fluid losses · Monitor Mg, Zn',
+  colostomy:        ' ESPEN · 1.2–1.5 g/kg · Lower electrolyte losses than ileostomy · Individualise fibre · Monitor hydration',
+  constipation:     ' Krause 16th Ch. 28 · High fibre 25–38 g/day · Fluids >2 L/day · Soluble + insoluble fibre · Avoid laxative dependence',
+  diarrhoea_acute:  ' WHO/Krause 16th Ch. 28 · ORS · Moderate soluble fibre · Avoid lactose/fructose/sugar alcohols if intolerant · Probiotics in selected cases',
+  aad_cdiff:        ' IDSA/SHEA CDI 2021 · Rehydration first · Probiotics cautiously (Lactobacillus/Saccharomyces) · FMT for recurrent CDI · PN/EN if severe',
+  coeliac:          ' ESPGHAN/BSG Coeliac 2020 · Strict lifelong GFD · Fe, Ca, Vit D, multivitamin · Temporary low lactose/FODMAP if symptomatic · Cross-contamination prevention',
+  lactose_intolerance: ' Krause 16th Ch. 28 · Restrict lactose per tolerance · Lactose-free dairy · Lactase enzyme supplements · Ensure Ca + Vit D adequacy',
+  ibs:              ' NICE IBS 2017 / Monash FODMAP · Low-FODMAP diet 4–8 wks then reintroduce · Probiotics/prebiotics cautiously · Stress reduction · Individualised food tolerance',
+  sibo:             ' ACG SIBO 2020 · Low-FODMAP approach · Antibiotic (rifaximin) course · Elemental diet severe cases · B12 + fat-soluble vitamin supplementation · Digestive enzymes',
+  crohns:           ' ECCO/ESPEN IBD 2023 · Low fibre during flares/strictures · EN preferred (EEN in paeds) · PN if severe/obstruction · Monitor B12, fat-soluble vitamins, Fe, folate, Vit D',
+  uc:               ' ECCO/ESPEN IBD 2023 · Individualised diet during flares · Hydration support · Probiotics (VSL#3) may benefit pouchitis/UC remission · Fe, folate, Vit D supplementation',
+  diverticulosis:   ' Krause 16th Ch. 28 / NICE 2019 · High-fibre diet ≥25 g/day · Adequate fluids · Regular bowel habits · No evidence against nuts/seeds',
+  diverticulitis:   ' NICE 2019 / ACG Diverticulitis 2021 · Liquid or low-fibre diet during acute flare · Gradual return to high-fibre after recovery · Antibiotics per severity',
+  microscopic_colitis: ' AGA Microscopic Colitis 2016 · Maintain hydration + nutrition status · Avoid NSAID/PPI/metformin triggers · Budesonide first-line · Diet supportive as per IBD',
   // Oncology
-  cancer_solid:     '🎗 ESPEN Onco · 1.2–1.5 g/kg · ONS + exercise · Address cachexia',
-  cancer_head_neck: '🎗 ESPEN · 1.5 g/kg · PEG/NGT often required · Mucositis management',
-  cancer_gi:        '🎗 ESPEN · 1.2–1.5 g/kg · Pre-op immunonutrition · Early post-op EN',
-  haem_malig:       '🎗 ESPEN · 1.5 g/kg · Mucositis, neutropenia · Safe food handling',
-  bmt:              '🎗 ESPEN · 1.5–2.0 g/kg · PN often needed · Aggressive micronutrient support',
-  post_chemo:       '🎗 ESPEN · 1.2–1.5 g/kg · Address nausea/vomiting · ONS',
-  cachexia:         '🎗 ESPEN · 1.5 g/kg + EPA · High protein, high energy · Omega-3',
-  palliative:       '🕊 ESPEN Palliative · Comfort feeding · Align with patient wishes',
+  cancer_solid:     ' ESPEN Onco · 1.2–1.5 g/kg · ONS + exercise · Address cachexia',
+  cancer_head_neck: ' ESPEN · 1.5 g/kg · PEG/NGT often required · Mucositis management',
+  cancer_gi:        ' ESPEN · 1.2–1.5 g/kg · Pre-op immunonutrition · Early post-op EN',
+  haem_malig:       ' ESPEN · 1.5 g/kg · Mucositis, neutropenia · Safe food handling',
+  bmt:              ' ESPEN · 1.5–2.0 g/kg · PN often needed · Aggressive micronutrient support',
+  post_chemo:       ' ESPEN · 1.2–1.5 g/kg · Address nausea/vomiting · ONS',
+  cachexia:         ' ESPEN · 1.5 g/kg + EPA · High protein, high energy · Omega-3',
+  palliative:       ' ESPEN Palliative · Comfort feeding · Align with patient wishes',
   // Cardiac
-  chf:              '❤️ ESPEN · 1.1–1.4 g/kg · Fluid + sodium restriction · Cardiac cachexia risk',
-  cardiac_cachexia: '❤️ ESPEN · 1.5 g/kg · High protein, fluid-restricted · ONS',
-  post_cardiac_surg:'❤️ ESPEN · 1.2–1.5 g/kg · Early EN within 12–24 h',
-  endocarditis:     '❤️ ESPEN · 1.5 g/kg · High catabolism · Adequate micronutrients',
+  chf:              ' ESPEN · 1.1–1.4 g/kg · Fluid + sodium restriction · Cardiac cachexia risk',
+  cardiac_cachexia: ' ESPEN · 1.5 g/kg · High protein, fluid-restricted · ONS',
+  post_cardiac_surg:' ESPEN · 1.2–1.5 g/kg · Early EN within 12–24 h',
+  endocarditis:     ' ESPEN · 1.5 g/kg · High catabolism · Adequate micronutrients',
   // Cardiovascular / Lipid (Krause & Mahan 16th ed.)
-  ascvd:            '❤️‍🔥 Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Fiber ≥25 g/day · Na ≤2400 mg · Omega-3 ≥2 servings fish/week · DASH or Mediterranean diet',
-  coronary_hd:      '❤️ Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Low GI CHO · Omega-3 fish ≥2×/week · Statin + dietary modification',
-  hypertension:     '🩺 Krause 16th · 1.0–1.2 g/kg · DASH diet · Na ≤1500–2400 mg/day · K⁺-rich foods · Moderate alcohol · Weight management',
-  dyslipidemia:     '📊 Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Fiber 25–30 g/day · Omega-3 · Replace SFA with MUFA/PUFA',
-  hypercholesterol: '📊 Krause 16th · LDL target · SFA <5–6%E · Trans fat minimal · Soluble fiber 10–25 g/day · Plant sterols 2 g/day',
-  hypertriglyc:     '📊 Krause 16th · TG target · ↓ Simple sugars + refined CHO · Omega-3 fish oil · Avoid alcohol · Weight loss · If TG >5.6 mmol/L: strict fat restriction',
-  low_hdl:          '📊 Krause 16th · ↑ HDL via: aerobic exercise · ↓ Trans fat · ↑ MUFA · Moderate alcohol (if appropriate) · Weight loss',
-  familial_hc:      '🧬 Krause 16th · Statin mandatory + dietary SFA <5%E · LDL-lowering diet · Plant sterols · Avoid TFA',
-  familial_chl:     '🧬 Krause 16th · Combined ↑ LDL + TG · SFA <5–6%E · ↓ CHO (refined) · Omega-3 · Weight management',
-  metabolic_synd_cvd:'⚖️ Krause 16th · 1.0–1.2 g/kg · Mediterranean / DASH · Weight loss 5–10% · ↑ Fiber · ↓ Refined CHO + SFA',
-  cvd_high_risk:    '🚨 Krause 16th · 10-yr CVD risk ≥10% · Aggressive dietary modification + exercise · SFA <5–6%E · Fiber ≥30 g/day',
-  cvd_mod_risk:     '⚠️ Krause 16th · 10-yr CVD risk 5–9% · Dietary pattern change · SFA <7%E · Physical activity ≥150 min/week',
+  ascvd:            '‍ Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Fiber ≥25 g/day · Na ≤2400 mg · Omega-3 ≥2 servings fish/week · DASH or Mediterranean diet',
+  coronary_hd:      ' Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Low GI CHO · Omega-3 fish ≥2×/week · Statin + dietary modification',
+  hypertension:     ' Krause 16th · 1.0–1.2 g/kg · DASH diet · Na ≤1500–2400 mg/day · K⁺-rich foods · Moderate alcohol · Weight management',
+  dyslipidemia:     ' Krause 16th · 1.0–1.2 g/kg · SFA <5–6%E · Fiber 25–30 g/day · Omega-3 · Replace SFA with MUFA/PUFA',
+  hypercholesterol: ' Krause 16th · LDL target · SFA <5–6%E · Trans fat minimal · Soluble fiber 10–25 g/day · Plant sterols 2 g/day',
+  hypertriglyc:     ' Krause 16th · TG target · ↓ Simple sugars + refined CHO · Omega-3 fish oil · Avoid alcohol · Weight loss · If TG >5.6 mmol/L: strict fat restriction',
+  low_hdl:          ' Krause 16th · ↑ HDL via: aerobic exercise · ↓ Trans fat · ↑ MUFA · Moderate alcohol (if appropriate) · Weight loss',
+  familial_hc:      ' Krause 16th · Statin mandatory + dietary SFA <5%E · LDL-lowering diet · Plant sterols · Avoid TFA',
+  familial_chl:     ' Krause 16th · Combined ↑ LDL + TG · SFA <5–6%E · ↓ CHO (refined) · Omega-3 · Weight management',
+  metabolic_synd_cvd:' Krause 16th · 1.0–1.2 g/kg · Mediterranean / DASH · Weight loss 5–10% · ↑ Fiber · ↓ Refined CHO + SFA',
+  cvd_high_risk:    ' Krause 16th · 10-yr CVD risk ≥10% · Aggressive dietary modification + exercise · SFA <5–6%E · Fiber ≥30 g/day',
+  cvd_mod_risk:     ' Krause 16th · 10-yr CVD risk 5–9% · Dietary pattern change · SFA <7%E · Physical activity ≥150 min/week',
   // Neurological
-  spinal:           '🦽 ASPEN/ESPEN · 1.2–1.5 g/kg ABW · Adjust for reduced muscle mass',
-  dementia:         '🧠 ESPEN · 1.2 g/kg · Texture modification · Mealtime support',
-  neurodegen:       '🧠 ESPEN Neurology 2018 · 1.2–1.5 g/kg · Progressive dysphagia · PEG timing — discuss early',
-  epilepsy_keto:    '⚗️ Ketogenic diet: 4:1 ratio fat:protein+CHO · Supervised protocol',
+  spinal:           ' ASPEN/ESPEN · 1.2–1.5 g/kg ABW · Adjust for reduced muscle mass',
+  dementia:         ' ESPEN · 1.2 g/kg · Texture modification · Mealtime support',
+  neurodegen:       ' ESPEN Neurology 2018 · 1.2–1.5 g/kg · Progressive dysphagia · PEG timing — discuss early',
+  epilepsy_keto:    ' Ketogenic diet: 4:1 ratio fat:protein+CHO · Supervised protocol',
   // Endocrine
-  dm1:              '🍬 ESPEN DM · 1.0–1.2 g/kg · CHO-consistent diet · Insulin matching',
-  dm2:              '🍬 ESPEN DM · 1.0–1.2 g/kg · Low GI CHO · High fibre',
-  dm_icu:           '🍬 SCCM · 1.5–2.0 g/kg · Target BG 7.8–10 mmol/L · Diabetic EN formula',
-  obesity:          '⚖️ SCCM/ASPEN · ≥2.0 g/kg IBW · Hypocaloric high-protein (65–70% target)',
-  obesity_severe:   '⚖️ ASPEN · ≥2.5 g/kg IBW · 50–60% energy target',
-  metabolic_synd:   '⚖️ ESPEN · 1.0–1.2 g/kg · Low GI, high fibre, Mediterranean pattern',
-  thyroid:          '🦋 Hypo: +10% energy · Hyper: +20–30% energy · Iodine monitoring',
-  adrenal:          '⚗️ Steroid-induced catabolism · 1.5 g/kg · Calcium + Vitamin D support',
+  dm1:              ' ESPEN DM · 1.0–1.2 g/kg · CHO-consistent diet · Insulin matching',
+  dm2:              ' ESPEN DM · 1.0–1.2 g/kg · Low GI CHO · High fibre',
+  dm_icu:           ' SCCM · 1.5–2.0 g/kg · Target BG 7.8–10 mmol/L · Diabetic EN formula',
+  obesity:          ' SCCM/ASPEN · ≥2.0 g/kg IBW · Hypocaloric high-protein (65–70% target)',
+  obesity_severe:   ' ASPEN · ≥2.5 g/kg IBW · 50–60% energy target',
+  metabolic_synd:   ' ESPEN · 1.0–1.2 g/kg · Low GI, high fibre, Mediterranean pattern',
+  thyroid:          ' Hypo: +10% energy · Hyper: +20–30% energy · Iodine monitoring',
+  adrenal:          ' Steroid-induced catabolism · 1.5 g/kg · Calcium + Vitamin D support',
   // Malnutrition
-  sam:              '🚨 WHO SAM · F-75 → F-100 → RUTF · 100–150 kcal/kg · Catch-up growth',
-  mam:              '⚠️ WHO MAM · RUSF · 1.0–1.5 g/kg · Therapeutic supplementary feeding',
-  chronic_malnutrition: '📈 WHO · Energy-dense foods · Micronutrient supplementation · Growth monitoring',
-  sarcopenia:       '💪 ESPEN · ≥1.2 g/kg · Resistance exercise + protein · Leucine-enriched',
-  refeeding_risk:   '🚨 NICE CG32 · Start ≤5–10 kcal/kg · IV Thiamine BEFORE feeds · Electrolytes Q6h',
-  anorexia:         '⚠️ MARSIPAN · Incremental refeeding · MDT · Medical monitoring',
+  sam:              ' WHO SAM · F-75 → F-100 → RUTF · 100–150 kcal/kg · Catch-up growth',
+  mam:              ' WHO MAM · RUSF · 1.0–1.5 g/kg · Therapeutic supplementary feeding',
+  chronic_malnutrition: ' WHO · Energy-dense foods · Micronutrient supplementation · Growth monitoring',
+  sarcopenia:       ' ESPEN · ≥1.2 g/kg · Resistance exercise + protein · Leucine-enriched',
+  refeeding_risk:   ' NICE CG32 · Start ≤5–10 kcal/kg · IV Thiamine BEFORE feeds · Electrolytes Q6h',
+  anorexia:         ' MARSIPAN · Incremental refeeding · MDT · Medical monitoring',
   // Obstetrics
-  pregnancy:        '🤰 WHO/NICE · +300 kcal/day (T2/T3) · +1.1 g/kg protein · Folate, iron, iodine',
-  pregnancy_hg:     '🤰 RCOG · PN if weight loss >5% · Anti-emetics · Thiamine replacement',
-  pregnancy_gest_dm:'🤰 NICE · CHO-controlled · 4–5 small meals · Target BG as per NICE',
-  lactation:        '🤱 WHO · +500 kcal/day · +1.1 g/kg protein · Iodine, DHA, calcium',
+  pregnancy:        ' WHO/NICE · +300 kcal/day (T2/T3) · +1.1 g/kg protein · Folate, iron, iodine',
+  pregnancy_hg:     ' RCOG · PN if weight loss >5% · Anti-emetics · Thiamine replacement',
+  pregnancy_gest_dm:' NICE · CHO-controlled · 4–5 small meals · Target BG as per NICE',
+  lactation:        ' WHO · +500 kcal/day · +1.1 g/kg protein · Iodine, DHA, calcium',
   // Surgical
-  gi_surgery:       '⚕️ ESPEN · 1.5 g/kg · Peri-op immunonutrition 5–7d · Early post-op EN',
-  ortho_trauma:     '🦴 ESPEN · 1.2–1.5 g/kg · Vitamin D + calcium · Early mobilisation',
-  pressure_injury:  '🩹 EPUAP/NPUAP · 1.5–2.0 g/kg · Zinc, Vitamin C, arginine · Hydration',
-  amputation:       '🦽 ESPEN · 1.5 g/kg · Adjust for reduced weight · Wound healing support',
+  gi_surgery:       ' ESPEN · 1.5 g/kg · Peri-op immunonutrition 5–7d · Early post-op EN',
+  ortho_trauma:     ' ESPEN · 1.2–1.5 g/kg · Vitamin D + calcium · Early mobilisation',
+  pressure_injury:  ' EPUAP/NPUAP · 1.5–2.0 g/kg · Zinc, Vitamin C, arginine · Hydration',
+  amputation:       ' ESPEN · 1.5 g/kg · Adjust for reduced weight · Wound healing support',
   // Geriatric
-  geriatric:        '👴 ESPEN Geriatric · 1.0–1.5 g/kg · Screen for sarcopenia · LES snack',
-  hip_fracture:     '🦴 ESPEN · 1.2–1.5 g/kg · Vitamin D, protein supplement · Prevent delirium',
-  dehydration:      '💧 1.0–1.2 g/kg · Fluid 35 mL/kg + losses · Oral hydration first',
+  geriatric:        ' ESPEN Geriatric · 1.0–1.5 g/kg · Screen for sarcopenia · LES snack',
+  hip_fracture:     ' ESPEN · 1.2–1.5 g/kg · Vitamin D, protein supplement · Prevent delirium',
+  dehydration:      ' 1.0–1.2 g/kg · Fluid 35 mL/kg + losses · Oral hydration first',
   // Other
-  general:          '📋 General guidelines: 1.2–1.5 g/kg · 25–30 kcal/kg · Reassess regularly',
-  home_en:          '🏠 ESPEN HEN · Match hospital prescription · Regular monitoring',
-  pn_long_term:     '💉 ESPEN HPN · Cyclic PN · Liver function monitoring · Trace elements',
-  immunosuppressed: '💊 ESPEN · 1.2–1.5 g/kg · Safe food handling · Avoid raw foods',
-  other_specify:    '📋 Custom diagnosis — apply general guidelines; adjust targets based on clinical context and specific condition requirements',
+  general:          ' General guidelines: 1.2–1.5 g/kg · 25–30 kcal/kg · Reassess regularly',
+  home_en:          ' ESPEN HEN · Match hospital prescription · Regular monitoring',
+  pn_long_term:     ' ESPEN HPN · Cyclic PN · Liver function monitoring · Trace elements',
+  immunosuppressed: ' ESPEN · 1.2–1.5 g/kg · Safe food handling · Avoid raw foods',
+  other_specify:    ' Custom diagnosis — apply general guidelines; adjust targets based on clinical context and specific condition requirements',
 };
 
 
@@ -8026,16 +8094,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── KDOQI 2020 CKD Stage Hints ───────────────────────────────────────────────
 var KDOQI_HINTS = {
-  ckd_g1g2: '📘 KDOQI 2020 · G1–G2 (eGFR ≥60) · Protein 0.6–0.8 g/kg/day IBW (restrict to slow progression) · Energy 25–35 kcal/kg · K⁺, Na⁺, PO₄ usually unrestricted at this stage',
-  ckd_g3a:  '📘 KDOQI 2020 · G3a (eGFR 45–59) · Protein 0.6–0.8 g/kg/day IBW · Energy 25–35 kcal/kg · Monitor K⁺ & PO₄; consider Na⁺ restriction if hypertensive',
-  ckd_g3b:  '📘 KDOQI 2020 · G3b (eGFR 30–44) · Protein 0.6–0.8 g/kg/day IBW · Energy 30–35 kcal/kg · Begin K⁺/PO₄ monitoring; consider dietitian-led CKD clinic',
-  ckd_g4:   '📘 KDOQI 2020 · G4 (eGFR 15–29) · Protein 0.6–0.8 g/kg/day IBW · Very Low Protein (0.3–0.4 g/kg + keto-analogues) if motivated & dietitian-supervised · Energy 30–35 kcal/kg · Restrict K⁺, PO₄, Na⁺',
-  ckd_g5:   '🔴 KDOQI 2020 · G5 pre-dialysis (eGFR <15) · Protein 0.6–0.8 g/kg/day IBW (or VLP 0.3–0.4 g/kg + keto-analogues) · Energy 30–35 kcal/kg · Strict K⁺, PO₄, fluid & Na⁺ restriction · Prepare for RRT',
-  ckd:      '📘 KDOQI 2020 · CKD non-dialysis (stage unspecified) · Protein 0.6–0.8 g/kg/day IBW · Energy 25–35 kcal/kg · Monitor electrolytes',
-  hd:       '📘 KDOQI 2020 · G5D Haemodialysis · Protein ≥1.0–1.2 g/kg/day dry wt (up to 1.4 in hypercatabolic) · Energy 25–35 kcal/kg · K⁺ & PO₄ restriction; fluid ~500–750 mL/day + urine output',
-  pd:       '📘 KDOQI 2020 · G5D Peritoneal Dialysis · Protein 1.2–1.5 g/kg/day dry wt (peritoneal losses 5–15 g/day) · Energy 25–35 kcal/kg (subtract dextrose calories from dialysate) · Fluid, K⁺, Na⁺, PO₄ restriction',
-  aki_no_rrt: '📗 KDIGO 2012 / ESPEN 2023 · AKI no RRT · Protein 0.8–1.2 g/kg/day ABW · Do NOT restrict protein to delay RRT · Monitor BUN trend',
-  aki_rrt:  '📗 KDIGO / ESPEN 2023 · AKI on CRRT · Protein 1.5–2.5 g/kg/day IBW · CRRT losses 10–15 g AA/day · Up to 2.5 g/kg in hypercatabolic sepsis',
+  ckd_g1g2: ' KDOQI 2020 · G1–G2 (eGFR ≥60) · Protein 0.6–0.8 g/kg/day IBW (restrict to slow progression) · Energy 25–35 kcal/kg · K⁺, Na⁺, PO₄ usually unrestricted at this stage',
+  ckd_g3a:  ' KDOQI 2020 · G3a (eGFR 45–59) · Protein 0.6–0.8 g/kg/day IBW · Energy 25–35 kcal/kg · Monitor K⁺ & PO₄; consider Na⁺ restriction if hypertensive',
+  ckd_g3b:  ' KDOQI 2020 · G3b (eGFR 30–44) · Protein 0.6–0.8 g/kg/day IBW · Energy 30–35 kcal/kg · Begin K⁺/PO₄ monitoring; consider dietitian-led CKD clinic',
+  ckd_g4:   ' KDOQI 2020 · G4 (eGFR 15–29) · Protein 0.6–0.8 g/kg/day IBW · Very Low Protein (0.3–0.4 g/kg + keto-analogues) if motivated & dietitian-supervised · Energy 30–35 kcal/kg · Restrict K⁺, PO₄, Na⁺',
+  ckd_g5:   ' KDOQI 2020 · G5 pre-dialysis (eGFR <15) · Protein 0.6–0.8 g/kg/day IBW (or VLP 0.3–0.4 g/kg + keto-analogues) · Energy 30–35 kcal/kg · Strict K⁺, PO₄, fluid & Na⁺ restriction · Prepare for RRT',
+  ckd:      ' KDOQI 2020 · CKD non-dialysis (stage unspecified) · Protein 0.6–0.8 g/kg/day IBW · Energy 25–35 kcal/kg · Monitor electrolytes',
+  hd:       ' KDOQI 2020 · G5D Haemodialysis · Protein ≥1.0–1.2 g/kg/day dry wt (up to 1.4 in hypercatabolic) · Energy 25–35 kcal/kg · K⁺ & PO₄ restriction; fluid ~500–750 mL/day + urine output',
+  pd:       ' KDOQI 2020 · G5D Peritoneal Dialysis · Protein 1.2–1.5 g/kg/day dry wt (peritoneal losses 5–15 g/day) · Energy 25–35 kcal/kg (subtract dextrose calories from dialysate) · Fluid, K⁺, Na⁺, PO₄ restriction',
+  aki_no_rrt: ' KDIGO 2012 / ESPEN 2023 · AKI no RRT · Protein 0.8–1.2 g/kg/day ABW · Do NOT restrict protein to delay RRT · Monitor BUN trend',
+  aki_rrt:  ' KDIGO / ESPEN 2023 · AKI on CRRT · Protein 1.5–2.5 g/kg/day IBW · CRRT losses 10–15 g AA/day · Up to 2.5 g/kg in hypercatabolic sepsis',
 };
 
 function onRenalChange() {
@@ -8114,10 +8182,16 @@ function dbInit() {
 }
 
 function dbGetPer100(food) {
-  // Get per-100g values — use first measure and normalise to 100g
-  const m = food.measures[0];
-  const factor = 100 / m.weight || 1;
-  // If measure is already 100g, use directly
+  // Get per-100g values — use first measure and normalise to 100g.
+  // Guards against missing measures or null weight (defensive).
+  const m = food.measures?.[0];
+  if (!m) {
+    return { kcal: food.kcal ?? 0, pro: food.pro ?? 0, cho: food.cho ?? 0, fat: food.fat ?? 0, kj: food.kj ?? 0 };
+  }
+  if (!m.weight) {
+    return { kcal: m.kcal ?? 0, pro: m.pro ?? 0, cho: m.cho ?? 0, fat: m.fat ?? 0, kj: m.kj ?? 0 };
+  }
+  const factor = 100 / m.weight;
   if (m.weight === 100) return { kcal: m.kcal, pro: m.pro, cho: m.cho, fat: m.fat, kj: m.kj };
   return {
     kcal: +(m.kcal * factor).toFixed(1),
@@ -8142,6 +8216,7 @@ const _dbGlobalResults = { items: [], active: false };
  *
  * Category filter / sort / per-mode all still apply to local results.
  * API results are shown in a separate "Global Results" section below the table.
+ * UCT Exchange List is excluded — it is a diabetic exchange system with its own tools.
  */
 function dbRender() {
   const search  = (document.getElementById('db-search')?.value || '').trim();
@@ -8150,7 +8225,8 @@ function dbRender() {
   const perMode = document.getElementById('db-per')?.value || '100';
   const searchN = search.toLowerCase();
 
-  // ── LOCAL FILTER (unchanged logic, now also uses NTFoodSearch synonyms) ──
+  // ── LOCAL FILTER — Malawi FCT only (UCT Exchange is a diabetic exchange
+  //    system and is excluded from general search; it lives in its own tools) ──
   let foods;
   if (search.length >= 2 && typeof NTFoodSearch !== 'undefined') {
     // Use fuzzy/synonym-aware local search
@@ -8192,8 +8268,8 @@ function dbRender() {
   const statPro   = document.getElementById('db-stat-avg-pro');
   if (statFoods) statFoods.textContent = foods.length;
   if (foods.length && statKcal) {
-    const avgKcal = foods.reduce((s,f) => s + dbGetPer100(f).kcal, 0) / foods.length;
-    const avgPro  = foods.reduce((s,f) => s + dbGetPer100(f).pro,  0) / foods.length;
+    const avgKcal = foods.reduce((s,f) => s + (dbGetPer100(f).kcal || 0), 0) / foods.length;
+    const avgPro  = foods.reduce((s,f) => s + (dbGetPer100(f).pro  || 0), 0) / foods.length;
     statKcal.textContent = avgKcal.toFixed(0);
     statPro.textContent  = avgPro.toFixed(1);
   }
@@ -8269,9 +8345,9 @@ function dbRenderHighlights() {
   const el = document.getElementById('db-highlights');
   if (!el) return;
   const highlights = [
-    { label:'⚡ Highest Energy', icon:'🔥', sort:(a,b)=>dbGetPer100(b).kcal-dbGetPer100(a).kcal, unit:'kcal/100g', val:f=>dbGetPer100(f).kcal+' kcal', color:'var(--amber)' },
-    { label:'💪 Highest Protein', icon:'🥩', sort:(a,b)=>dbGetPer100(b).pro-dbGetPer100(a).pro, unit:'g protein/100g', val:f=>dbGetPer100(f).pro+'g', color:'var(--blue)' },
-    { label:'🌿 Lowest Energy (vegetables)', icon:'🥗', filter:f=>f.cat==='Vegetables', sort:(a,b)=>dbGetPer100(a).kcal-dbGetPer100(b).kcal, unit:'kcal/100g (lowest)', val:f=>dbGetPer100(f).kcal+' kcal', color:'var(--green)' },
+    { label:' Highest Energy', icon:'', sort:(a,b)=>dbGetPer100(b).kcal-dbGetPer100(a).kcal, unit:'kcal/100g', val:f=>dbGetPer100(f).kcal+' kcal', color:'var(--amber)' },
+    { label:' Highest Protein', icon:'', sort:(a,b)=>dbGetPer100(b).pro-dbGetPer100(a).pro, unit:'g protein/100g', val:f=>dbGetPer100(f).pro+'g', color:'var(--blue)' },
+    { label:' Lowest Energy (vegetables)', icon:'', filter:f=>f.cat==='Vegetables', sort:(a,b)=>dbGetPer100(a).kcal-dbGetPer100(b).kcal, unit:'kcal/100g (lowest)', val:f=>dbGetPer100(f).kcal+' kcal', color:'var(--green)' },
   ];
   el.innerHTML = highlights.map(h => {
     let foods = [...MALAWI_FCT];
@@ -8405,11 +8481,23 @@ function saveUserProfile(p) {
 }
 
 // Role display metadata
+// Role SVGs are 22×22 Lucide icons — used in both the home profile
+// avatar and the settings drawer chip grid. Keep in sync with chips.
+const _ROLE_SVG = {
+  student:    `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+  dietitian:  `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/><path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-3.19 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.4 2.4 0 0 1 .44 1.06"/></svg>`,
+  clinician:  `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>`,
+  researcher: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>`,
+  nurse:      `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>`,
+  other:      `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+};
 const ROLE_META = {
-  student:    { label:'Student',    icon:'🎓', color:'var(--blue)'   },
-  dietitian:  { label:'Dietitian',  icon:'🥗', color:'var(--green)'  },
-  clinician:  { label:'Clinician',  icon:'👨‍⚕️', color:'var(--teal)'  },
-  researcher: { label:'Researcher', icon:'🔬', color:'var(--purple)' },
+  student:    { label:'Student',    icon:_ROLE_SVG.student,    color:'var(--blue)'   },
+  dietitian:  { label:'Dietitian',  icon:_ROLE_SVG.dietitian,  color:'var(--green)'  },
+  clinician:  { label:'Clinician',  icon:_ROLE_SVG.clinician,  color:'var(--teal)'   },
+  researcher: { label:'Researcher', icon:_ROLE_SVG.researcher, color:'var(--purple)' },
+  nurse:      { label:'Nurse',      icon:_ROLE_SVG.nurse,      color:'var(--amber)'  },
+  other:      { label:'Other',      icon:_ROLE_SVG.other,      color:'var(--teal)'   },
 };
 
 // ── Auth step state ───────────────────────────────────────────────
@@ -8426,7 +8514,7 @@ function obTogglePw(inputId, btn) {
   const el = document.getElementById(inputId);
   if (!el) return;
   el.type = el.type === 'password' ? 'text' : 'password';
-  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+  btn.textContent = el.type === 'password' ? '' : '';
 }
 
 function obToggleAuthMode() {
@@ -8665,7 +8753,7 @@ function _obFinish(name, isReturning) {
   document.body.style.overflow = '';
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
-  showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! 👋', 'success');
+  showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
 }
 
 // ── Onboarding gate ───────────────────────────────────────────────
@@ -8731,7 +8819,7 @@ function renderProfileCard() {
   if (!p) {
     wrap.innerHTML = `
       <div class="hp-profile-card" style="cursor:pointer;border:1.5px dashed rgba(29,233,212,0.35);opacity:.85" onclick="checkOnboarding()">
-        <div class="hp-profile-avatar">👤</div>
+        <div class="hp-profile-avatar"></div>
         <div class="hp-profile-info">
           <div class="hp-profile-name" style="color:var(--teal)">Sign in / Set up profile</div>
           <div class="hp-profile-inst" style="color:var(--text-dim)">Tap to add your name, ID &amp; role</div>
@@ -8740,7 +8828,11 @@ function renderProfileCard() {
       </div>`;
     return;
   }
-  const rm = ROLE_META[p.role] || { label: p.role, icon:'👤', color:'var(--teal)' };
+  const knownRoles = ['student','dietitian','clinician','researcher','nurse','other'];
+  const isKnown = knownRoles.includes(p.role);
+  const rm = isKnown
+    ? ROLE_META[p.role]
+    : { label: p.role || 'Other', icon: _ROLE_SVG.other, color: 'var(--teal)' };
   const signOutBtn = ``;
   wrap.innerHTML = `
     <div class="hp-profile-card">
@@ -8784,6 +8876,23 @@ function obSignOut() {
 }
 
 // ── Settings profile sync ─────────────────────────────────────────
+// ── Settings drawer role chip selector ──────────────────────────
+// Mirrors obSelectRole() from onboarding but targets the settings
+// drawer chip grid. Writes the chosen role to the hidden input
+// and shows/hides the "Other (specify)" free-text row.
+function sdrSelectRole(btn) {
+  document.querySelectorAll('.sdr-role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const role = btn.dataset.role || 'other';
+  const roleEl   = document.getElementById('sdr-user-role');
+  const otherRow = document.getElementById('sdr-role-other-row');
+  const otherVal = document.getElementById('sdr-role-other-val');
+  if (roleEl) roleEl.value = role;
+  if (otherRow) otherRow.style.display = (role === 'other') ? 'block' : 'none';
+  if (role !== 'other' && otherVal) otherVal.value = '';
+  autoSaveSettings();
+}
+
 function loadProfileIntoSettings() {
   const p = getUserProfile();
   const signOutRow = document.getElementById('sdr-signout-row');
@@ -8795,8 +8904,25 @@ function loadProfileIntoSettings() {
   const emailEl = document.getElementById('sdr-user-email');
   if (nameEl)  nameEl.value  = p.name  || '';
   if (uidEl)   uidEl.value   = p.uid   || '';
-  if (roleEl)  roleEl.value  = p.role  || 'student';
   if (emailEl) emailEl.value = p.email || '';
+  // Restore role chip selection
+  const savedRole = p.role || 'student';
+  const knownRoles = ['student','dietitian','clinician','researcher','nurse','other'];
+  const isKnown = knownRoles.includes(savedRole);
+  const chipRole = isKnown ? savedRole : 'other';
+  if (roleEl) roleEl.value = chipRole === 'other' && !isKnown ? savedRole : chipRole;
+  document.querySelectorAll('.sdr-role-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.role === chipRole);
+  });
+  const otherRow = document.getElementById('sdr-role-other-row');
+  const otherVal = document.getElementById('sdr-role-other-val');
+  if (chipRole === 'other') {
+    if (otherRow) otherRow.style.display = 'block';
+    if (otherVal && !isKnown) otherVal.value = savedRole;
+  } else {
+    if (otherRow) otherRow.style.display = 'none';
+    if (otherVal) otherVal.value = '';
+  }
 }
 
 function saveProfileFromSettings() {
@@ -8807,7 +8933,16 @@ function saveProfileFromSettings() {
   const emailEl = document.getElementById('sdr-user-email');
   if (nameEl && nameEl.value.trim()) p.name = nameEl.value.trim();
   if (uidEl  && uidEl.value.trim())  p.uid  = uidEl.value.trim();
-  if (roleEl) p.role = roleEl.value;
+  if (roleEl) {
+    // If 'other' chip is active, use the free-text value instead
+    const chipVal = roleEl.value;
+    if (chipVal === 'other') {
+      const otherText = (document.getElementById('sdr-role-other-val')?.value || '').trim();
+      p.role = otherText || 'other';
+    } else {
+      p.role = chipVal;
+    }
+  }
   if (emailEl) {
     const newEmail = emailEl.value.trim();
     if (newEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
@@ -8886,7 +9021,7 @@ setTimeout(() => {
 // to revise the Fenton growth chart for preterm infants."
 // BMC Pediatrics. 2013;13:59. doi:10.1186/1471-2431-13-59
 //
-// ⚠️  NOTE: "Fenton 2025" is not a formally published edition.
+//   NOTE: "Fenton 2025" is not a formally published edition.
 //     These LMS values are derived from the Fenton 2013 supplementary
 //     tables. Verify all values against the official publication before
 //     clinical use. Data marked 【VERIFY】 are interpolated estimates.
@@ -9118,18 +9253,18 @@ function getFormulaTags(f) {
 
 /** Clinical condition → required tags mapping for quick-filter presets. */
 const CLINICAL_PRESETS = [
-  { label:'ICU / Critical',    icon:'🏥', tags:['High Protein','High Energy'],          note:'High protein + energy dense — trauma, sepsis, burns' },
-  { label:'🎗 Oncology',          icon:'🎗', tags:['High Protein','Immune-enhancing'],      note:'Immune-enhancing, high protein — cancer cachexia' },
-  { label:'🌿 Constipation',      icon:'🌿', tags:['High Fibre'],                           note:'High fibre formulas for gut motility support' },
-  { label:'🌿 Bowel Support',     icon:'🌿', tags:['Moderate Fibre'],                       note:'Moderate fibre — diarrhoea/constipation management' },
-  { label:'Malabsorption',     icon:'🧪', tags:['Semi-elemental'],                       note:'Peptide-based, low fat — IBD, pancreatitis, short bowel' },
-  { label:'⚗️ Severe Malabs.',   icon:'⚗️', tags:['Elemental'],                            note:'Free amino acid — severe malabsorption, fistulae' },
-  { label:'🩸 Renal / CKD',       icon:'🩸', tags:['Renal-Adapted'],                        note:'Low electrolytes — dialysis and pre-dialysis patients' },
-  { label:'🍬 Diabetes',          icon:'🍬', tags:['Diabetic / Low-GI'],                    note:'Slow-release CHO, high MUFA — glycaemic control' },
-  { label:'💊 Fluid Restricted',  icon:'💊', tags:['High Energy'],                          note:'Energy dense ≥1.5 kcal/mL — fluid-restricted patients' },
-  { label:'👶 Paediatric',        icon:'👶', tags:['Paediatric'],                           note:'Age-specific formula for children' },
-  { label:'🧴 Oral Supplement',   icon:'🧴', tags:['Sip Feed'],                             note:'Oral nutritional supplements (ONS)' },
-  { label:'🫁 Respiratory',       icon:'🫁', tags:['Pulmonary'],                            note:'High fat, low CHO — ↓CO₂ production, COPD/ARDS' },
+  { label:'ICU / Critical',    icon:'', tags:['High Protein','High Energy'],          note:'High protein + energy dense — trauma, sepsis, burns' },
+  { label:' Oncology',          icon:'', tags:['High Protein','Immune-enhancing'],      note:'Immune-enhancing, high protein — cancer cachexia' },
+  { label:' Constipation',      icon:'', tags:['High Fibre'],                           note:'High fibre formulas for gut motility support' },
+  { label:' Bowel Support',     icon:'', tags:['Moderate Fibre'],                       note:'Moderate fibre — diarrhoea/constipation management' },
+  { label:'Malabsorption',     icon:'', tags:['Semi-elemental'],                       note:'Peptide-based, low fat — IBD, pancreatitis, short bowel' },
+  { label:' Severe Malabs.',   icon:'', tags:['Elemental'],                            note:'Free amino acid — severe malabsorption, fistulae' },
+  { label:' Renal / CKD',       icon:'', tags:['Renal-Adapted'],                        note:'Low electrolytes — dialysis and pre-dialysis patients' },
+  { label:' Diabetes',          icon:'', tags:['Diabetic / Low-GI'],                    note:'Slow-release CHO, high MUFA — glycaemic control' },
+  { label:' Fluid Restricted',  icon:'', tags:['High Energy'],                          note:'Energy dense ≥1.5 kcal/mL — fluid-restricted patients' },
+  { label:' Paediatric',        icon:'', tags:['Paediatric'],                           note:'Age-specific formula for children' },
+  { label:' Oral Supplement',   icon:'', tags:['Sip Feed'],                             note:'Oral nutritional supplements (ONS)' },
+  { label:' Respiratory',       icon:'', tags:['Pulmonary'],                            note:'High fat, low CHO — ↓CO₂ production, COPD/ARDS' },
 ];
 
 // ── Tag colour map (consistent across UI) ───────────────────────
@@ -9415,11 +9550,11 @@ function enRenderHighlights() {
   const el = document.getElementById('en-highlights');
   if (!el) return;
   const hs = [
-    { label:'⚡ Highest Energy Density', color:'var(--amber)',  list: [...ENTERAL_DB].sort((a,b)=>b.kcalML-a.kcalML).slice(0,5),     val:f=>`${f.kcalML} kcal/mL` },
-    { label:'💪 Highest Protein %E',     color:'var(--blue)',   list: [...ENTERAL_DB].filter(f=>f.kcalML>0).sort((a,b)=>(b.pro*4/(b.kcalML*100))-(a.pro*4/(a.kcalML*100))).slice(0,5), val:f=>`${Math.round(f.pro*4/(f.kcalML*100)*100)}% energy` },
-    { label:'🌿 Highest Fibre Content',  color:'var(--green)',  list: [...ENTERAL_DB].sort((a,b)=>(b.fibre||0)-(a.fibre||0)).slice(0,5), val:f=>`${((f.fibre||0)*10).toFixed(0)} g/L` },
-    { label:'👶 Paediatric Formulas',    color:'#ff9f43',       list: ENTERAL_DB.filter(f=>f.cat==='Paediatric').slice(0,5),          val:f=>`${f.kcalML} kcal/mL` },
-    { label:'🩸 Renal-Adapted',          color:'var(--red)',    list: ENTERAL_DB.filter(f=>f.cat==='Renal').slice(0,5),               val:f=>`${f.kcalML} kcal/mL` },
+    { label:' Highest Energy Density', color:'var(--amber)',  list: [...ENTERAL_DB].sort((a,b)=>b.kcalML-a.kcalML).slice(0,5),     val:f=>`${f.kcalML} kcal/mL` },
+    { label:' Highest Protein %E',     color:'var(--blue)',   list: [...ENTERAL_DB].filter(f=>f.kcalML>0).sort((a,b)=>(b.pro*4/(b.kcalML*100))-(a.pro*4/(a.kcalML*100))).slice(0,5), val:f=>`${Math.round(f.pro*4/(f.kcalML*100)*100)}% energy` },
+    { label:' Highest Fibre Content',  color:'var(--green)',  list: [...ENTERAL_DB].sort((a,b)=>(b.fibre||0)-(a.fibre||0)).slice(0,5), val:f=>`${((f.fibre||0)*10).toFixed(0)} g/L` },
+    { label:' Paediatric Formulas',    color:'#ff9f43',       list: ENTERAL_DB.filter(f=>f.cat==='Paediatric').slice(0,5),          val:f=>`${f.kcalML} kcal/mL` },
+    { label:' Renal-Adapted',          color:'var(--red)',    list: ENTERAL_DB.filter(f=>f.cat==='Renal').slice(0,5),               val:f=>`${f.kcalML} kcal/mL` },
     { label:'Semi / Elemental',       color:'#fd9644',       list: ENTERAL_DB.filter(f=>f.cat==='Semi-elemental'||f.cat==='Elemental / Amino Acid').slice(0,5), val:f=>f.cat },
   ];
   el.innerHTML = hs.map(h => `
@@ -9605,7 +9740,7 @@ function admCheck() {
         ${reasons.map(r=>`<div style="padding:4px 0;border-bottom:1px dotted rgba(255,255,255,.08)">• ${r}</div>`).join('')}
       </div>
       <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:12px">
-        ⚠ Refer to inpatient therapeutic care. Stabilisation phase (F-75) applies. Always confirm with clinical team.
+         Refer to inpatient therapeutic care. Stabilisation phase (F-75) applies. Always confirm with clinical team.
       </div>`;
     // Sync into inline results panel
     const inline = document.getElementById('adm-result-inline');
@@ -9886,11 +10021,11 @@ const VisualEngine = {
     const { diagnoses, risks, riskLevel, action } = result;
     if (!diagnoses.length && !risks.length) {
       return `<div style="padding:12px 16px;border-radius:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.35);margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--green)">
-        ✅ <strong>No malnutrition or growth concerns detected.</strong> Routine monitoring recommended.
+         <strong>No malnutrition or growth concerns detected.</strong> Routine monitoring recommended.
       </div>`;
     }
 
-    const severityIcon = { critical:'🚨', high:'⚠️', medium:'🔶', low:'ℹ️', ok:'✅' };
+    const severityIcon = { critical:'', high:'', medium:'', low:'ℹ', ok:'' };
     const severityColor = { critical:'var(--red)', high:'var(--amber)', medium:'var(--blue)', low:'var(--text-dim)', ok:'var(--green)' };
 
     const diagHtml = diagnoses.map(d => `
@@ -10143,10 +10278,10 @@ const VisualEngine = {
   // ── SAM risk traffic-light indicator ─────────────────────────
   renderRiskGauge(riskLevel) {
     const cfg = {
-      critical: { label:'CRITICAL', color:'#fb7185', fill:4, icon:'🚨' },
-      high:     { label:'HIGH',     color:'#f0b429', fill:3, icon:'⚠️' },
-      moderate: { label:'MODERATE', color:'#60a5fa', fill:2, icon:'🔶' },
-      low:      { label:'LOW',      color:'#34d399', fill:1, icon:'✅' },
+      critical: { label:'CRITICAL', color:'#fb7185', fill:4, icon:'' },
+      high:     { label:'HIGH',     color:'#f0b429', fill:3, icon:'' },
+      moderate: { label:'MODERATE', color:'#60a5fa', fill:2, icon:'' },
+      low:      { label:'LOW',      color:'#34d399', fill:1, icon:'' },
     }[riskLevel] || { label:'UNKNOWN', color:'var(--text-dim)', fill:0, icon:'?' };
 
     const dots = [1,2,3,4].map(n =>
@@ -10323,7 +10458,7 @@ function syncLRFromCalc(sourceKey) {
   const d = sourceKey ? CALC_SOURCES[sourceKey]?.get() : getUniversalCalcData();
   const s = document.getElementById('lr-sync-status');
   if (!d || !d.energy) {
-    if (s) s.innerHTML = '<span style="color:var(--amber)">⚠ Run the calculator first, then sync</span>';
+    if (s) s.innerHTML = '<span style="color:var(--amber)"> Run the calculator first, then sync</span>';
     return;
   }
   // Populate absolute targets
@@ -10337,9 +10472,9 @@ function syncLRFromCalc(sourceKey) {
   const nn = document.getElementById('lr-pt-nonnutr');
   if (nn) nn.value = nonNutr > 0 ? nonNutr : 0;
 
-  if (s) s.innerHTML = `<span style="color:var(--green)">✅ Synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'} — ${Math.round(netKcal)} kcal · ${Math.round(d.protein||0)} g protein/day</span>`;
+  if (s) s.innerHTML = `<span style="color:var(--green)"> Synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'} — ${Math.round(netKcal)} kcal · ${Math.round(d.protein||0)} g protein/day</span>`;
   lrCalc();
-  showToast(`✅ Low-Resource panel synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'}`, 'success');
+  showToast(` Low-Resource panel synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'}`, 'success');
 }
 
 // ── Sync Blend panel from Calculator ─────────────────────────────────
@@ -10353,7 +10488,7 @@ function syncBlendFromCalc(sourceKey) {
   const d = sourceKey ? CALC_SOURCES[sourceKey]?.get() : getUniversalCalcData();
   const s = document.getElementById('blend-sync-status') || getElementById('blend-header-sync-status');
   if (!d || !d.energy) {
-    if (s) s.innerHTML = '<span style="color:var(--amber)">⚠ Run the calculator first, then sync</span>';
+    if (s) s.innerHTML = '<span style="color:var(--amber)"> Run the calculator first, then sync</span>';
     return;
   }
   const netKcal  = d.netEnergy || d.energy || 0;
@@ -10365,9 +10500,9 @@ function syncBlendFromCalc(sourceKey) {
   const nn = document.getElementById('blend-pt-nonnutr');
   if (nn) nn.value = nonNutr > 0 ? nonNutr : 0;
 
-  if (s) s.innerHTML = `<span style="color:var(--green)">✅ Synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'} — ${Math.round(netKcal)} kcal · ${Math.round(d.protein||0)} g protein/day</span>`;
+  if (s) s.innerHTML = `<span style="color:var(--green)"> Synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'} — ${Math.round(netKcal)} kcal · ${Math.round(d.protein||0)} g protein/day</span>`;
   blendCalc();
-  showToast(`✅ Blenderized panel synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'}`, 'success');
+  showToast(` Blenderized panel synced from ${CALC_SOURCES[sourceKey]?.label||'Calculator'}`, 'success');
 }
 
 // ── Low-Resource Formula: Nutritional values per unit ─────────────────
@@ -10418,19 +10553,19 @@ function lrCalc() {
   const errors = [];
 
   if (milk <= 0 && likuni <= 0) {
-    errors.push('⚠ Recipe: Enter at least milk or Likuni Phala amount.');
+    errors.push(' Recipe: Enter at least milk or Likuni Phala amount.');
     _markInvalid('lr-milk'); _markInvalid('lr-likuni');
   }
   if (!vol || vol <= 0) {
-    errors.push('⚠ Total batch volume is required.');
+    errors.push(' Total batch volume is required.');
     _markInvalid('lr-vol');
   }
   if (!kcalReq || kcalReq <= 0) {
-    errors.push('⚠ Patient energy requirement (kcal/day) is required.');
+    errors.push(' Patient energy requirement (kcal/day) is required.');
     _markInvalid('lr-pt-kcal-abs');
   }
   if (!proReq || proReq <= 0) {
-    errors.push('⚠ Patient protein requirement (g/day) is required.');
+    errors.push(' Patient protein requirement (g/day) is required.');
     _markInvalid('lr-pt-pro-abs');
   }
 
@@ -10474,7 +10609,7 @@ function lrCalc() {
   }
 
   lrGenPrescription(kcalMl, proL);
-  if (typeof showToast === 'function') showToast('✅ Low-Resource prescription calculated', 'success');
+  if (typeof showToast === 'function') showToast(' Low-Resource prescription calculated', 'success');
   // Log to Firestore
   try { logCalcToFirebase({ calcType:'enteral-lowresource', module:'enteral', formula:'low-resource' }); } catch(e) {}
 }
@@ -10514,7 +10649,7 @@ function lrGenPrescription(kcalMl, proL) {
     badge.style.borderColor  = allOk ? 'rgba(52,211,153,0.5)'  : kcalOk || proOk ? 'rgba(240,180,41,0.5)' : 'rgba(251,113,133,0.5)';
     badge.style.background   = allOk ? 'rgba(52,211,153,0.06)' : kcalOk || proOk ? 'rgba(240,180,41,0.06)' : 'rgba(251,113,133,0.06)';
   }
-  if (bIcon)  bIcon.textContent  = allOk ? '✅' : kcalOk || proOk ? '⚠️' : '❌';
+  if (bIcon)  bIcon.textContent  = allOk ? '' : kcalOk || proOk ? '' : '';
   if (bTitle) { bTitle.textContent = allOk ? 'RECIPE ADEQUATE' : kcalOk || proOk ? 'RECIPE BELOW TARGET' : 'RECIPE INADEQUATE'; bTitle.style.color = allOk ? 'var(--green)' : kcalOk || proOk ? 'var(--amber)' : 'var(--red)'; }
   if (bSub) {
     const msgs = [];
@@ -10616,7 +10751,7 @@ function lrGenPrescription(kcalMl, proL) {
     <!-- Header -->
     <div style="background:linear-gradient(90deg,rgba(240,180,41,0.18),rgba(240,180,41,0.04));padding:14px 18px;border-bottom:2px solid rgba(240,180,41,0.25);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div>
-        <div style="font-family:var(--cond);font-size:16px;font-weight:800;letter-spacing:3px;color:var(--amber)">📋 PRESCRIPTION ORDER</div>
+        <div style="font-family:var(--cond);font-size:16px;font-weight:800;letter-spacing:3px;color:var(--amber)"> PRESCRIPTION ORDER</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:0.5px">Low-Resource Hospital Enteral Nutrition · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
       </div>
       <div style="font-family:var(--mono);font-size:8px;padding:4px 10px;border-radius:12px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);letter-spacing:1px">ENTERAL · ${routeLabels[route]} · ${methodLabels[method].toUpperCase()}</div>
@@ -10650,7 +10785,7 @@ function lrGenPrescription(kcalMl, proL) {
 
         <!-- Fluids row -->
         <div style="display:flex;align-items:center;padding:11px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0">💧 Fluids</div>
+          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0"> Fluids</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:16px;font-weight:800;color:var(--teal)">${Math.round(targetFluid > 0 ? targetFluid : volDay)}</span>
             <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">mL/day${targetFluid > 0 ? ' (target)' : ' (formula)'}</span>
@@ -10659,7 +10794,7 @@ function lrGenPrescription(kcalMl, proL) {
           </div>
         </div>
       </div>
-      ${nonNutr > 0 ? `<div style="margin-top:8px;padding:7px 12px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--amber)">➖ ${Math.round(nonNutr)} kcal non-nutritional deducted (propofol / IV glucose)</div>` : ''}
+      ${nonNutr > 0 ? `<div style="margin-top:8px;padding:7px 12px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--amber)"> ${Math.round(nonNutr)} kcal non-nutritional deducted (propofol / IV glucose)</div>` : ''}
     </div>
 
     <!-- Section 2: Feeding Type -->
@@ -10710,11 +10845,11 @@ function lrGenPrescription(kcalMl, proL) {
       <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">⑥ MONITORING</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px">
         ${[
-          ['👁 Tolerance','Nausea, vomiting, diarrhoea, abdominal distension — assess clinically before each feed. Routine GRV monitoring not recommended (ASPEN/SCCM 2016). GRV checks are not applicable for patients with adequate oral intake or post-pyloric feeds. If clinically indicated (nasogastric ICU patients with suspected gastroparesis only): GRV ≥500 mL with symptoms = hold &amp; reassess; GRV &lt;500 mL alone = continue EN.'],
-          ['🩺 Tube patency','Check position before each feed (aspiration / pH paper). Flush with warm water if resistance felt.'],
-          ['⚖️ Weight & hydration','Weigh every 3 days. Monitor urine output, skin turgor, mucous membranes, oedema.'],
+          [' Tolerance','Nausea, vomiting, diarrhoea, abdominal distension — assess clinically before each feed. Routine GRV monitoring not recommended (ASPEN/SCCM 2016). GRV checks are not applicable for patients with adequate oral intake or post-pyloric feeds. If clinically indicated (nasogastric ICU patients with suspected gastroparesis only): GRV ≥500 mL with symptoms = hold &amp; reassess; GRV &lt;500 mL alone = continue EN.'],
+          [' Tube patency','Check position before each feed (aspiration / pH paper). Flush with warm water if resistance felt.'],
+          [' Weight & hydration','Weigh every 3 days. Monitor urine output, skin turgor, mucous membranes, oedema.'],
           ['Biochemistry','Electrolytes (Na, K, Mg, PO₄) twice weekly. Refeeding syndrome risk: monitor closely first 72h.'],
-          ['📈 Nutritional response','Reassess energy & protein targets weekly or if clinical status changes significantly.'],
+          [' Nutritional response','Reassess energy & protein targets weekly or if clinical status changes significantly.'],
         ].map(([title, desc]) => `
           <div style="padding:8px 10px;background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.18);border-radius:7px">
             <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--text-bright);margin-bottom:3px">${title}</div>
@@ -10825,18 +10960,18 @@ function blendCalc() {
   const errors = [];
 
   if (!blendIngredients || blendIngredients.length === 0) {
-    errors.push('⚠ Add at least one ingredient to the blend recipe above.');
+    errors.push(' Add at least one ingredient to the blend recipe above.');
   }
   if (!totalVol || totalVol <= 0) {
-    errors.push('⚠ Total batch volume is required.');
+    errors.push(' Total batch volume is required.');
     _markInvalid('blend-total-vol');
   }
   if (!kcalReq || kcalReq <= 0) {
-    errors.push('⚠ Patient energy requirement (kcal/day) is required.');
+    errors.push(' Patient energy requirement (kcal/day) is required.');
     _markInvalid('blend-pt-kcal-abs');
   }
   if (!proReq || proReq <= 0) {
-    errors.push('⚠ Patient protein requirement (g/day) is required.');
+    errors.push(' Patient protein requirement (g/day) is required.');
     _markInvalid('blend-pt-pro-abs');
   }
 
@@ -10882,7 +11017,7 @@ function blendCalc() {
   }
 
   blendGenPrescription(kcalMl, proL);
-  if (typeof showToast === 'function') showToast('✅ Blenderized prescription calculated', 'success');
+  if (typeof showToast === 'function') showToast(' Blenderized prescription calculated', 'success');
   // Log to Firestore
   try { logCalcToFirebase({ calcType:'enteral-blenderized', module:'enteral', formula:'blenderized' }); } catch(e) {}
 }
@@ -10942,7 +11077,7 @@ function blendGenPrescription(kcalMl, proL) {
     badge.style.borderColor = allOk ? 'rgba(52,211,153,0.5)'  : kcalOk || proOk ? 'rgba(240,180,41,0.5)' : 'rgba(251,113,133,0.5)';
     badge.style.background  = allOk ? 'rgba(52,211,153,0.06)' : kcalOk || proOk ? 'rgba(240,180,41,0.06)' : 'rgba(251,113,133,0.06)';
   }
-  if (bIcon)  bIcon.textContent  = allOk ? '✅' : kcalOk || proOk ? '⚠️' : '❌';
+  if (bIcon)  bIcon.textContent  = allOk ? '' : kcalOk || proOk ? '' : '';
   if (bTitle) { bTitle.textContent = allOk ? 'BLEND ADEQUATE' : kcalOk || proOk ? 'BLEND BELOW TARGET' : 'BLEND INADEQUATE'; bTitle.style.color = allOk ? 'var(--green)' : kcalOk || proOk ? 'var(--amber)' : 'var(--red)'; }
   if (bSub) {
     const msgs = [];
@@ -11049,7 +11184,7 @@ function blendGenPrescription(kcalMl, proL) {
           <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">4h rest break recommended</div>
         </div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--red)">⚠ Blenderized feeds are NOT recommended for continuous pump delivery — high blockage risk. Use bolus or intermittent if possible.</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--red)"> Blenderized feeds are NOT recommended for continuous pump delivery — high blockage risk. Use bolus or intermittent if possible.</div>`;
   } else {
     adminHtml = `
       <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px 12px;display:inline-block">
@@ -11211,8 +11346,8 @@ function blendGenPrescription(kcalMl, proL) {
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Strain well through fine mesh sieve to prevent tube blockage</span></div>
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Allow feed to reach body temperature before administration</span></div>
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Large-bore tube ≥14 Fr only — blenderized feeds will block fine-bore tubes</span></div>
-        ${proMet !== null && proMet < 90 ? `<div style="display:flex;gap:10px"><span style="color:var(--amber);flex-shrink:0;font-weight:700">⚠</span><span>Protein delivery ${proMet}% of target — increase milk, beans, egg or usipa in recipe</span></div>` : ''}
-        ${!allOk ? `<div style="display:flex;gap:10px"><span style="color:var(--red);flex-shrink:0;font-weight:700">⚠</span><span>Blend does not fully meet nutritional targets — review recipe or refer to dietitian</span></div>` : ''}
+        ${proMet !== null && proMet < 90 ? `<div style="display:flex;gap:10px"><span style="color:var(--amber);flex-shrink:0;font-weight:700"></span><span>Protein delivery ${proMet}% of target — increase milk, beans, egg or usipa in recipe</span></div>` : ''}
+        ${!allOk ? `<div style="display:flex;gap:10px"><span style="color:var(--red);flex-shrink:0;font-weight:700"></span><span>Blend does not fully meet nutritional targets — review recipe or refer to dietitian</span></div>` : ''}
       </div>
     </div>
 
@@ -11240,7 +11375,7 @@ function saveEnteralRecord() {
     snapshot: 'Energy: ' + kcal + ' kcal/day · Protein: ' + pro + ' g/day · Volume: ' + vol + ' mL/day',
   };
   try { DataService.addToList('history', entry, 50); } catch(e) {}
-  showToast('✅ Enteral prescription saved to history', 'success');
+  showToast(' Enteral prescription saved to history', 'success');
   try { renderActivityStrip(); } catch(e) {}
 }
 
@@ -11260,7 +11395,7 @@ function saveMealPlanRecord() {
     snapshot: 'Energy: ' + kcal + ' kcal/day · Protein: ' + pro + ' g · Fat: ' + fat + ' g',
   };
   try { DataService.addToList('history', entry, 50); } catch(e) {}
-  showToast('✅ Meal plan saved to history', 'success');
+  showToast(' Meal plan saved to history', 'success');
   try { renderActivityStrip(); } catch(e) {}
 }
 
@@ -11281,7 +11416,7 @@ function saveLRRecord() {
     snapshot:  'Energy: ' + kcal + ' kcal/day · Protein: ' + pro + ' g/day · Formula: ' + vol + ' kcal/L',
   };
   DataService.addToList('history', entry, 50);
-  showToast('✅ Low-Resource prescription saved to history', 'success');
+  showToast(' Low-Resource prescription saved to history', 'success');
   try { renderActivityStrip(); } catch(e) {}
 }
 
@@ -11306,7 +11441,7 @@ function blendGeneratePrescription() {
       snapshot:  'Energy: ' + kcal + ' kcal/day · Protein: ' + pro + ' g/day · Formula: ' + vol + ' kcal/L · ' + n + ' ingredients',
     };
     try { DataService.addToList('history', entry, 50); } catch(e) {}
-    if (typeof showToast === 'function') showToast('✅ Prescription generated and saved to history', 'success');
+    if (typeof showToast === 'function') showToast(' Prescription generated and saved to history', 'success');
     try { renderActivityStrip(); } catch(e) {}
     // Scroll to the prescription
     setTimeout(() => {
@@ -11325,7 +11460,7 @@ function saveBlendRecord() {
     // Re-check after attempting generation
     const prescAfter = document.getElementById('blend-prescription');
     if (!prescAfter || !prescAfter.innerHTML.trim()) {
-      showToast('⚠ Fill in all required fields and calculate first', 'warning');
+      showToast(' Fill in all required fields and calculate first', 'warning');
       return;
     }
   }
@@ -11341,7 +11476,7 @@ function saveBlendRecord() {
     snapshot:  'Energy: ' + kcal + ' kcal/day · Protein: ' + pro + ' g/day · Formula: ' + vol + ' kcal/L · ' + n + ' ingredients',
   };
   DataService.addToList('history', entry, 50);
-  showToast('✅ Blenderized prescription saved to history', 'success');
+  showToast(' Blenderized prescription saved to history', 'success');
   try { renderActivityStrip(); } catch(e) {}
 }
 
@@ -11388,12 +11523,12 @@ function ampShowCondFlags() {
   const el    = document.getElementById('amp-cond-flags');
   if (!el) return;
   const flags = {
-    renal:    '⚠ <strong>Renal:</strong> Limit protein to 0.6–0.8 g/kg/day · Restrict potassium, phosphorus, sodium · Limit fluid if anuric',
-    diabetic: '⚠ <strong>Diabetic:</strong> Distribute CHO evenly · Avoid concentrated sweets · Prefer low-GI starches (nsima from refined maize is moderate-GI)',
-    cardiac:  '⚠ <strong>Cardiac:</strong> Restrict fluid to 1.5–2 L/day · Limit sodium · Monitor oedema daily',
-    burns:    '⚠ <strong>Burns/High Stress:</strong> Energy needs markedly elevated · Protein 1.5–2.5 g/kg/day · Reassess daily',
-    hiv:      '⚠ <strong>HIV/TB:</strong> Energy +10–30% above standard · Micronutrient supplementation recommended · Monitor for drug-nutrient interactions',
-    malnutrition: '⚠ <strong>SAM/MAM:</strong> Start low (60–80 kcal/kg/day) and advance · Use F-75 then F-100 / RUTF per IMAM protocol · Monitor for refeeding syndrome',
+    renal:    ' <strong>Renal:</strong> Limit protein to 0.6–0.8 g/kg/day · Restrict potassium, phosphorus, sodium · Limit fluid if anuric',
+    diabetic: ' <strong>Diabetic:</strong> Distribute CHO evenly · Avoid concentrated sweets · Prefer low-GI starches (nsima from refined maize is moderate-GI)',
+    cardiac:  ' <strong>Cardiac:</strong> Restrict fluid to 1.5–2 L/day · Limit sodium · Monitor oedema daily',
+    burns:    ' <strong>Burns/High Stress:</strong> Energy needs markedly elevated · Protein 1.5–2.5 g/kg/day · Reassess daily',
+    hiv:      ' <strong>HIV/TB:</strong> Energy +10–30% above standard · Micronutrient supplementation recommended · Monitor for drug-nutrient interactions',
+    malnutrition: ' <strong>SAM/MAM:</strong> Start low (60–80 kcal/kg/day) and advance · Use F-75 then F-100 / RUTF per IMAM protocol · Monitor for refeeding syndrome',
   };
   const msg = flags[cond];
   if (msg) {
@@ -11446,7 +11581,7 @@ const AMP_FOOD_LIB = {
 
 // meal-slot proportions: [breakfast, mid-morn, lunch, aftn, dinner, evening]
 const AMP_MEAL_PROPS = [0.25, 0.10, 0.30, 0.10, 0.25, 0.00];
-const AMP_MEAL_ICONS = ['','','☀','','','⭐'];
+const AMP_MEAL_ICONS = ['','','','','',''];
 const AMP_MEAL_LABELS = ['Breakfast','Mid-morning snack','Lunch','Afternoon snack','Dinner','Evening snack'];
 
 // Curated slot menus — arrays of food keys per slot
@@ -11609,7 +11744,7 @@ function ampSyncFromCalc() {
   set('mp-target-cho',   cho);
   set('mp-target-fluid', fluid);
   document.getElementById('mp-calc-status').innerHTML =
-    `<span style="color:var(--green)">✅ Synced from ${src}</span>`;
+    `<span style="color:var(--green)"> Synced from ${src}</span>`;
 
   // Fill override fields (even if hidden — used as fallback)
   set('amp-wt', parseFloat(d.weight || 0) || '');
@@ -11639,17 +11774,17 @@ function _ampRenderInfoBanner(d, src) {
   const COND_LABELS = { general:'General recovery', malnutrition:'SAM/MAM', hiv:'HIV/TB', renal:'Renal disease', diabetic:'Diabetic', burns:'Burns/High-stress', cardiac:'Cardiac' };
   const pill = (icon, val, col) => `<span style="font-family:var(--mono);font-size:10px;color:${col||'var(--text-bright)'};background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px">${icon} ${val}</span>`;
   disp.innerHTML = `
-    <span style="font-family:var(--mono);font-size:9px;color:var(--green)">✅ ${src}</span>
+    <span style="font-family:var(--mono);font-size:9px;color:var(--green)"> ${src}</span>
     ${d.patientName ? pill('', d.patientName.split(' ')[0], 'var(--text-bright)') : ''}
     ${d.weight      ? pill('', d.weight+'kg') : ''}
     ${d.age         ? pill('', d.age+'y') : ''}
     ${d.sex         ? pill('', d.sex) : ''}
-    ${pill('🩺', (d.diagnosis || 'General').replace(/_/g,' '), 'var(--teal)')}
+    ${pill('', (d.diagnosis || 'General').replace(/_/g,' '), 'var(--teal)')}
     ${pill('', Math.round(d.energy||0)+' kcal', 'var(--amber)')}
     ${pill('', Math.round(d.protein||0)+'g pro', 'var(--blue)')}
   `;
   const srcEl = document.getElementById('amp-sync-source');
-  if (srcEl) srcEl.textContent = '✅ ' + src;
+  if (srcEl) srcEl.textContent = ' ' + src;
 }
 
 function ampToggleOverride() {
@@ -11702,14 +11837,14 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
   const kcalPct = targetKcal>0 ? Math.round(totKcal/targetKcal*100) : null;
   const proPct  = targetPro >0 ? Math.round(totPro /targetPro *100) : null;
   const _col = p => p===null?'var(--text-dim)':p>=90&&p<=115?'var(--green)':p<75?'var(--red)':'var(--amber)';
-  const _lbl = p => p===null?'—':p>=90&&p<=115?'✅ Adequate':p<75?'⚠ Below target':'⚠ Marginal';
-  const _driLbl = (p, lo, hi) => p===null?'—':p>=lo&&p<=hi?`✅ Within DRI (${lo}–${hi}%E)`:p<lo?`⚠ Below ${lo}%E`:`⚠ Above ${hi}%E`;
+  const _lbl = p => p===null?'—':p>=90&&p<=115?' Adequate':p<75?' Below target':' Marginal';
+  const _driLbl = (p, lo, hi) => p===null?'—':p>=lo&&p<=hi?` Within DRI (${lo}–${hi}%E)`:p<lo?` Below ${lo}%E`:` Above ${hi}%E`;
 
   const macroDistHTML = hasMacro ? `
     <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;margin-top:2px">MACRONUTRIENT DISTRIBUTION (%E) vs WHO/DRI Ranges</div>
     <div style="margin-bottom:7px">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
-        <span style="color:var(--text-dim)">🌾 Carbohydrate</span>
+        <span style="color:var(--text-dim)"> Carbohydrate</span>
         <span style="color:var(--amber)">${choPctE}%E · ${totCho}g · ${totCho*4} kcal &nbsp;·&nbsp; ${_driLbl(choPctE,45,65)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(choPctE,100)}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div>
@@ -11723,7 +11858,7 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
     </div>
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
-        <span style="color:var(--text-dim)">🫒 Fat</span>
+        <span style="color:var(--text-dim)"> Fat</span>
         <span style="color:var(--green)">${fatPctE}%E · ${totFat}g · ${totFat*9} kcal &nbsp;·&nbsp; ${_driLbl(fatPctE,20,35)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(fatPctE,100)}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div>
@@ -11733,18 +11868,18 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
   const gapPro  = targetPro >0 ? targetPro  - totPro  : 0;
   const gapHTML = gapKcal>0 && gapKcal > targetKcal*0.1 ? `
     <div style="background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--red);line-height:1.8;margin-top:4px">
-      ⚠ <strong>Energy gap: ${gapKcal} kcal</strong> below target.
+       <strong>Energy gap: ${gapKcal} kcal</strong> below target.
       ${gapPro > targetPro*0.1 ? `&nbsp;|&nbsp; <strong>Protein gap: ${gapPro}g</strong>.` : ''}
       <br>ONS bridge: Fresubin Energy 200mL ×${Math.ceil(gapKcal/300)} = ~${Math.ceil(gapKcal/300)*300} kcal &nbsp;|&nbsp; Ensure Plus 237mL ×${Math.ceil(gapKcal/350)} = ~${Math.ceil(gapKcal/350)*350} kcal
     </div>` : kcalPct!==null && kcalPct>=90 ? `
     <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--green);line-height:1.8;margin-top:4px">
-      ✅ Energy target met (${kcalPct}% of ${targetKcal} kcal).
-      ${proPct!==null ? proPct>=90 ? '&nbsp;Protein target met ✅' : `&nbsp;⚠ Protein ${proPct}% of target — add protein-rich foods or protein supplement.` : ''}
-      ${targetFluid>0?`<br>💧 Fluid target: <strong>${targetFluid} mL/day</strong> — advise 6–8 cups water/oral fluids.`:''}
+       Energy target met (${kcalPct}% of ${targetKcal} kcal).
+      ${proPct!==null ? proPct>=90 ? '&nbsp;Protein target met ' : `&nbsp; Protein ${proPct}% of target — add protein-rich foods or protein supplement.` : ''}
+      ${targetFluid>0?`<br> Fluid target: <strong>${targetFluid} mL/day</strong> — advise 6–8 cups water/oral fluids.`:''}
     </div>` : '';
 
   const fluidOnlyHTML = (!gapHTML || gapKcal<=0) && targetFluid>0 && kcalPct===null ? `
-    <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:8px">💧 Fluid target: <strong>${targetFluid} mL/day</strong>.</div>` : '';
+    <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:8px"> Fluid target: <strong>${targetFluid} mL/day</strong>.</div>` : '';
 
   return `<div style="margin-top:16px;background:rgba(5,15,35,0.75);border:1px solid rgba(29,233,212,0.35);border-radius:12px;padding:16px">
     <div style="font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:2px;color:var(--teal);margin-bottom:14px">NUTRITION ANALYSIS — ${source}</div>
@@ -11752,7 +11887,7 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
       ${_mpAnaCard('Energy', totKcal, 'kcal', targetKcal>0?'target: '+targetKcal+' kcal':'no target set', kcalPct, _col(kcalPct), _lbl(kcalPct))}
       ${_mpAnaCard('Protein', totPro, 'g', targetPro>0?'target: '+targetPro+'g':'no target set', proPct, _col(proPct), _lbl(proPct))}
       ${hasMacro ? _mpAnaCard('CHO', totCho, 'g', (totCho*4)+' kcal · '+choPctE+'%E', choPctE, choPctE>=45&&choPctE<=65?'var(--green)':'var(--amber)', _driLbl(choPctE,45,65)) : ''}
-      ${hasMacro ? _mpAnaCard('🫒 Fat', totFat, 'g', (totFat*9)+' kcal · '+fatPctE+'%E', fatPctE, fatPctE>=20&&fatPctE<=35?'var(--green)':'var(--amber)', _driLbl(fatPctE,20,35)) : ''}
+      ${hasMacro ? _mpAnaCard(' Fat', totFat, 'g', (totFat*9)+' kcal · '+fatPctE+'%E', fatPctE, fatPctE>=20&&fatPctE<=35?'var(--green)':'var(--amber)', _driLbl(fatPctE,20,35)) : ''}
     </div>
     ${macroDistHTML}
     ${gapHTML}${fluidOnlyHTML}
@@ -11821,9 +11956,9 @@ function ampGenerate() {
 function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
   // Adjust targets for condition
   let condNote = '';
-  if (cond==='malnutrition') { condNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:12px">⚠ SAM/MAM: Start at 60–80 kcal/kg. Advance slowly. Use F-75/F-100/RUTF per IMAM protocol.</div>'; }
-  if (cond==='renal')       { condNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:12px">⚠ Renal: protein limited. Avoid high-K foods (banana, avocado, sweet potato) if hyperkalaemic.</div>'; }
-  if (cond==='diabetic')    { condNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:12px">⚠ Diabetic: Distribute CHO evenly. No concentrated sweets. Choose moderate-GI starches.</div>'; }
+  if (cond==='malnutrition') { condNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:12px"> SAM/MAM: Start at 60–80 kcal/kg. Advance slowly. Use F-75/F-100/RUTF per IMAM protocol.</div>'; }
+  if (cond==='renal')       { condNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:12px"> Renal: protein limited. Avoid high-K foods (banana, avocado, sweet potato) if hyperkalaemic.</div>'; }
+  if (cond==='diabetic')    { condNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:12px"> Diabetic: Distribute CHO evenly. No concentrated sweets. Choose moderate-GI starches.</div>'; }
 
   // Build meals
   const newMpData = {};
@@ -11847,10 +11982,10 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(56,100,168,0.08);flex-wrap:wrap;gap:4px">
         <div style="min-width:0;flex:1">
           <div style="font-family:var(--mono);font-size:11.5px;color:var(--text-bright);font-weight:600">${i.name}</div>
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:1px">📏 ${i.amount}</div>
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:1px"> ${i.amount}</div>
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;padding-top:2px">
-          <span style="font-family:var(--mono);font-size:9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:1px 7px;border-radius:8px">⚡${i.kcal}</span>
+          <span style="font-family:var(--mono);font-size:9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:1px 7px;border-radius:8px">${i.kcal}</span>
           <span style="font-family:var(--mono);font-size:9px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:1px 7px;border-radius:8px">P ${i.pro}g</span>
           <span style="font-family:var(--mono);font-size:9px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:1px 7px;border-radius:8px">F ${i.fat}g</span>
           <span style="font-family:var(--mono);font-size:9px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:1px 7px;border-radius:8px">C ${i.cho}g</span>
@@ -11862,7 +11997,7 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
           <div style="font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--text-bright)">${AMP_MEAL_ICONS[mi]} ${AMP_MEAL_LABELS[mi].toUpperCase()}</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:2px 9px;border-radius:10px">⚡${mKcal} kcal</span>
+            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:2px 9px;border-radius:10px">${mKcal} kcal</span>
             <span style="font-family:var(--mono);font-size:9.5px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:var(--blue);padding:2px 9px;border-radius:10px">P ${mPro.toFixed(1)}g</span>
             <span style="font-family:var(--mono);font-size:9.5px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:2px 9px;border-radius:10px">F ${mFat.toFixed(1)}g</span>
             <span style="font-family:var(--mono);font-size:9.5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:2px 9px;border-radius:10px">C ${mCho.toFixed(1)}g</span>
@@ -11883,18 +12018,18 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
 
   // Safety flags
   const flags = [];
-  if (!kcalOk) flags.push(`<li>Energy ${kcalOk?'✅':'⚠'} ${totalKcal} kcal = <strong>${kcalPct}%</strong> of ${kcalTarget} kcal target${kcalPct<80?' — <span style="color:var(--red)">BELOW TARGET</span>':''}</li>`);
-  if (!proOk)  flags.push(`<li>Protein ${proOk?'✅':'⚠'} ${totalPro.toFixed(0)}g = <strong>${proPct}%</strong> of ${proTarget}g target${proPct<80?' — <span style="color:var(--red)">BELOW TARGET</span>':''}</li>`);
-  if (fluidTarget>0) flags.push(`<li>💧 Hydration reminder: target <strong>${fluidTarget} mL/day</strong> fluid — ensure 6–8 cups water/day in addition to milk and fluids in meals</li>`);
+  if (!kcalOk) flags.push(`<li>Energy ${kcalOk?'':''} ${totalKcal} kcal = <strong>${kcalPct}%</strong> of ${kcalTarget} kcal target${kcalPct<80?' — <span style="color:var(--red)">BELOW TARGET</span>':''}</li>`);
+  if (!proOk)  flags.push(`<li>Protein ${proOk?'':''} ${totalPro.toFixed(0)}g = <strong>${proPct}%</strong> of ${proTarget}g target${proPct<80?' — <span style="color:var(--red)">BELOW TARGET</span>':''}</li>`);
+  if (fluidTarget>0) flags.push(`<li> Hydration reminder: target <strong>${fluidTarget} mL/day</strong> fluid — ensure 6–8 cups water/day in addition to milk and fluids in meals</li>`);
 
   const flagHtml = flags.length ? `<ul style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:2;padding-left:18px;margin:0">${flags.join('')}</ul>` : '';
 
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal)">🍽 DAILY ORAL MEAL PLAN</div>
+        <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal)"> DAILY ORAL MEAL PLAN</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:3px 12px;border-radius:12px">⚡${totalKcal} kcal (${kcalPct}%)</span>
+          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:3px 12px;border-radius:12px">${totalKcal} kcal (${kcalPct}%)</span>
           <span style="font-family:var(--mono);font-size:9.5px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:3px 12px;border-radius:12px">P ${totalPro.toFixed(0)}g (${proPct}%)</span>
           <span style="font-family:var(--mono);font-size:9.5px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:3px 12px;border-radius:12px">F ${totalFat}g</span>
           <span style="font-family:var(--mono);font-size:9.5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:3px 12px;border-radius:12px">C ${totalCho}g</span>
@@ -11904,7 +12039,7 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
       ${mealHtml.join('')}
       ${flagHtml ? `<div style="background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:8px;padding:12px;margin-top:8px">${flagHtml}</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer">✅ APPLY TO MEAL PLANNER</button>
+        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY TO MEAL PLANNER</button>
         <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
       </div>
       ${mpBuildAnalysisHTML(totalKcal,totalPro,totalCho,totalFat,kcalTarget,proTarget,fluidTarget,'GENERATED ORAL PLAN')}
@@ -11933,9 +12068,9 @@ function _ampGenEnteral(kcalTarget, proTarget, fluidTarget, feedType, delivery, 
   const proPct  = proTarget > 0 ? Math.round(proDay/proTarget*100) : '—';
 
   let specialNote = '';
-  if (cond==='renal')    specialNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px">⚠ Renal: Consider renal-specific formula (Fresubin Renal / Nepro). Limit protein to 0.6–0.8g/kg if non-dialysis.</div>';
-  if (cond==='diabetic') specialNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:10px">⚠ Diabetic: Consider Nutrison Diason or Fresubin Diabetes. Spread feeds evenly across 24h.</div>';
-  if (cond==='burns')    specialNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:10px">⚠ High Stress/Burns: Consider high-protein formula (Supportan / Fresubin HP). Reassess energy needs daily using Curreri formula.</div>';
+  if (cond==='renal')    specialNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px"> Renal: Consider renal-specific formula (Fresubin Renal / Nepro). Limit protein to 0.6–0.8g/kg if non-dialysis.</div>';
+  if (cond==='diabetic') specialNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:10px"> Diabetic: Consider Nutrison Diason or Fresubin Diabetes. Spread feeds evenly across 24h.</div>';
+  if (cond==='burns')    specialNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:10px"> High Stress/Burns: Consider high-protein formula (Supportan / Fresubin HP). Reassess energy needs daily using Curreri formula.</div>';
 
   const contHtml = `
     <div style="background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:14px;margin-bottom:10px">
@@ -11964,7 +12099,7 @@ function _ampGenEnteral(kcalTarget, proTarget, fluidTarget, feedType, delivery, 
 
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
-      <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:12px">🩺 ENTERAL TUBE FEEDING PLAN</div>
+      <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:12px"> ENTERAL TUBE FEEDING PLAN</div>
       ${specialNote}
       <div style="background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--text)">
         <strong style="color:var(--teal)">Formula:</strong> ${formula.name}<br>
@@ -11974,7 +12109,7 @@ function _ampGenEnteral(kcalTarget, proTarget, fluidTarget, feedType, delivery, 
       ${delivery === 'bolus' ? bolusHtml : contHtml}
       ${delivery === 'continuous' ? bolusHtml : contHtml}
       <div style="background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.25);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9;margin-top:4px">
-        <strong style="color:var(--amber)">🔧 Tube safety reminders:</strong><br>
+        <strong style="color:var(--amber)"> Tube safety reminders:</strong><br>
         • Flush tube with 30–50 mL clean boiled water before &amp; after each feed<br>
         • Starter rate Day 1–2: <strong>${halfRate} mL/hr</strong> — advance to full rate if tolerating well<br>
         • Monitor tolerance: nausea, vomiting, abdominal distension, diarrhoea — assess clinically before each feed<br>
@@ -12008,7 +12143,7 @@ function _ampGenMixed(kcalTarget, proTarget, fluidTarget, feedType, delivery, wt
 
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
-      <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:6px">🔀 MIXED ORAL + ENTERAL PLAN</div>
+      <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:6px"> MIXED ORAL + ENTERAL PLAN</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:14px">
         Oral: <strong style="color:var(--teal)">${oralPct*100}%</strong> (${oralKcal} kcal · ${oralPro}g protein) &nbsp;|&nbsp;
         Enteral: <strong style="color:var(--blue)">${Math.round((1-oralPct)*100)}%</strong> (${enteralKcal} kcal · ${enteralPro}g protein)
@@ -12020,7 +12155,7 @@ function _ampGenMixed(kcalTarget, proTarget, fluidTarget, feedType, delivery, wt
         ${enteralDiv.innerHTML}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer">✅ APPLY ORAL PART TO PLANNER</button>
+        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY ORAL PART TO PLANNER</button>
         <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
       </div>
       ${mpBuildAnalysisHTML(_mixTotKcal, _mixTotPro, _mixTotCho, _mixTotFat, kcalTarget, proTarget, fluidTarget, 'GENERATED MIXED PLAN (COMBINED)')}
@@ -12230,7 +12365,7 @@ function _dbRenderGlobalResult(food) {
   panel.innerHTML = `
     <div class="card" style="border:1px solid ${srcColor}40">
       <div class="card-header">
-        <div class="card-title" style="color:${srcColor}">🌐 Global Search Result</div>
+        <div class="card-title" style="color:${srcColor}"> Global Search Result</div>
         <div class="card-badge" style="color:${srcColor};border-color:${srcColor}40">
           ${srcLabel} · ${confidence}% match
         </div>
@@ -12286,7 +12421,7 @@ function _dbShowGlobalLoading(query) {
   panel.innerHTML = `
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
-        🔍 Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
+         Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
         <div style="margin-top:6px;font-size:9px">FoodData Central · CalorieNinjas</div>
       </div>
     </div>`;

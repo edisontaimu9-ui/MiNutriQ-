@@ -38,6 +38,7 @@
 <!-- safe-area insets for notch devices -->
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>
   // ══════════════════════════════════════════════════════
@@ -161,7 +162,7 @@
         <label class="ob-label" for="ob-auth-pw">Password <span>*</span></label>
         <div style="position:relative">
           <input id="ob-auth-pw" class="ob-input" type="password" placeholder="Enter your password" maxlength="128" autocomplete="current-password" style="padding-right:44px">
-          <button type="button" onclick="obTogglePw('ob-auth-pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0;line-height:1">👁</button>
+          <button type="button" onclick="obTogglePw('ob-auth-pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0;line-height:1"></button>
         </div>
         <!-- Forgot Password — only shown in sign-in mode -->
         <div id="ob-forgot-row" style="text-align:right;margin-top:6px">
@@ -244,16 +245,16 @@
         <label class="ob-label">Role <span>*</span></label>
         <div class="ob-role-grid">
           <button class="ob-role-btn" data-role="student" onclick="obSelectRole(this)">
-            <span class="ob-role-icon">🎓</span>Student
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>Student
           </button>
           <button class="ob-role-btn" data-role="dietitian" onclick="obSelectRole(this)">
-            <span class="ob-role-icon">🥗</span>Dietitian
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/><path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-3.19 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.4 2.4 0 0 1 .44 1.06"/></svg></span>Dietitian
           </button>
           <button class="ob-role-btn" data-role="clinician" onclick="obSelectRole(this)">
-            <span class="ob-role-icon">👨‍⚕️</span>Clinician
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg></span>Clinician
           </button>
           <button class="ob-role-btn" data-role="researcher" onclick="obSelectRole(this)">
-            <span class="ob-role-icon">🔬</span>Researcher
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg></span>Researcher
           </button>
         </div>
       </div>
@@ -272,7 +273,7 @@
 
 <!-- ── Device Orientation Overlay ─────────────────────── -->
 <div id="orient-overlay">
-  <div class="orient-icon">📱</div>
+  <div class="orient-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
   <div class="orient-title">Please Rotate Device</div>
   <div class="orient-sub">Oasis is optimised for<br>portrait orientation</div>
   <button class="orient-dismiss" onclick="document.getElementById('orient-overlay').classList.remove('show');window._orientDismissed=true">
@@ -293,11 +294,11 @@
         <span class="logo-name-nutri">Oasis</span><span class="logo-name-track" style="margin-left:6px">CNST</span>
       </div>
       <div class="logo-sub">
-        <span class="logo-sub-symbol">🩺</span>
+        <span class="logo-sub-symbol"></span>
         <span class="logo-sub-dot"></span>
         Clinical Nutrition Decision Support Tool
         <span class="logo-sub-dot"></span>
-        <span class="logo-sub-symbol">🔬</span>
+        <span class="logo-sub-symbol"></span>
       </div>
     </div>
   </div>
@@ -306,7 +307,7 @@
   <div class="header-right">
     <div id="nt-clock" style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal);letter-spacing:2px;flex-shrink:0">--:--</div>
     <div class="status-pill offline" id="db-pill"><span class="dot" id="db-dot"></span><span id="db-pill-txt">Offline</span></div>
-    <button class="settings-btn" onclick="openSettings()">⚙ SETTINGS</button>
+    <button class="settings-btn" onclick="openSettings()"> SETTINGS</button>
   </div>
 
 <!-- SETTINGS OVERLAY -->
@@ -317,7 +318,7 @@
 
   <!-- ── HEADER ── -->
   <div class="sdr-header">
-    <div class="sdr-title">⚙ Settings</div>
+    <div class="sdr-title"> Settings</div>
     <span id="sdr-autosave-ind" style="font-family:var(--mono);font-size:9px;color:var(--accent,var(--teal));
           opacity:0;transition:opacity .3s;letter-spacing:0.5px">✓ Saved</span>
     <button class="sdr-close" onclick="closeSettings()" aria-label="Close">✕</button>
@@ -347,12 +348,48 @@
 
       <div class="sdr-item sdr-item-col">
         <div class="sdr-item-lbl">Role</div>
-        <select id="sdr-user-role" class="sdr-sel" style="width:100%;margin-top:8px" onchange="autoSaveSettings()">
-          <option value="student">Student</option>
-          <option value="dietitian">Dietitian</option>
-          <option value="clinician">Clinician</option>
-          <option value="researcher">Researcher</option>
-        </select>
+        <!-- Hidden value store — read by saveProfileFromSettings -->
+        <input type="hidden" id="sdr-user-role" value="student">
+        <div class="sdr-role-grid" style="margin-top:10px">
+          <!-- Student -->
+          <button type="button" class="sdr-role-btn" data-role="student" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Student
+          </button>
+          <!-- Dietitian -->
+          <button type="button" class="sdr-role-btn" data-role="dietitian" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/><path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-3.19 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.4 2.4 0 0 1 .44 1.06"/></svg>
+            Dietitian
+          </button>
+          <!-- Clinician -->
+          <button type="button" class="sdr-role-btn" data-role="clinician" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+            Clinician
+          </button>
+          <!-- Researcher -->
+          <button type="button" class="sdr-role-btn" data-role="researcher" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>
+            Researcher
+          </button>
+          <!-- Nurse -->
+          <button type="button" class="sdr-role-btn" data-role="nurse" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+            Nurse
+          </button>
+          <!-- Other -->
+          <button type="button" class="sdr-role-btn" data-role="other" onclick="sdrSelectRole(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            Other
+          </button>
+        </div>
+        <!-- Other (specify) — shown only when Other is selected -->
+        <div id="sdr-role-other-row" style="display:none;margin-top:8px">
+          <input id="sdr-role-other-val" class="sdr-sel" type="text"
+            placeholder="e.g. Pharmacist, Public Health Officer…"
+            style="width:100%;box-sizing:border-box"
+            maxlength="60"
+            oninput="autoSaveSettings()">
+        </div>
       </div>
 
       <div class="sdr-item sdr-item-col">
@@ -629,7 +666,7 @@
       </div>
       <div class="sdr-item" style="border:none">
         <div class="sdr-item-lbl">Export<span class="sdr-item-sub">Download as JSON</span></div>
-        <button onclick="exportHistory?exportHistory():showToast('No data','info')"
+        <button onclick="exportHistory()"
           style="font-family:var(--mono);font-size:10px;color:var(--teal);background:transparent;border:1px solid rgba(29,233,212,0.25);border-radius:6px;padding:5px 12px;cursor:pointer;letter-spacing:0.5px">
           Export
         </button>
@@ -705,11 +742,11 @@
         <div style="display:flex;flex-direction:column;gap:5px">
           <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);
                       display:flex;align-items:center;gap:6px">
-            <span style="color:var(--red)">🚨</span> Critical lab values (phosphate, potassium, sodium)
+            <span style="color:var(--red)"></span> Critical lab values (phosphate, potassium, sodium)
           </div>
           <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);
                       display:flex;align-items:center;gap:6px">
-            <span style="color:var(--amber)">⚠</span> Refeeding syndrome risk flags
+            <span style="color:var(--amber)"></span> Refeeding syndrome risk flags
           </div>
           <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);
                       display:flex;align-items:center;gap:6px">
@@ -723,7 +760,7 @@
             font-family:var(--mono);font-size:9px;color:var(--text-muted);
             background:rgba(240,180,41,.05);border:1px solid rgba(240,180,41,.2);
             border-radius:8px;padding:10px 12px;line-height:1.6">
-        ⚠ Push notifications are not supported in this browser.<br>
+         Push notifications are not supported in this browser.<br>
         Use Chrome, Edge, or Firefox for full support.
       </div>
 
@@ -754,9 +791,9 @@
   gap: 10px;
   box-sizing: border-box;
 ">
-  <span style="color:var(--teal);font-size:13px;opacity:0.7">✦</span>
+  <span style="color:var(--teal);font-size:13px;opacity:0.7"></span>
   <span style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);opacity:0.85;text-shadow:0 0 18px rgba(29,233,212,0.25)">Optimize Patient Outcomes</span>
-  <span style="color:var(--teal);font-size:13px;opacity:0.7">✦</span>
+  <span style="color:var(--teal);font-size:13px;opacity:0.7"></span>
 </div>
 
 <div class="tabs" role="navigation" aria-label="Main navigation">
@@ -994,7 +1031,7 @@
 
   <!-- ── PWA INSTALL BANNER (shown when installable, hidden once installed or dismissed) ── -->
   <div id="pwa-install-banner" role="region" aria-label="Install Oasis">
-    <div class="pwa-banner-icon">⚕</div>
+    <div class="pwa-banner-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
     <div class="pwa-banner-text">
       <div class="pwa-banner-title">Install Oasis</div>
       <div class="pwa-banner-sub">Works offline · No app store · Instant access</div>
@@ -1387,7 +1424,7 @@
     <!-- helper macro for lab inputs — uses a simple 2-column value+unit layout -->
     <!-- FBC -->
     <div style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding:7px 12px;background:rgba(0,230,118,.06);border-radius:5px;border-left:3px solid var(--green)">
-      🩸 Full Blood Count (FBC)
+       Full Blood Count (FBC)
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px">
 
@@ -1499,7 +1536,7 @@
 
     <!-- LFTs -->
     <div style="font-family:var(--mono);font-size:9px;color:#ff9f43;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding:7px 12px;background:rgba(255,159,67,.06);border-radius:5px;border-left:3px solid #ff9f43">
-      🫀 Liver Function Tests (LFT)
+       Liver Function Tests (LFT)
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px">
 
@@ -1555,7 +1592,7 @@
 
     <!-- RFTs -->
     <div style="font-family:var(--mono);font-size:9px;color:var(--purple);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding:7px 12px;background:rgba(180,124,255,.06);border-radius:5px;border-left:3px solid var(--purple)">
-      🫘 Renal Function Tests (RFT)
+       Renal Function Tests (RFT)
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px">
 
@@ -1792,7 +1829,7 @@
         <div id="burn-eq-table" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);overflow-x:auto">Enter %TBSA above to see all equations.</div>
       </div>
     </div>
-    <!-- ⚡ SMART INTAKE & GI ROW — syncs to Refeeding & GLIM -->
+    <!--  SMART INTAKE & GI ROW — syncs to Refeeding & GLIM -->
     <div style="background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.2);border-radius:10px;padding:14px;margin-bottom:12px;box-sizing:border-box;overflow:hidden">
       <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:2px;color:#1de9d4;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         Dietary Intake History &amp; GI Function
@@ -1833,7 +1870,7 @@
     <!-- Refeeding Risk — NICE 2006 Full Criteria -->
     <div style="background:rgba(255,64,96,.05);border:1px solid rgba(255,64,96,.25);border-radius:10px;padding:16px;margin-top:4px">
       <div class="rf-collapsible-hdr" onclick="ntToggleRf(this)" aria-expanded="true" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div style="font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:2px;color:#ff8090;text-transform:uppercase">⚠ Refeeding Syndrome Risk — NICE 2006 Criteria</div>
+        <div style="font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:2px;color:#ff8090;text-transform:uppercase"> Refeeding Syndrome Risk — NICE 2006 Criteria</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div id="rf-live-badge" style="font-family:var(--mono);font-size:10px;padding:4px 14px;border-radius:20px;border:1px solid rgba(100,100,100,.3);background:var(--surface3);color:var(--text-dim);letter-spacing:1px;transition:all .3s">NOT ASSESSED</div>
           <span class="nt-chevron" style="margin-left:0">▼</span>
@@ -1844,22 +1881,22 @@
 
       <!-- HIGH RISK: Any ONE of -->
       <div style="margin-bottom:12px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(255,64,96,.08);border-radius:4px;border-left:3px solid var(--red)">🔴 HIGH RISK — Patient meets criteria if ANY ONE present:</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(255,64,96,.08);border-radius:4px;border-left:3px solid var(--red)"> HIGH RISK — Patient meets criteria if ANY ONE present:</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h1" onchange="rfAutoAssess()"><span>BMI &lt; 16 kg/m²</span><span id="badge-rf-h1" class="auto-badge">⚡ Auto-synced</span></label>
-          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h2" onchange="rfAutoAssess()"><span>Unintentional wt loss &gt;15% in 3–6 months</span><span id="badge-rf-h2" class="auto-badge">⚡ Auto-synced</span></label>
-          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h3" onchange="rfAutoAssess()"><span>Little/no nutrition intake for &gt;10 days</span><span id="badge-rf-h3" class="auto-badge">⚡ Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h1" onchange="rfAutoAssess()"><span>BMI &lt; 16 kg/m²</span><span id="badge-rf-h1" class="auto-badge"> Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h2" onchange="rfAutoAssess()"><span>Unintentional wt loss &gt;15% in 3–6 months</span><span id="badge-rf-h2" class="auto-badge"> Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h3" onchange="rfAutoAssess()"><span>Little/no nutrition intake for &gt;10 days</span><span id="badge-rf-h3" class="auto-badge"> Auto-synced</span></label>
           <label class="cbox-item" style="border-color:rgba(255,64,96,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-h4" onchange="rfAutoAssess()"><span>Low K⁺, PO₄, or Mg²⁺ before refeeding</span></label>
         </div>
       </div>
 
       <!-- HIGH RISK: TWO OR MORE of -->
       <div style="margin-bottom:12px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(255,184,48,.07);border-radius:4px;border-left:3px solid var(--amber)">🟠 HIGH RISK — Patient meets criteria if TWO OR MORE present:</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(255,184,48,.07);border-radius:4px;border-left:3px solid var(--amber)"> HIGH RISK — Patient meets criteria if TWO OR MORE present:</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m1" onchange="rfAutoAssess()"><span>BMI &lt; 18.5 kg/m²</span><span id="badge-rf-m1" class="auto-badge">⚡ Auto-synced</span></label>
-          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m2" onchange="rfAutoAssess()"><span>Unintentional wt loss &gt;10% in 3–6 months</span><span id="badge-rf-m2" class="auto-badge">⚡ Auto-synced</span></label>
-          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m3" onchange="rfAutoAssess()"><span>Little/no nutrition intake for &gt;5 days</span><span id="badge-rf-m3" class="auto-badge">⚡ Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m1" onchange="rfAutoAssess()"><span>BMI &lt; 18.5 kg/m²</span><span id="badge-rf-m1" class="auto-badge"> Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m2" onchange="rfAutoAssess()"><span>Unintentional wt loss &gt;10% in 3–6 months</span><span id="badge-rf-m2" class="auto-badge"> Auto-synced</span></label>
+          <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m3" onchange="rfAutoAssess()"><span>Little/no nutrition intake for &gt;5 days</span><span id="badge-rf-m3" class="auto-badge"> Auto-synced</span></label>
           <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m4" onchange="rfAutoAssess()"><span>History of alcohol or substance misuse</span></label>
           <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m5" onchange="rfAutoAssess()"><span>Use of insulin, diuretics, or antacids</span></label>
           <label class="cbox-item" style="border-color:rgba(255,184,48,.2)" onclick="rfAutoAssess()"><input type="checkbox" id="rf-m6" onchange="rfAutoAssess()"><span>Chemotherapy / cancer cachexia</span></label>
@@ -1868,7 +1905,7 @@
 
       <!-- Additional Risk Factors -->
       <div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(77,159,255,.07);border-radius:4px;border-left:3px solid var(--blue)">🔵 ADDITIONAL RISK FACTORS (increase caution):</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(77,159,255,.07);border-radius:4px;border-left:3px solid var(--blue)"> ADDITIONAL RISK FACTORS (increase caution):</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
           <label class="cbox-item" onclick="rfAutoAssess()"><input type="checkbox" id="rf-a1" onchange="rfAutoAssess()"><span>Anorexia nervosa / chronic restriction</span></label>
           <label class="cbox-item" onclick="rfAutoAssess()"><input type="checkbox" id="rf-a2" onchange="rfAutoAssess()"><span>Morbid obesity with prolonged fast</span></label>
@@ -1897,12 +1934,12 @@
   </div>
   <div class="card-body nt-collapsible-body" id="glim-section">
     <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:14px;line-height:1.7;padding:8px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:8px">
-      ⚖️ <strong style="color:var(--teal)">GLIM 2019</strong> — Diagnosis requires <strong>≥1 phenotypic criterion</strong> + <strong>≥1 etiologic criterion</strong>. BMI and weight loss % are auto-calculated from anthropometrics above. Tick additional criteria as clinically assessed.
+       <strong style="color:var(--teal)">GLIM 2019</strong> — Diagnosis requires <strong>≥1 phenotypic criterion</strong> + <strong>≥1 etiologic criterion</strong>. BMI and weight loss % are auto-calculated from anthropometrics above. Tick additional criteria as clinically assessed.
     </div>
 
     <!-- Phenotypic Criteria -->
     <div style="margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(29,233,212,0.07);border-radius:4px;border-left:3px solid var(--teal)">📉 PHENOTYPIC CRITERIA — meet ≥1 for malnutrition diagnosis:</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(29,233,212,0.07);border-radius:4px;border-left:3px solid var(--teal)"> PHENOTYPIC CRITERIA — meet ≥1 for malnutrition diagnosis:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <label class="cbox-item" onclick="glimAutoAssess()"><input type="checkbox" id="glim-muscle" onchange="glimAutoAssess()"><span>Reduced muscle mass — mild/moderate deficit (BIA / DEXA / anthropometry below validated cut-offs)</span></label>
         <label class="cbox-item" onclick="glimAutoAssess()"><input type="checkbox" id="glim-muscle-severe" onchange="glimAutoAssess()"><span>Reduced muscle mass — severe deficit (validated tool)</span></label>
@@ -1925,7 +1962,7 @@
     <div style="margin-bottom:12px">
       <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;padding:4px 8px;background:rgba(240,180,41,0.07);border-radius:4px;border-left:3px solid var(--amber)">ETIOLOGIC CRITERIA — meet ≥1 for malnutrition diagnosis:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-        <label class="cbox-item" style="border-color:rgba(240,180,41,.25)" onclick="glimAutoAssess()"><input type="checkbox" id="glim-intake" onchange="glimAutoAssess()"><span>Reduced food intake / assimilation (≤50% EER &gt;1 wk; or any reduction &gt;2 wk; or GI malabsorption)</span><span id="badge-glim-intake" class="auto-badge">⚡ Auto-synced</span></label>
+        <label class="cbox-item" style="border-color:rgba(240,180,41,.25)" onclick="glimAutoAssess()"><input type="checkbox" id="glim-intake" onchange="glimAutoAssess()"><span>Reduced food intake / assimilation (≤50% EER &gt;1 wk; or any reduction &gt;2 wk; or GI malabsorption)</span><span id="badge-glim-intake" class="auto-badge"> Auto-synced</span></label>
         <label class="cbox-item" style="border-color:rgba(240,180,41,.25)" onclick="glimAutoAssess()"><input type="checkbox" id="glim-disease-acute" onchange="glimAutoAssess()"><span>Acute disease / injury (ICU admission, major surgery, trauma, severe infection)</span></label>
         <label class="cbox-item" style="border-color:rgba(240,180,41,.25)" onclick="glimAutoAssess()"><input type="checkbox" id="glim-disease-chronic" onchange="glimAutoAssess()"><span>Chronic disease / inflammation (cancer, CKD, COPD, CVD, liver disease, HIV)</span></label>
       </div>
@@ -1948,11 +1985,11 @@
   <!-- ── Header bar ─────────────────────────────────────────── -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:14px 18px;background:#0c1830;border:1px solid rgba(29,233,212,0.3);border-radius:12px;flex-wrap:wrap;gap:10px">
     <div>
-      <div style="font-family:var(--cond);font-size:18px;font-weight:800;letter-spacing:3px;color:#1de9d4">📋 CLINICAL NUTRITION NOTE</div>
+      <div style="font-family:var(--cond);font-size:18px;font-weight:800;letter-spacing:3px;color:#1de9d4"> CLINICAL NUTRITION NOTE</div>
       <div style="font-family:var(--mono);font-size:10px;color:#ddeeff;margin-top:3px" id="r-time"></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="saveToHistory()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:6px;background:#0d1e3a;border:1px solid rgba(29,233,212,0.3);color:#1de9d4;cursor:pointer;letter-spacing:1px">💾 Save</button>
+      <button onclick="saveToHistory()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:6px;background:#0d1e3a;border:1px solid rgba(29,233,212,0.3);color:#1de9d4;cursor:pointer;letter-spacing:1px"> Save</button>
       <button onclick="exportDetailedReport()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:6px;background:#0d1e3a;border:1px solid rgba(240,180,41,0.3);color:#f0b429;cursor:pointer;letter-spacing:1px">Print</button>
       <button onclick="exportResultsCSV()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:6px;background:#0d1e3a;border:1px solid rgba(52,211,153,0.3);color:#34d399;cursor:pointer;letter-spacing:1px">CSV</button>
       <button onclick="saveToPDF('results-section','Oasis — Nutrition Results')" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:6px;background:#0d1e3a;border:1px solid rgba(96,165,250,0.35);color:#60a5fa;cursor:pointer;letter-spacing:1px">PDF</button>
@@ -1981,7 +2018,7 @@
   <div id="cde-safety-inject"></div>
 
   <!-- Anthropometrics -->
-  <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2.5px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px;padding-left:2px">📐 Anthropometrics</div>
+  <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2.5px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px;padding-left:2px"> Anthropometrics</div>
   <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
     <div style="background:#0d1e3a;border:1px solid rgba(29,233,212,0.3);border-top:3px solid #1de9d4;border-radius:10px;padding:14px 12px">
       <div style="font-family:var(--mono);font-size:8px;color:#ddeeff;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Actual BW</div>
@@ -2047,7 +2084,7 @@
   <!-- PES Statement & Clinical Nutrition Insights -->
   <div id="r-pes-card" style="background:#0c1830;border:1px solid rgba(29,233,212,0.22);border-radius:10px;overflow:hidden;margin-bottom:14px">
     <div style="padding:10px 18px;background:rgba(29,233,212,0.05);border-bottom:1px solid rgba(29,233,212,0.15)">
-      <span style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)">📋 PES STATEMENTS &amp; CLINICAL NUTRITION INSIGHTS</span>
+      <span style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)"> PES STATEMENTS &amp; CLINICAL NUTRITION INSIGHTS</span>
     </div>
     <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px">
       <div>
@@ -2199,14 +2236,14 @@
         <button onclick="recallSetMode('exchange')"
           style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(29,233,212,0.5);background:rgba(29,233,212,0.07);color:var(--teal);cursor:pointer;transition:all .2s;min-width:180px"
           onmouseover="this.style.background='rgba(29,233,212,0.16)'" onmouseout="this.style.background='rgba(29,233,212,0.07)'">
-          <span style="font-size:26px">🔄</span>
+          <span style="font-size:26px"></span>
           <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">UCT EXCHANGE</span>
           <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">UCT Exchange Lists 2014<br>Standardised exchange portions</span>
         </button>
         <button onclick="recallSetMode('fct')"
           style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(240,180,41,0.45);background:rgba(240,180,41,0.06);color:var(--amber);cursor:pointer;transition:all .2s;min-width:180px"
           onmouseover="this.style.background='rgba(240,180,41,0.14)'" onmouseout="this.style.background='rgba(240,180,41,0.06)'">
-          <span style="font-size:26px">🌽</span>
+          <span style="font-size:26px"></span>
           <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">MALAWI FCT</span>
           <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">Malawi Food Composition Table<br>Household measures · MoH</span>
         </button>
@@ -2228,7 +2265,7 @@
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim)">PATIENT REQUIREMENTS</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)" id="recall-sync-status">⚠ Enter targets below or sync from Calculator tab</div>
+        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)" id="recall-sync-status"> Enter targets below or sync from Calculator tab</div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
         <!-- Weight -->
@@ -2294,7 +2331,7 @@
         <div class="total-card"><div class="total-val c-t" id="rt-kcal">0</div><div class="total-lbl">kcal/day</div><div class="adequacy-bar"><div class="adequacy-fill" id="rf-kcal" style="background:var(--teal);width:0%"></div></div><div class="adequacy-pct" id="rp-kcal">— % of target</div></div>
         <div class="total-card"><div class="total-val c-a" id="rt-cho">0</div><div class="total-lbl">g CHO</div><div class="adequacy-bar"><div class="adequacy-fill" id="rf-cho" style="background:var(--amber);width:0%"></div></div><div class="adequacy-pct" id="rp-cho">— % of target</div></div>
         <div class="total-card"><div class="total-val c-b" id="rt-pro">0</div><div class="total-lbl">g Protein</div><div class="adequacy-bar"><div class="adequacy-fill" id="rf-pro" style="background:var(--blue);width:0%"></div></div><div class="adequacy-pct" id="rp-pro">— % of target</div></div>
-        <div class="total-card"><div class="total-val c-g" id="rt-fat">0</div><div class="total-lbl">🫒 g Fat</div><div class="adequacy-bar"><div class="adequacy-fill" id="rf-fat" style="background:var(--green);width:0%"></div></div><div class="adequacy-pct" id="rp-fat">— % of target</div></div>
+        <div class="total-card"><div class="total-val c-g" id="rt-fat">0</div><div class="total-lbl"> g Fat</div><div class="adequacy-bar"><div class="adequacy-fill" id="rf-fat" style="background:var(--green);width:0%"></div></div><div class="adequacy-pct" id="rp-fat">— % of target</div></div>
         <div class="total-card"><div class="total-val" style="color:#a0c4ff" id="rt-kj">0</div><div class="total-lbl">kJ/day</div><div style="height:6px"></div><div class="adequacy-pct" id="rp-kj" style="color:var(--text-dim)">—</div></div>
       </div>
 
@@ -2341,7 +2378,7 @@
   <div id="mp-req-bar" style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim)">PATIENT REQUIREMENTS — SYNCED OR MANUAL</div>
-      <div style="font-family:var(--mono);font-size:9.5px" id="mp-calc-status">⚠ Sync from Calculator or enter manually</div>
+      <div style="font-family:var(--mono);font-size:9.5px" id="mp-calc-status"> Sync from Calculator or enter manually</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
       <div>
@@ -2386,14 +2423,14 @@
       <button onclick="mpSetPlanMode('auto')"
         style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(29,233,212,0.5);background:rgba(29,233,212,0.07);color:var(--teal);cursor:pointer;transition:all .2s;min-width:180px"
         onmouseover="this.style.background='rgba(29,233,212,0.16)'" onmouseout="this.style.background='rgba(29,233,212,0.07)'">
-        <span style="font-size:26px">⚡</span>
+        <span style="font-size:26px"></span>
         <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">AUTOMATIC</span>
         <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">Generate a complete meal plan<br>from patient requirements</span>
       </button>
       <button onclick="mpSetPlanMode('manual')"
         style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 36px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border-radius:14px;border:2px solid rgba(240,180,41,0.45);background:rgba(240,180,41,0.06);color:var(--amber);cursor:pointer;transition:all .2s;min-width:180px"
         onmouseover="this.style.background='rgba(240,180,41,0.14)'" onmouseout="this.style.background='rgba(240,180,41,0.06)'">
-        <span style="font-size:26px">✏️</span>
+        <span style="font-size:26px">✏</span>
         <span style="font-family:var(--cond);font-size:15px;font-weight:800;letter-spacing:2px">MANUAL</span>
         <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400;text-align:center;line-height:1.6;letter-spacing:.5px">Build a meal plan food-by-food<br>from the Malawi database</span>
       </button>
@@ -2415,7 +2452,7 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <div>
-        <div style="font-family:var(--cond);font-size:16px;font-weight:800;letter-spacing:2px;color:var(--teal)">⚡ AUTOMATIC MEAL PLAN GENERATOR</div>
+        <div style="font-family:var(--cond);font-size:16px;font-weight:800;letter-spacing:2px;color:var(--teal)"> AUTOMATIC MEAL PLAN GENERATOR</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Malawi context · Oral, Enteral &amp; Mixed modes · Works offline · Populates meal plan below</div>
       </div>
       <button onclick="document.getElementById('amp-body').style.display=document.getElementById('amp-body').style.display==='none'?'':\'none\'" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:6px 14px;cursor:pointer;letter-spacing:1px">▾ COLLAPSE</button>
@@ -2426,8 +2463,8 @@
     <!-- Mode selector -->
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
       <button id="amp-btn-oral"    onclick="ampSetMode('oral')"    style="flex:1;min-width:120px;padding:10px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:8px;border:2px solid rgba(29,233,212,0.6);background:rgba(29,233,212,0.08);color:var(--teal);cursor:pointer;font-weight:700;transition:all .2s">ORAL DIET</button>
-      <button id="amp-btn-enteral" onclick="ampSetMode('enteral')" style="flex:1;min-width:120px;padding:10px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-weight:700;transition:all .2s">🩺 ENTERAL QUICK-PLAN</button>
-      <button id="amp-btn-mixed"   onclick="ampSetMode('mixed')"   style="flex:1;min-width:120px;padding:10px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-weight:700;transition:all .2s">🔀 MIXED (ORAL + ENTERAL)</button>
+      <button id="amp-btn-enteral" onclick="ampSetMode('enteral')" style="flex:1;min-width:120px;padding:10px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-weight:700;transition:all .2s"> ENTERAL QUICK-PLAN</button>
+      <button id="amp-btn-mixed"   onclick="ampSetMode('mixed')"   style="flex:1;min-width:120px;padding:10px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-weight:700;transition:all .2s"> MIXED (ORAL + ENTERAL)</button>
     </div>
 
     <!-- Context notes — shown conditionally by ampSetMode() -->
@@ -2454,7 +2491,7 @@
       </div>
       <!-- Synced info display -->
       <div id="amp-info-display" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">⚠ Run Adult or Pediatric calculator first, then tap Sync — or use Override to enter manually.</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted)"> Run Adult or Pediatric calculator first, then tap Sync — or use Override to enter manually.</div>
       </div>
       <!-- Override inputs (hidden by default) -->
       <div id="amp-override-row" style="display:none;margin-top:12px;display:none">
@@ -2572,20 +2609,20 @@
             <option value="fats">Fats & Oils</option>
             <option value="therapeutic">Therapeutic Foods (RUTF/RUSF/F-75/F-100)</option>
             <option value="ons">Oral Nutritional Supplements (ONS)</option>
-            <option value="exchange">🔄 UCT Exchange List — All Foods</option>
+            <option value="exchange"> UCT Exchange List — All Foods</option>
             <option value="exchange_starch">UCT — Starch</option>
-            <option value="exchange_lean">🥩 UCT — Protein (Lean)</option>
-            <option value="exchange_medium">🍗 UCT — Protein (Med-fat)</option>
-            <option value="exchange_highfat">🧀 UCT — Protein (High-fat)</option>
+            <option value="exchange_lean"> UCT — Protein (Lean)</option>
+            <option value="exchange_medium"> UCT — Protein (Med-fat)</option>
+            <option value="exchange_highfat"> UCT — Protein (High-fat)</option>
             <option value="exchange_milk_ff">UCT — Milk (Fat-free)</option>
             <option value="exchange_milk_lf">UCT — Milk (Low-fat)</option>
             <option value="exchange_milk_fc">UCT — Milk (Full cream)</option>
-            <option value="exchange_veg">🥦 UCT — Vegetables</option>
+            <option value="exchange_veg"> UCT — Vegetables</option>
             <option value="exchange_fruit"> UCT — Fruits</option>
-            <option value="exchange_fat">🫒 UCT — Fats & Oils</option>
+            <option value="exchange_fat"> UCT — Fats & Oils</option>
             <option value="exchange_sugar">UCT — Sugar/Sweets</option>
-            <option value="exchange_alcohol">🍷 UCT — Alcohol</option>
-            <option value="exchange_combo">🍔 UCT — Combination Foods</option>
+            <option value="exchange_alcohol"> UCT — Alcohol</option>
+            <option value="exchange_combo"> UCT — Combination Foods</option>
           </select>
         </div>
         <div class="field-group">
@@ -2644,7 +2681,7 @@
         <div class="total-card"><div class="total-val c-t" id="mp-tot-kcal">0</div><div class="total-lbl">kcal/day</div><div class="adequacy-bar"><div class="adequacy-fill" id="mp-bar-kcal" style="background:var(--teal);width:0%"></div></div><div class="adequacy-pct" id="mp-pct-kcal">—</div></div>
         <div class="total-card"><div class="total-val c-a" id="mp-tot-cho">0</div><div class="total-lbl">g CHO</div><div class="adequacy-bar"><div class="adequacy-fill" id="mp-bar-cho" style="background:var(--amber);width:0%"></div></div><div class="adequacy-pct" id="mp-pct-cho">—</div></div>
         <div class="total-card"><div class="total-val c-b" id="mp-tot-pro">0</div><div class="total-lbl">g Protein</div><div class="adequacy-bar"><div class="adequacy-fill" id="mp-bar-pro" style="background:var(--blue);width:0%"></div></div><div class="adequacy-pct" id="mp-pct-pro">—</div></div>
-        <div class="total-card"><div class="total-val c-g" id="mp-tot-fat">0</div><div class="total-lbl">🫒 g Fat</div><div class="adequacy-bar"><div class="adequacy-fill" id="mp-bar-fat" style="background:var(--green);width:0%"></div></div><div class="adequacy-pct" id="mp-pct-fat">—</div></div>
+        <div class="total-card"><div class="total-val c-g" id="mp-tot-fat">0</div><div class="total-lbl"> g Fat</div><div class="adequacy-bar"><div class="adequacy-fill" id="mp-bar-fat" style="background:var(--green);width:0%"></div></div><div class="adequacy-pct" id="mp-pct-fat">—</div></div>
         <div class="total-card"><div class="total-val" style="color:#a0c4ff" id="mp-tot-kj">0</div><div class="total-lbl">kJ/day</div></div>
       </div>
       <!-- Macro distribution bars for meal planner -->
@@ -2667,8 +2704,8 @@
 
   <!-- Meal Planner Actions -->
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">
-    <button class="print-btn" onclick="saveMealPlanRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save Record</button>
-    <button class="print-btn" onclick="saveToPDF('tab-mealplan','Oasis — Meal Plan')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 Save PDF</button>
+    <button class="print-btn" onclick="saveMealPlanRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save Record</button>
+    <button class="print-btn" onclick="saveToPDF('tab-mealplan','Oasis — Meal Plan')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> Save PDF</button>
   </div>
   </div><!-- end mp-manual-section -->
 </div>
@@ -2681,7 +2718,7 @@
 <div style="max-width:1000px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
     <div>
-      <div style="font-family:var(--cond);font-size:18px;font-weight:700;letter-spacing:2px;color:var(--teal)">🩺 Enteral Feeding Calculator</div>
+      <div style="font-family:var(--cond);font-size:18px;font-weight:700;letter-spacing:2px;color:var(--teal)"> Enteral Feeding Calculator</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">12-Step Edge Clinical Method · Requirements auto-sourced from Calculator · Fresenius Kabi Formula Database</div>
     </div>
     <div style="display:flex;gap:8px">
@@ -2713,7 +2750,7 @@
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim)">REQUIREMENTS — SYNCED OR ENTER MANUALLY</div>
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)" id="en-sync-status">⚠ Sync from Calculator or enter manually</div>
+      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)" id="en-sync-status"> Sync from Calculator or enter manually</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;font-family:var(--mono);font-size:11px">
       <div>
@@ -2766,7 +2803,7 @@
             <div class="rbtn"><input type="radio" id="en-rf-no" name="en-rf" value="no" checked onclick="toggleEnRfNote()"><label for="en-rf-no">No / Low Risk</label></div>
             <div class="rbtn"><input type="radio" id="en-rf-yes" name="en-rf" value="yes" onclick="toggleEnRfNote()"><label for="en-rf-yes">Yes — Refeeding Protocol</label></div>
           </div>
-          <div id="en-rf-note" style="display:none;margin-top:8px" class="alert warning"><span class="ai">⚠</span><div>Refeeding: Adults start at 10–20 kcal/kg. Limit fluid &lt;2L/day. Give IV Thiamine 200–300mg before feeds. Monitor K⁺/PO₄/Mg²⁺ 2–3× daily.</div></div>
+          <div id="en-rf-note" style="display:none;margin-top:8px" class="alert warning"><span class="ai"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div>Refeeding: Adults start at 10–20 kcal/kg. Limit fluid &lt;2L/day. Give IV Thiamine 200–300mg before feeds. Monitor K⁺/PO₄/Mg²⁺ 2–3× daily.</div></div>
           <div class="field-group" style="margin-top:8px">
             <label class="lbl">Kcal from Medications (Propofol, IV dextrose)</label>
             <div class="unit-wrap"><input type="number" class="inp" id="en-med-kcal" placeholder="0" oninput="debouncedEnCalc()" style="padding-right:58px"><span class="unit-tag">kcal/d</span></div>
@@ -2785,7 +2822,7 @@
 
     <!-- ── Formula Auto-Recommendation Panel ── -->
     <div id="en-formula-rec-panel" style="display:none;margin:0;padding:10px 14px;background:rgba(29,233,212,0.04);border-bottom:1px solid rgba(29,233,212,0.15)">
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">⚕ Formula Recommendation — Based on Diagnosis</div>
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px"> Formula Recommendation — Based on Diagnosis</div>
       <div id="en-formula-rec-content" style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7"></div>
       <div style="margin-top:6px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">
         You may override the auto-selected formula below. Guideline references: ASPEN 2016 / ASPEN 2022 · ESPEN 2019 · NICE CG32 · KDIGO · EASL
@@ -2903,7 +2940,7 @@
 
     <!-- Step 12: Final Prescription -->
     <div style="background:linear-gradient(135deg,rgba(0,212,184,.1),rgba(0,212,184,.04));border:2px solid var(--teal);border-radius:12px;padding:20px;margin-bottom:18px">
-      <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:3px;color:var(--teal);margin-bottom:14px">📋 STEP 12 — FINAL EN PRESCRIPTION</div>
+      <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:3px;color:var(--teal);margin-bottom:14px"> STEP 12 — FINAL EN PRESCRIPTION</div>
       <div id="en-prescription" style="font-family:var(--mono);font-size:12px;line-height:2;color:var(--text-bright)"></div>
     </div>
 
@@ -2911,8 +2948,8 @@
     <div id="en-alerts" style="margin-bottom:10px"></div>
 
     <div style="display:flex;gap:8px;margin-bottom:20px">
-      <button class="print-btn" onclick="saveEnteralRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save Record</button>
-      <button class="print-btn" onclick="saveToPDF('tab-enteral','Oasis — Enteral Feeding Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.3)">📄 Save PDF</button>
+      <button class="print-btn" onclick="saveEnteralRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save Record</button>
+      <button class="print-btn" onclick="saveToPDF('tab-enteral','Oasis — Enteral Feeding Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.3)"> Save PDF</button>
       <button class="print-btn" onclick="window.print()">Print Prescription</button>
     </div>
   </div>
@@ -2933,13 +2970,13 @@
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-family:var(--mono);font-size:9px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);padding:3px 12px;border-radius:12px;letter-spacing:1.5px;font-weight:700">MALAWI CONTEXT</span>
         <button onclick="syncLRFromCalc()" style="font-family:var(--mono);font-size:10px;color:var(--teal);background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.3);border-radius:5px;padding:6px 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap">↻ SYNC FROM CALCULATOR</button>
-        <div id="lr-header-sync-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">⚠ Sync or enter weight manually below</div>
+        <div id="lr-header-sync-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim)"> Sync or enter weight manually below</div>
       </div>
     </div>
 
     <!-- Clinical Warnings -->
     <div style="background:rgba(251,113,133,0.08);border:2px solid rgba(251,113,133,0.35);border-radius:10px;padding:14px 16px;margin-bottom:14px">
-      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);margin-bottom:8px">⚠ CLINICAL WARNINGS — READ BEFORE USE</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);margin-bottom:8px"> CLINICAL WARNINGS — READ BEFORE USE</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9">
         • <strong>Not suitable</strong> for critically ill or haemodynamically unstable patients<br>
         • <strong>Not for</strong> patients with severe GI dysfunction, obstruction or ischaemia<br>
@@ -2990,7 +3027,7 @@
     <!-- Prescription Requirements — sync or manual -->
     <div style="background:var(--surface2);border:1px solid rgba(29,233,212,0.2);border-radius:10px;padding:16px 18px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)">📋 PATIENT REQUIREMENTS</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)"> PATIENT REQUIREMENTS</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="syncLRFromCalc()" style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:var(--r-sm);border:1px solid rgba(29,233,212,0.4);background:rgba(29,233,212,0.08);color:var(--teal);cursor:pointer">↻ SYNC FROM ADULT CALC</button>
           <button onclick="syncLRFromCalc('pedi')" style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:var(--r-sm);border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:var(--blue);cursor:pointer">↻ SYNC FROM PEDI CALC</button>
@@ -3055,7 +3092,7 @@
 
     <!-- BLOCK A — Recipe Quality Badge -->
     <div id="lr-quality-badge" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;margin-bottom:14px;border:2px solid rgba(240,180,41,0.3);background:rgba(240,180,41,0.06)">
-      <div id="lr-badge-icon" style="font-size:24px;flex-shrink:0">⏳</div>
+      <div id="lr-badge-icon" style="font-size:24px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg></div>
       <div style="flex:1;min-width:0">
         <div id="lr-badge-title" style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:2px;color:var(--amber)">CALCULATING…</div>
         <div id="lr-badge-sub" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px;letter-spacing:0.5px"></div>
@@ -3135,8 +3172,8 @@
 
     <!-- Action buttons -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="print-btn" onclick="saveLRRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save Record</button>
-      <button class="print-btn" onclick="saveToPDF('lr-results-section','Oasis — Low-Resource Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 Save PDF</button>
+      <button class="print-btn" onclick="saveLRRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save Record</button>
+      <button class="print-btn" onclick="saveToPDF('lr-results-section','Oasis — Low-Resource Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> Save PDF</button>
       <button class="print-btn" onclick="window.print()" style="color:var(--teal)">Print</button>
     </div>
 
@@ -3151,19 +3188,19 @@
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
-        <div style="font-family:var(--cond);font-size:17px;font-weight:700;letter-spacing:2px;color:var(--green)">🥣 Blenderized Tube Feed</div>
+        <div style="font-family:var(--cond);font-size:17px;font-weight:700;letter-spacing:2px;color:var(--green)"> Blenderized Tube Feed</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Build from local Malawian foods · Real-time nutrition · Presets included · Works offline</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <span style="font-family:var(--mono);font-size:9px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);color:var(--green);padding:3px 12px;border-radius:12px;letter-spacing:1.5px;font-weight:700">MALAWI FOODS</span>
         <button onclick="syncBlendFromCalc()" style="font-family:var(--mono);font-size:10px;color:var(--teal);background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.3);border-radius:5px;padding:6px 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap">↻ SYNC FROM CALCULATOR</button>
-        <div id="blend-header-sync-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">⚠ Sync or enter weight manually below</div>
+        <div id="blend-header-sync-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim)"> Sync or enter weight manually below</div>
       </div>
     </div>
 
     <!-- Clinical Warnings -->
     <div style="background:rgba(251,113,133,0.08);border:2px solid rgba(251,113,133,0.35);border-radius:10px;padding:14px 16px;margin-bottom:14px">
-      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);margin-bottom:8px">⚠ CLINICAL WARNINGS — READ BEFORE USE</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);margin-bottom:8px"> CLINICAL WARNINGS — READ BEFORE USE</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9">
         • <strong>Not suitable</strong> for critically ill or haemodynamically unstable patients<br>
         • Must use <strong>large-bore tube (≥14 Fr)</strong> — blenderized feeds WILL block fine-bore tubes<br>
@@ -3177,15 +3214,15 @@
     <div style="margin-bottom:14px">
       <div style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:7px">PRESET RECIPES — CLICK TO LOAD</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <button onclick="blendLoadPreset(0)" style="font-family:var(--mono);font-size:10px;padding:7px 16px;border-radius:7px;border:1px solid rgba(240,180,41,0.4);background:rgba(240,180,41,0.06);color:var(--amber);cursor:pointer;letter-spacing:.5px">⚡ High-Energy Feed (1000 ml)</button>
-        <button onclick="blendLoadPreset(1)" style="font-family:var(--mono);font-size:10px;padding:7px 16px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.06);color:var(--blue);cursor:pointer;letter-spacing:.5px">🥩 High-Protein Feed (1000 ml)</button>
-        <button onclick="blendClearAll()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:7px;border:1px solid rgba(251,113,133,0.35);background:rgba(251,113,133,0.06);color:var(--red);cursor:pointer;letter-spacing:.5px">🗑 Clear All</button>
+        <button onclick="blendLoadPreset(0)" style="font-family:var(--mono);font-size:10px;padding:7px 16px;border-radius:7px;border:1px solid rgba(240,180,41,0.4);background:rgba(240,180,41,0.06);color:var(--amber);cursor:pointer;letter-spacing:.5px"> High-Energy Feed (1000 ml)</button>
+        <button onclick="blendLoadPreset(1)" style="font-family:var(--mono);font-size:10px;padding:7px 16px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.06);color:var(--blue);cursor:pointer;letter-spacing:.5px"> High-Protein Feed (1000 ml)</button>
+        <button onclick="blendClearAll()" style="font-family:var(--mono);font-size:10px;padding:7px 14px;border-radius:7px;border:1px solid rgba(251,113,133,0.35);background:rgba(251,113,133,0.06);color:var(--red);cursor:pointer;letter-spacing:.5px"> Clear All</button>
       </div>
     </div>
 
     <!-- Add Ingredient -->
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px">
-      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px">➕ ADD INGREDIENT</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px"> ADD INGREDIENT</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
         <div style="flex:2;min-width:180px">
           <label style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text-dim);display:block;margin-bottom:4px">FOOD ITEM</label>
@@ -3204,7 +3241,7 @@
               <option value="irish_potato">Irish potato (boiled)</option>
               <option value="sorghum">Sorghum porridge</option>
             </optgroup>
-            <optgroup label="🫘 Legumes / Pulses">
+            <optgroup label=" Legumes / Pulses">
               <option value="beans">Beans (cooked, any type)</option>
               <option value="gnut">Groundnuts (peanuts, roasted)</option>
               <option value="gnut_paste">Peanut butter / groundnut paste</option>
@@ -3236,7 +3273,7 @@
               <option value="papaya">Papaya / pawpaw</option>
               <option value="avocado">Avocado</option>
             </optgroup>
-            <optgroup label="🫒 Fats / Extras">
+            <optgroup label=" Fats / Extras">
               <option value="oil">Cooking oil (any)</option>
               <option value="sugar">Sugar</option>
               <option value="margarine">Margarine / butter</option>
@@ -3294,7 +3331,7 @@
     <!-- Prescription Requirements — sync or manual -->
     <div style="background:var(--surface2);border:1px solid rgba(29,233,212,0.2);border-radius:10px;padding:16px 18px;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)">📋 PATIENT REQUIREMENTS</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal)"> PATIENT REQUIREMENTS</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button onclick="syncBlendFromCalc()" style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:var(--r-sm);border:1px solid rgba(29,233,212,0.4);background:rgba(29,233,212,0.08);color:var(--teal);cursor:pointer">↻ SYNC FROM ADULT CALC</button>
           <button onclick="syncBlendFromCalc('pedi')" style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:var(--r-sm);border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:var(--blue);cursor:pointer">↻ SYNC FROM PEDI CALC</button>
@@ -3356,7 +3393,7 @@
 
     <!-- Generate Prescription Button -->
     <button class="calc-btn" id="blend-gen-presc-btn" onclick="blendGeneratePrescription()" style="width:100%;margin-top:0;margin-bottom:14px;font-size:13px;padding:13px;letter-spacing:2.5px;background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(96,165,250,0.06));border:2px solid rgba(96,165,250,0.7);color:#60a5fa;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:16px">📋</span> GENERATE &amp; SAVE PRESCRIPTION
+      <span style="font-size:16px"></span> GENERATE &amp; SAVE PRESCRIPTION
     </button>
 
     <!-- Results (hidden until calculated) -->
@@ -3364,7 +3401,7 @@
 
     <!-- BLOCK A — Blend Quality Badge -->
     <div id="blend-quality-badge" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;margin-bottom:14px;border:2px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.06)">
-      <div id="blend-badge-icon" style="font-size:24px;flex-shrink:0">⏳</div>
+      <div id="blend-badge-icon" style="font-size:24px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg></div>
       <div style="flex:1;min-width:0">
         <div id="blend-badge-title" style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:2px;color:var(--green)">CALCULATING…</div>
         <div id="blend-badge-sub" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px;letter-spacing:0.5px"></div>
@@ -3425,8 +3462,8 @@
 
     <!-- Action buttons -->
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;margin-top:-6px">
-      <button class="print-btn" onclick="saveBlendRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save Record</button>
-      <button class="print-btn" onclick="saveToPDF('blend-results-section','Oasis — Blenderized Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 Save PDF</button>
+      <button class="print-btn" onclick="saveBlendRecord()" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save Record</button>
+      <button class="print-btn" onclick="saveToPDF('blend-results-section','Oasis — Blenderized Prescription')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> Save PDF</button>
       <button class="print-btn" onclick="window.print()" style="color:var(--teal)">Print</button>
     </div>
 
@@ -3436,7 +3473,7 @@
     <div style="background:rgba(10,20,40,0.6);border:1px solid rgba(56,100,168,0.3);border-radius:10px;padding:12px 16px;margin-bottom:14px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:6px">🔧 TUBE &amp; PREP</div>
+          <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:6px"> TUBE &amp; PREP</div>
           <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.8">
             • <strong>≥14 Fr tube</strong> — blenderized blocks fine-bore tubes<br>
             • Blend completely smooth · sieve if needed<br>
@@ -3480,11 +3517,11 @@
 <div class="main" id="tab-history">
   <div style="max-width:1100px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-      <div style="font-family:var(--cond);font-size:18px;font-weight:700;letter-spacing:2px;color:var(--teal)">📁 Saved Calculations</div>
+      <div style="font-family:var(--cond);font-size:18px;font-weight:700;letter-spacing:2px;color:var(--teal)"> Saved Calculations</div>
       <div style="display:flex;gap:10px">
         <button onclick="exportHistoryCSV()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:4px;padding:7px 14px;cursor:pointer;letter-spacing:1px">⬇ EXPORT CSV</button>
-        <button onclick="saveToPDF('history-panel','Oasis — Calculation History')" style="font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:7px 14px;cursor:pointer;letter-spacing:1px">📄 SAVE PDF</button>
-        <button onclick="clearHistory()" style="font-family:var(--mono);font-size:10px;color:var(--red);background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.3);border-radius:4px;padding:7px 14px;cursor:pointer;letter-spacing:1px">🗑 CLEAR ALL</button>
+        <button onclick="saveToPDF('history-panel','Oasis — Calculation History')" style="font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:7px 14px;cursor:pointer;letter-spacing:1px"> SAVE PDF</button>
+        <button onclick="clearHistory()" style="font-family:var(--mono);font-size:10px;color:var(--red);background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.3);border-radius:4px;padding:7px 14px;cursor:pointer;letter-spacing:1px"> CLEAR ALL</button>
       </div>
     </div>
     <div id="history-panel"><div style="text-align:center;padding:48px;color:var(--text-dim);font-family:var(--mono);font-size:12px">No saved calculations yet.<br>Run a calculation and press Save.</div></div>
@@ -3884,7 +3921,7 @@
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button onclick="dbExportCSV()" id="db-export-btn" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:7px 14px;cursor:pointer;letter-spacing:1px">⬇ EXPORT CSV</button>
-      <button onclick="saveToPDF('tab-database','Oasis — Food Database')" style="font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:5px;padding:7px 14px;cursor:pointer;letter-spacing:1px">📄 SAVE PDF</button>
+      <button onclick="saveToPDF('tab-database','Oasis — Food Database')" style="font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:5px;padding:7px 14px;cursor:pointer;letter-spacing:1px"> SAVE PDF</button>
     </div>
   </div>
 
@@ -4168,7 +4205,7 @@
     </div>
     <!-- Clinical Condition Presets -->
     <div style="margin-bottom:4px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px">⚕ Clinical Condition Quick-Filter</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px"> Clinical Condition Quick-Filter</div>
       <div class="hscroll-wrap" id="en-presets-wrap">
         <div class="hscroll" id="en-presets" style="padding-bottom:8px"></div>
       </div>
@@ -4316,7 +4353,7 @@
         </div>
       </div>
       <div class="alert warning" style="margin-top:12px;margin-bottom:0">
-        <span class="ai">⚠</span>
+        <span class="ai"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <div><strong>Clinical Decision Support Only.</strong> All prescriptions and clinical decisions require review by a qualified dietitian or clinician. This tool does not replace professional judgement.</div>
       </div>
     </div>
@@ -4454,7 +4491,7 @@
     <div class="card-body" style="overflow-x:visible">
       <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
         <!-- Developer avatar icon -->
-        <div style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">👨‍⚕️</div>
+        <div style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">‍</div>
         <div style="flex:1;min-width:200px">
           <div style="font-family:var(--cond);font-size:15px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Edison Taimu</div>
 
@@ -4491,7 +4528,7 @@
           </div>
           <!-- Donation appeal -->
           <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-bottom:12px;padding:10px 12px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
-            ❤️ <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
+             <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;width:100%;box-sizing:border-box">
             <a href="mailto:edisontaimu9@gmail.com" style="display:flex;align-items:center;gap:10px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:10px 12px;text-decoration:none;transition:border-color .15s;box-sizing:border-box;width:100%;min-width:0;overflow:hidden" onmouseover="this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.borderColor='rgba(29,233,212,0.22)'">
@@ -4533,14 +4570,14 @@
     <div style="padding:12px 16px 6px">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">QUICK REACTION</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="selectFeedbackEmoji('👍')" class="fb-emoji-btn" data-e="👍" title="Helpful">👍</button>
-        <button onclick="selectFeedbackEmoji('❤️')" class="fb-emoji-btn" data-e="❤️" title="Love it">❤️</button>
-        <button onclick="selectFeedbackEmoji('🙏')" class="fb-emoji-btn" data-e="🙏" title="Thank you">🙏</button>
-        <button onclick="selectFeedbackEmoji('🔥')" class="fb-emoji-btn" data-e="🔥" title="Amazing">🔥</button>
-        <button onclick="selectFeedbackEmoji('🐛')" class="fb-emoji-btn" data-e="🐛" title="Bug report">🐛</button>
-        <button onclick="selectFeedbackEmoji('💡')" class="fb-emoji-btn" data-e="💡" title="Suggestion">💡</button>
-        <button onclick="selectFeedbackEmoji('⭐')" class="fb-emoji-btn" data-e="⭐" title="Great tool">⭐</button>
-        <button onclick="selectFeedbackEmoji('😕')" class="fb-emoji-btn" data-e="😕" title="Issue">😕</button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Helpful"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Love it"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Thank you"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Amazing"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Bug report"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Suggestion"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Great tool"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Issue"></button>
       </div>
     </div>
     <!-- message -->
@@ -4621,7 +4658,7 @@
       closeFeedbackModal();
       showToast(_selectedEmoji
         ? `${_selectedEmoji} Feedback sent — thank you!`
-        : '✅ Feedback sent to admin — thank you!', 'success');
+        : ' Feedback sent to admin — thank you!', 'success');
     } catch(e) {
       console.error('[Feedback]', e);
       showToast('Could not send feedback. Please try again.', 'error');
@@ -4686,14 +4723,14 @@
 ══════════════════════════════════════════════════════════════════ -->
 
 <!-- ┌─────────────────────────────────────────────────────────────────┐ -->
-<!-- │  🔥  SHARED PEDIATRIC BURN ASSESSMENT PANEL (single instance)   │ -->
+<!-- │    SHARED PEDIATRIC BURN ASSESSMENT PANEL (single instance)   │ -->
 <!-- │  Shown by JS when burns_pedi is selected. Applicable to:        │ -->
 <!-- │  Infant 6–24m · Child 2–5yr · Child 5–10yr · Adolescent 10–17yr│ -->
 <!-- └─────────────────────────────────────────────────────────────────┘ -->
 <div id="pedi-burns-card" style="display:none">
   <div class="card" style="border-color:rgba(251,113,133,0.55);margin-bottom:14px">
     <div class="card-header" style="background:linear-gradient(90deg,rgba(251,113,133,0.13),rgba(0,0,0,0))">
-      <div class="card-title" style="color:#fb7185">🔥 PEDIATRIC BURN ASSESSMENT</div>
+      <div class="card-title" style="color:#fb7185"> PEDIATRIC BURN ASSESSMENT</div>
       <div class="card-badge" style="color:#fb7185;border-color:rgba(251,113,133,0.35);background:rgba(251,113,133,0.08)">Galveston · Curreri Jr · Parkland Ped. · Holliday-Segar</div>
     </div>
     <div class="card-body">
@@ -4735,16 +4772,16 @@
         </div>
       </div>
       <div style="margin-top:10px;padding:10px 14px;border-radius:8px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.25);font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.9">
-        <strong style="color:#fb7185">📐 TBSA estimation:</strong> Use Lund-Browder chart (age-adjusted) — the Rule of Nines significantly underestimates head area and overestimates limbs in children under 10 years.<br>
-        <strong style="color:#fb7185">🥣 Early EN:</strong> Initiate enteral feeding within 6–12h of injury to attenuate hypermetabolism (ESPEN Burns 2013).<br>
-        <strong style="color:#fb7185">💊 Micronutrients:</strong> Supplement zinc, copper, selenium, vitamins B₁, C, D, and E. Maintain warm environment (28–30°C) to reduce insensible losses.
+        <strong style="color:#fb7185"> TBSA estimation:</strong> Use Lund-Browder chart (age-adjusted) — the Rule of Nines significantly underestimates head area and overestimates limbs in children under 10 years.<br>
+        <strong style="color:#fb7185"> Early EN:</strong> Initiate enteral feeding within 6–12h of injury to attenuate hypermetabolism (ESPEN Burns 2013).<br>
+        <strong style="color:#fb7185"> Micronutrients:</strong> Supplement zinc, copper, selenium, vitamins B₁, C, D, and E. Maintain warm environment (28–30°C) to reduce insensible losses.
       </div>
     </div>
   </div>
 </div>
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🍼  PRETERM PANEL                                       │ -->
+<!-- │    PRETERM PANEL                                       │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-preterm" class="pedi-panel" style="padding-top:16px">
 
@@ -4987,12 +5024,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-preterm',['pt-results'])">↺ CLEAR</button>
   </div>
   <div id="pt-results" style="display:none"></div>
-  <div id="pt-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('pt-results','Preterm Neonate');document.getElementById('pt-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('pt-results','Oasis — Preterm Neonate')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('pt-results').style.display='none';document.getElementById('pt-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="pt-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('pt-results','Preterm Neonate');document.getElementById('pt-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('pt-results','Oasis — Preterm Neonate')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('pt-results').style.display='none';document.getElementById('pt-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-preterm -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  👶  NEONATE PANEL (0–28 days, term)                    │ -->
+<!-- │    NEONATE PANEL (0–28 days, term)                    │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-neonate" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5107,12 +5144,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-neonate',['nn-results'])">↺ CLEAR</button>
   </div>
   <div id="nn-results" style="display:none"></div>
-  <div id="nn-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('nn-results','Term Neonate');document.getElementById('nn-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('nn-results','Oasis — Term Neonate')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('nn-results').style.display='none';document.getElementById('nn-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="nn-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('nn-results','Term Neonate');document.getElementById('nn-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('nn-results','Oasis — Term Neonate')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('nn-results').style.display='none';document.getElementById('nn-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-neonate -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🤱  INFANT 0–6 MONTHS PANEL                            │ -->
+<!-- │    INFANT 0–6 MONTHS PANEL                            │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-infant_early" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5231,12 +5268,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-infant_early',['ie-results'])">↺ CLEAR</button>
   </div>
   <div id="ie-results" style="display:none"></div>
-  <div id="ie-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('ie-results','Infant 0-6m');document.getElementById('ie-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('ie-results','Oasis — Infant 0–6m')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('ie-results').style.display='none';document.getElementById('ie-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="ie-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('ie-results','Infant 0-6m');document.getElementById('ie-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('ie-results','Oasis — Infant 0–6m')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('ie-results').style.display='none';document.getElementById('ie-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-infant_early -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🥄  INFANT 6–24 MONTHS PANEL                           │ -->
+<!-- │    INFANT 6–24 MONTHS PANEL                           │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-infant_late" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5372,12 +5409,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-infant_late',['il-results'])">↺ CLEAR</button>
   </div>
   <div id="il-results" style="display:none"></div>
-  <div id="il-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('il-results','Infant 6-24m');document.getElementById('il-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('il-results','Oasis — Infant 6–24m')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('il-results').style.display='none';document.getElementById('il-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="il-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('il-results','Infant 6-24m');document.getElementById('il-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('il-results','Oasis — Infant 6–24m')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('il-results').style.display='none';document.getElementById('il-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-infant_late -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🧒  CHILD 2–5 YEARS PANEL                              │ -->
+<!-- │    CHILD 2–5 YEARS PANEL                              │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-child_2to5" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5510,12 +5547,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-child_2to5',['c5-results'])">↺ CLEAR</button>
   </div>
   <div id="c5-results" style="display:none"></div>
-  <div id="c5-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('c5-results','Child 2–5yr');document.getElementById('c5-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('c5-results','Oasis — Child 2–5yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('c5-results').style.display='none';document.getElementById('c5-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="c5-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('c5-results','Child 2–5yr');document.getElementById('c5-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('c5-results','Oasis — Child 2–5yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('c5-results').style.display='none';document.getElementById('c5-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-child_2to5 -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🏃  CHILD 5–10 YEARS PANEL                             │ -->
+<!-- │    CHILD 5–10 YEARS PANEL                             │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-child_5to10" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5538,11 +5575,11 @@
           <div style="display:flex;gap:6px;margin-bottom:6px">
             <button type="button" id="c10-mode-dob" onclick="c10SetAgeMode('dob')"
               style="flex:1;padding:4px 0;font-family:var(--mono);font-size:9px;letter-spacing:1px;border-radius:5px;border:1px solid rgba(29,233,212,0.5);background:rgba(29,233,212,0.12);color:var(--teal);cursor:pointer">
-              📅 DOB
+               DOB
             </button>
             <button type="button" id="c10-mode-manual" onclick="c10SetAgeMode('manual')"
               style="flex:1;padding:4px 0;font-family:var(--mono);font-size:9px;letter-spacing:1px;border-radius:5px;border:1px solid rgba(100,116,139,0.3);background:transparent;color:var(--text-dim);cursor:pointer">
-              ✏️ Age
+              ✏ Age
             </button>
           </div>
           <!-- DOB mode -->
@@ -5676,12 +5713,12 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-child_5to10',['c10-results'])">↺ CLEAR</button>
   </div>
   <div id="c10-results" style="display:none"></div>
-  <div id="c10-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('c10-results','Child 5–10yr');document.getElementById('c10-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('c10-results','Oasis — Child 5–10yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('c10-results').style.display='none';document.getElementById('c10-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="c10-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('c10-results','Child 5–10yr');document.getElementById('c10-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('c10-results','Oasis — Child 5–10yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('c10-results').style.display='none';document.getElementById('c10-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-child_5to10 -->
 
 
 <!-- ┌─────────────────────────────────────────────────────────┐ -->
-<!-- │  🧑  ADOLESCENT 10–17 YEARS (UNIFIED) PANEL             │ -->
+<!-- │    ADOLESCENT 10–17 YEARS (UNIFIED) PANEL             │ -->
 <!-- └─────────────────────────────────────────────────────────┘ -->
 <div id="pp-child_10to15" class="pedi-panel" style="display:none;padding-top:16px">
   <div class="card" style="margin-bottom:14px">
@@ -5703,11 +5740,11 @@
           <div style="display:flex;gap:6px;margin-bottom:6px">
             <button type="button" id="ad-mode-dob" onclick="adSetAgeMode('dob')"
               style="flex:1;padding:4px 0;font-family:var(--mono);font-size:9px;letter-spacing:1px;border-radius:5px;border:1px solid rgba(96,165,250,0.5);background:rgba(96,165,250,0.12);color:var(--blue);cursor:pointer">
-              📅 DOB
+               DOB
             </button>
             <button type="button" id="ad-mode-manual" onclick="adSetAgeMode('manual')"
               style="flex:1;padding:4px 0;font-family:var(--mono);font-size:9px;letter-spacing:1px;border-radius:5px;border:1px solid rgba(100,116,139,0.3);background:transparent;color:var(--text-dim);cursor:pointer">
-              ✏️ Age
+              ✏ Age
             </button>
           </div>
           <div id="ad-dob-section">
@@ -5884,7 +5921,7 @@
     <button class="nt-clear-btn" onclick="ntClear('pp-child_10to15',['ad-results'])">↺ CLEAR</button>
   </div>
   <div id="ad-results" style="display:none"></div>
-  <div id="ad-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('ad-results','Adolescent 10–17yr');document.getElementById('ad-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('ad-results','Oasis — Adolescent 10–17yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('ad-results').style.display='none';document.getElementById('ad-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+  <div id="ad-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('ad-results','Adolescent 10–17yr');document.getElementById('ad-action-bar').style.display='none'" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('ad-results','Oasis — Adolescent 10–17yr')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('ad-results').style.display='none';document.getElementById('ad-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 </div><!-- end pp-child_10to15 -->
 
 <!-- Smart PES — Pediatric output container (shared across all pedi populations) -->
@@ -5897,7 +5934,7 @@
 <div id="uc-who-holder"    style="display:none"></div>
 <div id="uc-bmi-holder"    style="display:none"></div>
 <div id="uc-results"       style="display:none"></div>
-<div id="uc-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('uc-results','Unified Assessment')" style="color:var(--green);border-color:rgba(52,211,153,.35)">💾 Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('uc-results','Oasis — Counselling Report')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)">📄 PDF</button><button class="print-btn" onclick="document.getElementById('uc-results').style.display='none';document.getElementById('uc-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
+<div id="uc-action-bar" style="display:none;gap:8px;flex-wrap:wrap;margin:10px 0 4px 0;padding:0 4px"><button class="print-btn" onclick="if(typeof savePediToHistory==='function')savePediToHistory('uc-results','Unified Assessment')" style="color:var(--green);border-color:rgba(52,211,153,.35)"> Save</button><button class="print-btn" onclick="if(typeof saveToPDF==='function')saveToPDF('uc-results','Oasis — Counselling Report')" style="color:#60a5fa;border-color:rgba(96,165,250,.35)"> PDF</button><button class="print-btn" onclick="document.getElementById('uc-results').style.display='none';document.getElementById('uc-action-bar').style.display='none'" style="color:var(--text-dim)">↺ Dismiss</button></div>
 <div id="uc-admission-section" style="display:none">
   <div id="adm-panel-body" style="display:none">
     <div id="adm-result" style="display:none"></div>
@@ -6704,7 +6741,7 @@ function ntClear(scopeId, resultIds) {
 
   <!-- Module header -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <span style="font-size:28px">📏</span>
+    <span style="font-size:28px"></span>
     <div>
       <div style="font-family:var(--cond);font-size:18px;font-weight:700;color:var(--teal);letter-spacing:1px">ANTHROPOMETRY &amp; BODY COMPOSITION</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">Height &amp; Weight Estimation · Amputation AdjBW · Obesity AdjBW · Nitrogen Balance</div>
@@ -6744,7 +6781,7 @@ function ntClear(scopeId, resultIds) {
         Transfer estimated values <strong style="color:var(--teal)">manually</strong> into the relevant module — copy the result into the height or weight field of the <strong style="color:var(--text)">Adult Calculator</strong>, <strong style="color:var(--text)">Paediatric Module</strong>, or <strong style="color:var(--text)">Enteral</strong> as appropriate.
         For <strong style="color:var(--text)">Paediatric</strong> patients, use <strong>KH + MAC weight estimation</strong> (ages 6–18) or the <strong>Ulna</strong> lookup table and enter the result manually in the Paediatric Module.
         The <strong style="color:var(--text)">Enteral</strong> module inherits weight from the Adult Calculator automatically.
-        <span style="display:block;margin-top:5px;color:var(--amber)">⚠ Estimated values carry inherent error (SEE ±5–11 kg for weight). Always prefer direct measurement where feasible.</span>
+        <span style="display:block;margin-top:5px;color:var(--amber)"> Estimated values carry inherent error (SEE ±5–11 kg for weight). Always prefer direct measurement where feasible.</span>
       </div>
     </div>
   </div>
@@ -6920,7 +6957,7 @@ function ntClear(scopeId, resultIds) {
   <!-- NFPE link — now lives in its own tab -->
   <div style="margin-top:18px;background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
     <div>
-      <div style="font-family:var(--cond);font-size:11px;font-weight:700;color:#f472b6;letter-spacing:1.5px;text-transform:uppercase">🔬 Nutrition-Focused Physical Exam</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;color:#f472b6;letter-spacing:1.5px;text-transform:uppercase"> Nutrition-Focused Physical Exam</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">ASPEN NFPE — 11-domain malnutrition assessment tool</div>
     </div>
     <button onclick="switchTab('nfpe')" style="flex-shrink:0;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.8px;padding:8px 14px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer;white-space:nowrap">Open NFPE →</button>
@@ -6928,7 +6965,7 @@ function ntClear(scopeId, resultIds) {
 
   <!-- Reference card -->
   <div class="card" style="margin-top:14px;border-color:rgba(29,233,212,0.2)">
-    <div class="card-header"><div class="card-title" style="color:var(--teal)">📖 Clinical References</div></div>
+    <div class="card-header"><div class="card-title" style="color:var(--teal)"> Clinical References</div></div>
     <div class="card-body" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:2">
       <div>• <strong style="color:var(--text)">Knee Height → Stature</strong>: Lee &amp; Nieman (1996) — sex/ethnicity-specific equations, age 19–60.</div>
       <div>• <strong style="color:var(--text)">Demi-span → Stature</strong>: Gibson (2005) — fingertip to mid-sternum with arm horizontal.</div>
@@ -6952,7 +6989,7 @@ function ntClear(scopeId, resultIds) {
 
   <!-- Module header -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-    <span style="font-size:28px">🔬</span>
+    <span style="font-size:28px"></span>
     <div>
       <div style="font-family:var(--cond);font-size:18px;font-weight:700;color:#f472b6;letter-spacing:1px">NUTRITION-FOCUSED PHYSICAL EXAM</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">ASPEN NFPE · 11-Domain Malnutrition Assessment · AND/ASPEN 2012</div>
@@ -6960,7 +6997,7 @@ function ntClear(scopeId, resultIds) {
   </div>
 
   <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#f472b6;margin:0 0 10px;text-transform:uppercase">
-    🔬 NFPE Assessment
+     NFPE Assessment
   </div>
 
   <!-- NFPE intro strip -->
@@ -7108,7 +7145,7 @@ function ntClear(scopeId, resultIds) {
 
     <!-- Free text notes -->
     <div style="background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.15);border-radius:8px;padding:11px 12px">
-      <div style="color:#f472b6;font-weight:700;font-size:10px;margin-bottom:6px">📝 Additional Clinical Notes</div>
+      <div style="color:#f472b6;font-weight:700;font-size:10px;margin-bottom:6px"> Additional Clinical Notes</div>
       <textarea id="nfpe-notes" rows="3" placeholder="e.g. bilateral pretibial pitting edema 2+, Chvostek sign present, pressure injury sacrum stage 2…"
         style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:10px;resize:vertical;min-height:60px"></textarea>
     </div>
@@ -7118,7 +7155,7 @@ function ntClear(scopeId, resultIds) {
   <!-- NFPE Result Summary -->
   <div id="nfpe-result" style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
     <div style="background:rgba(244,114,182,0.1);border-bottom:1px solid rgba(244,114,182,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">
-      🩺 NFPE IMPRESSION
+       NFPE IMPRESSION
     </div>
     <div id="nfpe-summary" style="padding:12px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8">
       Complete the exam above — impression will auto-generate.
@@ -7126,11 +7163,11 @@ function ntClear(scopeId, resultIds) {
     <div style="padding:0 12px 10px;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="nfpeSaveToHistory()"
         style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
-        💾 SAVE NFPE
+         SAVE NFPE
       </button>
       <button onclick="window.SmartPES && window.SmartPES.generateFromNFPE()"
         style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
-        📋 QUICK PES
+         QUICK PES
       </button>
       <button onclick="nfpeClear()"
         style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
@@ -7189,10 +7226,10 @@ function ntClear(scopeId, resultIds) {
       // ≥2 domains in same severity category → that grade of malnutrition
       var dx = '';
       var dxColor = 'var(--text-dim)';
-      if      (totals[3] >= 2) { dx = '⛔ SEVERE MALNUTRITION'; dxColor = '#fb7185'; }
-      else if (totals[2] >= 2) { dx = '⚠ MODERATE MALNUTRITION'; dxColor = '#fb923c'; }
-      else if (totals[1] >= 2) { dx = '🟡 MILD MALNUTRITION'; dxColor = '#f0b429'; }
-      else if (totals[0] === NFPE_DOMAINS.length) { dx = '✅ NO MALNUTRITION INDICATORS'; dxColor = '#34d399'; }
+      if      (totals[3] >= 2) { dx = ' SEVERE MALNUTRITION'; dxColor = '#fb7185'; }
+      else if (totals[2] >= 2) { dx = ' MODERATE MALNUTRITION'; dxColor = '#fb923c'; }
+      else if (totals[1] >= 2) { dx = ' MILD MALNUTRITION'; dxColor = '#f0b429'; }
+      else if (totals[0] === NFPE_DOMAINS.length) { dx = ' NO MALNUTRITION INDICATORS'; dxColor = '#34d399'; }
       else { dx = 'ℹ Insufficient criteria — review clinical context'; dxColor = 'var(--text-dim)'; }
 
       // Abnormal findings list
@@ -7289,7 +7326,7 @@ function ntClear(scopeId, resultIds) {
       // Edema caveat
       if (edemaScore && edemaScore.score > 0) {
         html += '<div style="margin-top:8px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:6px;padding:7px 10px;font-size:9px;color:#60a5fa">';
-        html += '💧 Edema present — measured weight likely overestimates true lean mass; interpret weight-based targets cautiously.';
+        html += ' Edema present — measured weight likely overestimates true lean mass; interpret weight-based targets cautiously.';
         html += '</div>';
       }
 
@@ -7336,7 +7373,7 @@ function ntClear(scopeId, resultIds) {
       };
       try {
         DataService.addToList('history', entry, 50);
-        showToast('✅ NFPE saved to history','success');
+        showToast(' NFPE saved to history','success');
         try { renderActivityStrip(); } catch(e){}
       } catch(e) {
         try { showToast('Save failed: '+e.message,'error'); } catch(e2){}
@@ -7355,7 +7392,7 @@ function ntClear(scopeId, resultIds) {
 
   <!-- Reference card -->
   <div class="card" style="margin-top:14px;border-color:rgba(244,114,182,0.2)">
-    <div class="card-header"><div class="card-title" style="color:#f472b6">📖 Clinical References</div></div>
+    <div class="card-header"><div class="card-title" style="color:#f472b6"> Clinical References</div></div>
     <div class="card-body" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:2">
       <div>• <strong style="color:var(--text)">NFPE Consensus</strong>: Mordarski &amp; Wolff — ASPEN Pocket Guide to Nutrition Assessment of the Patient with Obesity (2015).</div>
       <div>• <strong style="color:var(--text)">Malnutrition Diagnosis</strong>: White et al. — AND/ASPEN Consensus Statement. JPEN 2012;36(3):275–283.</div>
@@ -7656,7 +7693,7 @@ function ntClear(scopeId, resultIds) {
       if (!combined.length) {
         _hpSt('No results — try a different spelling');
         _showResults(`<div style="text-align:center;padding:24px;font-family:var(--mono);
-          font-size:10px;color:var(--text-dim)">🔍 No results for "${q.replace(/</g,'&lt;')}"</div>`);
+          font-size:10px;color:var(--text-dim)"> No results for "${q.replace(/</g,'&lt;')}"</div>`);
         return;
       }
 
@@ -7906,7 +7943,7 @@ function ntClear(scopeId, resultIds) {
       if(!_lfsResults.length){
         _lsSt('No results — try different spelling');
         resEl.innerHTML=`<div style="text-align:center;padding:24px;font-family:var(--mono);
-                          font-size:10px;color:var(--text-dim)">🔍 No results for "${_esc(q)}"</div>`;
+                          font-size:10px;color:var(--text-dim)"> No results for "${_esc(q)}"</div>`;
       } else {
         _lsSt(`${_lfsResults.length} result${_lfsResults.length>1?'s':''} · per 100 g`);
         resEl.innerHTML=_lfsResults.map((f,i)=>_lfsCard(f,i)).join('');
