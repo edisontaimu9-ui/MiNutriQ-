@@ -7343,7 +7343,7 @@ function renderMpMeals() {
                     <button onclick="adjMpQty(${mi},${ii},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">+</button>
                   </div>`;
               return `<div class="recall-item-row">
-                <div style="flex:1;color:var(--text-bright);font-family:var(--mono);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.desc}</div>
+                <div style="flex:1;min-width:120px;color:var(--text-bright);font-family:var(--mono);font-size:11px;overflow-wrap:break-word;word-break:break-word;white-space:normal;padding-top:2px">${item.desc}</div>
                 ${badge}
                 ${qtyCtrl}
                 <div style="color:${isFdc?'#60a5fa':'var(--teal)'};min-width:72px;text-align:right;font-family:var(--mono);font-size:11px">${kcal} kcal</div>
