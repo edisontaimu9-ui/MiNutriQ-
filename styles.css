@@ -1331,7 +1331,7 @@ body:not(.ob-authed) .tab-content {
 }
 .hp-profile-inst {
   font-family: var(--mono); font-size: 10px; color: var(--text-dim);
-  margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px; white-space: normal; overflow-wrap: break-word; word-break: break-word;
 }
 .hp-profile-id {
   font-family: var(--mono); font-size: 9px; color: var(--text-muted);

@@ -7408,9 +7408,9 @@ function updateMpTotals() {
     const proPct=Math.round(totPro*4/mpMacroKcal*100);
     const fatPct=Math.round(totFat*9/mpMacroKcal*100);
     mpDistEl.innerHTML=`
-      <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)">Carbohydrate</span><span style="color:var(--amber)">${choPct}% (${totCho}g · ${totCho*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${choPct}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div></div>
-      <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)">Protein</span><span style="color:var(--blue)">${proPct}% (${totPro}g · ${totPro*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${proPct}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div></div>
-      <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim)"> Fat</span><span style="color:var(--green)">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
+      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0">Carbohydrate</span><span style="color:var(--amber);overflow-wrap:break-word;word-break:break-word;text-align:right">${choPct}% (${totCho}g · ${totCho*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${choPct}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div></div>
+      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0">Protein</span><span style="color:var(--blue);overflow-wrap:break-word;word-break:break-word;text-align:right">${proPct}% (${totPro}g · ${totPro*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${proPct}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div></div>
+      <div><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0"> Fat</span><span style="color:var(--green);overflow-wrap:break-word;word-break:break-word;text-align:right">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
     `;
   }
   // Gap alert
@@ -12184,23 +12184,23 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
   const macroDistHTML = hasMacro ? `
     <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;margin-top:2px">MACRONUTRIENT DISTRIBUTION (%E) vs WHO/DRI Ranges</div>
     <div style="margin-bottom:7px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
-        <span style="color:var(--text-dim)"> Carbohydrate</span>
-        <span style="color:var(--amber)">${choPctE}%E · ${totCho}g · ${totCho*4} kcal &nbsp;·&nbsp; ${_driLbl(choPctE,45,65)}</span>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+        <span style="color:var(--text-dim);flex-shrink:0"> Carbohydrate</span>
+        <span style="color:var(--amber);overflow-wrap:break-word;word-break:break-word;text-align:right">${choPctE}%E · ${totCho}g · ${totCho*4} kcal · ${_driLbl(choPctE,45,65)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(choPctE,100)}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div>
     </div>
     <div style="margin-bottom:7px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
-        <span style="color:var(--text-dim)">Protein</span>
-        <span style="color:var(--blue)">${proPctE}%E · ${totPro}g · ${totPro*4} kcal &nbsp;·&nbsp; ${_driLbl(proPctE,10,35)}</span>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+        <span style="color:var(--text-dim);flex-shrink:0">Protein</span>
+        <span style="color:var(--blue);overflow-wrap:break-word;word-break:break-word;text-align:right">${proPctE}%E · ${totPro}g · ${totPro*4} kcal · ${_driLbl(proPctE,10,35)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(proPctE,100)}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
-        <span style="color:var(--text-dim)"> Fat</span>
-        <span style="color:var(--green)">${fatPctE}%E · ${totFat}g · ${totFat*9} kcal &nbsp;·&nbsp; ${_driLbl(fatPctE,20,35)}</span>
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+        <span style="color:var(--text-dim);flex-shrink:0"> Fat</span>
+        <span style="color:var(--green);overflow-wrap:break-word;word-break:break-word;text-align:right">${fatPctE}%E · ${totFat}g · ${totFat*9} kcal · ${_driLbl(fatPctE,20,35)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(fatPctE,100)}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div>
     </div>` : `<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:12px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">ℹ CHO/Fat breakdown not available for formula-based plans — macro %E distribution requires food-item level data.</div>`;
@@ -12224,7 +12224,7 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
 
   return `<div style="margin-top:16px;background:rgba(5,15,35,0.75);border:1px solid rgba(29,233,212,0.35);border-radius:12px;padding:16px">
     <div style="font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:2px;color:var(--teal);margin-bottom:14px">NUTRITION ANALYSIS — ${source}</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px">
       ${_mpAnaCard('Energy', totKcal, 'kcal', targetKcal>0?'target: '+targetKcal+' kcal':'no target set', kcalPct, _col(kcalPct), _lbl(kcalPct))}
       ${_mpAnaCard('Protein', totPro, 'g', targetPro>0?'target: '+targetPro+'g':'no target set', proPct, _col(proPct), _lbl(proPct))}
       ${hasMacro ? _mpAnaCard('CHO', totCho, 'g', (totCho*4)+' kcal · '+choPctE+'%E', choPctE, choPctE>=45&&choPctE<=65?'var(--green)':'var(--amber)', _driLbl(choPctE,45,65)) : ''}
@@ -12243,7 +12243,7 @@ function _mpAnaCard(label, val, unit, sub, pct, col, statusLabel) {
   return `<div style="background:rgba(8,18,36,0.55);border:1px solid rgba(56,100,168,0.2);border-radius:9px;padding:11px 12px">
     <div style="font-family:var(--mono);font-size:8px;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px">${label}</div>
     <div style="font-family:var(--mono);font-size:21px;font-weight:800;color:${col};line-height:1.1;margin-bottom:2px">${val}<span style="font-size:10px;font-weight:400;margin-left:3px;color:var(--text-dim)">${unit}</span></div>
-    <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted);margin-bottom:7px">${sub}</div>
+    <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted);margin-bottom:7px;overflow-wrap:break-word;word-break:break-word">${sub}</div>
     ${pct!==null?`<div style="height:4px;background:rgba(255,255,255,0.06);border-radius:3px;margin-bottom:5px"><div style="height:100%;width:${barW}%;background:${col};border-radius:3px"></div></div>`:''}
     <div style="font-family:var(--mono);font-size:8px;color:${col}">${statusLabel}</div>
   </div>`;
