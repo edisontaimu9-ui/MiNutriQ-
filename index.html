@@ -27,10 +27,10 @@
 <!-- ── Content Security Policy ── -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self' blob:;
-  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com;
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov;
+  connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -46,7 +46,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.2.5';
+  const APP_VERSION = '1.2.6';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -971,6 +971,29 @@
         onblur="document.getElementById('hp-search-bar').style.borderColor='rgba(29,233,212,.22)';document.getElementById('hp-search-bar').style.boxShadow='0 2px 18px rgba(29,233,212,.06)'"
       />
 
+      <!-- barcode scan button -->
+      <button id="hp-barcode-btn" onclick="hpBarcodeOpen()" title="Scan barcode"
+        aria-label="Scan barcode"
+        style="display:flex;align-items:center;justify-content:center;
+               background:none;border:none;color:var(--teal);
+               font-size:16px;cursor:pointer;padding:6px 7px;flex-shrink:0;
+               opacity:.75;transition:opacity .15s"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.75'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+          <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+          <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+          <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+          <line x1="7" y1="8" x2="7" y2="16"/>
+          <line x1="10" y1="8" x2="10" y2="16"/>
+          <line x1="13" y1="8" x2="13" y2="16"/>
+          <line x1="16" y1="8" x2="16" y2="12"/>
+          <line x1="16" y1="14" x2="16" y2="16"/>
+        </svg>
+      </button>
+
       <!-- clear -->
       <button id="hp-search-clear" onclick="hpSearchClear()"
         style="display:none;align-items:center;justify-content:center;
@@ -1018,6 +1041,227 @@
       max-height:0;overflow:hidden;
       transition:max-height .35s cubic-bezier(.4,0,.2,1), margin .25s;
     "></div>
+  </div>
+
+  <!-- ── BARCODE SCANNER MODAL ── -->
+  <div id="bc-overlay" role="dialog" aria-modal="true" aria-label="Barcode scanner"
+    style="display:none;position:fixed;inset:0;z-index:9900;
+           background:rgba(2,6,23,.92);backdrop-filter:blur(4px);
+           flex-direction:column;align-items:center;justify-content:center;
+           padding:16px;box-sizing:border-box">
+
+    <!-- Modal card -->
+    <div style="width:100%;max-width:400px;background:var(--surface2,#0d1d2e);
+                border:1.5px solid rgba(29,233,212,.25);border-radius:18px;
+                overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:14px 16px 12px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="var(--teal)" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+            <line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="8" x2="10" y2="16"/>
+            <line x1="13" y1="8" x2="13" y2="16"/>
+            <line x1="16" y1="8" x2="16" y2="12"/><line x1="16" y1="14" x2="16" y2="16"/>
+          </svg>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;
+                       color:var(--text)">Scan Barcode</span>
+          <span style="font-family:var(--mono);font-size:8px;padding:1px 7px;
+                       border-radius:100px;background:rgba(29,233,212,.1);
+                       color:var(--teal);border:1px solid rgba(29,233,212,.25)">EAN / UPC</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <!-- Torch toggle -->
+          <button id="bc-torch-btn" onclick="hpBarcodeToggleTorch()" title="Toggle flashlight"
+            style="display:none;align-items:center;justify-content:center;
+                   background:none;border:1px solid var(--border);border-radius:8px;
+                   color:var(--text-dim);cursor:pointer;padding:5px 9px;
+                   font-family:var(--mono);font-size:10px;gap:4px;
+                   transition:all .15s">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span id="bc-torch-lbl">Torch</span>
+          </button>
+          <!-- Close -->
+          <button onclick="hpBarcodeClose()"
+            style="background:none;border:1px solid var(--border);border-radius:8px;
+                   color:var(--text-dim);cursor:pointer;padding:5px 10px;
+                   font-family:var(--mono);font-size:11px;transition:all .15s"
+            onmouseover="this.style.borderColor='rgba(29,233,212,.4)';this.style.color='var(--text)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">&#x2715; Close</button>
+        </div>
+      </div>
+
+      <!-- Viewfinder -->
+      <div style="position:relative;background:#000;overflow:hidden" id="bc-viewfinder-wrap">
+        <video id="bc-video" autoplay playsinline muted
+          style="width:100%;max-height:260px;object-fit:cover;display:block"></video>
+
+        <!-- Corner guides + scan line -->
+        <div style="position:absolute;inset:0;pointer-events:none">
+          <div id="bc-scanline" style="
+            position:absolute;left:12%;right:12%;height:2px;top:50%;
+            background:linear-gradient(90deg,transparent,var(--teal),transparent);
+            box-shadow:0 0 8px rgba(29,233,212,.6);
+            animation:bcScanMove 2s ease-in-out infinite;opacity:.85"></div>
+          <div style="position:absolute;top:14%;left:12%;width:20px;height:20px;
+                      border-top:2.5px solid var(--teal);border-left:2.5px solid var(--teal);border-radius:3px 0 0 0"></div>
+          <div style="position:absolute;top:14%;right:12%;width:20px;height:20px;
+                      border-top:2.5px solid var(--teal);border-right:2.5px solid var(--teal);border-radius:0 3px 0 0"></div>
+          <div style="position:absolute;bottom:14%;left:12%;width:20px;height:20px;
+                      border-bottom:2.5px solid var(--teal);border-left:2.5px solid var(--teal);border-radius:0 0 0 3px"></div>
+          <div style="position:absolute;bottom:14%;right:12%;width:20px;height:20px;
+                      border-bottom:2.5px solid var(--teal);border-right:2.5px solid var(--teal);border-radius:0 0 3px 0"></div>
+        </div>
+      </div>
+
+      <!-- Tab strip: Camera | Gallery -->
+      <div style="display:flex;border-bottom:1px solid var(--border)">
+        <button id="bc-tab-camera" onclick="hpBarcodeSetTab('camera')"
+          style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:9px 0;
+                 background:rgba(29,233,212,.07);border:none;cursor:pointer;
+                 color:var(--teal);border-bottom:2px solid var(--teal);transition:all .15s;
+                 display:flex;align-items:center;justify-content:center;gap:5px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Camera
+        </button>
+        <button id="bc-tab-gallery" onclick="hpBarcodeSetTab('gallery')"
+          style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:9px 0;
+                 background:none;border:none;cursor:pointer;
+                 color:var(--text-dim);border-bottom:2px solid transparent;transition:all .15s;
+                 display:flex;align-items:center;justify-content:center;gap:5px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Gallery
+        </button>
+      </div>
+
+      <!-- ── CAMERA PANEL ── -->
+      <div id="bc-panel-camera">
+        <!-- Status bar -->
+        <div id="bc-status" style="
+          padding:11px 16px;font-family:var(--mono);font-size:10px;color:var(--text-dim);
+          display:flex;align-items:center;gap:8px;border-top:none;min-height:40px">
+          <span id="bc-spin" style="display:none;width:10px;height:10px;flex-shrink:0;
+            border-radius:50%;border:2px solid var(--border);border-top-color:var(--teal);
+            animation:lfsSpin .65s linear infinite"></span>
+          <span id="bc-status-txt">Point camera at a barcode&#8230;</span>
+        </div>
+
+        <!-- Not-found bar -->
+        <div id="bc-notfound-bar" style="display:none;padding:0 16px 14px">
+          <div style="font-family:var(--mono);font-size:9.5px;margin-bottom:7px;padding:8px 10px;
+                      border-radius:8px;background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.2);
+                      color:rgba(251,146,60,.85)">
+            &#9888; Product not found in Open Food Facts.
+          </div>
+          <button onclick="hpBarcodeManualFallback()"
+            style="width:100%;font-family:var(--mono);font-size:10px;padding:8px;
+                   border-radius:8px;background:rgba(29,233,212,.08);
+                   border:1px solid rgba(29,233,212,.25);color:var(--teal);
+                   cursor:pointer;transition:all .15s"
+            onmouseover="this.style.background='rgba(29,233,212,.15)'"
+            onmouseout="this.style.background='rgba(29,233,212,.08)'">
+            Search manually instead &#x2192;
+          </button>
+        </div>
+      </div>
+
+      <!-- ── GALLERY PANEL ── -->
+      <div id="bc-panel-gallery" style="display:none;padding:14px 16px 16px">
+
+        <!-- Hidden file input -->
+        <input type="file" id="bc-file-input" accept="image/*" style="display:none"
+               onchange="hpBarcodeGalleryPick(this)"/>
+
+        <!-- Drop-zone / pick button -->
+        <div id="bc-dropzone"
+          onclick="document.getElementById('bc-file-input').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--teal)';this.style.background='rgba(29,233,212,.06)'"
+          ondragleave="this.style.borderColor='rgba(29,233,212,.2)';this.style.background='transparent'"
+          ondrop="event.preventDefault();this.style.borderColor='rgba(29,233,212,.2)';this.style.background='transparent';hpBarcodeGalleryDrop(event)"
+          style="border:1.5px dashed rgba(29,233,212,.2);border-radius:12px;
+                 padding:22px 16px;text-align:center;cursor:pointer;
+                 transition:border-color .15s,background .15s;
+                 display:flex;flex-direction:column;align-items:center;gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+               fill="none" stroke="var(--teal)" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round" style="opacity:.6">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)">
+            Tap to choose image
+          </div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+            or drag &amp; drop &#183; JPG, PNG, WEBP, GIF
+          </div>
+        </div>
+
+        <!-- Image preview (hidden until file chosen) -->
+        <div id="bc-preview-wrap" style="display:none;margin-top:12px;position:relative">
+          <img id="bc-preview-img" alt="Scanned image preview"
+               style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;
+                      border:1px solid var(--border);background:#000;display:block"/>
+          <!-- Detected barcode highlight overlay -->
+          <canvas id="bc-preview-canvas"
+                  style="position:absolute;inset:0;width:100%;height:100%;
+                         border-radius:10px;pointer-events:none"></canvas>
+        </div>
+
+        <!-- Gallery status bar -->
+        <div id="bc-gallery-status" style="
+          margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);
+          display:flex;align-items:center;gap:7px;min-height:22px">
+          <span id="bc-gallery-spin" style="display:none;width:10px;height:10px;flex-shrink:0;
+            border-radius:50%;border:2px solid var(--border);border-top-color:var(--teal);
+            animation:lfsSpin .65s linear infinite"></span>
+          <span id="bc-gallery-status-txt"></span>
+        </div>
+
+        <!-- Re-pick button (shown after attempt) -->
+        <button id="bc-repick-btn" onclick="document.getElementById('bc-file-input').click()"
+          style="display:none;width:100%;margin-top:8px;font-family:var(--mono);
+                 font-size:10px;padding:8px;border-radius:8px;
+                 background:rgba(29,233,212,.08);border:1px solid rgba(29,233,212,.25);
+                 color:var(--teal);cursor:pointer;transition:all .15s"
+          onmouseover="this.style.background='rgba(29,233,212,.15)'"
+          onmouseout="this.style.background='rgba(29,233,212,.08)'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Choose a different image
+        </button>
+      </div>
+
+    </div>
+
+    <div style="margin-top:14px;font-family:var(--mono);font-size:9px;
+                color:rgba(255,255,255,.3);text-align:center">
+      Tap <strong style="color:rgba(255,255,255,.5)">&#x2715; Close</strong> to cancel &#183; EAN-13, UPC-A, EAN-8, QR supported
+    </div>
   </div>
 
   <!-- ── HERO ── -->
@@ -7621,6 +7865,10 @@ function ntClear(scopeId, resultIds) {
 <style>
 @keyframes lfsPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(29,233,212,.4)}50%{opacity:.35;box-shadow:0 0 0 4px rgba(29,233,212,0)}}
 @keyframes lfsSpin{to{transform:rotate(360deg)}}
+@keyframes bcScanMove{0%{top:20%}50%{top:78%}100%{top:20%}}
+#bc-overlay.bc-open{display:flex!important}
+#bc-torch-btn.bc-torch-on{background:rgba(255,213,79,.12)!important;border-color:rgba(255,213,79,.45)!important;color:#ffd54f!important}
+
 .lfs-card{
   background:var(--card,#131b26);
   border:1px solid var(--border);
@@ -7937,6 +8185,825 @@ function ntClear(scopeId, resultIds) {
     const q = document.getElementById('hp-search-q');
     if (q) q.addEventListener('keydown', e => { if (e.key === 'Enter') hpSearch(); });
   });
+
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     BARCODE SCANNER — Open Food Facts integration
+     ══════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ── constants ── */
+  const OFF_BASE  = 'https://world.openfoodfacts.org/api/v2/product/';
+  const CACHE_KEY = 'oasis_bc_cache_v1';
+  const HIST_KEY  = 'oasis_bc_history_v1';
+  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  /* ── state ── */
+  let _stream     = null;
+  let _detector   = null;
+  let _rafId      = null;
+  let _torchOn    = false;
+  let _torchTrack = null;
+  let _lastCode   = null;
+  let _scanning   = true;
+  let _lastBarcode = '';   // for manual fallback
+
+  /* ── cache helpers ── */
+  function _cacheGet(barcode) {
+    try {
+      const store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+      const entry = store[barcode];
+      if (!entry) return null;
+      if (Date.now() - entry.ts > CACHE_TTL) { delete store[barcode]; localStorage.setItem(CACHE_KEY, JSON.stringify(store)); return null; }
+      return entry.data;
+    } catch(e) { return null; }
+  }
+  function _cacheSet(barcode, data) {
+    try {
+      const store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+      store[barcode] = { ts: Date.now(), data };
+      // Prune to 50 entries max
+      const keys = Object.keys(store);
+      if (keys.length > 50) { delete store[keys[0]]; }
+      localStorage.setItem(CACHE_KEY, JSON.stringify(store));
+    } catch(e) {}
+  }
+  function _historyAdd(barcode, productName) {
+    try {
+      const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+      hist.unshift({ barcode, name: productName, ts: Date.now() });
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0, 30)));
+    } catch(e) {}
+  }
+
+  /* ── status helpers ── */
+  function _bcSt(msg, spin) {
+    const txt = document.getElementById('bc-status-txt');
+    const sp  = document.getElementById('bc-spin');
+    if (txt) txt.textContent = msg;
+    if (sp)  sp.style.display = spin ? 'block' : 'none';
+  }
+  function _bcNotFound(show) {
+    const el = document.getElementById('bc-notfound-bar');
+    if (el) el.style.display = show ? 'block' : 'none';
+  }
+
+  /* ── vibrate ── */
+  function _vibrate(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+  }
+
+  /* ── safe timeout fetch (AbortSignal.timeout not in all Android WebViews) ── */
+  function _fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' },
+    }).finally(() => clearTimeout(tid));
+  }
+
+  /* ── fetch Open Food Facts ── */
+  async function _fetchOFF(barcode) {
+    // Check cache first
+    const cached = _cacheGet(barcode);
+    if (cached !== null) return cached;
+
+    // Build URL — use v2 JSON endpoint, no trailing slash issues
+    const url = 'https://world.openfoodfacts.org/api/v2/product/'
+              + encodeURIComponent(barcode.trim())
+              + '.json?fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,nutriments';
+
+    let r;
+    try {
+      r = await _fetchWithTimeout(url, 12000);
+    } catch (netErr) {
+      // Distinguish abort (timeout) from actual network failure
+      if (netErr.name === 'AbortError') throw new Error('Request timed out — check connection');
+      throw new Error('Network error: ' + (netErr.message || netErr));
+    }
+
+    if (r.status === 404) return null;   // barcode unknown to OFF
+    if (!r.ok) throw new Error('Open Food Facts returned ' + r.status);
+
+    let d;
+    try { d = await r.json(); }
+    catch (jsonErr) { throw new Error('Bad response from Open Food Facts'); }
+
+    if (d.status !== 1 || !d.product) return null;  // product record missing
+
+    const p = d.product;
+    const nm = p.nutriments || {};
+    const n  = (id) => {
+      const val = nm[id];
+      return (val !== undefined && val !== null && val !== '') ? +parseFloat(val).toFixed(2) : null;
+    };
+
+    // Prefer kcal field; fall back to kJ ÷ 4.184
+    const kcalDirect = n('energy-kcal_100g');
+    const kcalFromKj = nm['energy_100g'] != null ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1) : null;
+
+    const result = {
+      name:   (p.product_name || p.product_name_en || '').trim() || barcode,
+      brand:  (p.brands || '').trim(),
+      cat:    (p.categories_tags?.[0] || p.food_groups_tags?.[0] || 'Open Food Facts')
+                .replace(/^[a-z]{2}:/,''),
+      kcal:   kcalDirect ?? kcalFromKj,
+      kj:     n('energy_100g'),
+      pro:    n('proteins_100g'),
+      cho:    n('carbohydrates_100g'),
+      fat:    n('fat_100g'),
+      fiber:  n('fiber_100g'),
+      sugar:  n('sugars_100g'),
+      sodium: n('sodium_100g'),
+      salt:   n('salt_100g'),
+      barcode,
+      sourceUsed: 'OFF',
+      confidenceScore: 0.82,
+      _offProduct: true,
+    };
+    _cacheSet(barcode, result);
+    return result;
+  }
+
+  /* ── map OFF result into hp-search result format ── */
+  function _offToHpResult(offFood) {
+    return {
+      name:           offFood.brand ? offFood.name + (offFood.brand ? ' (' + offFood.brand + ')' : '') : offFood.name,
+      cat:            offFood.cat,
+      kcal:           offFood.kcal,
+      kj:             offFood.kj,
+      pro:            offFood.pro,
+      cho:            offFood.cho,
+      fat:            offFood.fat,
+      fiber:          offFood.fiber,
+      sugar:          offFood.sugar,
+      sodium:         offFood.sodium,
+      sourceUsed:     'OFF',
+      confidenceScore: 0.82,
+      _section:       'off',
+      _barcode:       offFood.barcode,
+    };
+  }
+
+  /* ── handle a detected barcode code ── */
+  async function _onBarcode(code) {
+    if (!_scanning || code === _lastCode) return;
+    _lastCode  = code;
+    _scanning  = false;
+    _lastBarcode = code;
+
+    _vibrate([60]);
+    _bcNotFound(false);
+    _bcSt('Barcode detected: ' + code + ' — fetching…', true);
+
+    try {
+      const offFood = await _fetchOFF(code);
+
+      if (!offFood) {
+        _bcSt('Product not found in Open Food Facts.', false);
+        _bcNotFound(true);
+        // allow rescan after 3 s
+        setTimeout(() => { _lastCode = null; _scanning = true; _bcSt('Point camera at a barcode…', false); _bcNotFound(false); }, 4000);
+        return;
+      }
+
+      // Success!
+      _vibrate([30, 40, 60]);
+      _historyAdd(code, offFood.name);
+
+      const productName = offFood.name;
+
+      // Close scanner
+      hpBarcodeClose();
+
+      // Autofill search bar
+      const qEl = document.getElementById('hp-search-q');
+      if (qEl) {
+        qEl.value = productName;
+        const clearBtn = document.getElementById('hp-search-clear');
+        if (clearBtn) clearBtn.style.display = 'flex';
+      }
+
+      // Build merged results: OFF product first, then local + FDC hits for same name
+      window._hpBarcodeResult = offFood;
+      _showBarcodeResults(offFood, productName);
+
+    } catch(err) {
+      const msg = err.message || String(err);
+      // Give user a readable message based on failure type
+      const friendly = msg.includes('timed out')   ? 'Request timed out. Check your connection.'
+                     : msg.includes('NetworkError') || msg.includes('Failed to fetch') || msg.includes('Network error')
+                       ? 'No internet connection. Check your data/Wi-Fi and try again.'
+                       : 'Lookup failed: ' + msg;
+      _bcSt(friendly, false);
+      // Show not-found bar with manual fallback option after any error
+      _bcNotFound(true);
+      // Auto-reset for rescan after 5 s
+      setTimeout(() => {
+        _lastCode = null;
+        _scanning = true;
+        _bcNotFound(false);
+        _bcSt('Point camera at a barcode…', false);
+      }, 5000);
+    }
+  }
+
+  /* ── render barcode results into main hp-search-results area ── */
+  async function _showBarcodeResults(offFood, query) {
+    // Use the existing status + results infrastructure
+    const stEl  = document.getElementById('hp-search-status');
+    const txtEl = document.getElementById('hp-search-status-txt');
+    const spEl  = document.getElementById('hp-search-spin');
+    const resEl = document.getElementById('hp-search-results');
+    if (!resEl) return;
+
+    // Show status
+    if (stEl)  { stEl.style.maxHeight = '30px'; stEl.style.marginTop = '7px'; }
+    if (txtEl) txtEl.textContent = 'Barcode ' + offFood.barcode + ' — merging results…';
+    if (spEl)  spEl.style.display = 'block';
+    resEl.style.maxHeight = '0';
+
+    // OFF source badge colours
+    const OFF_BADGE = { label:'Open Food Facts', color:'#4ade80', bg:'rgba(74,222,128,.10)', border:'rgba(74,222,128,.30)' };
+
+    // Reuse the private hpSearch rendering machinery via the global
+    // by injecting OFF result into _hpResults via a temporary hook
+    let combined = [_offToHpResult(offFood)];
+
+    // Also pull local search results for richer context
+    if (typeof NTFoodSearch !== 'undefined') {
+      const localHits = NTFoodSearch.searchLocal(query, 4);
+      const seen = new Set([(offFood.name||'').toLowerCase().trim()]);
+      for (const f of localHits) {
+        const key = (f.name||'').toLowerCase().trim();
+        if (!seen.has(key)) { seen.add(key); combined.push({...f, _section:'local'}); }
+      }
+    }
+
+    // Expose to hpRecalc/hpSetMeasure
+    if (window._hpResultsArr) window._hpResultsArr(combined);
+
+    // Build HTML using existing card renderer — we invoke hpSearch after seeding query
+    // Instead, build a simplified OFF card + delegate rest to standard search
+    if (txtEl) txtEl.textContent = (combined.length) + ' result' + (combined.length > 1 ? 's' : '') + ' — barcode scan · per 100 g';
+    if (spEl)  spEl.style.display = 'none';
+
+    // Fall through to standard search to fill remaining cards
+    const qEl = document.getElementById('hp-search-q');
+    if (qEl && qEl.value) {
+      // Trigger the standard search to render all cards (it also adds OFF first via merged array)
+      await window.hpSearch({ _barcodePrefix: combined[0] });
+    }
+  }
+
+  /* ── Barcode Detection loop ── */
+  async function _startDetection(video) {
+    // Prefer native BarcodeDetector, fallback to ZXing via CDN
+    if ('BarcodeDetector' in window) {
+      try {
+        _detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'] });
+      } catch(e) { _detector = new BarcodeDetector(); }
+
+      const _tick = async () => {
+        if (!_scanning && _lastCode) { _rafId = requestAnimationFrame(_tick); return; }
+        if (video.readyState >= 2) {
+          try {
+            const codes = await _detector.detect(video);
+            if (codes.length > 0) await _onBarcode(codes[0].rawValue);
+          } catch(e) {}
+        }
+        _rafId = requestAnimationFrame(_tick);
+      };
+      _rafId = requestAnimationFrame(_tick);
+
+    } else {
+      // Lazy-load ZXing as fallback
+      _bcSt('Loading scanner library…', true);
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+      script.onload = () => {
+        try {
+          const hints = new Map();
+          const codeReader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 200 });
+          codeReader.decodeFromVideoElement(video, (result, err) => {
+            if (result) _onBarcode(result.getText());
+          });
+          _scanning = true;
+          _bcSt('Point camera at a barcode…', false);
+          // Store for cleanup
+          window._bcZxingReader = codeReader;
+        } catch(e) { _bcSt('Scanner unavailable on this device.', false); }
+      };
+      script.onerror = () => { _bcSt('Scanner library failed to load.', false); };
+      document.head.appendChild(script);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     GALLERY / IMAGE SCAN
+     ══════════════════════════════════════════════════ */
+
+  /* ── tab switcher ── */
+  window.hpBarcodeSetTab = function(tab) {
+    const camPanel  = document.getElementById('bc-panel-camera');
+    const galPanel  = document.getElementById('bc-panel-gallery');
+    const camTab    = document.getElementById('bc-tab-camera');
+    const galTab    = document.getElementById('bc-tab-gallery');
+    const vfWrap    = document.getElementById('bc-viewfinder-wrap');
+    const torchBtn  = document.getElementById('bc-torch-btn');
+
+    if (tab === 'camera') {
+      if (camPanel)  camPanel.style.display  = 'block';
+      if (galPanel)  galPanel.style.display  = 'none';
+      if (vfWrap)    vfWrap.style.display    = 'block';
+      // Tab active styles
+      if (camTab) { camTab.style.background = 'rgba(29,233,212,.07)'; camTab.style.color = 'var(--teal)'; camTab.style.borderBottomColor = 'var(--teal)'; }
+      if (galTab) { galTab.style.background = 'none'; galTab.style.color = 'var(--text-dim)'; galTab.style.borderBottomColor = 'transparent'; }
+      // Re-show torch btn if track exists
+      if (torchBtn) torchBtn.style.display = _torchTrack ? 'flex' : 'none';
+      // Resume live scan if stream is active
+      if (_stream) { _scanning = true; _lastCode = null; }
+    } else {
+      if (camPanel)  camPanel.style.display  = 'none';
+      if (galPanel)  galPanel.style.display  = 'block';
+      if (vfWrap)    vfWrap.style.display    = 'none';
+      if (torchBtn)  torchBtn.style.display  = 'none';
+      // Pause live camera scan while in gallery mode
+      _scanning = false;
+      // Tab active styles
+      if (galTab) { galTab.style.background = 'rgba(29,233,212,.07)'; galTab.style.color = 'var(--teal)'; galTab.style.borderBottomColor = 'var(--teal)'; }
+      if (camTab) { camTab.style.background = 'none'; camTab.style.color = 'var(--text-dim)'; camTab.style.borderBottomColor = 'transparent'; }
+    }
+  };
+
+  /* ── gallery status helpers ── */
+  function _galSt(msg, spin) {
+    const txt = document.getElementById('bc-gallery-status-txt');
+    const sp  = document.getElementById('bc-gallery-spin');
+    if (txt) txt.textContent = msg || '';
+    if (sp)  sp.style.display = spin ? 'block' : 'none';
+  }
+
+  /* ── draw highlight box on the preview canvas ── */
+  function _drawHighlight(img, cornerPoints) {
+    const canvas = document.getElementById('bc-preview-canvas');
+    if (!canvas || !cornerPoints) return;
+    const rect = img.getBoundingClientRect();
+    // The canvas CSS fills the preview-img container; set its internal resolution
+    canvas.width  = img.naturalWidth  || rect.width;
+    canvas.height = img.naturalHeight || rect.height;
+    const scaleX = canvas.width  / (img.naturalWidth  || canvas.width);
+    const scaleY = canvas.height / (img.naturalHeight || canvas.height);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#1de9d4';
+    ctx.lineWidth   = Math.max(2, canvas.width * 0.005);
+    ctx.shadowColor = 'rgba(29,233,212,.8)';
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    const pts = cornerPoints;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  /* ── decode an image file (File or Blob) ── */
+  async function _scanImageFile(file) {
+    // Reset gallery UI
+    _galSt('Analysing image…', true);
+    const repickBtn   = document.getElementById('bc-repick-btn');
+    const previewWrap = document.getElementById('bc-preview-wrap');
+    const previewImg  = document.getElementById('bc-preview-img');
+    const canvas      = document.getElementById('bc-preview-canvas');
+    if (repickBtn)   repickBtn.style.display   = 'none';
+    if (canvas)      { const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    // Show image preview
+    const objectUrl = URL.createObjectURL(file);
+    if (previewImg)  {
+      previewImg.src = objectUrl;
+      if (previewWrap) previewWrap.style.display = 'block';
+    }
+
+    // Wait for image to fully load
+    await new Promise((res) => {
+      if (!previewImg) return res();
+      if (previewImg.complete) return res();
+      previewImg.onload = res;
+      previewImg.onerror = res;
+    });
+
+    try {
+      let detectedCode = null;
+      let cornerPoints = null;
+
+      // ── Strategy 1: native BarcodeDetector on ImageBitmap ──────────
+      if ('BarcodeDetector' in window) {
+        try {
+          let detector = _detector;
+          if (!detector) {
+            try { detector = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code','data_matrix','aztec'] }); }
+            catch(e) { detector = new BarcodeDetector(); }
+          }
+          const bitmap = await createImageBitmap(file);
+          const codes  = await detector.detect(bitmap);
+          bitmap.close();
+          if (codes.length > 0) {
+            detectedCode = codes[0].rawValue;
+            cornerPoints = codes[0].cornerPoints || null;
+          }
+        } catch(e) { /* BarcodeDetector failed — fall through to ZXing */ }
+      }
+
+      // ── Strategy 2: ZXing via a hidden <img> element ────────────────
+      if (!detectedCode) {
+        detectedCode = await _zxingDecodeImageUrl(objectUrl);
+      }
+
+      // ── Result ──────────────────────────────────────────────────────
+      if (detectedCode) {
+        // Draw highlight if we have corner points
+        if (cornerPoints && previewImg) _drawHighlight(previewImg, cornerPoints);
+        _galSt('Barcode found: ' + detectedCode, false);
+        if (repickBtn) repickBtn.style.display = 'block';
+        URL.revokeObjectURL(objectUrl);
+        // Brief delay so user sees the found message, then trigger lookup
+        await new Promise(r => setTimeout(r, 400));
+        // Switch back to camera tab UI before triggering product lookup
+        // (so status messages appear in the right panel)
+        hpBarcodeSetTab('camera');
+        await _onBarcode(detectedCode);
+      } else {
+        _galSt('No barcode detected in this image.', false);
+        if (repickBtn) repickBtn.style.display = 'block';
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch(err) {
+      _galSt('Scan error: ' + (err.message || err), false);
+      if (repickBtn) repickBtn.style.display = 'block';
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  /* ── ZXing image decode via a temp <img> ── */
+  async function _zxingDecodeImageUrl(url) {
+    // Ensure ZXing is loaded
+    if (typeof ZXing === 'undefined') {
+      await new Promise((resolve, reject) => {
+        if (document.querySelector('script[data-zxing]')) {
+          // Already loading — poll
+          let attempts = 0;
+          const poll = setInterval(() => {
+            if (typeof ZXing !== 'undefined') { clearInterval(poll); resolve(); }
+            if (++attempts > 100) { clearInterval(poll); reject(new Error('ZXing load timeout')); }
+          }, 100);
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+        s.setAttribute('data-zxing', '1');
+        s.onload  = resolve;
+        s.onerror = () => reject(new Error('ZXing failed to load'));
+        document.head.appendChild(s);
+      });
+    }
+
+    return new Promise((resolve) => {
+      try {
+        const reader = new ZXing.BrowserMultiFormatReader();
+        // decodeFromImageUrl returns a Result or throws NotFoundException
+        reader.decodeFromImageUrl(url)
+          .then(result => resolve(result ? result.getText() : null))
+          .catch(() => resolve(null));
+      } catch(e) { resolve(null); }
+    });
+  }
+
+  /* ── file input change handler ── */
+  window.hpBarcodeGalleryPick = function(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    // Reset file input so same file can be re-selected
+    input.value = '';
+    _scanImageFile(file);
+  };
+
+  /* ── drag-and-drop handler ── */
+  window.hpBarcodeGalleryDrop = function(event) {
+    const file = event.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      _galSt('Please drop an image file.', false);
+      return;
+    }
+    _scanImageFile(file);
+  };
+
+  /* ── paste from clipboard (anywhere on page while modal is open) ── */
+  document.addEventListener('paste', async function(e) {
+    const overlay = document.getElementById('bc-overlay');
+    if (!overlay || overlay.style.display === 'none') return;
+    const galPanel = document.getElementById('bc-panel-gallery');
+    if (!galPanel || galPanel.style.display === 'none') return;
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) { _scanImageFile(file); break; }
+      }
+    }
+  });
+
+  /* ── open ── */
+  /* ── open ── */
+  window.hpBarcodeOpen = async function() {
+    _lastCode = null;
+    _scanning = true;
+    _torchOn  = false;
+    _bcNotFound(false);
+    _bcSt('Requesting camera…', true);
+
+    const overlay = document.getElementById('bc-overlay');
+    if (overlay) { overlay.style.display = 'flex'; overlay.classList.add('bc-open'); }
+
+    try {
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 },
+        }
+      };
+      _stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const video = document.getElementById('bc-video');
+      if (video) {
+        video.srcObject = _stream;
+        await video.play();
+      }
+
+      // Check torch support
+      _torchTrack = _stream.getVideoTracks().find(t => {
+        const caps = t.getCapabilities?.() || {};
+        return caps.torch;
+      }) || null;
+      const torchBtn = document.getElementById('bc-torch-btn');
+      if (torchBtn) torchBtn.style.display = _torchTrack ? 'flex' : 'none';
+
+      _bcSt('Point camera at a barcode…', false);
+      await _startDetection(video);
+
+    } catch(err) {
+      const msg = err.name === 'NotAllowedError'
+        ? 'Camera permission denied. Please allow camera access and try again.'
+        : 'Camera unavailable: ' + (err.message || err);
+      _bcSt(msg, false);
+    }
+  };
+
+  /* ── close ── */
+  window.hpBarcodeClose = function() {
+    // Stop scan loop
+    if (_rafId)     { cancelAnimationFrame(_rafId); _rafId = null; }
+    if (window._bcZxingReader) { try { window._bcZxingReader.reset(); } catch(e){} window._bcZxingReader = null; }
+
+    // Stop camera stream
+    if (_stream) {
+      _stream.getTracks().forEach(t => t.stop());
+      _stream = null;
+    }
+    const video = document.getElementById('bc-video');
+    if (video) { video.srcObject = null; }
+
+    // Reset torch
+    _torchOn = false;
+    const torchBtn = document.getElementById('bc-torch-btn');
+    if (torchBtn) { torchBtn.classList.remove('bc-torch-on'); torchBtn.style.display = 'none'; }
+
+    // Hide overlay
+    const overlay = document.getElementById('bc-overlay');
+    if (overlay) { overlay.style.display = 'none'; overlay.classList.remove('bc-open'); }
+
+    _lastCode = null;
+    _scanning = true;
+    _bcNotFound(false);
+
+    // Reset gallery panel back to default state for next open
+    const previewWrap = document.getElementById('bc-preview-wrap');
+    const previewImg  = document.getElementById('bc-preview-img');
+    const repickBtn   = document.getElementById('bc-repick-btn');
+    const canvas      = document.getElementById('bc-preview-canvas');
+    const fileInput   = document.getElementById('bc-file-input');
+    if (previewWrap) previewWrap.style.display = 'none';
+    if (previewImg)  previewImg.src = '';
+    if (repickBtn)   repickBtn.style.display = 'none';
+    if (canvas)      { const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    if (fileInput)   fileInput.value = '';
+    _galSt('', false);
+
+    // Reset tabs back to Camera
+    const camPanel = document.getElementById('bc-panel-camera');
+    const galPanel = document.getElementById('bc-panel-gallery');
+    const vfWrap   = document.getElementById('bc-viewfinder-wrap');
+    const camTab   = document.getElementById('bc-tab-camera');
+    const galTab   = document.getElementById('bc-tab-gallery');
+    if (camPanel) camPanel.style.display = 'block';
+    if (galPanel) galPanel.style.display = 'none';
+    if (vfWrap)   vfWrap.style.display   = 'block';
+    if (camTab) { camTab.style.background = 'rgba(29,233,212,.07)'; camTab.style.color = 'var(--teal)'; camTab.style.borderBottomColor = 'var(--teal)'; }
+    if (galTab) { galTab.style.background = 'none'; galTab.style.color = 'var(--text-dim)'; galTab.style.borderBottomColor = 'transparent'; }
+  };
+
+  /* ── torch toggle ── */
+  window.hpBarcodeToggleTorch = async function() {
+    if (!_torchTrack) return;
+    try {
+      _torchOn = !_torchOn;
+      await _torchTrack.applyConstraints({ advanced: [{ torch: _torchOn }] });
+      const btn = document.getElementById('bc-torch-btn');
+      const lbl = document.getElementById('bc-torch-lbl');
+      if (btn) btn.classList.toggle('bc-torch-on', _torchOn);
+      if (lbl) lbl.textContent = _torchOn ? 'On' : 'Torch';
+    } catch(e) { console.warn('Torch toggle failed', e); }
+  };
+
+  /* ── manual fallback: close modal and let user type ── */
+  window.hpBarcodeManualFallback = function() {
+    hpBarcodeClose();
+    const qEl = document.getElementById('hp-search-q');
+    if (qEl) {
+      if (_lastBarcode) qEl.value = _lastBarcode;
+      qEl.focus();
+    }
+  };
+
+  /* ── ESC key closes modal ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('bc-overlay');
+      if (overlay && overlay.style.display !== 'none') hpBarcodeClose();
+    }
+  });
+
+  /* ── patch hpSearch to accept barcode prefix ── */
+  const _origHpSearch = window.hpSearch;
+  window.hpSearch = async function(opts) {
+    // If called from barcode flow with a prefix result, we inject it first
+    const prefix = opts && opts._barcodePrefix;
+    if (prefix) {
+      // Run normal search, then prepend barcode card
+      const qEl   = document.getElementById('hp-search-q');
+      const query = qEl ? qEl.value.trim() : '';
+      if (!query) return;
+
+      const stEl  = document.getElementById('hp-search-status');
+      const txtEl = document.getElementById('hp-search-status-txt');
+      const spEl  = document.getElementById('hp-search-spin');
+      const resEl = document.getElementById('hp-search-results');
+
+      if (stEl)  { stEl.style.maxHeight = '30px'; stEl.style.marginTop = '7px'; }
+      if (txtEl) txtEl.textContent = 'Barcode scan — merging sources…';
+      if (spEl)  spEl.style.display = 'block';
+
+      // Gather local + FDC
+      let localHits = [];
+      if (typeof NTFoodSearch !== 'undefined') {
+        localHits = NTFoodSearch.searchLocal(query, 5);
+      }
+      let fdcHits = [];
+      if (localHits.length < 3 && typeof window._lfsFDC === 'function') {
+        try { fdcHits = await window._lfsFDC(query); } catch(e) {}
+      }
+
+      // Build combined with OFF first
+      const seen = new Set([(prefix.name||'').toLowerCase().trim()]);
+      const combined = [{ ...prefix, _section: 'off' }];
+      for (const f of localHits) {
+        const k = (f.name||'').toLowerCase().trim();
+        if (!seen.has(k)) { seen.add(k); combined.push({...f, _section:'local'}); }
+      }
+      for (const f of fdcHits) {
+        const k = (f.name||'').toLowerCase().trim();
+        if (!seen.has(k)) { seen.add(k); combined.push({...f, _section:'fdc'}); }
+      }
+
+      // Expose for hpRecalc
+      if (typeof window._hpResultsRef !== 'undefined') window._hpResultsRef.length = 0;
+
+      // Build HTML using OFF badge for first card, existing renderer for rest
+      const offBadge = `<span style="font-family:var(--mono);font-size:8px;font-weight:700;
+        letter-spacing:.06em;padding:2px 7px;border-radius:100px;
+        color:#4ade80;background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.30);
+        white-space:nowrap;flex-shrink:0">Open Food Facts</span>`;
+
+      function _divider(label, count) {
+        return `<div style="font-family:var(--mono);font-size:8.5px;font-weight:700;
+          letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);
+          padding:4px 2px 2px;border-bottom:1px solid var(--border);margin-bottom:2px">
+          ${label} <span style="font-weight:400;opacity:.6">(${count})</span></div>`;
+      }
+
+      // Re-use existing _hpCard by calling hpSearch normally after building the array
+      // Simplest: just inject combined into the search state and rerender via inner function
+      // Since _hpCard is private, we call _origHpSearch but intercept the results array
+      // via the existing window.hpSearch result pipe. To avoid recursion we directly
+      // render here using a simplified but consistent card template:
+      function simpleCard(food, i) {
+        const b     = food.kcal != null ? Math.round(food.kcal) : '—';
+        const pro   = food.pro != null ? (+food.pro).toFixed(1)+'g' : '—';
+        const cho   = food.cho != null ? (+food.cho).toFixed(1)+'g' : '—';
+        const fat   = food.fat != null ? (+food.fat).toFixed(1)+'g' : '—';
+        const name  = String(food.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const cat   = String(food.cat||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const isOFF = food._section === 'off';
+        const badge = isOFF ? offBadge
+          : food._section === 'local'
+            ? `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#1de9d4;background:rgba(29,233,212,.10);border:1px solid rgba(29,233,212,.30);white-space:nowrap;flex-shrink:0">Malawi FCT</span>`
+            : `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#60a5fa;background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.30);white-space:nowrap;flex-shrink:0">USDA FDC</span>`;
+        const barBg = isOFF ? '#4ade80' : (food._section==='local' ? 'var(--teal)' : 'rgba(96,165,250,.7)');
+        return `<div class="lfs-card" style="animation-delay:${i*.04}s">
+          <div style="height:2px;background:var(--border);position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0 auto 0 0;width:${Math.round((food.confidenceScore||.7)*100)}%;background:${barBg}"></div>
+          </div>
+          <div style="padding:9px 12px 6px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${name}">${name}</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">${cat}${isOFF && food._barcode ? ' · <span style="color:#4ade80;opacity:.75;font-size:8px">'+food._barcode+'</span>' : ''}</div>
+            </div>${badge}
+          </div>
+          <div class="lfs-macros">
+            <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_kcal" style="color:var(--teal)">${b}</span><span class="lfs-ml">kcal</span></div>
+            <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_pro" style="color:#60a5fa">${pro}</span><span class="lfs-ml">protein</span></div>
+            <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_cho" style="color:#f0b429">${cho}</span><span class="lfs-ml">carbs</span></div>
+            <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_fat" style="color:#fb923c">${fat}</span><span class="lfs-ml">fat</span></div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">per</span>
+            <input type="number" min="1" max="2000" value="100" id="hpg_${i}"
+              style="width:54px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);outline:none;text-align:center"
+              oninput="hpRecalc(${i})"
+              onfocus="this.style.borderColor='rgba(29,233,212,.5)'" onblur="this.style.borderColor='var(--border)'"/>
+            <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">g</span>
+            <button onclick="document.getElementById('hpg_${i}').value=100;hpRecalc(${i})"
+              style="font-family:var(--mono);font-size:8.5px;padding:2px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer">Reset</button>
+          </div>
+        </div>`;
+      }
+
+      // Store in the internal _hpResults (hpRecalc reads from it)
+      // Access via closure by calling the original hpSearch with injected query state, OR
+      // simply mirror the array here. Since _hpResults is closed, we patch hpRecalc:
+      window._hpBcCombined = combined;
+      const origRecalc = window.hpRecalc;
+      window.hpRecalc = function(idx) {
+        const food = (window._hpBcCombined || [])[idx];
+        if (!food) { origRecalc && origRecalc(idx); return; }
+        const g    = parseFloat(document.getElementById('hpg_'+idx)?.value) || 100;
+        const base = food;
+        [['kcal',0],['pro',1],['cho',1],['fat',1]].forEach(([field, d]) => {
+          const el  = document.getElementById('hpv_'+idx+'_'+field);
+          const val = base[field];
+          if (!el || val == null) return;
+          el.textContent = d === 0
+            ? String(+(val * g / 100).toFixed(0))
+            : (+(val * g / 100).toFixed(1)) + 'g';
+        });
+      };
+
+      const offCards   = combined.filter(f => f._section === 'off');
+      const localCards = combined.filter(f => f._section === 'local');
+      const fdcCards   = combined.filter(f => f._section === 'fdc');
+
+      let html = '';
+      if (offCards.length) {
+        html += _divider('Open Food Facts · Barcode Scan', offCards.length);
+        html += offCards.map((f, i) => simpleCard(f, i)).join('');
+      }
+      if (localCards.length) {
+        const offset = offCards.length;
+        html += _divider('Malawi FCT / UCT Exchange', localCards.length);
+        html += localCards.map((f, i) => simpleCard(f, offset + i)).join('');
+      }
+      if (fdcCards.length) {
+        const offset = offCards.length + localCards.length;
+        html += _divider('USDA FoodData Central', fdcCards.length);
+        html += fdcCards.map((f, i) => simpleCard(f, offset + i)).join('');
+      }
+
+      if (resEl) { resEl.innerHTML = html; resEl.style.maxHeight = '900px'; resEl.style.marginTop = '10px'; }
+      if (spEl)  spEl.style.display = 'none';
+      if (txtEl) txtEl.textContent = combined.length + ' result' + (combined.length > 1 ? 's' : '') + ' — barcode + local + online · per 100 g';
+      if (stEl)  stEl.style.maxHeight = '30px';
+      return;
+    }
+
+    // Normal path
+    return _origHpSearch.apply(this, arguments);
+  };
 
 })();
 </script>
