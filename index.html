@@ -338,11 +338,30 @@
 
         <div class="kebab-divider"></div>
 
-        <button class="kebab-item" role="menuitem" onclick="kebabCycleTheme()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-          Theme
-          <span class="kebab-item-sub" id="kebab-theme-label">DARK</span>
-        </button>
+        <!-- Inline Theme Switcher -->
+        <div class="kebab-theme-panel">
+          <div class="kebab-theme-panel-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            Theme
+            <span class="kebab-item-sub" id="kebab-theme-label">DARK</span>
+          </div>
+          <!-- Mode chips -->
+          <div class="kebab-theme-modes">
+            <button id="km-dark"   class="kebab-mode-chip" onclick="kebabSetMode('dark')">Dark</button>
+            <button id="km-amoled" class="kebab-mode-chip" onclick="kebabSetMode('amoled')">AMOLED</button>
+            <button id="km-hc"     class="kebab-mode-chip" onclick="kebabSetMode('hc')">Hi-C</button>
+          </div>
+          <!-- Accent swatches -->
+          <div class="kebab-accent-row">
+            <button class="kebab-accent-dot" id="ka-cyan"   onclick="kebabSetAccent('cyan')"   style="background:#1de9d4" title="Cyan"></button>
+            <button class="kebab-accent-dot" id="ka-green"  onclick="kebabSetAccent('green')"  style="background:#34d399" title="Green"></button>
+            <button class="kebab-accent-dot" id="ka-blue"   onclick="kebabSetAccent('blue')"   style="background:#60a5fa" title="Blue"></button>
+            <button class="kebab-accent-dot" id="ka-purple" onclick="kebabSetAccent('purple')" style="background:#a78bfa" title="Purple"></button>
+            <button class="kebab-accent-dot" id="ka-rose"   onclick="kebabSetAccent('rose')"   style="background:#fb7185" title="Rose"></button>
+            <button class="kebab-accent-dot" id="ka-orange" onclick="kebabSetAccent('orange')" style="background:#fb923c" title="Orange"></button>
+            <button class="kebab-accent-dot" id="ka-gold"   onclick="kebabSetAccent('gold')"   style="background:#f0b429" title="Gold"></button>
+          </div>
+        </div>
 
         <button class="kebab-item" role="menuitem" onclick="kebabPrint()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -668,21 +687,22 @@
 <!-- ── PROFILE DRAWER ── -->
 <div id="profile-drawer">
   <div class="sdr-header">
-    <div class="sdr-title">Profile</div>
-    <button class="sdr-close" onclick="closeProfile()" aria-label="Close">✕</button>
+    <div class="sdr-title" id="pdr-header-title">Profile</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <!-- Back button (only visible in edit mode) -->
+      <button id="pdr-back-btn" onclick="pdrExitEditMode()" style="display:none;font-family:var(--mono);font-size:9px;padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--teal)';this.style.borderColor='rgba(29,233,212,0.4)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">← Back</button>
+      <button class="sdr-close" onclick="closeProfile()" aria-label="Close">✕</button>
+    </div>
   </div>
-  <div class="sdr-body" id="profile-drawer-body">
+
+  <!-- ── VIEW MODE ── -->
+  <div class="sdr-body" id="pdr-view-mode">
     <!-- Avatar + name row -->
     <div style="display:flex;flex-direction:column;align-items:center;padding:24px 0 20px;gap:12px">
-      <div id="pdr-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;cursor:pointer;transition:border-color .2s,transform .18s" onclick="toggleAvatarPicker()" title="Change avatar"></div>
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:0.5px;margin-top:-6px">Tap to change</div>
-
-      <!-- Avatar picker panel -->
-      <div id="avatar-picker-panel" style="width:100%;display:none;animation:fadeSlideIn .2s ease">
-        <div class="avatar-picker-label" style="text-align:center;margin-bottom:12px">Choose your avatar</div>
-        <div class="avatar-grid" id="avatar-grid"></div>
-        <div style="margin-top:12px;display:flex;justify-content:center">
-          <button onclick="hideAvatarPicker()" style="font-family:var(--mono);font-size:9px;padding:6px 18px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--teal)';this.style.borderColor='rgba(29,233,212,0.4)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">Done</button>
+      <div class="pdr-avatar-wrap" onclick="pdrEnterEditMode()" title="Edit profile photo">
+        <div id="pdr-avatar" style="width:82px;height:82px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;transition:border-color .2s,transform .18s;overflow:hidden;"></div>
+        <div class="pdr-avatar-edit-ring">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </div>
       </div>
       <div style="text-align:center">
@@ -708,9 +728,9 @@
       </div>
     </div>
 
-    <!-- Edit button -->
-    <div style="margin-top:4px">
-      <button onclick="closeProfile();openSettings();setTimeout(function(){var g=document.querySelector('#settings-drawer .sdr-group');if(g)g.scrollIntoView({behavior:'smooth',block:'start'});},320)"
+    <!-- Action buttons -->
+    <div style="margin-top:4px;display:flex;flex-direction:column;gap:8px">
+      <button onclick="pdrEnterEditMode()"
         style="width:100%;padding:11px;background:var(--accent,var(--teal));border:none;border-radius:8px;
                color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;
                letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:7px"
@@ -718,14 +738,146 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit Profile
       </button>
+      <div id="pdr-signout-row" style="display:none">
+        <button onclick="closeProfile();obSignOut()"
+          style="width:100%;padding:10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;
+                 color:rgba(251,113,133,0.9);font-family:var(--mono);font-size:11px;font-weight:700;
+                 letter-spacing:1px;cursor:pointer;transition:opacity .15s"
+          onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+          Sign Out
+        </button>
+      </div>
     </div>
-    <div id="pdr-signout-row" style="margin-top:8px;display:none">
-      <button onclick="closeProfile();obSignOut()"
-        style="width:100%;padding:10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;
-               color:rgba(251,113,133,0.9);font-family:var(--mono);font-size:11px;font-weight:700;
-               letter-spacing:1px;cursor:pointer;transition:opacity .15s"
-        onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
-        Sign Out
+  </div>
+
+  <!-- ── EDIT MODE ── -->
+  <div class="sdr-body" id="pdr-edit-mode" style="display:none">
+
+    <!-- Photo section -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;gap:10px">
+      <div style="position:relative">
+        <div id="pdr-edit-avatar" style="width:82px;height:82px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.4);display:flex;align-items:center;justify-content:center;color:var(--teal);overflow:hidden;flex-shrink:0;"></div>
+        <!-- Camera overlay button -->
+        <button onclick="document.getElementById('pdr-photo-input').click()" title="Upload photo from device"
+          style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--accent,var(--teal));border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s"
+          onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+        <input type="file" id="pdr-photo-input" accept="image/*" style="display:none" onchange="pdrHandlePhotoUpload(this)">
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:0.5px;text-align:center">Tap camera to upload · or choose an avatar below</div>
+    </div>
+
+    <!-- Photo source tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button id="pdr-tab-avatar" onclick="pdrSwitchPhotoTab('avatar')"
+        class="pdr-photo-tab pdr-photo-tab-active">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Avatars
+      </button>
+      <button id="pdr-tab-photo" onclick="pdrSwitchPhotoTab('photo')"
+        class="pdr-photo-tab">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        My Photo
+      </button>
+    </div>
+
+    <!-- Avatar grid panel -->
+    <div id="pdr-edit-avatar-panel">
+      <div class="avatar-grid" id="pdr-edit-avatar-grid" style="margin-bottom:14px"></div>
+    </div>
+
+    <!-- Custom photo panel -->
+    <div id="pdr-edit-photo-panel" style="display:none;margin-bottom:14px">
+      <div id="pdr-photo-preview-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+        <img id="pdr-photo-preview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(29,233,212,0.4)" src="" alt="Preview">
+        <button onclick="pdrRemoveCustomPhoto()" style="font-family:var(--mono);font-size:9px;padding:4px 12px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:6px;color:rgba(251,113,133,0.9);cursor:pointer;letter-spacing:0.5px">Remove photo</button>
+      </div>
+      <div id="pdr-photo-empty" style="text-align:center;padding:20px 0;color:var(--text-dim);font-family:var(--mono);font-size:10px">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 8px;opacity:0.4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        No photo uploaded yet
+        <div style="margin-top:10px">
+          <button onclick="document.getElementById('pdr-photo-input').click()"
+            style="font-family:var(--mono);font-size:9px;padding:7px 18px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.3);border-radius:6px;color:var(--teal);cursor:pointer;letter-spacing:0.5px;transition:background .15s"
+            onmouseover="this.style.background='rgba(29,233,212,0.15)'" onmouseout="this.style.background='rgba(29,233,212,0.08)'">
+            Choose from device
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile fields -->
+    <div class="sdr-group">
+      <div class="sdr-group-label">Profile Details</div>
+
+      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <label class="sdr-item-lbl" for="pdr-field-name">Full Name</label>
+        <input id="pdr-field-name" type="text" placeholder="Your full name"
+          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;box-sizing:border-box"
+          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <label class="sdr-item-lbl" for="pdr-field-uid">Student / Staff ID</label>
+        <input id="pdr-field-uid" type="text" placeholder="e.g. KUHeS/BND/2024/001"
+          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
+          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <label class="sdr-item-lbl" for="pdr-field-email">Email</label>
+        <input id="pdr-field-email" type="email" placeholder="your@email.com"
+          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
+          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+
+      <!-- Role -->
+      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:8px;border:none">
+        <div class="sdr-item-lbl">Role</div>
+        <div id="pdr-role-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div id="pdr-role-other-row" style="display:none;width:100%">
+          <input id="pdr-field-role-other" type="text" placeholder="Specify your role"
+            style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
+            onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+      </div>
+    </div>
+
+    <!-- Institution -->
+    <div class="sdr-group" style="margin-top:0">
+      <div class="sdr-group-label">Institution</div>
+      <div style="padding:4px 0 8px">
+        <select id="pdr-field-institution"
+          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer;appearance:none;transition:border-color .15s"
+          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'"
+          onchange="document.getElementById('pdr-inst-other-row').style.display=this.value==='Other'?'block':'none'">
+          <option value="">Select institution</option>
+          <option value="Kamuzu University of Health Sciences">Kamuzu University of Health Sciences</option>
+          <option value="Kamuzu Central Hospital">Kamuzu Central Hospital</option>
+          <option value="Queen Elizabeth Central Hospital">Queen Elizabeth Central Hospital</option>
+          <option value="Mzuzu Central Hospital">Mzuzu Central Hospital</option>
+          <option value="Zomba Central Hospital">Zomba Central Hospital</option>
+          <option value="Malawi Ministry of Health">Malawi Ministry of Health</option>
+          <option value="Other">Other</option>
+        </select>
+        <div id="pdr-inst-other-row" style="display:none;margin-top:6px">
+          <input id="pdr-field-institution-other" type="text" placeholder="Enter institution name"
+            style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
+            onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+      </div>
+    </div>
+
+    <!-- Save / cancel -->
+    <div style="display:flex;gap:8px;margin-top:6px;padding-bottom:8px">
+      <button onclick="pdrExitEditMode()"
+        style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:color .15s,border-color .15s"
+        onmouseover="this.style.color='var(--text)';this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">Cancel</button>
+      <button onclick="pdrSaveProfile()"
+        style="flex:2;padding:10px;background:var(--accent,var(--teal));border:none;border-radius:8px;color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px"
+        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Changes
       </button>
     </div>
   </div>

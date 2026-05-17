@@ -4151,3 +4151,35 @@ input[type="search"],
 .header-avatar-mini svg{width:55%;height:55%;color:var(--teal)}
 .header-avatar-mini.visible{display:flex}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PROFILE DRAWER — EDIT MODE ─────────────────────────────────── */
+.pdr-avatar-wrap{position:relative;cursor:pointer;display:inline-block}
+.pdr-avatar-wrap:hover #pdr-avatar{border-color:rgba(29,233,212,0.7);transform:scale(1.03)}
+.pdr-avatar-edit-ring{position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--accent,var(--teal));border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;color:#020617;transition:transform .15s}
+.pdr-avatar-wrap:hover .pdr-avatar-edit-ring{transform:scale(1.12)}
+.pdr-avatar-edit-ring svg{flex-shrink:0}
+
+/* Photo source tabs */
+.pdr-photo-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;font-family:var(--mono);font-size:9px;letter-spacing:0.5px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.pdr-photo-tab:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.pdr-photo-tab-active{background:rgba(29,233,212,0.1);border-color:rgba(29,233,212,0.4);color:var(--teal)}
+
+/* Role chips inside edit drawer */
+.pdr-role-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;font-family:var(--mono);font-size:9px;letter-spacing:0.5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s,border-color .15s;white-space:nowrap}
+.pdr-role-chip:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+.pdr-role-chip.active{background:rgba(29,233,212,0.12);border-color:rgba(29,233,212,0.5);color:var(--teal)}
+
+/* ── HAMBURGER MENU — INLINE THEME SWITCHER ──────────────────────── */
+.kebab-theme-panel{padding:10px 14px 12px;border-bottom:1px solid var(--border)}
+.kebab-theme-panel-header{display:flex;align-items:center;gap:9px;font-family:var(--sans);font-size:13px;color:var(--text);margin-bottom:10px;letter-spacing:0.2px}
+.kebab-theme-panel-header svg{flex-shrink:0;opacity:0.7}
+
+.kebab-theme-modes{display:flex;gap:5px;margin-bottom:10px}
+.kebab-mode-chip{flex:1;padding:5px 0;font-family:var(--mono);font-size:9px;letter-spacing:0.5px;background:var(--surface2,#0d1626);border:1px solid var(--border,#1e293b);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:background .12s,color .12s,border-color .12s}
+.kebab-mode-chip:hover{background:rgba(29,233,212,0.07);color:var(--text-bright)}
+.kebab-mode-chip.active{background:rgba(29,233,212,0.12);border-color:rgba(29,233,212,0.45);color:var(--teal)}
+
+.kebab-accent-row{display:flex;gap:7px;align-items:center}
+.kebab-accent-dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:transform .15s,box-shadow .15s}
+.kebab-accent-dot:hover{transform:scale(1.2)}
+.kebab-accent-dot.active{border-color:rgba(255,255,255,0.8);box-shadow:0 0 0 3px rgba(255,255,255,0.18);transform:scale(1.15)}

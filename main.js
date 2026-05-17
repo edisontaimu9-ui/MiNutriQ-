@@ -2481,7 +2481,7 @@ function toggleKebabMenu(e){
   var bd=document.getElementById('kebab-backdrop');
   if(!menu)return;
   if(menu.classList.contains('open')){closeKebabMenu();return;}
-  _kebabUpdateLabels();_kebabShowSignOut();
+  _kebabUpdateLabels();_kebabShowSignOut();_kebabSyncThemeUI();
   menu.classList.add('open');btn.classList.add('open');
   btn.setAttribute('aria-expanded','true');
   if(bd)bd.classList.add('visible');
@@ -2523,18 +2523,309 @@ function kebabOpenAbout(){closeKebabMenu();openAbout();}
 /* ── PROFILE DRAWER ── */
 function openProfile(){
   _populateProfileDrawer();
-  // Apply saved avatar (overrides role-based default from _populateProfileDrawer)
-  if(_selectedAvatarId){
-    _renderAvatarEl(document.getElementById('pdr-avatar'), _selectedAvatarId, 72);
-  }
-  // Always close picker panel on open
-  hideAvatarPicker();
+  // Apply saved avatar/photo (overrides role-based default from _populateProfileDrawer)
+  _applyStoredProfilePhoto(document.getElementById('pdr-avatar'), 82);
+  // Always start in view mode
+  pdrShowViewMode();
   document.getElementById('profile-drawer').classList.add('open');
   document.getElementById('profile-overlay').classList.add('open');
 }
 function closeProfile(){
   document.getElementById('profile-drawer').classList.remove('open');
   document.getElementById('profile-overlay').classList.remove('open');
+}
+
+/* ── PROFILE EDIT MODE ── */
+function pdrShowViewMode(){
+  var vm=document.getElementById('pdr-view-mode');
+  var em=document.getElementById('pdr-edit-mode');
+  var backBtn=document.getElementById('pdr-back-btn');
+  var title=document.getElementById('pdr-header-title');
+  if(vm)vm.style.display='';
+  if(em)em.style.display='none';
+  if(backBtn)backBtn.style.display='none';
+  if(title)title.textContent='Profile';
+}
+
+function pdrEnterEditMode(){
+  var vm=document.getElementById('pdr-view-mode');
+  var em=document.getElementById('pdr-edit-mode');
+  var backBtn=document.getElementById('pdr-back-btn');
+  var title=document.getElementById('pdr-header-title');
+  if(vm)vm.style.display='none';
+  if(em)em.style.display='';
+  if(backBtn)backBtn.style.display='';
+  if(title)title.textContent='Edit Profile';
+
+  // Populate fields from current profile
+  var p=(typeof getUserProfile==='function')?getUserProfile():null;
+  var nameEl=document.getElementById('pdr-field-name');
+  var uidEl=document.getElementById('pdr-field-uid');
+  var emailEl=document.getElementById('pdr-field-email');
+  var instEl=document.getElementById('pdr-field-institution');
+  if(nameEl)nameEl.value=(p&&p.name)?p.name:'';
+  if(uidEl)uidEl.value=(p&&p.uid)?p.uid:'';
+  if(emailEl)emailEl.value=(p&&p.email)?p.email:'';
+
+  // Institution
+  if(instEl && p && p.institution){
+    var found=false;
+    for(var i=0;i<instEl.options.length;i++){
+      if(instEl.options[i].value===p.institution){instEl.value=p.institution;found=true;break;}
+    }
+    if(!found){
+      instEl.value='Other';
+      document.getElementById('pdr-inst-other-row').style.display='block';
+      var oi=document.getElementById('pdr-field-institution-other');
+      if(oi)oi.value=p.institution;
+    }
+  }
+
+  // Role chips
+  _buildPdrRoleChips((p&&p.role)?p.role:'');
+
+  // Mirror avatar/photo into edit preview
+  _applyStoredProfilePhoto(document.getElementById('pdr-edit-avatar'), 82);
+
+  // Build avatar grid in edit mode
+  _buildPdrEditAvatarGrid();
+
+  // Default to avatar tab
+  pdrSwitchPhotoTab('avatar');
+
+  // Show/hide custom photo preview
+  _refreshPdrPhotoPanel();
+
+  // Scroll to top of edit body
+  if(em)em.scrollTop=0;
+}
+
+function pdrExitEditMode(){
+  pdrShowViewMode();
+}
+
+function _buildPdrRoleChips(currentRole){
+  var container=document.getElementById('pdr-role-chips');
+  if(!container)return;
+  container.innerHTML='';
+  var roles=[
+    {id:'student',label:'Student'},
+    {id:'dietitian',label:'Dietitian'},
+    {id:'clinician',label:'Clinician'},
+    {id:'nurse',label:'Nurse'},
+    {id:'researcher',label:'Researcher'},
+    {id:'other',label:'Other'},
+  ];
+  roles.forEach(function(r){
+    var btn=document.createElement('button');
+    btn.className='pdr-role-chip'+(currentRole===r.id?' active':'');
+    btn.setAttribute('data-role',r.id);
+    btn.textContent=r.label;
+    btn.onclick=function(){
+      container.querySelectorAll('.pdr-role-chip').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      var otherRow=document.getElementById('pdr-role-other-row');
+      if(otherRow)otherRow.style.display=r.id==='other'?'block':'none';
+    };
+    container.appendChild(btn);
+  });
+  var otherRow=document.getElementById('pdr-role-other-row');
+  if(otherRow)otherRow.style.display=currentRole==='other'?'block':'none';
+}
+
+function _buildPdrEditAvatarGrid(){
+  var grid=document.getElementById('pdr-edit-avatar-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  OASIS_AVATARS.forEach(function(av){
+    var btn=document.createElement('button');
+    btn.className='avatar-option av-color-'+av.color+(_selectedAvatarId===av.id?' selected':'');
+    btn.setAttribute('aria-label',av.label);
+    btn.setAttribute('title',av.label);
+    btn.setAttribute('data-av-id',av.id);
+    btn.innerHTML=av.svg+'<span class="av-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    btn.addEventListener('click',function(){
+      // selecting avatar clears custom photo selection temporarily
+      _pdrSelectedAvId=av.id;
+      _pdrPhotoDataUrl=null;// deselect custom photo when avatar chosen
+      grid.querySelectorAll('.avatar-option').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-av-id')===av.id);});
+      _renderAvatarEl(document.getElementById('pdr-edit-avatar'),av.id,82);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+// Temp edit-mode state
+var _pdrSelectedAvId=null;
+var _pdrPhotoDataUrl=null;
+
+function pdrSwitchPhotoTab(tab){
+  var avatarPanel=document.getElementById('pdr-edit-avatar-panel');
+  var photoPanel=document.getElementById('pdr-edit-photo-panel');
+  var tabAv=document.getElementById('pdr-tab-avatar');
+  var tabPh=document.getElementById('pdr-tab-photo');
+  if(tab==='avatar'){
+    if(avatarPanel)avatarPanel.style.display='';
+    if(photoPanel)photoPanel.style.display='none';
+    if(tabAv)tabAv.className='pdr-photo-tab pdr-photo-tab-active';
+    if(tabPh)tabPh.className='pdr-photo-tab';
+  } else {
+    if(avatarPanel)avatarPanel.style.display='none';
+    if(photoPanel)photoPanel.style.display='';
+    if(tabAv)tabAv.className='pdr-photo-tab';
+    if(tabPh)tabPh.className='pdr-photo-tab pdr-photo-tab-active';
+    _refreshPdrPhotoPanel();
+  }
+}
+
+function _refreshPdrPhotoPanel(){
+  var stored=localStorage.getItem('oasis_profile_photo');
+  var preview=document.getElementById('pdr-photo-preview');
+  var previewWrap=document.getElementById('pdr-photo-preview-wrap');
+  var empty=document.getElementById('pdr-photo-empty');
+  var hasPhoto=_pdrPhotoDataUrl||stored;
+  if(preview&&hasPhoto){preview.src=_pdrPhotoDataUrl||stored;}
+  if(previewWrap)previewWrap.style.display=hasPhoto?'flex':'none';
+  if(empty)empty.style.display=hasPhoto?'none':'block';
+}
+
+function pdrHandlePhotoUpload(input){
+  var file=input.files&&input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    _pdrPhotoDataUrl=e.target.result;
+    _pdrSelectedAvId=null;// photo overrides avatar
+    // Update edit preview
+    var editAv=document.getElementById('pdr-edit-avatar');
+    if(editAv){
+      editAv.style.background='transparent';
+      editAv.style.borderColor='rgba(29,233,212,0.5)';
+      editAv.innerHTML='<img src="'+_pdrPhotoDataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
+    // Switch to photo tab and refresh panel
+    pdrSwitchPhotoTab('photo');
+    _refreshPdrPhotoPanel();
+  };
+  reader.readAsDataURL(file);
+}
+
+function pdrRemoveCustomPhoto(){
+  _pdrPhotoDataUrl=null;
+  localStorage.removeItem('oasis_profile_photo');
+  // Revert edit avatar to avatar/initials
+  _pdrSelectedAvId=_selectedAvatarId;
+  if(_pdrSelectedAvId){
+    _renderAvatarEl(document.getElementById('pdr-edit-avatar'),_pdrSelectedAvId,82);
+  } else {
+    var p=(typeof getUserProfile==='function')?getUserProfile():null;
+    _setAvatarToInitials(document.getElementById('pdr-edit-avatar'),p);
+  }
+  _refreshPdrPhotoPanel();
+}
+
+function _applyStoredProfilePhoto(el,size){
+  if(!el)return;
+  var photo=localStorage.getItem('oasis_profile_photo');
+  if(photo){
+    el.style.background='transparent';
+    el.style.borderColor='rgba(29,233,212,0.45)';
+    el.innerHTML='<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    return true;
+  } else if(_selectedAvatarId){
+    _renderAvatarEl(el,_selectedAvatarId,size||72);
+    return true;
+  }
+  return false;
+}
+
+function _setAvatarToInitials(el,p){
+  if(!el)return;
+  var name=(p&&p.name)?p.name:'?';
+  var initials=name!=='?'?name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2):'?';
+  el.style.background='var(--surface2)';
+  el.style.borderColor='rgba(29,233,212,0.3)';
+  el.innerHTML='<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">'+initials+'</span>';
+}
+
+function pdrSaveProfile(){
+  var p=(typeof getUserProfile==='function')?(getUserProfile()||{}):{};
+
+  // Save photo if a new one was selected
+  if(_pdrPhotoDataUrl){
+    try{localStorage.setItem('oasis_profile_photo',_pdrPhotoDataUrl);}catch(e){
+      if(typeof showToast==='function')showToast('Photo too large to store','warn');
+      _pdrPhotoDataUrl=null;
+    }
+  }
+
+  // Save selected avatar if no photo
+  if(_pdrSelectedAvId&&!_pdrPhotoDataUrl&&!localStorage.getItem('oasis_profile_photo')){
+    _selectedAvatarId=_pdrSelectedAvId;
+    localStorage.setItem('oasis_avatar_id',_selectedAvatarId);
+  } else if(_pdrSelectedAvId&&!_pdrPhotoDataUrl){
+    // avatar chosen but photo also exists — avatar wins (photo was removed)
+    _selectedAvatarId=_pdrSelectedAvId;
+    localStorage.setItem('oasis_avatar_id',_selectedAvatarId);
+  }
+
+  // Name
+  var nameEl=document.getElementById('pdr-field-name');
+  if(nameEl&&nameEl.value.trim())p.name=nameEl.value.trim();
+
+  // UID
+  var uidEl=document.getElementById('pdr-field-uid');
+  if(uidEl&&uidEl.value.trim())p.uid=uidEl.value.trim();
+
+  // Email
+  var emailEl=document.getElementById('pdr-field-email');
+  if(emailEl){
+    var newEmail=emailEl.value.trim();
+    if(newEmail&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){
+      var prevEmail=p.email||'';
+      p.email=newEmail;
+      if(newEmail!==prevEmail){
+        var auth=(typeof _getAuth==='function')?_getAuth():null;
+        if(auth&&auth.currentUser)auth.currentUser.updateEmail(newEmail).catch(function(){});
+      }
+    }
+  }
+
+  // Role
+  var activeRoleChip=document.querySelector('#pdr-role-chips .pdr-role-chip.active');
+  if(activeRoleChip){
+    var roleId=activeRoleChip.getAttribute('data-role');
+    if(roleId==='other'){
+      var ov=(document.getElementById('pdr-field-role-other')?.value||'').trim();
+      p.role=ov||'other';
+    } else {
+      p.role=roleId;
+    }
+  }
+
+  // Institution
+  var instSel=document.getElementById('pdr-field-institution');
+  if(instSel&&instSel.value){
+    var instVal=instSel.value==='Other'
+      ?(document.getElementById('pdr-field-institution-other')?.value.trim()||'Other')
+      :instSel.value;
+    if(instVal)p.institution=instVal;
+  }
+
+  if(typeof saveUserProfile==='function')saveUserProfile(p);
+
+  // Reset temp state
+  _pdrPhotoDataUrl=null;
+  _pdrSelectedAvId=null;
+
+  // Refresh view mode
+  _populateProfileDrawer();
+  _applyStoredProfilePhoto(document.getElementById('pdr-avatar'),82);
+  _updateHeaderAvatar();
+  if(typeof renderProfileCard==='function')renderProfileCard();
+
+  pdrShowViewMode();
+  if(typeof showToast==='function')showToast('Profile saved','success',2000);
 }
 function _populateProfileDrawer(){
   var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
@@ -2559,21 +2850,28 @@ function _populateProfileDrawer(){
   if(emailEl) emailEl.textContent = email;
   if(signOutRow) signOutRow.style.display = p ? 'block' : 'none';
 
-  // Avatar: initials or role icon
+  // Avatar: initials or role icon — custom photo takes priority
   if(avatarEl){
-    var initials = name !== 'No name set'
-      ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
-      : '?';
-    var svgIcons = {
-      student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-      dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
-      clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
-      nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
-    };
-    if(svgIcons[role]){
-      avatarEl.innerHTML = svgIcons[role];
+    var storedPhoto=localStorage.getItem('oasis_profile_photo');
+    if(storedPhoto){
+      avatarEl.style.background='transparent';
+      avatarEl.style.borderColor='rgba(29,233,212,0.45)';
+      avatarEl.innerHTML='<img src="'+storedPhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     } else {
-      avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
+      var initials = name !== 'No name set'
+        ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
+        : '?';
+      var svgIcons = {
+        student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+        dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
+        clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
+        nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
+      };
+      if(svgIcons[role]){
+        avatarEl.innerHTML = svgIcons[role];
+      } else {
+        avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
+      }
     }
   }
 }
@@ -2646,7 +2944,11 @@ function _svgInner(svgStr){
 function _updateHeaderAvatar(){
   var mini = document.getElementById('header-avatar-mini');
   if(!mini) return;
-  if(_selectedAvatarId){
+  var photo=localStorage.getItem('oasis_profile_photo');
+  if(photo){
+    mini.innerHTML='<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    mini.classList.add('visible');
+  } else if(_selectedAvatarId){
     var av = _getAvatarDef(_selectedAvatarId);
     if(av){
       mini.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">' + _svgInner(av.svg) + '</svg>';
@@ -2701,6 +3003,41 @@ function kebabCycleTheme(){
     if(typeof autoSaveSettings==='function')autoSaveSettings();
     if(typeof showToast==='function')showToast('Theme: '+next.charAt(0).toUpperCase()+next.slice(1),'info',1800);
   }
+  _kebabUpdateLabels();
+  _kebabSyncThemeUI();
+}
+
+function kebabSetMode(mode){
+  if(typeof applyAppearanceMode==='function'){
+    applyAppearanceMode(mode);
+    if(typeof autoSaveSettings==='function')autoSaveSettings();
+  }
+  _kebabUpdateLabels();
+  _kebabSyncThemeUI();
+}
+
+function kebabSetAccent(accent){
+  if(typeof applyAccent==='function'){
+    applyAccent(accent);
+    if(typeof autoSaveSettings==='function')autoSaveSettings();
+  }
+  _kebabSyncThemeUI();
+}
+
+function _kebabSyncThemeUI(){
+  // Sync mode chips
+  var mode=(typeof currentSettings!=='undefined'&&currentSettings.appearanceMode)||'dark';
+  ['dark','amoled','hc'].forEach(function(m){
+    var el=document.getElementById('km-'+m);
+    if(el)el.className='kebab-mode-chip'+(mode===m?' active':'');
+  });
+  // Sync accent dots
+  var accent=(typeof currentSettings!=='undefined'&&currentSettings.accent)||'cyan';
+  ['cyan','green','blue','purple','rose','orange','gold'].forEach(function(a){
+    var el=document.getElementById('ka-'+a);
+    if(el)el.className='kebab-accent-dot'+(accent===a?' active':'');
+  });
+  // Sync label
   _kebabUpdateLabels();
 }
 function kebabPrint(){closeKebabMenu();if(typeof printReport==='function')printReport();else window.print();}
