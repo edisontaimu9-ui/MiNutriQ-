@@ -351,16 +351,6 @@
             <button id="km-amoled" class="kebab-mode-chip" onclick="kebabSetMode('amoled')">AMOLED</button>
             <button id="km-hc"     class="kebab-mode-chip" onclick="kebabSetMode('hc')">Hi-C</button>
           </div>
-          <!-- Accent swatches -->
-          <div class="kebab-accent-row">
-            <button class="kebab-accent-dot" id="ka-cyan"   onclick="kebabSetAccent('cyan')"   style="background:#1de9d4" title="Cyan"></button>
-            <button class="kebab-accent-dot" id="ka-green"  onclick="kebabSetAccent('green')"  style="background:#34d399" title="Green"></button>
-            <button class="kebab-accent-dot" id="ka-blue"   onclick="kebabSetAccent('blue')"   style="background:#60a5fa" title="Blue"></button>
-            <button class="kebab-accent-dot" id="ka-purple" onclick="kebabSetAccent('purple')" style="background:#a78bfa" title="Purple"></button>
-            <button class="kebab-accent-dot" id="ka-rose"   onclick="kebabSetAccent('rose')"   style="background:#fb7185" title="Rose"></button>
-            <button class="kebab-accent-dot" id="ka-orange" onclick="kebabSetAccent('orange')" style="background:#fb923c" title="Orange"></button>
-            <button class="kebab-accent-dot" id="ka-gold"   onclick="kebabSetAccent('gold')"   style="background:#f0b429" title="Gold"></button>
-          </div>
         </div>
 
         <button class="kebab-item" role="menuitem" onclick="kebabPrint()">
@@ -1021,17 +1011,47 @@
     <!-- Developer -->
     <div class="sdr-group">
       <div class="sdr-group-label">Developer</div>
-      <div class="sdr-item">
-        <div class="sdr-item-lbl">Built by</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Edison Taimu</div>
+
+      <!-- Avatar + name/role — populated by _adrLoadDevProfile() -->
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0 14px">
+        <div id="adr-dev-avatar" style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">👤</div>
+        <div style="flex:1;min-width:0">
+          <div id="adr-dev-name" style="font-family:var(--cond);font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:1px">—</div>
+          <div id="adr-dev-role" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px"></div>
+          <div id="adr-dev-institution" style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-top:2px"></div>
+        </div>
       </div>
-      <div class="sdr-item">
-        <div class="sdr-item-lbl">Affiliation</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">KUHeS, Malawi</div>
-      </div>
+
+      <!-- Bio -->
+      <p id="adr-dev-bio" style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin:0 0 14px;display:none"></p>
+
+      <!-- Affiliation row (static) -->
       <div class="sdr-item" style="border:none">
         <div class="sdr-item-lbl">Guidelines</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">ASPEN · ESPEN · WHO · KDIGO</div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="sdr-group">
+      <div class="sdr-group-label">Contact</div>
+      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
+        <div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:10px;padding:8px 10px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
+          <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
+        </div>
+        <div id="adr-dev-links" style="display:flex;flex-direction:column;gap:7px"></div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="sdr-group">
+      <div class="sdr-group-label">Feedback</div>
+      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md)">
+        <div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:10px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
+        <button onclick="openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
+        </button>
       </div>
     </div>
 
@@ -5154,14 +5174,14 @@
     <div style="padding:12px 16px 6px">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">QUICK REACTION</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Helpful"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Love it"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Thank you"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Amazing"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Bug report"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Suggestion"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Great tool"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Issue"></button>
+        <button onclick="selectFeedbackEmoji('👍')" class="fb-emoji-btn" data-e="👍" title="Helpful">👍</button>
+        <button onclick="selectFeedbackEmoji('❤️')" class="fb-emoji-btn" data-e="❤️" title="Love it">❤️</button>
+        <button onclick="selectFeedbackEmoji('🙏')" class="fb-emoji-btn" data-e="🙏" title="Thank you">🙏</button>
+        <button onclick="selectFeedbackEmoji('🔥')" class="fb-emoji-btn" data-e="🔥" title="Amazing">🔥</button>
+        <button onclick="selectFeedbackEmoji('🐛')" class="fb-emoji-btn" data-e="🐛" title="Bug report">🐛</button>
+        <button onclick="selectFeedbackEmoji('💡')" class="fb-emoji-btn" data-e="💡" title="Suggestion">💡</button>
+        <button onclick="selectFeedbackEmoji('⭐')" class="fb-emoji-btn" data-e="⭐" title="Great tool">⭐</button>
+        <button onclick="selectFeedbackEmoji('⚠️')" class="fb-emoji-btn" data-e="⚠️" title="Issue">⚠️</button>
       </div>
     </div>
     <!-- message -->
