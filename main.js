@@ -2692,23 +2692,442 @@ function _refreshPdrPhotoPanel(){
 function pdrHandlePhotoUpload(input){
   var file=input.files&&input.files[0];
   if(!file)return;
+  // Reset the input so the same file can be re-selected
+  input.value='';
   var reader=new FileReader();
   reader.onload=function(e){
-    _pdrPhotoDataUrl=e.target.result;
-    _pdrSelectedAvId=null;// photo overrides avatar
-    // Update edit preview
-    var editAv=document.getElementById('pdr-edit-avatar');
-    if(editAv){
-      editAv.style.background='transparent';
-      editAv.style.borderColor='rgba(29,233,212,0.5)';
-      editAv.innerHTML='<img src="'+_pdrPhotoDataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    }
-    // Switch to photo tab and refresh panel
-    pdrSwitchPhotoTab('photo');
-    _refreshPdrPhotoPanel();
+    // Open image editor first — don't store directly
+    imgEditorOpen(e.target.result, function(optimizedDataUrl){
+      // Called when user clicks "Save Photo" inside the editor
+      _pdrPhotoDataUrl=optimizedDataUrl;
+      _pdrSelectedAvId=null;
+      // Update edit avatar preview
+      var editAv=document.getElementById('pdr-edit-avatar');
+      if(editAv){
+        editAv.style.background='transparent';
+        editAv.style.borderColor='rgba(29,233,212,0.5)';
+        editAv.innerHTML='<img src="'+_pdrPhotoDataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      }
+      pdrSwitchPhotoTab('photo');
+      _refreshPdrPhotoPanel();
+    });
   };
   reader.readAsDataURL(file);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   IMAGE EDITOR ENGINE
+   Full canvas-based editor: drag to reposition, pinch/scroll zoom,
+   rotate slider, flip, fit, reset. Circular clip preview.
+   Outputs a compressed, square-cropped JPEG/WebP for avatar use.
+   ══════════════════════════════════════════════════════════════════ */
+(function(){
+  var _img = null;          // HTMLImageElement source
+  var _onSave = null;       // callback(dataUrl)
+
+  // Transform state
+  var _zoom = 1;
+  var _rotate = 0;          // degrees
+  var _offsetX = 0;         // pan offset in image pixels
+  var _offsetY = 0;
+  var _flipH = false;
+  var _flipV = false;
+
+  // Drag state
+  var _dragging = false;
+  var _lastX = 0;
+  var _lastY = 0;
+
+  // Pinch state
+  var _pinchDist0 = null;
+  var _zoom0 = 1;
+  var _pinchCx = 0;
+  var _pinchCy = 0;
+
+  // Canvas / viewport
+  var _canvas = null;
+  var _ctx = null;
+  var _size = 0;            // canvas pixel size (square)
+
+  var _previewCanvas = null;
+  var _previewCtx = null;
+
+  var _raf = null;
+  var _dirty = true;
+  var _gridTimer = null;
+
+  /* ── PUBLIC API ── */
+  window.imgEditorOpen = function(dataUrl, onSaveCb){
+    _onSave = onSaveCb;
+    var img = new Image();
+    img.onload = function(){
+      _img = img;
+      _initEditor();
+      document.getElementById('img-editor-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    };
+    img.src = dataUrl;
+  };
+
+  window.imgEditorCancel = function(){
+    _closeEditor();
+  };
+
+  window.imgEditorSave = function(){
+    var out = _renderOutput(400); // 400×400 output
+    _closeEditor();
+    if(_onSave) _onSave(out);
+    // Immediately persist the saved photo and refresh all avatar surfaces
+    if(out){
+      try{
+        localStorage.setItem('oasis_profile_photo',out);
+        // Clear any selected avatar since a custom photo now takes priority
+        localStorage.removeItem('oasis_avatar_id');
+        if(typeof _updateHeaderAvatar==='function')_updateHeaderAvatar();
+        if(typeof _populateProfileDrawer==='function')_populateProfileDrawer();
+        if(typeof renderProfileCard==='function')renderProfileCard();
+        if(typeof showToast==='function')showToast('Photo saved','success',2000);
+      }catch(e){
+        if(typeof showToast==='function')showToast('Photo too large to save — try a smaller image','warn',3500);
+      }
+    }
+  };
+
+  window.imgEditorZoom = function(delta){
+    _setZoom(Math.max(0.1, Math.min(4, _zoom + delta)));
+  };
+
+  window.imgEditorSetZoom = function(val){
+    _setZoom(val);
+  };
+
+  window.imgEditorRotate = function(deg){
+    _setRotate(_rotate + deg);
+  };
+
+  window.imgEditorSetRotate = function(deg){
+    _setRotate(deg);
+  };
+
+  window.imgEditorFlipH = function(){
+    _flipH = !_flipH;
+    _markDirty();
+  };
+
+  window.imgEditorFlipV = function(){
+    _flipV = !_flipV;
+    _markDirty();
+  };
+
+  window.imgEditorReset = function(){
+    _zoom = 1; _rotate = 0;
+    _offsetX = 0; _offsetY = 0;
+    _flipH = false; _flipV = false;
+    _syncSliders();
+    _markDirty();
+  };
+
+  window.imgEditorFit = function(){
+    if(!_img||!_size) return;
+    var s = _fitZoom();
+    _zoom = s;
+    _offsetX = 0; _offsetY = 0;
+    _syncSliders();
+    _markDirty();
+  };
+
+  /* ── INIT ── */
+  function _initEditor(){
+    _canvas = document.getElementById('ime-canvas');
+    _previewCanvas = document.getElementById('ime-preview-canvas');
+    _ctx = _canvas.getContext('2d');
+    _previewCtx = _previewCanvas.getContext('2d');
+
+    // Set canvas pixel size to viewport rendered size (square)
+    var vp = document.getElementById('ime-viewport');
+    var vpRect = vp.getBoundingClientRect();
+    _size = Math.min(vpRect.width, vpRect.height) || 320;
+    _canvas.width = _size;
+    _canvas.height = _size;
+
+    // Reset state
+    _rotate = 0; _flipH = false; _flipV = false;
+    _offsetX = 0; _offsetY = 0;
+    _zoom = _fitZoom(); // fit image to frame on open
+
+    _syncSliders();
+    _bindEvents();
+    _startLoop();
+  }
+
+  function _fitZoom(){
+    if(!_img||!_size) return 1;
+    var r = _rotate * Math.PI / 180;
+    var cos = Math.abs(Math.cos(r));
+    var sin = Math.abs(Math.sin(r));
+    var bw = _img.width * cos + _img.height * sin;
+    var bh = _img.width * sin + _img.height * cos;
+    var circlePx = _size * 0.8; // the circle is 80% of the canvas
+    return Math.max(circlePx / bw, circlePx / bh);
+  }
+
+  function _closeEditor(){
+    _stopLoop();
+    _unbindEvents();
+    document.getElementById('img-editor-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    _img = null; _onSave = null;
+  }
+
+  /* ── RENDER LOOP ── */
+  function _startLoop(){
+    _dirty = true;
+    function loop(){
+      if(_dirty){ _drawFrame(); _dirty=false; }
+      _raf = requestAnimationFrame(loop);
+    }
+    _raf = requestAnimationFrame(loop);
+  }
+
+  function _stopLoop(){
+    if(_raf) cancelAnimationFrame(_raf);
+    _raf = null;
+  }
+
+  function _markDirty(){ _dirty = true; }
+
+  function _drawFrame(){
+    if(!_img||!_canvas) return;
+    var C = _canvas;
+    var ctx = _ctx;
+    ctx.clearRect(0,0,C.width,C.height);
+
+    ctx.save();
+
+    // Move to canvas centre
+    ctx.translate(C.width/2, C.height/2);
+
+    // Apply rotation
+    ctx.rotate(_rotate * Math.PI / 180);
+
+    // Apply flip
+    ctx.scale(_flipH?-1:1, _flipV?-1:1);
+
+    // Apply zoom & pan (pan in image space, so divide by zoom for canvas space)
+    ctx.scale(_zoom, _zoom);
+    ctx.translate(-_offsetX, -_offsetY);
+
+    // Draw image centred
+    ctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
+
+    ctx.restore();
+
+    // Also update the small circular preview
+    _drawPreview();
+  }
+
+  function _drawPreview(){
+    var pc = _previewCanvas;
+    var pctx = _previewCtx;
+    var ps = pc.width; // 52
+    pctx.clearRect(0,0,ps,ps);
+    pctx.save();
+    pctx.beginPath();
+    pctx.arc(ps/2,ps/2,ps/2,0,Math.PI*2);
+    pctx.clip();
+
+    // Scale so the circle portion maps to preview
+    // The circle in main canvas is 80% of _size
+    var circleR = _size * 0.4;
+    var scale = (ps/2) / circleR;
+    pctx.translate(ps/2, ps/2);
+    pctx.scale(scale, scale);
+    pctx.rotate(_rotate * Math.PI / 180);
+    pctx.scale((_flipH?-1:1)*_zoom, (_flipV?-1:1)*_zoom);
+    pctx.translate(-_offsetX, -_offsetY);
+    pctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
+
+    pctx.restore();
+  }
+
+  /* ── RENDER OUTPUT ── */
+  function _renderOutput(outputSize){
+    var off = document.createElement('canvas');
+    off.width = outputSize;
+    off.height = outputSize;
+    var ctx = off.getContext('2d');
+
+    // Clip to circle
+    ctx.beginPath();
+    ctx.arc(outputSize/2, outputSize/2, outputSize/2, 0, Math.PI*2);
+    ctx.clip();
+
+    // Map the circle viewport region to the output canvas
+    var circleR = _size * 0.4; // radius in main canvas pixels
+    var scale = (outputSize/2) / circleR;
+
+    ctx.translate(outputSize/2, outputSize/2);
+    ctx.rotate(_rotate * Math.PI / 180);
+    ctx.scale((_flipH?-1:1)*_zoom*scale, (_flipV?-1:1)*_zoom*scale);
+    ctx.translate(-_offsetX, -_offsetY);
+    ctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
+
+    // Compress: try WebP first (smaller), fall back to JPEG
+    var quality = 0.82;
+    var out = off.toDataURL('image/webp', quality);
+    if(!out || out === 'data:,') out = off.toDataURL('image/jpeg', quality);
+    return out;
+  }
+
+  /* ── SLIDERS & LABELS ── */
+  function _setZoom(val){
+    _zoom = Math.max(0.1, Math.min(4, val));
+    document.getElementById('ime-zoom-slider').value = _zoom;
+    document.getElementById('ime-zoom-val').textContent = Math.round(_zoom*100)+'%';
+    _markDirty();
+  }
+
+  function _setRotate(deg){
+    // clamp to -180..180
+    _rotate = ((deg+180)%360+360)%360-180;
+    document.getElementById('ime-rotate-slider').value = _rotate;
+    document.getElementById('ime-rotate-val').textContent = Math.round(_rotate)+'°';
+    _markDirty();
+  }
+
+  function _syncSliders(){
+    var zs = document.getElementById('ime-zoom-slider');
+    var zv = document.getElementById('ime-zoom-val');
+    var rs = document.getElementById('ime-rotate-slider');
+    var rv = document.getElementById('ime-rotate-val');
+    if(zs) zs.value = _zoom;
+    if(zv) zv.textContent = Math.round(_zoom*100)+'%';
+    if(rs) rs.value = _rotate;
+    if(rv) rv.textContent = Math.round(_rotate)+'°';
+  }
+
+  /* ── EVENT BINDING ── */
+  function _bindEvents(){
+    var vp = document.getElementById('ime-viewport');
+    vp.addEventListener('mousedown', _onMouseDown);
+    vp.addEventListener('wheel', _onWheel, {passive:false});
+    vp.addEventListener('touchstart', _onTouchStart, {passive:false});
+    vp.addEventListener('touchmove', _onTouchMove, {passive:false});
+    vp.addEventListener('touchend', _onTouchEnd);
+    document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mouseup', _onMouseUp);
+  }
+
+  function _unbindEvents(){
+    var vp = document.getElementById('ime-viewport');
+    if(!vp) return;
+    vp.removeEventListener('mousedown', _onMouseDown);
+    vp.removeEventListener('wheel', _onWheel);
+    vp.removeEventListener('touchstart', _onTouchStart);
+    vp.removeEventListener('touchmove', _onTouchMove);
+    vp.removeEventListener('touchend', _onTouchEnd);
+    document.removeEventListener('mousemove', _onMouseMove);
+    document.removeEventListener('mouseup', _onMouseUp);
+  }
+
+  function _showGrid(){ document.getElementById('ime-grid').classList.add('visible'); }
+  function _hideGrid(){
+    clearTimeout(_gridTimer);
+    _gridTimer = setTimeout(function(){
+      document.getElementById('ime-grid').classList.remove('visible');
+    }, 600);
+  }
+
+  /* Mouse drag */
+  function _onMouseDown(e){
+    _dragging = true;
+    _lastX = e.clientX;
+    _lastY = e.clientY;
+    _showGrid();
+    e.preventDefault();
+  }
+  function _onMouseMove(e){
+    if(!_dragging) return;
+    _applyPan(e.clientX - _lastX, e.clientY - _lastY);
+    _lastX = e.clientX;
+    _lastY = e.clientY;
+  }
+  function _onMouseUp(){
+    _dragging = false;
+    _hideGrid();
+  }
+
+  /* Scroll / wheel zoom */
+  function _onWheel(e){
+    e.preventDefault();
+    var delta = e.deltaY < 0 ? 0.08 : -0.08;
+    _setZoom(_zoom + delta);
+    _showGrid(); _hideGrid();
+  }
+
+  /* Touch: single-finger pan, two-finger pinch zoom */
+  function _onTouchStart(e){
+    if(e.touches.length===1){
+      _dragging=true;
+      _lastX=e.touches[0].clientX;
+      _lastY=e.touches[0].clientY;
+      _showGrid();
+    } else if(e.touches.length===2){
+      _dragging=false;
+      _pinchDist0=_touchDist(e.touches);
+      _zoom0=_zoom;
+      var mid=_touchMid(e.touches,_canvas);
+      _pinchCx=mid.x; _pinchCy=mid.y;
+    }
+    e.preventDefault();
+  }
+  function _onTouchMove(e){
+    e.preventDefault();
+    if(e.touches.length===1 && _dragging){
+      _applyPan(e.touches[0].clientX-_lastX, e.touches[0].clientY-_lastY);
+      _lastX=e.touches[0].clientX;
+      _lastY=e.touches[0].clientY;
+    } else if(e.touches.length===2 && _pinchDist0){
+      var d=_touchDist(e.touches);
+      var newZoom=Math.max(0.1,Math.min(4,_zoom0*(d/_pinchDist0)));
+      _setZoom(newZoom);
+      _showGrid();
+    }
+  }
+  function _onTouchEnd(e){
+    if(e.touches.length===0){ _dragging=false; _pinchDist0=null; _hideGrid(); }
+  }
+
+  function _touchDist(t){
+    var dx=t[0].clientX-t[1].clientX;
+    var dy=t[0].clientY-t[1].clientY;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+  function _touchMid(t, el){
+    var r=el.getBoundingClientRect();
+    return {
+      x:((t[0].clientX+t[1].clientX)/2)-r.left,
+      y:((t[0].clientY+t[1].clientY)/2)-r.top
+    };
+  }
+
+  /* Pan: screen pixel delta → image pixel delta */
+  function _applyPan(dx,dy){
+    if(!_canvas||!_size) return;
+    var pixRatio = _canvas.width / _canvas.offsetWidth || 1;
+    // Convert from screen to canvas, then to image coords (undo zoom, undo rotation)
+    var cdx = dx * pixRatio;
+    var cdy = dy * pixRatio;
+    // Undo rotation
+    var rad = -_rotate * Math.PI / 180;
+    var rdx = cdx*Math.cos(rad) - cdy*Math.sin(rad);
+    var rdy = cdx*Math.sin(rad) + cdy*Math.cos(rad);
+    // Undo zoom
+    _offsetX -= rdx / _zoom;
+    _offsetY -= rdy / _zoom;
+    _markDirty();
+  }
+})();
 
 function pdrRemoveCustomPhoto(){
   _pdrPhotoDataUrl=null;
@@ -2751,8 +3170,9 @@ function _setAvatarToInitials(el,p){
 function pdrSaveProfile(){
   var p=(typeof getUserProfile==='function')?(getUserProfile()||{}):{};
 
-  // Save photo if a new one was selected
-  if(_pdrPhotoDataUrl){
+  // Save photo if a new one was selected and not yet persisted (imgEditorSave handles this
+  // immediately on crop, so this is a safety net for any remaining in-memory state)
+  if(_pdrPhotoDataUrl && !localStorage.getItem('oasis_profile_photo')){
     try{localStorage.setItem('oasis_profile_photo',_pdrPhotoDataUrl);}catch(e){
       if(typeof showToast==='function')showToast('Photo too large to store','warn');
       _pdrPhotoDataUrl=null;
@@ -2983,16 +3403,72 @@ function hideAvatarPicker(){
 })();
 
 /* ── ABOUT DRAWER ── */
+var _adrDevProfileCache = null; // session cache
+
 function openAbout(){
   // Sync version text
   var verEl = document.getElementById('adr-version-text');
   if(verEl && typeof APP_VERSION !== 'undefined') verEl.textContent = 'v' + APP_VERSION;
   document.getElementById('about-drawer').classList.add('open');
   document.getElementById('about-overlay').classList.add('open');
+  // Load developer profile from Firestore (cached after first fetch)
+  _adrLoadDevProfile();
 }
 function closeAbout(){
   document.getElementById('about-drawer').classList.remove('open');
   document.getElementById('about-overlay').classList.remove('open');
+}
+
+// Fetch developer_profile from Firestore and populate about drawer
+function _adrLoadDevProfile(){
+  // Use cache if available
+  if(_adrDevProfileCache){ _adrApplyDevProfile(_adrDevProfileCache); return; }
+  try{
+    var db = firebase.firestore();
+    db.collection('app_config').doc('developer_profile').get().then(function(snap){
+      if(!snap.exists) return;
+      _adrDevProfileCache = snap.data();
+      _adrApplyDevProfile(_adrDevProfileCache);
+    }).catch(function(e){ console.warn('[About] dev profile load error:', e); });
+  }catch(e){ console.warn('[About] Firestore unavailable:', e); }
+}
+
+function _adrApplyDevProfile(d){
+  if(!d) return;
+  // Avatar
+  var av = document.getElementById('adr-dev-avatar');
+  if(av){
+    if(d.photo){
+      av.innerHTML = '<img src="'+d.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      av.textContent = '👤';
+    }
+  }
+  // Name / role / institution
+  var el;
+  el = document.getElementById('adr-dev-name');        if(el && d.name)        el.textContent = d.name;
+  el = document.getElementById('adr-dev-role');        if(el && d.role)        el.textContent = d.role;
+  el = document.getElementById('adr-dev-institution'); if(el && d.institution) el.textContent = d.institution;
+  // Bio
+  el = document.getElementById('adr-dev-bio');
+  if(el && d.bio){ el.textContent = d.bio; el.style.display = ''; }
+  // Links
+  var linksWrap = document.getElementById('adr-dev-links');
+  if(linksWrap && d.links){
+    var html = '';
+    var baseStyle = 'display:flex;align-items:center;gap:9px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:9px 11px;text-decoration:none;box-sizing:border-box';
+    var labelStyle = 'font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    var svgMail = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+    var svgGH   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>';
+    var svgLI   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
+    var svgTW   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>';
+    if(d.links.email)    html += '<a href="mailto:'+d.links.email+'" style="'+baseStyle+'">'+svgMail+'<span style="'+labelStyle+'">'+d.links.email+'</span></a>';
+    if(d.links.github)   html += '<a href="'+d.links.github+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgGH+'<span style="'+labelStyle+'">GitHub</span></a>';
+    if(d.links.linkedin) html += '<a href="'+d.links.linkedin+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgLI+'<span style="'+labelStyle+'">LinkedIn</span></a>';
+    if(d.links.twitter)  html += '<a href="'+d.links.twitter+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgTW+'<span style="'+labelStyle+'">Twitter / X</span></a>';
+    if(!html) html = '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">No contact info available.</span>';
+    linksWrap.innerHTML = html;
+  }
 }
 function kebabCycleTheme(){
   var order=['dark','amoled','clinical'];
@@ -3030,12 +3506,6 @@ function _kebabSyncThemeUI(){
   ['dark','amoled','hc'].forEach(function(m){
     var el=document.getElementById('km-'+m);
     if(el)el.className='kebab-mode-chip'+(mode===m?' active':'');
-  });
-  // Sync accent dots
-  var accent=(typeof currentSettings!=='undefined'&&currentSettings.accent)||'cyan';
-  ['cyan','green','blue','purple','rose','orange','gold'].forEach(function(a){
-    var el=document.getElementById('ka-'+a);
-    if(el)el.className='kebab-accent-dot'+(accent===a?' active':'');
   });
   // Sync label
   _kebabUpdateLabels();
