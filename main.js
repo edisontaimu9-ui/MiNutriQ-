@@ -2777,20 +2777,6 @@ function pdrHandlePhotoUpload(input){
     var out = _renderOutput(400); // 400×400 output
     _closeEditor();
     if(_onSave) _onSave(out);
-    // Immediately persist the saved photo and refresh all avatar surfaces
-    if(out){
-      try{
-        localStorage.setItem('oasis_profile_photo',out);
-        // Clear any selected avatar since a custom photo now takes priority
-        localStorage.removeItem('oasis_avatar_id');
-        if(typeof _updateHeaderAvatar==='function')_updateHeaderAvatar();
-        if(typeof _populateProfileDrawer==='function')_populateProfileDrawer();
-        if(typeof renderProfileCard==='function')renderProfileCard();
-        if(typeof showToast==='function')showToast('Photo saved','success',2000);
-      }catch(e){
-        if(typeof showToast==='function')showToast('Photo too large to save — try a smaller image','warn',3500);
-      }
-    }
   };
 
   window.imgEditorZoom = function(delta){
@@ -3170,9 +3156,8 @@ function _setAvatarToInitials(el,p){
 function pdrSaveProfile(){
   var p=(typeof getUserProfile==='function')?(getUserProfile()||{}):{};
 
-  // Save photo if a new one was selected and not yet persisted (imgEditorSave handles this
-  // immediately on crop, so this is a safety net for any remaining in-memory state)
-  if(_pdrPhotoDataUrl && !localStorage.getItem('oasis_profile_photo')){
+  // Save photo if a new one was selected
+  if(_pdrPhotoDataUrl){
     try{localStorage.setItem('oasis_profile_photo',_pdrPhotoDataUrl);}catch(e){
       if(typeof showToast==='function')showToast('Photo too large to store','warn');
       _pdrPhotoDataUrl=null;
@@ -3403,72 +3388,16 @@ function hideAvatarPicker(){
 })();
 
 /* ── ABOUT DRAWER ── */
-var _adrDevProfileCache = null; // session cache
-
 function openAbout(){
   // Sync version text
   var verEl = document.getElementById('adr-version-text');
   if(verEl && typeof APP_VERSION !== 'undefined') verEl.textContent = 'v' + APP_VERSION;
   document.getElementById('about-drawer').classList.add('open');
   document.getElementById('about-overlay').classList.add('open');
-  // Load developer profile from Firestore (cached after first fetch)
-  _adrLoadDevProfile();
 }
 function closeAbout(){
   document.getElementById('about-drawer').classList.remove('open');
   document.getElementById('about-overlay').classList.remove('open');
-}
-
-// Fetch developer_profile from Firestore and populate about drawer
-function _adrLoadDevProfile(){
-  // Use cache if available
-  if(_adrDevProfileCache){ _adrApplyDevProfile(_adrDevProfileCache); return; }
-  try{
-    var db = firebase.firestore();
-    db.collection('app_config').doc('developer_profile').get().then(function(snap){
-      if(!snap.exists) return;
-      _adrDevProfileCache = snap.data();
-      _adrApplyDevProfile(_adrDevProfileCache);
-    }).catch(function(e){ console.warn('[About] dev profile load error:', e); });
-  }catch(e){ console.warn('[About] Firestore unavailable:', e); }
-}
-
-function _adrApplyDevProfile(d){
-  if(!d) return;
-  // Avatar
-  var av = document.getElementById('adr-dev-avatar');
-  if(av){
-    if(d.photo){
-      av.innerHTML = '<img src="'+d.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    } else {
-      av.textContent = '👤';
-    }
-  }
-  // Name / role / institution
-  var el;
-  el = document.getElementById('adr-dev-name');        if(el && d.name)        el.textContent = d.name;
-  el = document.getElementById('adr-dev-role');        if(el && d.role)        el.textContent = d.role;
-  el = document.getElementById('adr-dev-institution'); if(el && d.institution) el.textContent = d.institution;
-  // Bio
-  el = document.getElementById('adr-dev-bio');
-  if(el && d.bio){ el.textContent = d.bio; el.style.display = ''; }
-  // Links
-  var linksWrap = document.getElementById('adr-dev-links');
-  if(linksWrap && d.links){
-    var html = '';
-    var baseStyle = 'display:flex;align-items:center;gap:9px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:9px 11px;text-decoration:none;box-sizing:border-box';
-    var labelStyle = 'font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    var svgMail = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
-    var svgGH   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>';
-    var svgLI   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
-    var svgTW   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>';
-    if(d.links.email)    html += '<a href="mailto:'+d.links.email+'" style="'+baseStyle+'">'+svgMail+'<span style="'+labelStyle+'">'+d.links.email+'</span></a>';
-    if(d.links.github)   html += '<a href="'+d.links.github+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgGH+'<span style="'+labelStyle+'">GitHub</span></a>';
-    if(d.links.linkedin) html += '<a href="'+d.links.linkedin+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgLI+'<span style="'+labelStyle+'">LinkedIn</span></a>';
-    if(d.links.twitter)  html += '<a href="'+d.links.twitter+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgTW+'<span style="'+labelStyle+'">Twitter / X</span></a>';
-    if(!html) html = '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">No contact info available.</span>';
-    linksWrap.innerHTML = html;
-  }
 }
 function kebabCycleTheme(){
   var order=['dark','amoled','clinical'];
@@ -3506,6 +3435,12 @@ function _kebabSyncThemeUI(){
   ['dark','amoled','hc'].forEach(function(m){
     var el=document.getElementById('km-'+m);
     if(el)el.className='kebab-mode-chip'+(mode===m?' active':'');
+  });
+  // Sync accent dots
+  var accent=(typeof currentSettings!=='undefined'&&currentSettings.accent)||'cyan';
+  ['cyan','green','blue','purple','rose','orange','gold'].forEach(function(a){
+    var el=document.getElementById('ka-'+a);
+    if(el)el.className='kebab-accent-dot'+(accent===a?' active':'');
   });
   // Sync label
   _kebabUpdateLabels();
