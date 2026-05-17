@@ -2523,6 +2523,12 @@ function kebabOpenAbout(){closeKebabMenu();openAbout();}
 /* ── PROFILE DRAWER ── */
 function openProfile(){
   _populateProfileDrawer();
+  // Apply saved avatar (overrides role-based default from _populateProfileDrawer)
+  if(_selectedAvatarId){
+    _renderAvatarEl(document.getElementById('pdr-avatar'), _selectedAvatarId, 72);
+  }
+  // Always close picker panel on open
+  hideAvatarPicker();
   document.getElementById('profile-drawer').classList.add('open');
   document.getElementById('profile-overlay').classList.add('open');
 }
@@ -2571,6 +2577,108 @@ function _populateProfileDrawer(){
     }
   }
 }
+
+/* ── AVATAR PICKER ── */
+var OASIS_AVATARS = [
+  { id:'av_stethoscope', label:'Clinician', color:0, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/><path d="M14 9a6 6 0 0 1 6 6v1a2 2 0 0 1-2 2h-2"/></svg>' },
+  { id:'av_mortarboard', label:'Student', color:1, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>' },
+  { id:'av_leaf', label:'Nutrition', color:2, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>' },
+  { id:'av_heartpulse', label:'Vitals', color:3, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>' },
+  { id:'av_flask', label:'Lab', color:4, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M9 3v6.5L4 19h16L15 9.5V3"/><path d="M7 17h10"/></svg>' },
+  { id:'av_cross', label:'Nurse', color:5, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>' },
+  { id:'av_microscope', label:'Research', color:6, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h.01"/><path d="M9 6l.01 8"/><path d="M10 2l5 5-5 5"/></svg>' },
+  { id:'av_pill', label:'Pharmacy', color:7, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>' },
+  { id:'av_brain', label:'Cognitive', color:8, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14Z"/></svg>' },
+  { id:'av_chart', label:'Analytics', color:9, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>' },
+];
+
+var _selectedAvatarId = localStorage.getItem('oasis_avatar_id') || null;
+
+function _buildAvatarGrid(){
+  var grid = document.getElementById('avatar-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  OASIS_AVATARS.forEach(function(av){
+    var btn = document.createElement('button');
+    btn.className = 'avatar-option av-color-' + av.color + (_selectedAvatarId === av.id ? ' selected' : '');
+    btn.setAttribute('aria-label', av.label);
+    btn.setAttribute('title', av.label);
+    btn.setAttribute('data-av-id', av.id);
+    btn.innerHTML = av.svg +
+      '<span class="av-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    btn.addEventListener('click', function(){ selectAvatar(av.id); });
+    grid.appendChild(btn);
+  });
+}
+
+function selectAvatar(avId){
+  _selectedAvatarId = avId;
+  localStorage.setItem('oasis_avatar_id', avId);
+  // Update grid selection state
+  var btns = document.querySelectorAll('#avatar-grid .avatar-option');
+  btns.forEach(function(b){ b.classList.toggle('selected', b.getAttribute('data-av-id') === avId); });
+  // Re-render profile avatar
+  _renderAvatarEl(document.getElementById('pdr-avatar'), avId, 72);
+  // Update mini header avatar
+  _updateHeaderAvatar();
+}
+
+function _getAvatarDef(avId){ return OASIS_AVATARS.find(function(a){ return a.id === avId; }); }
+
+function _renderAvatarEl(el, avId, size){
+  if(!el) return;
+  var av = _getAvatarDef(avId);
+  if(av){
+    var colorIdx = av.color;
+    var colors = ['rgba(29,233,212,0.18)','rgba(96,165,250,0.18)','rgba(167,139,250,0.18)','rgba(52,211,153,0.18)','rgba(240,180,41,0.18)','rgba(251,113,133,0.18)','rgba(29,233,212,0.18)','rgba(96,165,250,0.18)','rgba(167,139,250,0.18)','rgba(52,211,153,0.18)'];
+    var iconSize = Math.round(size * 0.48);
+    el.style.background = colors[colorIdx % colors.length];
+    el.style.borderColor = 'rgba(29,233,212,0.45)';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="' + iconSize + '" height="' + iconSize + '">' + _svgInner(av.svg) + '</svg>';
+  }
+}
+
+function _svgInner(svgStr){
+  // Strip outer <svg> tag and return inner path content
+  return svgStr.replace(/<svg[^>]*>/,'').replace(/<\/svg>/,'');
+}
+
+function _updateHeaderAvatar(){
+  var mini = document.getElementById('header-avatar-mini');
+  if(!mini) return;
+  if(_selectedAvatarId){
+    var av = _getAvatarDef(_selectedAvatarId);
+    if(av){
+      mini.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">' + _svgInner(av.svg) + '</svg>';
+      mini.classList.add('visible');
+    }
+  } else {
+    mini.classList.remove('visible');
+  }
+}
+
+function toggleAvatarPicker(){
+  var panel = document.getElementById('avatar-picker-panel');
+  if(!panel) return;
+  var isHidden = panel.style.display === 'none' || panel.style.display === '';
+  if(isHidden){ _buildAvatarGrid(); panel.style.display = 'block'; }
+  else { panel.style.display = 'none'; }
+}
+function hideAvatarPicker(){
+  var panel = document.getElementById('avatar-picker-panel');
+  if(panel) panel.style.display = 'none';
+}
+
+// Avatar override is applied directly inside openProfile() below
+
+// Init on load
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    _updateHeaderAvatar();
+  });
+  // Also try immediately in case DOM is already ready
+  if(document.readyState !== 'loading'){ _updateHeaderAvatar(); }
+})();
 
 /* ── ABOUT DRAWER ── */
 function openAbout(){

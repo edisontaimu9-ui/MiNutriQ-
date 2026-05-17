@@ -46,7 +46,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.2.6';
+  const APP_VERSION = '1.2.7';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -311,7 +311,14 @@
     <div class="status-pill offline" id="db-pill"><span class="dot" id="db-dot"></span><span id="db-pill-txt">Offline</span></div>
 
     <div class="kebab-wrap" id="kebab-wrap">
-      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋮</button>
+      <button class="header-avatar-mini" id="header-avatar-mini" onclick="kebabOpenProfile()" aria-label="View profile" title="Profile"></button>
+      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+        <svg class="hamburger-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect class="ham-line ham-line-1" x="2" y="3.5" width="14" height="1.75" rx="0.875" fill="currentColor"/>
+          <rect class="ham-line ham-line-2" x="2" y="8.125" width="14" height="1.75" rx="0.875" fill="currentColor"/>
+          <rect class="ham-line ham-line-3" x="2" y="12.75" width="14" height="1.75" rx="0.875" fill="currentColor"/>
+        </svg>
+      </button>
       <div class="kebab-menu" id="kebab-menu" role="menu">
 
         <button class="kebab-item" role="menuitem" onclick="kebabOpenProfile()">
@@ -667,7 +674,17 @@
   <div class="sdr-body" id="profile-drawer-body">
     <!-- Avatar + name row -->
     <div style="display:flex;flex-direction:column;align-items:center;padding:24px 0 20px;gap:12px">
-      <div id="pdr-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0"></div>
+      <div id="pdr-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;cursor:pointer;transition:border-color .2s,transform .18s" onclick="toggleAvatarPicker()" title="Change avatar"></div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:0.5px;margin-top:-6px">Tap to change</div>
+
+      <!-- Avatar picker panel -->
+      <div id="avatar-picker-panel" style="width:100%;display:none;animation:fadeSlideIn .2s ease">
+        <div class="avatar-picker-label" style="text-align:center;margin-bottom:12px">Choose your avatar</div>
+        <div class="avatar-grid" id="avatar-grid"></div>
+        <div style="margin-top:12px;display:flex;justify-content:center">
+          <button onclick="hideAvatarPicker()" style="font-family:var(--mono);font-size:9px;padding:6px 18px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--teal)';this.style.borderColor='rgba(29,233,212,0.4)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">Done</button>
+        </div>
+      </div>
       <div style="text-align:center">
         <div id="pdr-name" style="font-family:var(--sans);font-size:18px;font-weight:700;color:var(--text-bright);letter-spacing:0.3px">—</div>
         <div id="pdr-role-label" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-top:4px">—</div>
