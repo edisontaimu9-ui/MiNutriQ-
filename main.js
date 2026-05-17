@@ -886,25 +886,8 @@ document.addEventListener('DOMContentLoaded', () => {
   _updateNotifSettingsUI(Notification.permission);
 });
 
-// ── BOTTOM NAV SCROLL FADE INDICATORS ────────────────────────
-window._bnavUpdateFades = function() {
-  const nav = document.getElementById('bottom-nav-scroll');
-  const fadeL = document.getElementById('bnav-fade-left');
-  const fadeR = document.getElementById('bnav-fade-right');
-  if (!nav || !fadeL || !fadeR) return;
-  const atLeft  = nav.scrollLeft <= 2;
-  const atRight = nav.scrollLeft >= (nav.scrollWidth - nav.clientWidth - 2);
-  fadeL.classList.toggle('visible', !atLeft);
-  fadeR.classList.toggle('visible', !atRight);
-};
 
-document.addEventListener('DOMContentLoaded', () => {
-  const nav = document.getElementById('bottom-nav-scroll');
-  if (!nav) return;
-  nav.addEventListener('scroll', window._bnavUpdateFades, { passive: true });
-  // Initial check after modules have injected their tabs
-  setTimeout(window._bnavUpdateFades, 600);
-});
+
 
 
 
@@ -1605,25 +1588,10 @@ function switchTab(tab) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
-  // Activate matching bottom-nav tab + scroll it into view
+  // Activate matching bottom-nav tab
   document.querySelectorAll('.bottom-nav .tab').forEach(t => {
-    if (t.getAttribute('onclick') === `switchTab('${tab}')`) {
-      t.classList.add('active');
-      // Scroll active tab into view smoothly
-      try {
-        const nav = document.getElementById('bottom-nav-scroll');
-        if (nav) {
-          const tabLeft = t.offsetLeft;
-          const tabWidth = t.offsetWidth;
-          const navWidth = nav.offsetWidth;
-          const scrollTarget = tabLeft - (navWidth / 2) + (tabWidth / 2);
-          nav.scrollTo({ left: scrollTarget, behavior: 'smooth' });
-        }
-      } catch(e) {}
-    }
+    if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
-  // Update fade indicators after scroll settles
-  try { _bnavUpdateFades(); } catch(e) {}
 
   const el = document.getElementById('tab-' + tab);
   if (el) el.classList.add('active');
@@ -1937,7 +1905,7 @@ function exportResultsCSV() {
     ['Fluid Requirement High (mL/day)', fluidHigh],
     ['Refeeding Risk', d.rfRisk >= 2 ? 'HIGH' : d.rfRisk === 1 ? 'MODERATE' : 'LOW'],
   ];
-  downloadCSV('nutrical_results_' + TODAY + '.csv', headers, rows);
+  downloadCSV('oasis_results_' + TODAY + '.csv', headers, rows);
 }
 
 
@@ -2499,12 +2467,144 @@ function openSettings(){
   document.getElementById('settings-drawer').classList.add('open');
   document.getElementById('settings-overlay').classList.add('open');
   loadSettingsUI();
-  try { loadProfileIntoSettings(); } catch(e) {}
 }
 function closeSettings(){
   document.getElementById('settings-drawer').classList.remove('open');
   document.getElementById('settings-overlay').classList.remove('open');
 }
+
+/* ── KEBAB (THREE-DOT) MENU ── */
+function toggleKebabMenu(e){
+  e.stopPropagation();
+  var menu=document.getElementById('kebab-menu');
+  var btn=document.getElementById('kebab-btn');
+  var bd=document.getElementById('kebab-backdrop');
+  if(!menu)return;
+  if(menu.classList.contains('open')){closeKebabMenu();return;}
+  _kebabUpdateLabels();_kebabShowSignOut();
+  menu.classList.add('open');btn.classList.add('open');
+  btn.setAttribute('aria-expanded','true');
+  if(bd)bd.classList.add('visible');
+}
+function closeKebabMenu(){
+  var menu=document.getElementById('kebab-menu');
+  var btn=document.getElementById('kebab-btn');
+  var bd=document.getElementById('kebab-backdrop');
+  if(!menu)return;
+  menu.classList.remove('open');
+  if(btn){btn.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+  if(bd)bd.classList.remove('visible');
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    closeKebabMenu();
+    if(document.getElementById('profile-drawer')?.classList.contains('open'))closeProfile();
+    if(document.getElementById('about-drawer')?.classList.contains('open'))closeAbout();
+  }
+});
+function _kebabUpdateLabels(){
+  var el=document.getElementById('kebab-theme-label');
+  if(!el)return;
+  var t=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'dark';
+  el.textContent=t.toUpperCase();
+}
+function _kebabShowSignOut(){
+  var btn=document.getElementById('kebab-signout-btn');
+  if(!btn)return;
+  var name=(typeof currentSettings!=='undefined'&&currentSettings.userName)||'';
+  btn.style.display=name?'flex':'none';
+}
+function kebabOpenProfile(){
+  closeKebabMenu();openProfile();
+}
+function kebabOpenSettings(){closeKebabMenu();openSettings();}
+function kebabOpenAbout(){closeKebabMenu();openAbout();}
+
+/* ── PROFILE DRAWER ── */
+function openProfile(){
+  _populateProfileDrawer();
+  document.getElementById('profile-drawer').classList.add('open');
+  document.getElementById('profile-overlay').classList.add('open');
+}
+function closeProfile(){
+  document.getElementById('profile-drawer').classList.remove('open');
+  document.getElementById('profile-overlay').classList.remove('open');
+}
+function _populateProfileDrawer(){
+  var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
+  var name = (p && p.name) ? p.name : 'No name set';
+  var uid  = (p && p.uid)  ? p.uid  : '—';
+  var role = (p && p.role) ? p.role : '—';
+  var inst = (p && p.institution) ? p.institution : '—';
+  var email = (p && p.email) ? p.email : '—';
+
+  var nameEl  = document.getElementById('pdr-name');
+  var roleEl  = document.getElementById('pdr-role-label');
+  var uidEl   = document.getElementById('pdr-uid');
+  var instEl  = document.getElementById('pdr-institution');
+  var emailEl = document.getElementById('pdr-email');
+  var avatarEl= document.getElementById('pdr-avatar');
+  var signOutRow = document.getElementById('pdr-signout-row');
+
+  if(nameEl)  nameEl.textContent  = name;
+  if(roleEl)  roleEl.textContent  = role.charAt(0).toUpperCase() + role.slice(1);
+  if(uidEl)   uidEl.textContent   = uid;
+  if(instEl)  instEl.textContent  = inst;
+  if(emailEl) emailEl.textContent = email;
+  if(signOutRow) signOutRow.style.display = p ? 'block' : 'none';
+
+  // Avatar: initials or role icon
+  if(avatarEl){
+    var initials = name !== 'No name set'
+      ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
+      : '?';
+    var svgIcons = {
+      student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+      dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
+      clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
+      nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
+    };
+    if(svgIcons[role]){
+      avatarEl.innerHTML = svgIcons[role];
+    } else {
+      avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
+    }
+  }
+}
+
+/* ── ABOUT DRAWER ── */
+function openAbout(){
+  // Sync version text
+  var verEl = document.getElementById('adr-version-text');
+  if(verEl && typeof APP_VERSION !== 'undefined') verEl.textContent = 'v' + APP_VERSION;
+  document.getElementById('about-drawer').classList.add('open');
+  document.getElementById('about-overlay').classList.add('open');
+}
+function closeAbout(){
+  document.getElementById('about-drawer').classList.remove('open');
+  document.getElementById('about-overlay').classList.remove('open');
+}
+function kebabCycleTheme(){
+  var order=['dark','amoled','clinical'];
+  var cur=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'dark';
+  var next=order[(order.indexOf(cur)+1)%order.length];
+  if(typeof applyTheme==='function'){
+    applyTheme(next);
+    if(typeof autoSaveSettings==='function')autoSaveSettings();
+    if(typeof showToast==='function')showToast('Theme: '+next.charAt(0).toUpperCase()+next.slice(1),'info',1800);
+  }
+  _kebabUpdateLabels();
+}
+function kebabPrint(){closeKebabMenu();if(typeof printReport==='function')printReport();else window.print();}
+function kebabShare(){
+  closeKebabMenu();
+  if(typeof window.pwaShare==='function'){window.pwaShare();}
+  else if(navigator.share){navigator.share({title:'Oasis CNST',text:'Clinical Nutrition Decision Support Tool',url:window.location.href}).catch(function(){});}
+  else{navigator.clipboard.writeText(window.location.href).then(function(){if(typeof showToast==='function')showToast('Link copied to clipboard','success');});}
+}
+function kebabSignOut(){closeKebabMenu();if(typeof obSignOut==='function')obSignOut();}
+/* ── END KEBAB MENU ── */
+
 function loadSettingsUI(){
   const s=DataService.get('settings')||{};
   currentSettings=s;
