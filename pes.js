@@ -1,5 +1,5 @@
 /**
- * Oasis — Smart PES Generator (pes.js)
+ * Oasis (formerly NutriTrack Pro) — Smart PES Generator (pes.js)
  * Disease-phase-aware, NFPE-integrated PES statement engine
  *
  * Supplemental module — works alongside existing adult & pedi PES engines in main.js

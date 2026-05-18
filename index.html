@@ -46,7 +46,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.2.7';
+  const APP_VERSION = '1.2.6';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -64,7 +64,7 @@
   })();
 
   // ── Firebase Project Configuration ───────────────────
-  // Oasis — Firebase project config
+  // Oasis — project: nutri-track-pro-c11c5
   const FIREBASE_CONFIG = {
     apiKey:            "AIzaSyDLdoWCGmuwEwuPLwijnoRyRP7sWtGc-Qc",
     authDomain:        "nutri-track-pro-c11c5.firebaseapp.com",
@@ -258,16 +258,6 @@
           <button class="ob-role-btn" data-role="researcher" onclick="obSelectRole(this)">
             <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg></span>Researcher
           </button>
-          <button class="ob-role-btn" data-role="nurse" onclick="obSelectRole(this)">
-            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg></span>Nurse
-          </button>
-          <button class="ob-role-btn" data-role="other" onclick="obSelectRole(this)">
-            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>Other
-          </button>
-        </div>
-        <!-- Custom role text field — shown only when "Other" is selected -->
-        <div id="ob-role-other-row" style="display:none;margin-top:8px">
-          <input id="ob-role-other-val" class="ob-input" type="text" placeholder="Describe your role…" maxlength="60" autocomplete="off">
         </div>
       </div>
 
@@ -321,23 +311,7 @@
     <div class="status-pill offline" id="db-pill"><span class="dot" id="db-dot"></span><span id="db-pill-txt">Offline</span></div>
 
     <div class="kebab-wrap" id="kebab-wrap">
-      <!-- Profile completion badge — clicking opens profile drawer -->
-      <button id="profile-completion-badge" onclick="openProfile()" aria-label="Profile completion" title="Profile completion" style="display:none;align-items:center;gap:5px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.28);border-radius:20px;padding:3px 9px 3px 6px;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:0.8px;color:var(--teal);transition:background .15s,border-color .15s;white-space:nowrap" onmouseover="this.style.background='rgba(29,233,212,0.14)';this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.background='rgba(29,233,212,0.08)';this.style.borderColor='rgba(29,233,212,0.28)'">
-        <svg id="pcb-ring" width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0" aria-hidden="true">
-          <circle cx="9" cy="9" r="7" fill="none" stroke="rgba(29,233,212,0.2)" stroke-width="2.2"/>
-          <circle id="pcb-arc" cx="9" cy="9" r="7" fill="none" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round"
-            stroke-dasharray="43.98" stroke-dashoffset="43.98" transform="rotate(-90 9 9)" style="transition:stroke-dashoffset .4s ease"/>
-        </svg>
-        <span id="pcb-pct">0%</span>
-      </button>
-      <button class="header-avatar-mini" id="header-avatar-mini" onclick="kebabOpenProfile()" aria-label="View profile" title="Profile"></button>
-      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">
-        <svg class="hamburger-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect class="ham-line ham-line-1" x="2" y="3.5" width="14" height="1.75" rx="0.875" fill="currentColor"/>
-          <rect class="ham-line ham-line-2" x="2" y="8.125" width="14" height="1.75" rx="0.875" fill="currentColor"/>
-          <rect class="ham-line ham-line-3" x="2" y="12.75" width="14" height="1.75" rx="0.875" fill="currentColor"/>
-        </svg>
-      </button>
+      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋮</button>
       <div class="kebab-menu" id="kebab-menu" role="menu">
 
         <button class="kebab-item" role="menuitem" onclick="kebabOpenProfile()">
@@ -355,30 +329,13 @@
           About Oasis
         </button>
 
-        <button class="kebab-item" role="menuitem" onclick="openWhatsNew(); closeKebabMenu()" id="wsn-kebab-btn" style="position:relative">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-          What's New
-          <span class="kebab-item-sub" id="wsn-menu-label">UPDATES</span>
+        <div class="kebab-divider"></div>
+
+        <button class="kebab-item" role="menuitem" onclick="kebabCycleTheme()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          Theme
+          <span class="kebab-item-sub" id="kebab-theme-label">DARK</span>
         </button>
-
-        <div class="kebab-divider"></div>
-
-        <!-- Inline Theme Switcher -->
-        <div class="kebab-theme-panel">
-          <div class="kebab-theme-panel-header">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-            Theme
-            <span class="kebab-item-sub" id="kebab-theme-label">DARK</span>
-          </div>
-          <!-- Mode chips -->
-          <div class="kebab-theme-modes">
-            <button id="km-dark"   class="kebab-mode-chip" onclick="kebabSetMode('dark')">Dark</button>
-            <button id="km-amoled" class="kebab-mode-chip" onclick="kebabSetMode('amoled')">AMOLED</button>
-            <button id="km-hc"     class="kebab-mode-chip" onclick="kebabSetMode('hc')">Hi-C</button>
-          </div>
-        </div>
-
-        <div class="kebab-divider"></div>
 
         <button class="kebab-item" role="menuitem" onclick="kebabPrint()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -704,24 +661,13 @@
 <!-- ── PROFILE DRAWER ── -->
 <div id="profile-drawer">
   <div class="sdr-header">
-    <div class="sdr-title" id="pdr-header-title">Profile</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <!-- Back button (only visible in edit mode) -->
-      <button id="pdr-back-btn" onclick="pdrExitEditMode()" style="display:none;font-family:var(--mono);font-size:9px;padding:5px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--teal)';this.style.borderColor='rgba(29,233,212,0.4)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">← Back</button>
-      <button class="sdr-close" onclick="closeProfile()" aria-label="Close">✕</button>
-    </div>
+    <div class="sdr-title">Profile</div>
+    <button class="sdr-close" onclick="closeProfile()" aria-label="Close">✕</button>
   </div>
-
-  <!-- ── VIEW MODE ── -->
-  <div class="sdr-body" id="pdr-view-mode">
+  <div class="sdr-body" id="profile-drawer-body">
     <!-- Avatar + name row -->
     <div style="display:flex;flex-direction:column;align-items:center;padding:24px 0 20px;gap:12px">
-      <div class="pdr-avatar-wrap" onclick="pdrEnterEditMode()" title="Edit profile photo">
-        <div id="pdr-avatar" style="width:82px;height:82px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;transition:border-color .2s,transform .18s;overflow:hidden;"></div>
-        <div class="pdr-avatar-edit-ring">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
-      </div>
+      <div id="pdr-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0"></div>
       <div style="text-align:center">
         <div id="pdr-name" style="font-family:var(--sans);font-size:18px;font-weight:700;color:var(--text-bright);letter-spacing:0.3px">—</div>
         <div id="pdr-role-label" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-top:4px">—</div>
@@ -745,9 +691,9 @@
       </div>
     </div>
 
-    <!-- Action buttons -->
-    <div style="margin-top:4px;display:flex;flex-direction:column;gap:8px">
-      <button onclick="pdrEnterEditMode()"
+    <!-- Edit button -->
+    <div style="margin-top:4px">
+      <button onclick="closeProfile();openSettings();setTimeout(function(){var g=document.querySelector('#settings-drawer .sdr-group');if(g)g.scrollIntoView({behavior:'smooth',block:'start'});},320)"
         style="width:100%;padding:11px;background:var(--accent,var(--teal));border:none;border-radius:8px;
                color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;
                letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:7px"
@@ -755,241 +701,15 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit Profile
       </button>
-      <div id="pdr-signout-row" style="display:none">
-        <button onclick="closeProfile();obSignOut()"
-          style="width:100%;padding:10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;
-                 color:rgba(251,113,133,0.9);font-family:var(--mono);font-size:11px;font-weight:700;
-                 letter-spacing:1px;cursor:pointer;transition:opacity .15s"
-          onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
-          Sign Out
-        </button>
-      </div>
     </div>
-  </div>
-
-  <!-- ── EDIT MODE ── -->
-  <div class="sdr-body" id="pdr-edit-mode" style="display:none">
-
-    <!-- Photo section -->
-    <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 16px;gap:10px">
-      <div style="position:relative">
-        <div id="pdr-edit-avatar" style="width:82px;height:82px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.4);display:flex;align-items:center;justify-content:center;color:var(--teal);overflow:hidden;flex-shrink:0;"></div>
-        <!-- Camera overlay button -->
-        <button onclick="document.getElementById('pdr-photo-input').click()" title="Upload photo from device"
-          style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--accent,var(--teal));border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s"
-          onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </button>
-        <input type="file" id="pdr-photo-input" accept="image/*" style="display:none" onchange="pdrHandlePhotoUpload(this)">
-      </div>
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:0.5px;text-align:center">Tap camera to upload · or choose an avatar below</div>
-    </div>
-
-    <!-- Photo source tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:14px">
-      <button id="pdr-tab-avatar" onclick="pdrSwitchPhotoTab('avatar')"
-        class="pdr-photo-tab pdr-photo-tab-active">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Avatars
+    <div id="pdr-signout-row" style="margin-top:8px;display:none">
+      <button onclick="closeProfile();obSignOut()"
+        style="width:100%;padding:10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;
+               color:rgba(251,113,133,0.9);font-family:var(--mono);font-size:11px;font-weight:700;
+               letter-spacing:1px;cursor:pointer;transition:opacity .15s"
+        onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+        Sign Out
       </button>
-      <button id="pdr-tab-photo" onclick="pdrSwitchPhotoTab('photo')"
-        class="pdr-photo-tab">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        My Photo
-      </button>
-    </div>
-
-    <!-- Avatar grid panel -->
-    <div id="pdr-edit-avatar-panel">
-      <div class="avatar-grid" id="pdr-edit-avatar-grid" style="margin-bottom:14px"></div>
-    </div>
-
-    <!-- Custom photo panel -->
-    <div id="pdr-edit-photo-panel" style="display:none;margin-bottom:14px">
-      <div id="pdr-photo-preview-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
-        <img id="pdr-photo-preview" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(29,233,212,0.4)" src="" alt="Preview">
-        <button onclick="pdrRemoveCustomPhoto()" style="font-family:var(--mono);font-size:9px;padding:4px 12px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:6px;color:rgba(251,113,133,0.9);cursor:pointer;letter-spacing:0.5px">Remove photo</button>
-      </div>
-      <div id="pdr-photo-empty" style="text-align:center;padding:20px 0;color:var(--text-dim);font-family:var(--mono);font-size:10px">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 8px;opacity:0.4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        No photo uploaded yet
-        <div style="margin-top:10px">
-          <button onclick="document.getElementById('pdr-photo-input').click()"
-            style="font-family:var(--mono);font-size:9px;padding:7px 18px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.3);border-radius:6px;color:var(--teal);cursor:pointer;letter-spacing:0.5px;transition:background .15s"
-            onmouseover="this.style.background='rgba(29,233,212,0.15)'" onmouseout="this.style.background='rgba(29,233,212,0.08)'">
-            Choose from device
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Profile fields -->
-    <div class="sdr-group">
-      <div class="sdr-group-label">Profile Details</div>
-
-      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <label class="sdr-item-lbl" for="pdr-field-name">Full Name</label>
-        <input id="pdr-field-name" type="text" placeholder="Your full name"
-          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;box-sizing:border-box"
-          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-
-      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <label class="sdr-item-lbl" for="pdr-field-uid">Student / Staff ID</label>
-        <input id="pdr-field-uid" type="text" placeholder="e.g. KUHeS/BND/2024/001"
-          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
-          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-
-      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <label class="sdr-item-lbl" for="pdr-field-email">Email</label>
-        <input id="pdr-field-email" type="email" placeholder="your@email.com"
-          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
-          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
-      </div>
-
-      <!-- Role -->
-      <div class="sdr-item" style="flex-direction:column;align-items:flex-start;gap:8px;border:none">
-        <div class="sdr-item-lbl">Role</div>
-        <div id="pdr-role-chips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-        <div id="pdr-role-other-row" style="display:none;width:100%">
-          <input id="pdr-field-role-other" type="text" placeholder="Specify your role"
-            style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
-            onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-      </div>
-    </div>
-
-    <!-- Institution -->
-    <div class="sdr-group" style="margin-top:0">
-      <div class="sdr-group-label">Institution</div>
-      <div style="padding:4px 0 8px">
-        <select id="pdr-field-institution"
-          style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;cursor:pointer;appearance:none;transition:border-color .15s"
-          onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'"
-          onchange="document.getElementById('pdr-inst-other-row').style.display=this.value==='Other'?'block':'none'">
-          <option value="">Select institution</option>
-          <option value="Kamuzu University of Health Sciences">Kamuzu University of Health Sciences</option>
-          <option value="Kamuzu Central Hospital">Kamuzu Central Hospital</option>
-          <option value="Queen Elizabeth Central Hospital">Queen Elizabeth Central Hospital</option>
-          <option value="Mzuzu Central Hospital">Mzuzu Central Hospital</option>
-          <option value="Zomba Central Hospital">Zomba Central Hospital</option>
-          <option value="Malawi Ministry of Health">Malawi Ministry of Health</option>
-          <option value="Other">Other</option>
-        </select>
-        <div id="pdr-inst-other-row" style="display:none;margin-top:6px">
-          <input id="pdr-field-institution-other" type="text" placeholder="Enter institution name"
-            style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text-bright);font-family:var(--sans);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box"
-            onfocus="this.style.borderColor='rgba(29,233,212,0.5)'" onblur="this.style.borderColor='var(--border)'">
-        </div>
-      </div>
-    </div>
-
-    <!-- Save / cancel -->
-    <div style="display:flex;gap:8px;margin-top:6px;padding-bottom:8px">
-      <button onclick="pdrExitEditMode()"
-        style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:color .15s,border-color .15s"
-        onmouseover="this.style.color='var(--text)';this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border)'">Cancel</button>
-      <button onclick="pdrSaveProfile()"
-        style="flex:2;padding:10px;background:var(--accent,var(--teal));border:none;border-radius:8px;color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:6px"
-        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Save Changes
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ── IMAGE EDITOR OVERLAY ── -->
-<div id="img-editor-overlay" aria-modal="true" role="dialog" aria-label="Edit profile photo">
-  <div id="img-editor-modal">
-
-    <!-- Header -->
-    <div class="ime-header">
-      <button class="ime-btn-ghost" onclick="imgEditorCancel()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        Cancel
-      </button>
-      <div class="ime-title">Edit Photo</div>
-      <button class="ime-btn-primary" onclick="imgEditorSave()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Save Photo
-      </button>
-    </div>
-
-    <!-- Canvas viewport — circular clip preview -->
-    <div class="ime-viewport-wrap">
-      <div class="ime-viewport" id="ime-viewport">
-        <canvas id="ime-canvas" aria-label="Drag to reposition image"></canvas>
-        <!-- Circular mask overlay -->
-        <div class="ime-circle-mask" id="ime-circle-mask" aria-hidden="true"></div>
-        <!-- Grid lines (shown while dragging) -->
-        <div class="ime-grid" id="ime-grid" aria-hidden="true">
-          <div class="ime-grid-h"></div><div class="ime-grid-h"></div>
-          <div class="ime-grid-v"></div><div class="ime-grid-v"></div>
-        </div>
-      </div>
-      <!-- Preview badge -->
-      <div class="ime-preview-badge">
-        <canvas id="ime-preview-canvas" width="52" height="52" aria-label="Preview"></canvas>
-        <span class="ime-preview-label">Preview</span>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div class="ime-controls">
-
-      <!-- Zoom -->
-      <div class="ime-ctrl-row">
-        <button class="ime-icon-btn" onclick="imgEditorZoom(-0.1)" title="Zoom out" aria-label="Zoom out">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        </button>
-        <div class="ime-slider-wrap">
-          <input type="range" id="ime-zoom-slider" class="ime-slider" min="0.1" max="4" step="0.01" value="1"
-            aria-label="Zoom level" oninput="imgEditorSetZoom(parseFloat(this.value))">
-        </div>
-        <button class="ime-icon-btn" onclick="imgEditorZoom(0.1)" title="Zoom in" aria-label="Zoom in">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
-        </button>
-        <span class="ime-ctrl-val" id="ime-zoom-val">100%</span>
-      </div>
-
-      <!-- Rotate -->
-      <div class="ime-ctrl-row">
-        <button class="ime-icon-btn" onclick="imgEditorRotate(-90)" title="Rotate left" aria-label="Rotate left 90°">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
-        <div class="ime-slider-wrap">
-          <input type="range" id="ime-rotate-slider" class="ime-slider ime-slider-rotate" min="-180" max="180" step="1" value="0"
-            aria-label="Rotation angle" oninput="imgEditorSetRotate(parseFloat(this.value))">
-        </div>
-        <button class="ime-icon-btn" onclick="imgEditorRotate(90)" title="Rotate right" aria-label="Rotate right 90°">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-        </button>
-        <span class="ime-ctrl-val" id="ime-rotate-val">0°</span>
-      </div>
-
-      <!-- Quick actions row -->
-      <div class="ime-actions-row">
-        <button class="ime-action-chip" onclick="imgEditorFlipH()" title="Flip horizontal">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><line x1="12" y1="20" x2="12" y2="4"/></svg>
-          Flip H
-        </button>
-        <button class="ime-action-chip" onclick="imgEditorFlipV()" title="Flip vertical">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
-          Flip V
-        </button>
-        <button class="ime-action-chip" onclick="imgEditorReset()" title="Reset all">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M3 3v5h5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16m18 0v5h-5"/></svg>
-          Reset
-        </button>
-        <button class="ime-action-chip" onclick="imgEditorFit()" title="Fit to frame">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          Fit
-        </button>
-      </div>
-
-      <p class="ime-hint">Drag to reposition · Pinch or scroll to zoom</p>
     </div>
   </div>
 </div>
@@ -1009,7 +729,7 @@
       </div>
       <div>
         <div style="font-family:var(--cond,var(--sans));font-size:22px;font-weight:800;letter-spacing:2px;color:var(--text-bright)">Oasis</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">Clinical Decision Support System</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">NutriTrack Pro · Clinical Decision Support</div>
       </div>
     </div>
 
@@ -1022,12 +742,9 @@
       <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);color:var(--blue)">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>May 2026
       </span>
-    </div>
-
-    <!-- Clinical Decision Support warning -->
-    <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);border-radius:var(--r-sm);margin-bottom:20px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber,#f0b429)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <div style="font-family:var(--sans);font-size:11px;color:var(--amber,#f0b429);line-height:1.65"><strong>Clinical Decision Support Only.</strong> All prescriptions and clinical decisions require review by a qualified dietitian or clinician. This tool does not replace professional judgement.</div>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:var(--purple,#a78bfa)">
+        PWA · Offline
+      </span>
     </div>
 
     <!-- Description -->
@@ -1041,36 +758,17 @@
     <!-- Developer -->
     <div class="sdr-group">
       <div class="sdr-group-label">Developer</div>
-
-      <!-- Avatar + name/role — populated by _adrLoadDevProfile() -->
-      <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0 14px">
-        <div id="adr-dev-avatar" style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">👤</div>
-        <div style="flex:1;min-width:0">
-          <div id="adr-dev-name" style="font-family:var(--cond);font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:1px">—</div>
-          <div id="adr-dev-role" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px"></div>
-          <div id="adr-dev-institution" style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-top:2px"></div>
-        </div>
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Built by</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Edison Taimu</div>
       </div>
-
-      <!-- Bio -->
-      <p id="adr-dev-bio" style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin:0 0 14px;display:none"></p>
-
-      <!-- Affiliation row (static) -->
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Affiliation</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">KUHeS, Malawi</div>
+      </div>
       <div class="sdr-item" style="border:none">
         <div class="sdr-item-lbl">Guidelines</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">ASPEN · ESPEN · WHO · KDIGO</div>
-      </div>
-    </div>
-
-    <!-- Contact -->
-    <div class="sdr-group">
-      <div class="sdr-group-label">Contact</div>
-      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
-        <div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:10px;padding:8px 10px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
-          <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
-        </div>
-        <div id="adr-dev-links" style="display:flex;flex-direction:column;gap:7px;min-height:0"><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Loading…</span></div>
       </div>
     </div>
 
@@ -1078,16 +776,16 @@
     <div class="sdr-group" style="margin-bottom:0">
       <div class="sdr-group-label">Modules</div>
       <div style="display:flex;flex-direction:column;gap:4px;padding:4px 0">
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">01</span> Nutrition Screening (MUST · MNA-SF)</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">02</span> Anthropometry</div>
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">03</span> NFPE</div>
-        <div class="adr-mod-row"><span style="color:var(--teal)">04</span> Adult Clinical Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">05</span> Pediatric Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">06</span> Enteral Feeding</div>
-        <div class="adr-mod-row"><span style="color:var(--purple,#a78bfa)">07</span> TPN / Parenteral Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--rose,#fb7185)">08</span> 24-Hour Dietary Recall</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">09</span> Meal Planning</div>
-        <div class="adr-mod-row"><span style="color:var(--teal)">10</span> Drug–Nutrient Interactions</div>
+        <div class="adr-mod-row"><span style="color:var(--teal)">01</span> Adult Clinical Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--blue)">02</span> Pediatric Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--amber)">03</span> Enteral Feeding</div>
+        <div class="adr-mod-row"><span style="color:var(--purple,#a78bfa)">04</span> TPN / Parenteral Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">05</span> Nutrition Screening (MUST · MNA-SF)</div>
+        <div class="adr-mod-row"><span style="color:var(--teal)">06</span> Drug–Nutrient Interactions</div>
+        <div class="adr-mod-row"><span style="color:var(--rose,#fb7185)">07</span> Dietary Assessment</div>
+        <div class="adr-mod-row"><span style="color:var(--amber)">08</span> Meal Planning</div>
+        <div class="adr-mod-row"><span style="color:var(--blue)">09</span> Anthropometry</div>
+        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">10</span> NFPE</div>
         <div class="adr-mod-row" style="border:none"><span style="color:var(--purple,#a78bfa)">11</span> References</div>
       </div>
     </div>
@@ -1170,15 +868,21 @@
 </svg></span><span class="tab-label">Enteral</span>
   </div>
 
-</div><!-- /tabs -->
+</div>
+
 
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     BOTTOM NAVIGATION BAR — fixed 4 tabs
-     Anthro | PN | Screen | DNI
+     BOTTOM NAVIGATION BAR — scrollable secondary clinical tools
+     Anthro | NFPE | 24hr Recall | Meal Planner | + dynamic tabs
 ════════════════════════════════════════════════════════════ -->
-<nav class="bottom-nav" role="navigation" aria-label="Secondary navigation">
+<div class="bottom-nav-wrap">
+  <!-- Fade indicators for scroll overflow -->
+  <div class="bnav-fade bnav-fade-left" id="bnav-fade-left"></div>
+  <div class="bnav-fade bnav-fade-right" id="bnav-fade-right"></div>
+
+<nav class="bottom-nav" role="navigation" aria-label="Secondary navigation" id="bottom-nav-scroll">
 
   <!-- ── ANTHRO ── -->
   <div class="tab tab-clinical" id="bnav-anthro" onclick="switchTab('anthro')" role="button" tabindex="0" aria-label="Anthropometry">
@@ -1190,39 +894,45 @@
     <span class="tab-label">Anthro</span>
   </div>
 
-  <!-- ── PN (Parenteral Nutrition) ── -->
-  <div class="tab tab-clinical" id="bnav-parenteral" onclick="switchTab('parenteral')" role="button" tabindex="0" aria-label="Parenteral Nutrition">
+  <!-- ── NFPE ── -->
+  <div class="tab tab-clinical" id="bnav-nfpe" onclick="switchTab('nfpe')" role="button" tabindex="0" aria-label="Nutrition-Focused Physical Exam">
     <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M8 3h8a1 1 0 0 1 1 1v3a5 5 0 0 1-10 0V4a1 1 0 0 1 1-1z"/>
-  <line x1="12" y1="7" x2="12" y2="14"/>
-  <path d="M9.5 13.5h5" stroke-width="1.4"/>
-  <path d="M12 14v5" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
-  <circle cx="12" cy="20" r="1.2" fill="#60a5fa" stroke="none"/>
+  <circle cx="12" cy="8" r="3"/>
+  <path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+  <path d="M16 3.5c1.5.8 2.5 2.3 2.5 4" stroke="#f472b6" stroke-width="1.4"/>
+  <path d="M18.5 2c2.5 1.3 3.5 3.8 3.5 6" stroke="#f472b6" stroke-width="1.4" opacity="0.6"/>
     </svg></span>
-    <span class="tab-label">PN</span>
+    <span class="tab-label">NFPE</span>
   </div>
 
-  <!-- ── SCREEN (Nutrition Screening) ── -->
-  <div class="tab tab-clinical" id="bnav-screening" onclick="switchTab('screening')" role="button" tabindex="0" aria-label="Nutrition Screening">
-    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-  <rect x="9" y="3" width="6" height="4" rx="1"/>
-  <polyline points="9,12 11,14 15,10" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- ── 24HR RECALL ── -->
+  <div class="tab tab-assess" id="bnav-recall" onclick="switchTab('recall')" role="button" tabindex="0" aria-label="24-Hour Dietary Recall">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <circle cx="12" cy="13" r="7" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="12" y1="13" x2="12" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="13" x2="15.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="12" cy="13" r="1" fill="currentColor"/>
+  <text x="12" y="5.5" font-size="4" fill="currentColor" text-anchor="middle" font-family="monospace" font-weight="600" opacity="0.9">24h</text>
     </svg></span>
-    <span class="tab-label">Screen</span>
+    <span class="tab-label">24hr Recall</span>
   </div>
 
-  <!-- ── DNI (Drug-Nutrient Interactions) ── -->
-  <div class="tab tab-clinical" id="bnav-dni" onclick="switchTab('dni')" role="button" tabindex="0" aria-label="Drug-Nutrient Interactions">
-    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/>
-  <circle cx="18" cy="18" r="3"/>
-  <path d="m22 22-1.5-1.5" stroke="#fb923c" stroke-width="2"/>
+  <!-- ── MEAL PLANNER ── -->
+  <div class="tab tab-assess" id="bnav-mealplan" onclick="switchTab('mealplan')" role="button" tabindex="0" aria-label="Meal Planner">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <circle cx="12" cy="14" r="8" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M12 14L12 8.5A5.5 5.5 0 0117.5 14Z" fill="#f0b429" opacity="0.35" stroke="#f0b429" stroke-width="1.2"/>
+  <path d="M12 14L17.5 14A5.5 5.5 0 0114 19Z" fill="#4fc3f7" opacity="0.35" stroke="#4fc3f7" stroke-width="1.2"/>
+  <path d="M12 14L14 19A5.5 5.5 0 0112 8.5Z" fill="#34d399" opacity="0.35" stroke="#34d399" stroke-width="1.2"/>
+  <circle cx="12" cy="14" r="1.2" fill="currentColor"/>
+  <line x1="8" y1="4" x2="8" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="4" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg></span>
-    <span class="tab-label">DNI</span>
+    <span class="tab-label">Meal</span>
   </div>
 
 </nav>
+</div><!-- /bottom-nav-wrap -->
 
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1616,138 +1326,67 @@
     <div id="hp-recent-list" class="hp-recent-list"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════
-       HOME QUICK-ACCESS GRID — 7 cards
-  ═══════════════════════════════════════════════ -->
-  <div class="hp-section-title" style="margin-top:20px">Quick Access</div>
-
-  <div class="hg-grid">
-
-    <!-- 1. 24hr Recall -->
-    <div class="hg-card hg-card--green" onclick="switchTab('recall')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="13" r="7"/>
-          <line x1="12" y1="13" x2="12" y2="8.5"/>
-          <line x1="12" y1="13" x2="15.5" y2="14.5"/>
-          <circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/>
-          <text x="12" y="5.2" font-size="4.2" fill="currentColor" text-anchor="middle" font-family="monospace" font-weight="700">24h</text>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">24hr Recall</div>
-        <div class="hg-desc">Malawi FCT · local foods</div>
-      </div>
-      <div class="hg-arrow">→</div>
+  <!-- ── QUICK ACCESS ── -->
+  <div class="hp-section-title">Information</div>
+  <div class="hp-refs">
+    <div class="hp-ref-card" onclick="switchTab('database')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <ellipse cx="12" cy="5.5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M5 5.5V11.5" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M19 5.5V11.5" stroke="currentColor" stroke-width="1.5"/>
+  <ellipse cx="12" cy="11.5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M5 11.5V17" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M19 11.5V17" stroke="currentColor" stroke-width="1.5"/>
+  <ellipse cx="12" cy="17" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M13 3.5C15 2.5 17.5 3 16.5 5.5C15.5 7 13 6.5 12.5 4.5" fill="#34d399" opacity="0.8" filter="url(#ni-glow)"/>
+</svg></span>
+      <div><div class="hp-ref-name">Food Database</div><div class="hp-ref-desc">Malawi FCT + local foods</div></div>
     </div>
-
-    <!-- 2. Meal Planner -->
-    <div class="hg-card hg-card--rose" onclick="switchTab('mealplan')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="13" r="8"/>
-          <path d="M12 13L12 7A6 6 0 0118 13Z" fill="currentColor" opacity="0.18" stroke="none"/>
-          <path d="M12 13L18 13A6 6 0 0112 19Z" fill="currentColor" opacity="0.10" stroke="none"/>
-          <circle cx="12" cy="13" r="1.2" fill="currentColor" stroke="none"/>
-          <line x1="8" y1="3" x2="8" y2="6"/>
-          <line x1="16" y1="3" x2="16" y2="5"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">Meal Planner</div>
-        <div class="hg-desc">7-day plan · exchange lists</div>
-      </div>
-      <div class="hg-arrow">→</div>
+    <div class="hp-ref-card" onclick="switchTab('history')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <rect x="4" y="3" width="13" height="17" rx="2" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <rect x="4" y="3" width="13" height="5" rx="2" fill="currentColor" fill-opacity="0.12"/>
+  <rect x="4" y="7" width="13" height="1" fill="currentColor" fill-opacity="0.12"/>
+  <line x1="7" y1="11.5" x2="14" y2="11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="7" y1="14" x2="13" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>
+  <line x1="7" y1="16.5" x2="14.5" y2="16.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="19" cy="18" r="5" fill="var(--surface2,#071525)" stroke="currentColor" stroke-width="1.3"/>
+  <line x1="19" y1="18" x2="19" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" filter="url(#ni-glow)"/>
+  <line x1="19" y1="18" x2="21.5" y2="19.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+</svg></span>
+      <div><div class="hp-ref-name">History</div><div class="hp-ref-desc">Saved patient records</div></div>
     </div>
-
-    <!-- 3. NFPE -->
-    <div class="hg-card hg-card--pink" onclick="switchTab('nfpe')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="3"/>
-          <path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
-          <path d="M16 3.5c1.4.8 2.3 2.2 2.3 3.8" stroke="#f472b6" stroke-width="1.5"/>
-          <path d="M18.2 1.8c2.2 1.3 3.3 3.6 3.3 5.7" stroke="#f472b6" stroke-width="1.3" opacity="0.55"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">NFPE</div>
-        <div class="hg-desc">Physical exam · deficiency signs</div>
-      </div>
-      <div class="hg-arrow">→</div>
+    <div class="hp-ref-card" onclick="switchTab('reference')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <path d="M3 6C3 4.895 3.895 4 5 4H12V20H5C3.895 20 3 19.105 3 18V6Z" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M21 6C21 4.895 20.105 4 19 4H12V20H19C20.105 20 21 19.105 21 18V6Z" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <line x1="6" y1="8" x2="10.5" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="6" y1="11" x2="10" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+  <line x1="6" y1="14" x2="10.5" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <rect x="13.5" y="7" width="6" height="2" rx="1" fill="#a78bfa" opacity="0.35" stroke="#a78bfa" stroke-width="0.8"/>
+  <line x1="13.5" y1="11.5" x2="19.5" y2="11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+  <line x1="13.5" y1="14.5" x2="18.5" y2="14.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M18.5 4L21 6L19.5 6Z" fill="currentColor" opacity="0.3"/>
+</svg></span>
+      <div><div class="hp-ref-name">Reference</div><div class="hp-ref-desc">ASPEN · ESPEN · WHO guidelines</div></div>
     </div>
-
-    <!-- 4. Food Database -->
-    <div class="hg-card hg-card--teal" onclick="switchTab('database')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="12" cy="5" rx="7" ry="2.5"/>
-          <path d="M5 5v6c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5V5"/>
-          <path d="M5 11v6c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5v-6"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">Food Database</div>
-        <div class="hg-desc">Malawi FCT · local foods</div>
-      </div>
-      <div class="hg-arrow">→</div>
+    <div class="hp-ref-card" onclick="switchTab('about')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" filter="url(#ni-glow)"/>
+  <circle cx="12" cy="8" r="1.2" fill="currentColor" opacity="0.9"/>
+</svg></span>
+      <div><div class="hp-ref-name">About</div><div class="hp-ref-desc">Version · Support · Contact</div></div>
     </div>
-
-    <!-- 5. History — wide card -->
-    <div class="hg-card hg-card--amber hg-card--wide" onclick="switchTab('history')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 3v5h5"/>
-          <path d="M3.05 13A9 9 0 1 0 6 6.3L3 9"/>
-          <line x1="12" y1="7" x2="12" y2="12"/>
-          <line x1="12" y1="12" x2="15" y2="14"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">History</div>
-        <div class="hg-desc">Saved patient records · previous calculations</div>
-      </div>
-      <div class="hg-arrow">→</div>
-    </div>
-
-    <!-- 6. Reference — wide card -->
-    <div class="hg-card hg-card--purple hg-card--wide" onclick="switchTab('reference')">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6C3 4.895 3.895 4 5 4H12V20H5C3.895 20 3 19.105 3 18V6Z"/>
-          <path d="M21 6C21 4.895 20.105 4 19 4H12V20H19C20.105 20 21 19.105 21 18V6Z"/>
-          <line x1="6" y1="8" x2="10.5" y2="8" stroke-width="1.1" opacity="0.6"/>
-          <line x1="6" y1="11" x2="10" y2="11" stroke-width="1.1" opacity="0.4"/>
-          <line x1="6" y1="14" x2="10.5" y2="14" stroke-width="1.1" opacity="0.6"/>
-          <rect x="13.5" y="7" width="6" height="2" rx="1" fill="#a78bfa" opacity="0.28" stroke="#a78bfa" stroke-width="0.8"/>
-          <line x1="13.5" y1="11.5" x2="19.5" y2="11.5" stroke-width="1.1" opacity="0.4"/>
-          <line x1="13.5" y1="14.5" x2="18.5" y2="14.5" stroke-width="1.1" opacity="0.6"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">Reference</div>
-        <div class="hg-desc">ASPEN · ESPEN · WHO guidelines</div>
-      </div>
-      <div class="hg-arrow">→</div>
-    </div>
-
-    <!-- 7. About — wide card -->
-    <div class="hg-card hg-card--blue hg-card--wide" onclick="kebabOpenAbout()">
-      <div class="hg-icon-wrap">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="9"/>
-          <line x1="12" y1="11" x2="12" y2="17"/>
-          <circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/>
-        </svg>
-      </div>
-      <div class="hg-body">
-        <div class="hg-title">About Oasis</div>
-        <div class="hg-desc">Version · developer · guidelines used</div>
-      </div>
-      <div class="hg-arrow">→</div>
-    </div>
-
-  </div><!-- /hg-grid -->
+  </div>
 
   <!-- ── FOOTER ── -->
   <div class="hp-footer">
@@ -5164,9 +4803,145 @@
           </div>
         </div>
 
+        <!-- Feedback -->
+        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md);box-sizing:border-box;width:100%">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:1px">FEEDBACK</span>
+          </div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.7;margin-bottom:12px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
+          <button onclick="openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
+
+
+<!-- ── FEEDBACK MODAL ── -->
+<div id="feedback-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--surface);border:1px solid rgba(29,233,212,0.2);border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
+    <!-- header -->
+    <div style="padding:14px 16px;background:rgba(29,233,212,0.06);border-bottom:1px solid rgba(29,233,212,0.12);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:var(--cond);font-size:12px;font-weight:700;color:var(--teal);letter-spacing:2px">SEND FEEDBACK</div>
+      <button onclick="closeFeedbackModal()" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px" title="Close">✕</button>
+    </div>
+    <!-- emoji quick-react -->
+    <div style="padding:12px 16px 6px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">QUICK REACTION</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Helpful"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Love it"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Thank you"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Amazing"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Bug report"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Suggestion"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Great tool"></button>
+        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Issue"></button>
+      </div>
+    </div>
+    <!-- message -->
+    <div style="padding:8px 16px 12px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">MESSAGE <span style="color:var(--text-muted)">(optional)</span></div>
+      <textarea id="fb-message-input" placeholder="Type your feedback, bug report, or suggestion…" style="width:100%;min-height:90px;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);border-radius:var(--r-sm);padding:9px 11px;font-family:var(--sans);font-size:12px;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='rgba(29,233,212,0.45)'" onblur="this.style.borderColor='var(--input-border)'"></textarea>
+    </div>
+    <!-- selected emoji display -->
+    <div id="fb-selected-emoji" style="padding:0 16px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);display:none">
+      Reaction: <span id="fb-emoji-display" style="font-size:16px"></span>
+    </div>
+    <!-- actions -->
+    <div style="padding:10px 16px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border)">
+      <button onclick="closeFeedbackModal()" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 16px;cursor:pointer;letter-spacing:0.5px">CANCEL</button>
+      <button onclick="submitFeedback()" id="fb-submit-btn" style="font-family:var(--mono);font-size:9px;color:#020617;background:var(--teal);border:none;border-radius:var(--r-sm);padding:7px 18px;cursor:pointer;font-weight:700;letter-spacing:0.5px">SEND →</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  let _selectedEmoji = '';
+
+  window.openFeedbackModal = function() {
+    const m = document.getElementById('feedback-modal');
+    if (!m) return;
+    _selectedEmoji = '';
+    document.getElementById('fb-message-input').value = '';
+    document.getElementById('fb-selected-emoji').style.display = 'none';
+    document.querySelectorAll('.fb-emoji-btn').forEach(b => b.classList.remove('selected'));
+    m.style.display = 'flex';
+    setTimeout(() => document.getElementById('fb-message-input').focus(), 100);
+  };
+
+  window.closeFeedbackModal = function() {
+    const m = document.getElementById('feedback-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  window.selectFeedbackEmoji = function(emoji) {
+    _selectedEmoji = emoji;
+    document.querySelectorAll('.fb-emoji-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.e === emoji);
+    });
+    const wrap = document.getElementById('fb-selected-emoji');
+    const disp = document.getElementById('fb-emoji-display');
+    if (wrap && disp) { disp.textContent = emoji; wrap.style.display = 'block'; }
+  };
+
+  window.submitFeedback = async function() {
+    const msg  = (document.getElementById('fb-message-input')?.value || '').trim();
+    const btn  = document.getElementById('fb-submit-btn');
+    if (!msg && !_selectedEmoji) {
+      showToast('Please add a message or pick a reaction first.', 'warning');
+      return;
+    }
+    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+    const _fp = (typeof getUserProfile !== 'undefined') ? getUserProfile() : null;
+    const _fi = localStorage.getItem('nc_institution') || '';
+    const payload = {
+      emoji:        _selectedEmoji || null,
+      message:      msg || null,
+      sessionId:    typeof SESSION_ID !== 'undefined' ? SESSION_ID : 'unknown',
+      sentAt:       (typeof firebase !== 'undefined')
+                      ? firebase.firestore.FieldValue.serverTimestamp()
+                      : new Date().toISOString(),
+      userAgent:    navigator.userAgent.slice(0, 120),
+      userName:     _fp?.name || '',
+      userRole:     _fp?.role || '',
+      institution:  _fi,
+      read:         false,
+    };
+    try {
+      if (typeof db !== 'undefined' && db) {
+        await db.collection('feedback').add(payload);
+      }
+      closeFeedbackModal();
+      showToast(_selectedEmoji
+        ? `${_selectedEmoji} Feedback sent — thank you!`
+        : ' Feedback sent to admin — thank you!', 'success');
+    } catch(e) {
+      console.error('[Feedback]', e);
+      showToast('Could not send feedback. Please try again.', 'error');
+    } finally {
+      if (btn) { btn.textContent = 'SEND →'; btn.disabled = false; }
+    }
+  };
+
+  // Close modal on backdrop click
+  document.addEventListener('click', function(e) {
+    const m = document.getElementById('feedback-modal');
+    if (m && e.target === m) closeFeedbackModal();
+  });
+})();
+</script>
+      </div>
+    </div>
+  </div>
+
+
+
 
 
 
@@ -9506,7 +9281,6 @@ function ntClear(scopeId, resultIds) {
 </script>
 
 <script src="pes.js"></script>
-<script src="whatsnew.js"></script>
 
 <!-- ════════════ UCT EXCHANGE LIST TOOLTIP ════════════ -->
 <div id="uct-exchange-tooltip" role="tooltip" aria-live="polite" style="

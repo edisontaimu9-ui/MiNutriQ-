@@ -886,8 +886,25 @@ document.addEventListener('DOMContentLoaded', () => {
   _updateNotifSettingsUI(Notification.permission);
 });
 
+// ── BOTTOM NAV SCROLL FADE INDICATORS ────────────────────────
+window._bnavUpdateFades = function() {
+  const nav = document.getElementById('bottom-nav-scroll');
+  const fadeL = document.getElementById('bnav-fade-left');
+  const fadeR = document.getElementById('bnav-fade-right');
+  if (!nav || !fadeL || !fadeR) return;
+  const atLeft  = nav.scrollLeft <= 2;
+  const atRight = nav.scrollLeft >= (nav.scrollWidth - nav.clientWidth - 2);
+  fadeL.classList.toggle('visible', !atLeft);
+  fadeR.classList.toggle('visible', !atRight);
+};
 
-
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.getElementById('bottom-nav-scroll');
+  if (!nav) return;
+  nav.addEventListener('scroll', window._bnavUpdateFades, { passive: true });
+  // Initial check after modules have injected their tabs
+  setTimeout(window._bnavUpdateFades, 600);
+});
 
 
 
@@ -1588,10 +1605,25 @@ function switchTab(tab) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
-  // Activate matching bottom-nav tab
+  // Activate matching bottom-nav tab + scroll it into view
   document.querySelectorAll('.bottom-nav .tab').forEach(t => {
-    if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
+    if (t.getAttribute('onclick') === `switchTab('${tab}')`) {
+      t.classList.add('active');
+      // Scroll active tab into view smoothly
+      try {
+        const nav = document.getElementById('bottom-nav-scroll');
+        if (nav) {
+          const tabLeft = t.offsetLeft;
+          const tabWidth = t.offsetWidth;
+          const navWidth = nav.offsetWidth;
+          const scrollTarget = tabLeft - (navWidth / 2) + (tabWidth / 2);
+          nav.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        }
+      } catch(e) {}
+    }
   });
+  // Update fade indicators after scroll settles
+  try { _bnavUpdateFades(); } catch(e) {}
 
   const el = document.getElementById('tab-' + tab);
   if (el) el.classList.add('active');
@@ -1905,7 +1937,7 @@ function exportResultsCSV() {
     ['Fluid Requirement High (mL/day)', fluidHigh],
     ['Refeeding Risk', d.rfRisk >= 2 ? 'HIGH' : d.rfRisk === 1 ? 'MODERATE' : 'LOW'],
   ];
-  downloadCSV('oasis_results_' + TODAY + '.csv', headers, rows);
+  downloadCSV('nutrical_results_' + TODAY + '.csv', headers, rows);
 }
 
 
@@ -2481,7 +2513,7 @@ function toggleKebabMenu(e){
   var bd=document.getElementById('kebab-backdrop');
   if(!menu)return;
   if(menu.classList.contains('open')){closeKebabMenu();return;}
-  _kebabUpdateLabels();_kebabShowSignOut();_kebabSyncThemeUI();
+  _kebabUpdateLabels();_kebabShowSignOut();
   menu.classList.add('open');btn.classList.add('open');
   btn.setAttribute('aria-expanded','true');
   if(bd)bd.classList.add('visible');
@@ -2523,730 +2555,12 @@ function kebabOpenAbout(){closeKebabMenu();openAbout();}
 /* ── PROFILE DRAWER ── */
 function openProfile(){
   _populateProfileDrawer();
-  // Apply saved avatar/photo (overrides role-based default from _populateProfileDrawer)
-  _applyStoredProfilePhoto(document.getElementById('pdr-avatar'), 82);
-  // Always start in view mode
-  pdrShowViewMode();
   document.getElementById('profile-drawer').classList.add('open');
   document.getElementById('profile-overlay').classList.add('open');
 }
 function closeProfile(){
   document.getElementById('profile-drawer').classList.remove('open');
   document.getElementById('profile-overlay').classList.remove('open');
-}
-
-/* ── PROFILE EDIT MODE ── */
-function pdrShowViewMode(){
-  var vm=document.getElementById('pdr-view-mode');
-  var em=document.getElementById('pdr-edit-mode');
-  var backBtn=document.getElementById('pdr-back-btn');
-  var title=document.getElementById('pdr-header-title');
-  if(vm)vm.style.display='';
-  if(em)em.style.display='none';
-  if(backBtn)backBtn.style.display='none';
-  if(title)title.textContent='Profile';
-}
-
-function pdrEnterEditMode(){
-  var vm=document.getElementById('pdr-view-mode');
-  var em=document.getElementById('pdr-edit-mode');
-  var backBtn=document.getElementById('pdr-back-btn');
-  var title=document.getElementById('pdr-header-title');
-  if(vm)vm.style.display='none';
-  if(em)em.style.display='';
-  if(backBtn)backBtn.style.display='';
-  if(title)title.textContent='Edit Profile';
-
-  // Populate fields from current profile
-  var p=(typeof getUserProfile==='function')?getUserProfile():null;
-  var nameEl=document.getElementById('pdr-field-name');
-  var uidEl=document.getElementById('pdr-field-uid');
-  var emailEl=document.getElementById('pdr-field-email');
-  var instEl=document.getElementById('pdr-field-institution');
-  if(nameEl)nameEl.value=(p&&p.name)?p.name:'';
-  if(uidEl)uidEl.value=(p&&p.uid)?p.uid:'';
-  if(emailEl)emailEl.value=(p&&p.email)?p.email:'';
-
-  // Institution
-  if(instEl && p && p.institution){
-    var found=false;
-    for(var i=0;i<instEl.options.length;i++){
-      if(instEl.options[i].value===p.institution){instEl.value=p.institution;found=true;break;}
-    }
-    if(!found){
-      instEl.value='Other';
-      document.getElementById('pdr-inst-other-row').style.display='block';
-      var oi=document.getElementById('pdr-field-institution-other');
-      if(oi)oi.value=p.institution;
-    }
-  }
-
-  // Role chips
-  _buildPdrRoleChips((p&&p.role)?p.role:'');
-
-  // Mirror avatar/photo into edit preview
-  _applyStoredProfilePhoto(document.getElementById('pdr-edit-avatar'), 82);
-
-  // Build avatar grid in edit mode
-  _buildPdrEditAvatarGrid();
-
-  // Default to avatar tab
-  pdrSwitchPhotoTab('avatar');
-
-  // Show/hide custom photo preview
-  _refreshPdrPhotoPanel();
-
-  // Scroll to top of edit body
-  if(em)em.scrollTop=0;
-}
-
-function pdrExitEditMode(){
-  pdrShowViewMode();
-}
-
-function _buildPdrRoleChips(currentRole){
-  var container=document.getElementById('pdr-role-chips');
-  if(!container)return;
-  container.innerHTML='';
-  var roles=[
-    {id:'student',label:'Student'},
-    {id:'dietitian',label:'Dietitian'},
-    {id:'clinician',label:'Clinician'},
-    {id:'nurse',label:'Nurse'},
-    {id:'researcher',label:'Researcher'},
-    {id:'other',label:'Other'},
-  ];
-  roles.forEach(function(r){
-    var btn=document.createElement('button');
-    btn.className='pdr-role-chip'+(currentRole===r.id?' active':'');
-    btn.setAttribute('data-role',r.id);
-    btn.textContent=r.label;
-    btn.onclick=function(){
-      container.querySelectorAll('.pdr-role-chip').forEach(function(b){b.classList.remove('active');});
-      btn.classList.add('active');
-      var otherRow=document.getElementById('pdr-role-other-row');
-      if(otherRow)otherRow.style.display=r.id==='other'?'block':'none';
-    };
-    container.appendChild(btn);
-  });
-  var otherRow=document.getElementById('pdr-role-other-row');
-  if(otherRow)otherRow.style.display=currentRole==='other'?'block':'none';
-}
-
-function _buildPdrEditAvatarGrid(){
-  var grid=document.getElementById('pdr-edit-avatar-grid');
-  if(!grid)return;
-  grid.innerHTML='';
-  OASIS_AVATARS.forEach(function(av){
-    var btn=document.createElement('button');
-    btn.className='avatar-option av-color-'+av.color+(_selectedAvatarId===av.id?' selected':'');
-    btn.setAttribute('aria-label',av.label);
-    btn.setAttribute('title',av.label);
-    btn.setAttribute('data-av-id',av.id);
-    btn.innerHTML=av.svg+'<span class="av-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
-    btn.addEventListener('click',function(){
-      // selecting avatar clears custom photo selection temporarily
-      _pdrSelectedAvId=av.id;
-      _pdrPhotoDataUrl=null;// deselect custom photo when avatar chosen
-      grid.querySelectorAll('.avatar-option').forEach(function(b){b.classList.toggle('selected',b.getAttribute('data-av-id')===av.id);});
-      _renderAvatarEl(document.getElementById('pdr-edit-avatar'),av.id,82);
-    });
-    grid.appendChild(btn);
-  });
-}
-
-// Temp edit-mode state
-var _pdrSelectedAvId=null;
-var _pdrPhotoDataUrl=null;
-
-function pdrSwitchPhotoTab(tab){
-  var avatarPanel=document.getElementById('pdr-edit-avatar-panel');
-  var photoPanel=document.getElementById('pdr-edit-photo-panel');
-  var tabAv=document.getElementById('pdr-tab-avatar');
-  var tabPh=document.getElementById('pdr-tab-photo');
-  if(tab==='avatar'){
-    if(avatarPanel)avatarPanel.style.display='';
-    if(photoPanel)photoPanel.style.display='none';
-    if(tabAv)tabAv.className='pdr-photo-tab pdr-photo-tab-active';
-    if(tabPh)tabPh.className='pdr-photo-tab';
-  } else {
-    if(avatarPanel)avatarPanel.style.display='none';
-    if(photoPanel)photoPanel.style.display='';
-    if(tabAv)tabAv.className='pdr-photo-tab';
-    if(tabPh)tabPh.className='pdr-photo-tab pdr-photo-tab-active';
-    _refreshPdrPhotoPanel();
-  }
-}
-
-function _refreshPdrPhotoPanel(){
-  var stored=localStorage.getItem('oasis_profile_photo');
-  var preview=document.getElementById('pdr-photo-preview');
-  var previewWrap=document.getElementById('pdr-photo-preview-wrap');
-  var empty=document.getElementById('pdr-photo-empty');
-  var hasPhoto=_pdrPhotoDataUrl||stored;
-  if(preview&&hasPhoto){preview.src=_pdrPhotoDataUrl||stored;}
-  if(previewWrap)previewWrap.style.display=hasPhoto?'flex':'none';
-  if(empty)empty.style.display=hasPhoto?'none':'block';
-}
-
-function pdrHandlePhotoUpload(input){
-  var file=input.files&&input.files[0];
-  if(!file)return;
-  // Reset the input so the same file can be re-selected
-  input.value='';
-  var reader=new FileReader();
-  reader.onload=function(e){
-    // Open image editor first — don't store directly
-    imgEditorOpen(e.target.result, function(optimizedDataUrl){
-      // Called when user clicks "Save Photo" inside the editor
-      _pdrPhotoDataUrl=optimizedDataUrl;
-      _pdrSelectedAvId=null;
-      // Update edit avatar preview
-      var editAv=document.getElementById('pdr-edit-avatar');
-      if(editAv){
-        editAv.style.background='transparent';
-        editAv.style.borderColor='rgba(29,233,212,0.5)';
-        editAv.innerHTML='<img src="'+_pdrPhotoDataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      }
-      pdrSwitchPhotoTab('photo');
-      _refreshPdrPhotoPanel();
-    });
-  };
-  reader.readAsDataURL(file);
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   IMAGE EDITOR ENGINE
-   Full canvas-based editor: drag to reposition, pinch/scroll zoom,
-   rotate slider, flip, fit, reset. Circular clip preview.
-   Outputs a compressed, square-cropped JPEG/WebP for avatar use.
-   ══════════════════════════════════════════════════════════════════ */
-(function(){
-  var _img = null;          // HTMLImageElement source
-  var _onSave = null;       // callback(dataUrl)
-
-  // Transform state
-  var _zoom = 1;
-  var _rotate = 0;          // degrees
-  var _offsetX = 0;         // pan offset in image pixels
-  var _offsetY = 0;
-  var _flipH = false;
-  var _flipV = false;
-
-  // Drag state
-  var _dragging = false;
-  var _lastX = 0;
-  var _lastY = 0;
-
-  // Pinch state
-  var _pinchDist0 = null;
-  var _zoom0 = 1;
-  var _pinchCx = 0;
-  var _pinchCy = 0;
-
-  // Canvas / viewport
-  var _canvas = null;
-  var _ctx = null;
-  var _size = 0;            // canvas pixel size (square)
-
-  var _previewCanvas = null;
-  var _previewCtx = null;
-
-  var _raf = null;
-  var _dirty = true;
-  var _gridTimer = null;
-
-  /* ── PUBLIC API ── */
-  window.imgEditorOpen = function(dataUrl, onSaveCb){
-    _onSave = onSaveCb;
-    var img = new Image();
-    img.onload = function(){
-      _img = img;
-      _initEditor();
-      document.getElementById('img-editor-overlay').classList.add('open');
-      document.body.style.overflow = 'hidden';
-    };
-    img.src = dataUrl;
-  };
-
-  window.imgEditorCancel = function(){
-    _closeEditor();
-  };
-
-  window.imgEditorSave = function(){
-    var out = _renderOutput(400); // 400×400 output
-    _closeEditor();
-    if(_onSave) _onSave(out);
-    // Immediately persist the saved photo and refresh all avatar surfaces
-    if(out){
-      try{
-        localStorage.setItem('oasis_profile_photo',out);
-        // Clear any selected avatar since a custom photo now takes priority
-        localStorage.removeItem('oasis_avatar_id');
-        if(typeof _updateHeaderAvatar==='function')_updateHeaderAvatar(); if(typeof _updateProfileCompletionBadge==='function')_updateProfileCompletionBadge();
-        if(typeof _populateProfileDrawer==='function')_populateProfileDrawer();
-        if(typeof renderProfileCard==='function')renderProfileCard();
-        if(typeof showToast==='function')showToast('Photo saved','success',2000);
-      }catch(e){
-        if(typeof showToast==='function')showToast('Photo too large to save — try a smaller image','warn',3500);
-      }
-    }
-  };
-
-  window.imgEditorZoom = function(delta){
-    _setZoom(Math.max(0.1, Math.min(4, _zoom + delta)));
-  };
-
-  window.imgEditorSetZoom = function(val){
-    _setZoom(val);
-  };
-
-  window.imgEditorRotate = function(deg){
-    _setRotate(_rotate + deg);
-  };
-
-  window.imgEditorSetRotate = function(deg){
-    _setRotate(deg);
-  };
-
-  window.imgEditorFlipH = function(){
-    _flipH = !_flipH;
-    _markDirty();
-  };
-
-  window.imgEditorFlipV = function(){
-    _flipV = !_flipV;
-    _markDirty();
-  };
-
-  window.imgEditorReset = function(){
-    _zoom = 1; _rotate = 0;
-    _offsetX = 0; _offsetY = 0;
-    _flipH = false; _flipV = false;
-    _syncSliders();
-    _markDirty();
-  };
-
-  window.imgEditorFit = function(){
-    if(!_img||!_size) return;
-    var s = _fitZoom();
-    _zoom = s;
-    _offsetX = 0; _offsetY = 0;
-    _syncSliders();
-    _markDirty();
-  };
-
-  /* ── INIT ── */
-  function _initEditor(){
-    _canvas = document.getElementById('ime-canvas');
-    _previewCanvas = document.getElementById('ime-preview-canvas');
-    _ctx = _canvas.getContext('2d');
-    _previewCtx = _previewCanvas.getContext('2d');
-
-    // Set canvas pixel size to viewport rendered size (square)
-    var vp = document.getElementById('ime-viewport');
-    var vpRect = vp.getBoundingClientRect();
-    _size = Math.min(vpRect.width, vpRect.height) || 320;
-    _canvas.width = _size;
-    _canvas.height = _size;
-
-    // Reset state
-    _rotate = 0; _flipH = false; _flipV = false;
-    _offsetX = 0; _offsetY = 0;
-    _zoom = _fitZoom(); // fit image to frame on open
-
-    _syncSliders();
-    _bindEvents();
-    _startLoop();
-  }
-
-  function _fitZoom(){
-    if(!_img||!_size) return 1;
-    var r = _rotate * Math.PI / 180;
-    var cos = Math.abs(Math.cos(r));
-    var sin = Math.abs(Math.sin(r));
-    var bw = _img.width * cos + _img.height * sin;
-    var bh = _img.width * sin + _img.height * cos;
-    var circlePx = _size * 0.8; // the circle is 80% of the canvas
-    return Math.max(circlePx / bw, circlePx / bh);
-  }
-
-  function _closeEditor(){
-    _stopLoop();
-    _unbindEvents();
-    document.getElementById('img-editor-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-    _img = null; _onSave = null;
-  }
-
-  /* ── RENDER LOOP ── */
-  function _startLoop(){
-    _dirty = true;
-    function loop(){
-      if(_dirty){ _drawFrame(); _dirty=false; }
-      _raf = requestAnimationFrame(loop);
-    }
-    _raf = requestAnimationFrame(loop);
-  }
-
-  function _stopLoop(){
-    if(_raf) cancelAnimationFrame(_raf);
-    _raf = null;
-  }
-
-  function _markDirty(){ _dirty = true; }
-
-  function _drawFrame(){
-    if(!_img||!_canvas) return;
-    var C = _canvas;
-    var ctx = _ctx;
-    ctx.clearRect(0,0,C.width,C.height);
-
-    ctx.save();
-
-    // Move to canvas centre
-    ctx.translate(C.width/2, C.height/2);
-
-    // Apply rotation
-    ctx.rotate(_rotate * Math.PI / 180);
-
-    // Apply flip
-    ctx.scale(_flipH?-1:1, _flipV?-1:1);
-
-    // Apply zoom & pan (pan in image space, so divide by zoom for canvas space)
-    ctx.scale(_zoom, _zoom);
-    ctx.translate(-_offsetX, -_offsetY);
-
-    // Draw image centred
-    ctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
-
-    ctx.restore();
-
-    // Also update the small circular preview
-    _drawPreview();
-  }
-
-  function _drawPreview(){
-    var pc = _previewCanvas;
-    var pctx = _previewCtx;
-    var ps = pc.width; // 52
-    pctx.clearRect(0,0,ps,ps);
-    pctx.save();
-    pctx.beginPath();
-    pctx.arc(ps/2,ps/2,ps/2,0,Math.PI*2);
-    pctx.clip();
-
-    // Scale so the circle portion maps to preview
-    // The circle in main canvas is 80% of _size
-    var circleR = _size * 0.4;
-    var scale = (ps/2) / circleR;
-    pctx.translate(ps/2, ps/2);
-    pctx.scale(scale, scale);
-    pctx.rotate(_rotate * Math.PI / 180);
-    pctx.scale((_flipH?-1:1)*_zoom, (_flipV?-1:1)*_zoom);
-    pctx.translate(-_offsetX, -_offsetY);
-    pctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
-
-    pctx.restore();
-  }
-
-  /* ── RENDER OUTPUT ── */
-  function _renderOutput(outputSize){
-    var off = document.createElement('canvas');
-    off.width = outputSize;
-    off.height = outputSize;
-    var ctx = off.getContext('2d');
-
-    // Clip to circle
-    ctx.beginPath();
-    ctx.arc(outputSize/2, outputSize/2, outputSize/2, 0, Math.PI*2);
-    ctx.clip();
-
-    // Map the circle viewport region to the output canvas
-    var circleR = _size * 0.4; // radius in main canvas pixels
-    var scale = (outputSize/2) / circleR;
-
-    ctx.translate(outputSize/2, outputSize/2);
-    ctx.rotate(_rotate * Math.PI / 180);
-    ctx.scale((_flipH?-1:1)*_zoom*scale, (_flipV?-1:1)*_zoom*scale);
-    ctx.translate(-_offsetX, -_offsetY);
-    ctx.drawImage(_img, -_img.width/2, -_img.height/2, _img.width, _img.height);
-
-    // Compress: try WebP first (smaller), fall back to JPEG
-    var quality = 0.82;
-    var out = off.toDataURL('image/webp', quality);
-    if(!out || out === 'data:,') out = off.toDataURL('image/jpeg', quality);
-    return out;
-  }
-
-  /* ── SLIDERS & LABELS ── */
-  function _setZoom(val){
-    _zoom = Math.max(0.1, Math.min(4, val));
-    document.getElementById('ime-zoom-slider').value = _zoom;
-    document.getElementById('ime-zoom-val').textContent = Math.round(_zoom*100)+'%';
-    _markDirty();
-  }
-
-  function _setRotate(deg){
-    // clamp to -180..180
-    _rotate = ((deg+180)%360+360)%360-180;
-    document.getElementById('ime-rotate-slider').value = _rotate;
-    document.getElementById('ime-rotate-val').textContent = Math.round(_rotate)+'°';
-    _markDirty();
-  }
-
-  function _syncSliders(){
-    var zs = document.getElementById('ime-zoom-slider');
-    var zv = document.getElementById('ime-zoom-val');
-    var rs = document.getElementById('ime-rotate-slider');
-    var rv = document.getElementById('ime-rotate-val');
-    if(zs) zs.value = _zoom;
-    if(zv) zv.textContent = Math.round(_zoom*100)+'%';
-    if(rs) rs.value = _rotate;
-    if(rv) rv.textContent = Math.round(_rotate)+'°';
-  }
-
-  /* ── EVENT BINDING ── */
-  function _bindEvents(){
-    var vp = document.getElementById('ime-viewport');
-    vp.addEventListener('mousedown', _onMouseDown);
-    vp.addEventListener('wheel', _onWheel, {passive:false});
-    vp.addEventListener('touchstart', _onTouchStart, {passive:false});
-    vp.addEventListener('touchmove', _onTouchMove, {passive:false});
-    vp.addEventListener('touchend', _onTouchEnd);
-    document.addEventListener('mousemove', _onMouseMove);
-    document.addEventListener('mouseup', _onMouseUp);
-  }
-
-  function _unbindEvents(){
-    var vp = document.getElementById('ime-viewport');
-    if(!vp) return;
-    vp.removeEventListener('mousedown', _onMouseDown);
-    vp.removeEventListener('wheel', _onWheel);
-    vp.removeEventListener('touchstart', _onTouchStart);
-    vp.removeEventListener('touchmove', _onTouchMove);
-    vp.removeEventListener('touchend', _onTouchEnd);
-    document.removeEventListener('mousemove', _onMouseMove);
-    document.removeEventListener('mouseup', _onMouseUp);
-  }
-
-  function _showGrid(){ document.getElementById('ime-grid').classList.add('visible'); }
-  function _hideGrid(){
-    clearTimeout(_gridTimer);
-    _gridTimer = setTimeout(function(){
-      document.getElementById('ime-grid').classList.remove('visible');
-    }, 600);
-  }
-
-  /* Mouse drag */
-  function _onMouseDown(e){
-    _dragging = true;
-    _lastX = e.clientX;
-    _lastY = e.clientY;
-    _showGrid();
-    e.preventDefault();
-  }
-  function _onMouseMove(e){
-    if(!_dragging) return;
-    _applyPan(e.clientX - _lastX, e.clientY - _lastY);
-    _lastX = e.clientX;
-    _lastY = e.clientY;
-  }
-  function _onMouseUp(){
-    _dragging = false;
-    _hideGrid();
-  }
-
-  /* Scroll / wheel zoom */
-  function _onWheel(e){
-    e.preventDefault();
-    var delta = e.deltaY < 0 ? 0.08 : -0.08;
-    _setZoom(_zoom + delta);
-    _showGrid(); _hideGrid();
-  }
-
-  /* Touch: single-finger pan, two-finger pinch zoom */
-  function _onTouchStart(e){
-    if(e.touches.length===1){
-      _dragging=true;
-      _lastX=e.touches[0].clientX;
-      _lastY=e.touches[0].clientY;
-      _showGrid();
-    } else if(e.touches.length===2){
-      _dragging=false;
-      _pinchDist0=_touchDist(e.touches);
-      _zoom0=_zoom;
-      var mid=_touchMid(e.touches,_canvas);
-      _pinchCx=mid.x; _pinchCy=mid.y;
-    }
-    e.preventDefault();
-  }
-  function _onTouchMove(e){
-    e.preventDefault();
-    if(e.touches.length===1 && _dragging){
-      _applyPan(e.touches[0].clientX-_lastX, e.touches[0].clientY-_lastY);
-      _lastX=e.touches[0].clientX;
-      _lastY=e.touches[0].clientY;
-    } else if(e.touches.length===2 && _pinchDist0){
-      var d=_touchDist(e.touches);
-      var newZoom=Math.max(0.1,Math.min(4,_zoom0*(d/_pinchDist0)));
-      _setZoom(newZoom);
-      _showGrid();
-    }
-  }
-  function _onTouchEnd(e){
-    if(e.touches.length===0){ _dragging=false; _pinchDist0=null; _hideGrid(); }
-  }
-
-  function _touchDist(t){
-    var dx=t[0].clientX-t[1].clientX;
-    var dy=t[0].clientY-t[1].clientY;
-    return Math.sqrt(dx*dx+dy*dy);
-  }
-  function _touchMid(t, el){
-    var r=el.getBoundingClientRect();
-    return {
-      x:((t[0].clientX+t[1].clientX)/2)-r.left,
-      y:((t[0].clientY+t[1].clientY)/2)-r.top
-    };
-  }
-
-  /* Pan: screen pixel delta → image pixel delta */
-  function _applyPan(dx,dy){
-    if(!_canvas||!_size) return;
-    var pixRatio = _canvas.width / _canvas.offsetWidth || 1;
-    // Convert from screen to canvas, then to image coords (undo zoom, undo rotation)
-    var cdx = dx * pixRatio;
-    var cdy = dy * pixRatio;
-    // Undo rotation
-    var rad = -_rotate * Math.PI / 180;
-    var rdx = cdx*Math.cos(rad) - cdy*Math.sin(rad);
-    var rdy = cdx*Math.sin(rad) + cdy*Math.cos(rad);
-    // Undo zoom
-    _offsetX -= rdx / _zoom;
-    _offsetY -= rdy / _zoom;
-    _markDirty();
-  }
-})();
-
-function pdrRemoveCustomPhoto(){
-  _pdrPhotoDataUrl=null;
-  localStorage.removeItem('oasis_profile_photo');
-  // Revert edit avatar to avatar/initials
-  _pdrSelectedAvId=_selectedAvatarId;
-  if(_pdrSelectedAvId){
-    _renderAvatarEl(document.getElementById('pdr-edit-avatar'),_pdrSelectedAvId,82);
-  } else {
-    var p=(typeof getUserProfile==='function')?getUserProfile():null;
-    _setAvatarToInitials(document.getElementById('pdr-edit-avatar'),p);
-  }
-  _refreshPdrPhotoPanel();
-}
-
-function _applyStoredProfilePhoto(el,size){
-  if(!el)return;
-  var photo=localStorage.getItem('oasis_profile_photo');
-  if(photo){
-    el.style.background='transparent';
-    el.style.borderColor='rgba(29,233,212,0.45)';
-    el.innerHTML='<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    return true;
-  } else if(_selectedAvatarId){
-    _renderAvatarEl(el,_selectedAvatarId,size||72);
-    return true;
-  }
-  return false;
-}
-
-function _setAvatarToInitials(el,p){
-  if(!el)return;
-  var name=(p&&p.name)?p.name:'?';
-  var initials=name!=='?'?name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2):'?';
-  el.style.background='var(--surface2)';
-  el.style.borderColor='rgba(29,233,212,0.3)';
-  el.innerHTML='<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">'+initials+'</span>';
-}
-
-function pdrSaveProfile(){
-  var p=(typeof getUserProfile==='function')?(getUserProfile()||{}):{};
-
-  // Save photo if a new one was selected and not yet persisted (imgEditorSave handles this
-  // immediately on crop, so this is a safety net for any remaining in-memory state)
-  if(_pdrPhotoDataUrl && !localStorage.getItem('oasis_profile_photo')){
-    try{localStorage.setItem('oasis_profile_photo',_pdrPhotoDataUrl);}catch(e){
-      if(typeof showToast==='function')showToast('Photo too large to store','warn');
-      _pdrPhotoDataUrl=null;
-    }
-  }
-
-  // Save selected avatar if no photo
-  if(_pdrSelectedAvId&&!_pdrPhotoDataUrl&&!localStorage.getItem('oasis_profile_photo')){
-    _selectedAvatarId=_pdrSelectedAvId;
-    localStorage.setItem('oasis_avatar_id',_selectedAvatarId);
-  } else if(_pdrSelectedAvId&&!_pdrPhotoDataUrl){
-    // avatar chosen but photo also exists — avatar wins (photo was removed)
-    _selectedAvatarId=_pdrSelectedAvId;
-    localStorage.setItem('oasis_avatar_id',_selectedAvatarId);
-  }
-
-  // Name
-  var nameEl=document.getElementById('pdr-field-name');
-  if(nameEl&&nameEl.value.trim())p.name=nameEl.value.trim();
-
-  // UID
-  var uidEl=document.getElementById('pdr-field-uid');
-  if(uidEl&&uidEl.value.trim())p.uid=uidEl.value.trim();
-
-  // Email
-  var emailEl=document.getElementById('pdr-field-email');
-  if(emailEl){
-    var newEmail=emailEl.value.trim();
-    if(newEmail&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)){
-      var prevEmail=p.email||'';
-      p.email=newEmail;
-      if(newEmail!==prevEmail){
-        var auth=(typeof _getAuth==='function')?_getAuth():null;
-        if(auth&&auth.currentUser)auth.currentUser.updateEmail(newEmail).catch(function(){});
-      }
-    }
-  }
-
-  // Role
-  var activeRoleChip=document.querySelector('#pdr-role-chips .pdr-role-chip.active');
-  if(activeRoleChip){
-    var roleId=activeRoleChip.getAttribute('data-role');
-    if(roleId==='other'){
-      var ov=(document.getElementById('pdr-field-role-other')?.value||'').trim();
-      p.role=ov||'other';
-    } else {
-      p.role=roleId;
-    }
-  }
-
-  // Institution
-  var instSel=document.getElementById('pdr-field-institution');
-  if(instSel&&instSel.value){
-    var instVal=instSel.value==='Other'
-      ?(document.getElementById('pdr-field-institution-other')?.value.trim()||'Other')
-      :instSel.value;
-    if(instVal)p.institution=instVal;
-  }
-
-  if(typeof saveUserProfile==='function')saveUserProfile(p);
-
-  // Reset temp state
-  _pdrPhotoDataUrl=null;
-  _pdrSelectedAvId=null;
-
-  // Refresh view mode
-  _populateProfileDrawer();
-  _applyStoredProfilePhoto(document.getElementById('pdr-avatar'),82);
-  _updateHeaderAvatar();
-  _updateProfileCompletionBadge();
-  if(typeof renderProfileCard==='function')renderProfileCard();
-
-  pdrShowViewMode();
-  if(typeof showToast==='function')showToast('Profile saved','success',2000);
 }
 function _populateProfileDrawer(){
   var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
@@ -3271,246 +2585,36 @@ function _populateProfileDrawer(){
   if(emailEl) emailEl.textContent = email;
   if(signOutRow) signOutRow.style.display = p ? 'block' : 'none';
 
-  // Avatar: initials or role icon — custom photo takes priority
+  // Avatar: initials or role icon
   if(avatarEl){
-    var storedPhoto=localStorage.getItem('oasis_profile_photo');
-    if(storedPhoto){
-      avatarEl.style.background='transparent';
-      avatarEl.style.borderColor='rgba(29,233,212,0.45)';
-      avatarEl.innerHTML='<img src="'+storedPhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    var initials = name !== 'No name set'
+      ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
+      : '?';
+    var svgIcons = {
+      student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+      dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
+      clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
+      nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
+    };
+    if(svgIcons[role]){
+      avatarEl.innerHTML = svgIcons[role];
     } else {
-      var initials = name !== 'No name set'
-        ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
-        : '?';
-      var svgIcons = {
-        student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-        dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
-        clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
-        nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
-      };
-      if(svgIcons[role]){
-        avatarEl.innerHTML = svgIcons[role];
-      } else {
-        avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
-      }
+      avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
     }
   }
 }
-
-/* ── AVATAR PICKER ── */
-var OASIS_AVATARS = [
-  { id:'av_stethoscope', label:'Clinician', color:0, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/><path d="M14 9a6 6 0 0 1 6 6v1a2 2 0 0 1-2 2h-2"/></svg>' },
-  { id:'av_mortarboard', label:'Student', color:1, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>' },
-  { id:'av_leaf', label:'Nutrition', color:2, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>' },
-  { id:'av_heartpulse', label:'Vitals', color:3, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>' },
-  { id:'av_flask', label:'Lab', color:4, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M9 3v6.5L4 19h16L15 9.5V3"/><path d="M7 17h10"/></svg>' },
-  { id:'av_cross', label:'Nurse', color:5, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>' },
-  { id:'av_microscope', label:'Research', color:6, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h.01"/><path d="M9 6l.01 8"/><path d="M10 2l5 5-5 5"/></svg>' },
-  { id:'av_pill', label:'Pharmacy', color:7, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>' },
-  { id:'av_brain', label:'Cognitive', color:8, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.14Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.14Z"/></svg>' },
-  { id:'av_chart', label:'Analytics', color:9, svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>' },
-];
-
-var _selectedAvatarId = localStorage.getItem('oasis_avatar_id') || null;
-
-function _buildAvatarGrid(){
-  var grid = document.getElementById('avatar-grid');
-  if(!grid) return;
-  grid.innerHTML = '';
-  OASIS_AVATARS.forEach(function(av){
-    var btn = document.createElement('button');
-    btn.className = 'avatar-option av-color-' + av.color + (_selectedAvatarId === av.id ? ' selected' : '');
-    btn.setAttribute('aria-label', av.label);
-    btn.setAttribute('title', av.label);
-    btn.setAttribute('data-av-id', av.id);
-    btn.innerHTML = av.svg +
-      '<span class="av-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
-    btn.addEventListener('click', function(){ selectAvatar(av.id); });
-    grid.appendChild(btn);
-  });
-}
-
-function selectAvatar(avId){
-  _selectedAvatarId = avId;
-  localStorage.setItem('oasis_avatar_id', avId);
-  // Update grid selection state
-  var btns = document.querySelectorAll('#avatar-grid .avatar-option');
-  btns.forEach(function(b){ b.classList.toggle('selected', b.getAttribute('data-av-id') === avId); });
-  // Re-render profile avatar
-  _renderAvatarEl(document.getElementById('pdr-avatar'), avId, 72);
-  // Update mini header avatar
-  _updateHeaderAvatar();
-  _updateProfileCompletionBadge();
-}
-
-function _getAvatarDef(avId){ return OASIS_AVATARS.find(function(a){ return a.id === avId; }); }
-
-function _renderAvatarEl(el, avId, size){
-  if(!el) return;
-  var av = _getAvatarDef(avId);
-  if(av){
-    var colorIdx = av.color;
-    var colors = ['rgba(29,233,212,0.18)','rgba(96,165,250,0.18)','rgba(167,139,250,0.18)','rgba(52,211,153,0.18)','rgba(240,180,41,0.18)','rgba(251,113,133,0.18)','rgba(29,233,212,0.18)','rgba(96,165,250,0.18)','rgba(167,139,250,0.18)','rgba(52,211,153,0.18)'];
-    var iconSize = Math.round(size * 0.48);
-    el.style.background = colors[colorIdx % colors.length];
-    el.style.borderColor = 'rgba(29,233,212,0.45)';
-    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="' + iconSize + '" height="' + iconSize + '">' + _svgInner(av.svg) + '</svg>';
-  }
-}
-
-function _svgInner(svgStr){
-  // Strip outer <svg> tag and return inner path content
-  return svgStr.replace(/<svg[^>]*>/,'').replace(/<\/svg>/,'');
-}
-
-function _updateHeaderAvatar(){
-  var mini = document.getElementById('header-avatar-mini');
-  if(!mini) return;
-  var photo=localStorage.getItem('oasis_profile_photo');
-  if(photo){
-    mini.innerHTML='<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    mini.classList.add('visible');
-  } else if(_selectedAvatarId){
-    var av = _getAvatarDef(_selectedAvatarId);
-    if(av){
-      mini.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">' + _svgInner(av.svg) + '</svg>';
-      mini.classList.add('visible');
-    }
-  } else {
-    mini.classList.remove('visible');
-  }
-}
-
-/**
- * Calculate profile completion % and update the badge near the Harbinger menu.
- * Fields counted: name, uid (staff/student ID), institution, role, email, avatar/photo.
- * Badge is hidden when no profile exists (unauthenticated).
- */
-function _updateProfileCompletionBadge() {
-  var badge  = document.getElementById('profile-completion-badge');
-  var arcEl  = document.getElementById('pcb-arc');
-  var pctEl  = document.getElementById('pcb-pct');
-  if (!badge || !arcEl || !pctEl) return;
-
-  var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
-  if (!p) { badge.style.display = 'none'; return; }
-
-  // Six scored fields
-  var fields = [
-    !!(p.name        && p.name.trim()),
-    !!(p.uid         && p.uid.trim()),
-    !!(p.institution && p.institution.trim()),
-    !!(p.role        && p.role.trim()),
-    !!(p.email       && p.email.trim()),
-    !!(localStorage.getItem('oasis_profile_photo') || localStorage.getItem('oasis_avatar_id')),
-  ];
-  var filled = fields.filter(Boolean).length;
-  var pct    = Math.round((filled / fields.length) * 100);
-
-  // Circumference of r=7 circle = 2π×7 ≈ 43.98
-  var circ   = 43.98;
-  var offset = circ - (circ * pct / 100);
-  arcEl.style.strokeDashoffset = offset;
-  pctEl.textContent = pct + '%';
-
-  // Show green when complete, amber when nearly there, default teal otherwise
-  var color = pct === 100 ? 'var(--green, #34d399)' : (pct >= 67 ? 'var(--amber, #f0b429)' : 'var(--teal)');
-  arcEl.style.stroke = color;
-  pctEl.style.color  = color;
-  badge.style.display = (pct === 100) ? 'none' : 'flex';
-}
-
-function toggleAvatarPicker(){
-  var panel = document.getElementById('avatar-picker-panel');
-  if(!panel) return;
-  var isHidden = panel.style.display === 'none' || panel.style.display === '';
-  if(isHidden){ _buildAvatarGrid(); panel.style.display = 'block'; }
-  else { panel.style.display = 'none'; }
-}
-function hideAvatarPicker(){
-  var panel = document.getElementById('avatar-picker-panel');
-  if(panel) panel.style.display = 'none';
-}
-
-// Avatar override is applied directly inside openProfile() below
-
-// Init on load
-(function(){
-  document.addEventListener('DOMContentLoaded', function(){
-    _updateHeaderAvatar();
-  _updateProfileCompletionBadge();
-  });
-  // Also try immediately in case DOM is already ready
-  if(document.readyState !== 'loading'){ _updateHeaderAvatar(); _updateProfileCompletionBadge(); }
-})();
 
 /* ── ABOUT DRAWER ── */
-var _adrDevProfileCache = null; // session cache
-
 function openAbout(){
   // Sync version text
   var verEl = document.getElementById('adr-version-text');
   if(verEl && typeof APP_VERSION !== 'undefined') verEl.textContent = 'v' + APP_VERSION;
   document.getElementById('about-drawer').classList.add('open');
   document.getElementById('about-overlay').classList.add('open');
-  // Load developer profile from Firestore (cached after first fetch)
-  _adrLoadDevProfile();
 }
 function closeAbout(){
   document.getElementById('about-drawer').classList.remove('open');
   document.getElementById('about-overlay').classList.remove('open');
-}
-
-// Fetch developer_profile from Firestore and populate about drawer
-function _adrLoadDevProfile(){
-  // Use cache if available
-  if(_adrDevProfileCache){ _adrApplyDevProfile(_adrDevProfileCache); return; }
-  try{
-    var db = firebase.firestore();
-    db.collection('app_config').doc('developer_profile').get().then(function(snap){
-      if(!snap.exists) return;
-      _adrDevProfileCache = snap.data();
-      _adrApplyDevProfile(_adrDevProfileCache);
-    }).catch(function(e){ console.warn('[About] dev profile load error:', e); });
-  }catch(e){ console.warn('[About] Firestore unavailable:', e); }
-}
-
-function _adrApplyDevProfile(d){
-  if(!d) return;
-  // Avatar
-  var av = document.getElementById('adr-dev-avatar');
-  if(av){
-    if(d.photo){
-      av.innerHTML = '<img src="'+d.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    } else {
-      av.textContent = '👤';
-    }
-  }
-  // Name / role / institution
-  var el;
-  el = document.getElementById('adr-dev-name');        if(el && d.name)        el.textContent = d.name;
-  el = document.getElementById('adr-dev-role');        if(el && d.role)        el.textContent = d.role;
-  el = document.getElementById('adr-dev-institution'); if(el && d.institution) el.textContent = d.institution;
-  // Bio
-  el = document.getElementById('adr-dev-bio');
-  if(el && d.bio){ el.textContent = d.bio; el.style.display = ''; }
-  // Links
-  var linksWrap = document.getElementById('adr-dev-links');
-  if(linksWrap && d.links){
-    var html = '';
-    var baseStyle = 'display:flex;align-items:center;gap:9px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:9px 11px;text-decoration:none;box-sizing:border-box';
-    var labelStyle = 'font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    var svgMail = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
-    var svgGH   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>';
-    var svgLI   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
-    var svgTW   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="var(--teal)" style="flex-shrink:0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L2.25 2.25h6.927l4.215 5.577 5.852-5.577zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-    if(d.links.email)    html += '<a href="mailto:'+d.links.email+'" style="'+baseStyle+'">'+svgMail+'<span style="'+labelStyle+'">'+d.links.email+'</span></a>';
-    if(d.links.github)   html += '<a href="'+d.links.github+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgGH+'<span style="'+labelStyle+'">GitHub</span></a>';
-    if(d.links.linkedin) html += '<a href="'+d.links.linkedin+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgLI+'<span style="'+labelStyle+'">LinkedIn</span></a>';
-    if(d.links.twitter)  html += '<a href="'+d.links.twitter+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgTW+'<span style="'+labelStyle+'">X</span></a>';
-    if(!html) html = '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">No contact info available.</span>';
-    linksWrap.innerHTML = html;
-  }
 }
 function kebabCycleTheme(){
   var order=['dark','amoled','clinical'];
@@ -3521,35 +2625,6 @@ function kebabCycleTheme(){
     if(typeof autoSaveSettings==='function')autoSaveSettings();
     if(typeof showToast==='function')showToast('Theme: '+next.charAt(0).toUpperCase()+next.slice(1),'info',1800);
   }
-  _kebabUpdateLabels();
-  _kebabSyncThemeUI();
-}
-
-function kebabSetMode(mode){
-  if(typeof applyAppearanceMode==='function'){
-    applyAppearanceMode(mode);
-    if(typeof autoSaveSettings==='function')autoSaveSettings();
-  }
-  _kebabUpdateLabels();
-  _kebabSyncThemeUI();
-}
-
-function kebabSetAccent(accent){
-  if(typeof applyAccent==='function'){
-    applyAccent(accent);
-    if(typeof autoSaveSettings==='function')autoSaveSettings();
-  }
-  _kebabSyncThemeUI();
-}
-
-function _kebabSyncThemeUI(){
-  // Sync mode chips
-  var mode=(typeof currentSettings!=='undefined'&&currentSettings.appearanceMode)||'dark';
-  ['dark','amoled','hc'].forEach(function(m){
-    var el=document.getElementById('km-'+m);
-    if(el)el.className='kebab-mode-chip'+(mode===m?' active':'');
-  });
-  // Sync label
   _kebabUpdateLabels();
 }
 function kebabPrint(){closeKebabMenu();if(typeof printReport==='function')printReport();else window.print();}
@@ -9857,8 +8932,6 @@ function getUserProfile() {
 
 function saveUserProfile(p) {
   localStorage.setItem(USER_KEY, JSON.stringify(p));
-  // Refresh completion badge whenever profile is saved
-  try { _updateProfileCompletionBadge(); } catch(e) {}
   // Mirror to Firestore users collection (keyed by Firebase Auth UID when available)
   if (typeof db !== 'undefined' && db) {
     const auth = _getAuth();
@@ -9972,35 +9045,7 @@ async function obAuthSubmit() {
 
   try {
     if (_obIsRegisterMode) {
-      // ── REGISTRATION ──────────────────────────────────────────
-      // Purge any stale local profile BEFORE creating the new Firebase account
-      // so the new user never accidentally inherits the previous user's cached data.
-      const _staleProfile = localStorage.getItem(USER_KEY);
-      if (_staleProfile) {
-        console.warn('[Auth] Stale local profile detected before registration — clearing now.');
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem('oasis_profile_photo');
-        localStorage.removeItem('oasis_avatar_id');
-        localStorage.removeItem('nt_push_sub');
-        // Clear all nc_* DataService keys (settings, history, etc.)
-        const _ncKeys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('nc_')) _ncKeys.push(k);
-        }
-        _ncKeys.forEach(k => localStorage.removeItem(k));
-        sessionStorage.removeItem('_ntpPid');
-        sessionStorage.removeItem('nc_recall');
-        sessionStorage.removeItem('nc_mealplan');
-      }
-
       await auth.createUserWithEmailAndPassword(email, pwVal);
-
-      // Force-reload currentUser from Firebase to guarantee a fresh credential
-      await auth.currentUser?.reload().catch(() => {});
-      const newUid = auth.currentUser?.uid;
-      console.log('[Auth] Registration successful. New Firebase UID:', newUid);
-
     } else {
       // Both username AND password must be correct — Firebase verifies atomically
       await auth.signInWithEmailAndPassword(email, pwVal);
@@ -10009,8 +9054,6 @@ async function obAuthSubmit() {
     // Auth success — check if profile already exists in Firestore
     const auth2 = _getAuth();
     const fbUid = auth2?.currentUser?.uid;
-    console.log('[Auth] Authenticated UID after sign-in/register:', fbUid);
-
     let existingProfile = null;
     if (db && fbUid) {
       const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
@@ -10018,20 +9061,8 @@ async function obAuthSubmit() {
         existingProfile = snap.data();
       }
     }
-
-    if (_obIsRegisterMode && existingProfile) {
-      // A Firestore doc exists for this UID (e.g. registered on another device).
-      // Treat as returning user only if the stored Firebase UID matches exactly.
-      const storedFbUid = existingProfile.firebaseUid || null;
-      if (storedFbUid && storedFbUid !== fbUid) {
-        // UID mismatch — do NOT restore the old profile; go to fresh setup.
-        console.warn('[Auth] Firestore UID mismatch on register — forcing fresh profile setup.');
-        existingProfile = null;
-      }
-    }
-
-    if (existingProfile && !_obIsRegisterMode) {
-      // Sign-in: returning user — restore full profile and proceed directly to home
+    if (existingProfile) {
+      // Returning user — restore full profile and proceed directly to home
       const p = {
         name:        existingProfile.userName    || '',
         uid:         existingProfile.userId      || '',
@@ -10042,11 +9073,9 @@ async function obAuthSubmit() {
         firebaseUid: fbUid,
       };
       saveUserProfile(p);
-      console.log('[Auth] Returning user profile restored for UID:', fbUid);
       _obFinish(p.name, true);
     } else {
-      // New user (or registration) — show profile setup step fresh
-      console.log('[Auth] New user setup — no pre-existing profile for UID:', fbUid);
+      // New user — show profile setup step (Staff ID blank, user must fill manually)
       _obSkipToProfile();
     }
   } catch (err) {
@@ -10119,11 +9148,6 @@ function obSelectRole(btn) {
   document.querySelectorAll('.ob-role-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   _obSelectedRole = btn.dataset.role;
-  // Show/hide the custom role free-text field
-  const otherRow = document.getElementById('ob-role-other-row');
-  const otherVal = document.getElementById('ob-role-other-val');
-  if (otherRow) otherRow.style.display = (_obSelectedRole === 'other') ? 'block' : 'none';
-  if (_obSelectedRole !== 'other' && otherVal) otherVal.value = '';
 }
 
 function obSubmit() {
@@ -10146,11 +9170,6 @@ function obSubmit() {
   if (!inst) { errs.push('Please select your institution.'); instEl?.classList.add('error'); }
   else instEl?.classList.remove('error');
   if (!_obSelectedRole) errs.push('Please select your role.');
-  // If "other" chosen, require the custom label
-  if (_obSelectedRole === 'other') {
-    const _orv = (document.getElementById('ob-role-other-val')?.value || '').trim();
-    if (!_orv) errs.push('Please describe your role.');
-  }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errs.push('Please enter a valid email address.');
     emailEl?.classList.add('error');
@@ -10163,7 +9182,7 @@ function obSubmit() {
   const auth = _getAuth();
   const fbUid = auth?.currentUser?.uid || null;
 
-  const profile = { name, uid, institution: inst, role: (_obSelectedRole === 'other' ? ((document.getElementById('ob-role-other-val')?.value || '').trim() || 'other') : _obSelectedRole), email, createdAt: new Date().toISOString(), firebaseUid: fbUid };
+  const profile = { name, uid, institution: inst, role: _obSelectedRole, email, createdAt: new Date().toISOString(), firebaseUid: fbUid };
   saveUserProfile(profile);
 
   // If user provided a real email, update Firebase Auth so password reset works
@@ -10207,8 +9226,6 @@ function _obFinish(name, isReturning) {
   document.body.style.overflow = '';
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
-  try { _updateHeaderAvatar(); } catch(e) {}   // ensure fresh user's avatar (not previous user's) is shown
-  try { _updateProfileCompletionBadge(); } catch(e) {}
   showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
 }
 
@@ -10219,39 +9236,24 @@ function checkOnboarding() {
     // Let Firebase Auth state determine whether to show the overlay
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log('[Auth] onAuthStateChanged — active UID:', user.uid);
-        // Already authenticated — check if profile is stored locally AND belongs to this UID
-        const localProfile = getUserProfile();
-        const profileBelongsToUser = localProfile && localProfile.firebaseUid === user.uid;
-
-        if (!localProfile || !profileBelongsToUser) {
-          if (localProfile && !profileBelongsToUser) {
-            // Cached profile is from a DIFFERENT Firebase user — must not be used.
-            console.warn('[Auth] Cached profile UID mismatch. Cached:', localProfile.firebaseUid, '| Active:', user.uid, '— clearing stale profile.');
-            localStorage.removeItem(USER_KEY);
-            localStorage.removeItem('oasis_profile_photo');
-            localStorage.removeItem('oasis_avatar_id');
-          }
-          // Profile missing or cleared — attempt restore from Firestore
+        // Already authenticated — check if profile is stored locally
+        if (!getUserProfile()) {
+          // Profile missing locally — they may have registered elsewhere; restore or re-prompt profile step
           db && db.collection('users').doc(user.uid).get().then(snap => {
             if (snap.exists && snap.data().userName) {
               const d = snap.data();
               saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
-              console.log('[Auth] Profile restored from Firestore for UID:', user.uid);
               try { renderProfileCard(); } catch(e) {}
               _hideOnboardingOverlay();
             } else {
-              // No Firestore doc — new account, show profile setup
               _showOnboardingOverlay();
             }
           }).catch(() => _showOnboardingOverlay());
         } else {
-          // Profile present and belongs to the active user — let them in
-          console.log('[Auth] Valid local profile found for UID:', user.uid);
+          // Profile present — hide overlay, let user in
           _hideOnboardingOverlay();
         }
       } else {
-        console.log('[Auth] onAuthStateChanged — no user signed in.');
         // Not signed in — always block home screen
         _showOnboardingOverlay();
       }
@@ -10319,71 +9321,13 @@ function renderProfileCard() {
 }
 
 // ── Sign out ──────────────────────────────────────────────────────
-/**
- * _clearAllUserSession — wipes every user-scoped key from localStorage,
- * sessionStorage, and in-memory state so the next sign-in/registration
- * starts from a completely blank slate.
- *
- * Keys preserved: SW version/dismissed flags, PWA install banner flag —
- * these are device-level, not user-level.
- */
-function _clearAllUserSession() {
-  // ── 1. Capture previous UID for debug log ────────────────────
-  let prevUid = '(none)';
-  try {
-    const prev = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-    prevUid = prev?.firebaseUid || prev?.uid || '(none)';
-  } catch(_) {}
-  console.log('[Auth] Signing out. Previous UID:', prevUid);
-
-  // ── 2. User profile & auth flags ────────────────────────────
-  localStorage.removeItem(USER_KEY);
-
-  // ── 3. All DataService (nc_*) keys — calc history, settings,
-  //        saved records, meal plans, recall, etc. ─────────────
-  const NC_PREFIX = 'nc_';
-  const keysToRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith(NC_PREFIX)) keysToRemove.push(k);
-  }
-  keysToRemove.forEach(k => localStorage.removeItem(k));
-
-  // ── 4. Profile photo / avatar ────────────────────────────────
-  localStorage.removeItem('oasis_profile_photo');
-  localStorage.removeItem('oasis_avatar_id');
-
-  // ── 5. Push-notification subscription cache ──────────────────
-  localStorage.removeItem('nt_push_sub');
-
-  // ── 6. sessionStorage — presence PID, recall, meal plan ──────
-  sessionStorage.removeItem('_ntpPid');
-  sessionStorage.removeItem('nc_recall');
-  sessionStorage.removeItem('nc_mealplan');
-
-  // ── 7. In-memory module state reset ─────────────────────────
-  try { if (typeof appState !== 'undefined') { Object.keys(appState).forEach(k => { appState[k] = null; }); } } catch(_) {}
-  try { _selectedAvatarId = null; } catch(_) {}
-  try { _pdrPhotoDataUrl  = null; } catch(_) {}
-
-  // ── 8. Mark sign-out so welcome screen says "Welcome back" ───
-  localStorage.setItem('ob_has_signed_out', '1');
-
-  console.log('[Auth] Session cleared. All user-scoped localStorage/sessionStorage keys removed.');
-}
-
 function obSignOut() {
   if (!confirm('Sign out of Oasis?')) return;
   const auth = _getAuth();
-
-  // Clear all user data BEFORE Firebase signOut to avoid any race where
-  // onAuthStateChanged fires with the old user still in memory.
-  _clearAllUserSession();
-
-  const doUIReset = () => {
+  localStorage.removeItem(USER_KEY);
+  localStorage.setItem('ob_has_signed_out', '1');
+  (auth ? auth.signOut() : Promise.resolve()).then(() => {
     try { renderProfileCard(); } catch(e) {}
-    try { _updateHeaderAvatar(); } catch(e) {}   // clear header mini-avatar photo/icon
-    try { _updateProfileCompletionBadge(); } catch(e) {}  // hide badge on sign-out
     showToast('Signed out.', 'success');
     // Reset overlay to sign-in step for next user
     document.getElementById('ob-step-auth').style.display    = 'block';
@@ -10397,15 +9341,11 @@ function obSignOut() {
     document.getElementById('ob-auth-heading').textContent = 'Welcome back';
     // Block home screen until signed in again
     _showOnboardingOverlay();
-  };
-
-  (auth ? auth.signOut() : Promise.resolve())
-    .then(doUIReset)
-    .catch(() => {
-      // Even if Firebase signOut fails, the local session is already wiped.
-      console.warn('[Auth] Firebase signOut failed — local session was already cleared.');
-      doUIReset();
-    });
+  }).catch(() => {
+    localStorage.removeItem(USER_KEY);
+    try { renderProfileCard(); } catch(e) {}
+    _showOnboardingOverlay();
+  });
 }
 
 // ── Settings profile sync ─────────────────────────────────────────
