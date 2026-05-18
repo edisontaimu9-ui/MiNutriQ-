@@ -258,6 +258,16 @@
           <button class="ob-role-btn" data-role="researcher" onclick="obSelectRole(this)">
             <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg></span>Researcher
           </button>
+          <button class="ob-role-btn" data-role="nurse" onclick="obSelectRole(this)">
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg></span>Nurse
+          </button>
+          <button class="ob-role-btn" data-role="other" onclick="obSelectRole(this)">
+            <span class="ob-role-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>Other
+          </button>
+        </div>
+        <!-- Custom role text field — shown only when "Other" is selected -->
+        <div id="ob-role-other-row" style="display:none;margin-top:8px">
+          <input id="ob-role-other-val" class="ob-input" type="text" placeholder="Describe your role…" maxlength="60" autocomplete="off">
         </div>
       </div>
 
@@ -311,6 +321,15 @@
     <div class="status-pill offline" id="db-pill"><span class="dot" id="db-dot"></span><span id="db-pill-txt">Offline</span></div>
 
     <div class="kebab-wrap" id="kebab-wrap">
+      <!-- Profile completion badge — clicking opens profile drawer -->
+      <button id="profile-completion-badge" onclick="openProfile()" aria-label="Profile completion" title="Profile completion" style="display:none;align-items:center;gap:5px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.28);border-radius:20px;padding:3px 9px 3px 6px;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:0.8px;color:var(--teal);transition:background .15s,border-color .15s;white-space:nowrap" onmouseover="this.style.background='rgba(29,233,212,0.14)';this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.background='rgba(29,233,212,0.08)';this.style.borderColor='rgba(29,233,212,0.28)'">
+        <svg id="pcb-ring" width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0" aria-hidden="true">
+          <circle cx="9" cy="9" r="7" fill="none" stroke="rgba(29,233,212,0.2)" stroke-width="2.2"/>
+          <circle id="pcb-arc" cx="9" cy="9" r="7" fill="none" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round"
+            stroke-dasharray="43.98" stroke-dashoffset="43.98" transform="rotate(-90 9 9)" style="transition:stroke-dashoffset .4s ease"/>
+        </svg>
+        <span id="pcb-pct">0%</span>
+      </button>
       <button class="header-avatar-mini" id="header-avatar-mini" onclick="kebabOpenProfile()" aria-label="View profile" title="Profile"></button>
       <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">
         <svg class="hamburger-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -336,6 +355,12 @@
           About Oasis
         </button>
 
+        <button class="kebab-item" role="menuitem" onclick="openWhatsNew(); closeKebabMenu()" id="wsn-kebab-btn" style="position:relative">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          What's New
+          <span class="kebab-item-sub" id="wsn-menu-label">UPDATES</span>
+        </button>
+
         <div class="kebab-divider"></div>
 
         <!-- Inline Theme Switcher -->
@@ -352,6 +377,8 @@
             <button id="km-hc"     class="kebab-mode-chip" onclick="kebabSetMode('hc')">Hi-C</button>
           </div>
         </div>
+
+        <div class="kebab-divider"></div>
 
         <button class="kebab-item" role="menuitem" onclick="kebabPrint()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -995,9 +1022,12 @@
       <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);color:var(--blue)">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>May 2026
       </span>
-      <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:var(--purple,#a78bfa)">
-        PWA · Offline
-      </span>
+    </div>
+
+    <!-- Clinical Decision Support warning -->
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);border-radius:var(--r-sm);margin-bottom:20px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber,#f0b429)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div style="font-family:var(--sans);font-size:11px;color:var(--amber,#f0b429);line-height:1.65"><strong>Clinical Decision Support Only.</strong> All prescriptions and clinical decisions require review by a qualified dietitian or clinician. This tool does not replace professional judgement.</div>
     </div>
 
     <!-- Description -->
@@ -1035,23 +1065,12 @@
     <!-- Contact -->
     <div class="sdr-group">
       <div class="sdr-group-label">Contact</div>
-      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden">
+      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
         <div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:10px;padding:8px 10px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
           <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
         </div>
-        <div id="adr-dev-links" style="display:flex;flex-direction:column;gap:7px"></div>
-      </div>
-    </div>
-
-    <!-- Feedback -->
-    <div class="sdr-group">
-      <div class="sdr-group-label">Feedback</div>
-      <div style="padding:12px 14px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md)">
-        <div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:10px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
-        <button onclick="openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
-        </button>
+        <div id="adr-dev-links" style="display:flex;flex-direction:column;gap:7px;min-height:0"><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Loading…</span></div>
       </div>
     </div>
 
@@ -1059,16 +1078,16 @@
     <div class="sdr-group" style="margin-bottom:0">
       <div class="sdr-group-label">Modules</div>
       <div style="display:flex;flex-direction:column;gap:4px;padding:4px 0">
-        <div class="adr-mod-row"><span style="color:var(--teal)">01</span> Adult Clinical Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">02</span> Pediatric Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">03</span> Enteral Feeding</div>
-        <div class="adr-mod-row"><span style="color:var(--purple,#a78bfa)">04</span> TPN / Parenteral Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">05</span> Nutrition Screening (MUST · MNA-SF)</div>
-        <div class="adr-mod-row"><span style="color:var(--teal)">06</span> Drug–Nutrient Interactions</div>
-        <div class="adr-mod-row"><span style="color:var(--rose,#fb7185)">07</span> Dietary Assessment</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">08</span> Meal Planning</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">09</span> Anthropometry</div>
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">10</span> NFPE</div>
+        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">01</span> Nutrition Screening (MUST · MNA-SF)</div>
+        <div class="adr-mod-row"><span style="color:var(--blue)">02</span> Anthropometry</div>
+        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">03</span> NFPE</div>
+        <div class="adr-mod-row"><span style="color:var(--teal)">04</span> Adult Clinical Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--blue)">05</span> Pediatric Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--amber)">06</span> Enteral Feeding</div>
+        <div class="adr-mod-row"><span style="color:var(--purple,#a78bfa)">07</span> TPN / Parenteral Nutrition</div>
+        <div class="adr-mod-row"><span style="color:var(--rose,#fb7185)">08</span> 24-Hour Dietary Recall</div>
+        <div class="adr-mod-row"><span style="color:var(--amber)">09</span> Meal Planning</div>
+        <div class="adr-mod-row"><span style="color:var(--teal)">10</span> Drug–Nutrient Interactions</div>
         <div class="adr-mod-row" style="border:none"><span style="color:var(--purple,#a78bfa)">11</span> References</div>
       </div>
     </div>
@@ -5145,145 +5164,9 @@
           </div>
         </div>
 
-        <!-- Feedback -->
-        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md);box-sizing:border-box;width:100%">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:1px">FEEDBACK</span>
-          </div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.7;margin-bottom:12px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
-          <button onclick="openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
-          </button>
-        </div>
-
       </div>
     </div>
   </div>
-
-
-<!-- ── FEEDBACK MODAL ── -->
-<div id="feedback-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px">
-  <div style="background:var(--surface);border:1px solid rgba(29,233,212,0.2);border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
-    <!-- header -->
-    <div style="padding:14px 16px;background:rgba(29,233,212,0.06);border-bottom:1px solid rgba(29,233,212,0.12);display:flex;align-items:center;justify-content:space-between">
-      <div style="font-family:var(--cond);font-size:12px;font-weight:700;color:var(--teal);letter-spacing:2px">SEND FEEDBACK</div>
-      <button onclick="closeFeedbackModal()" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px" title="Close">✕</button>
-    </div>
-    <!-- emoji quick-react -->
-    <div style="padding:12px 16px 6px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">QUICK REACTION</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="selectFeedbackEmoji('👍')" class="fb-emoji-btn" data-e="👍" title="Helpful">👍</button>
-        <button onclick="selectFeedbackEmoji('❤️')" class="fb-emoji-btn" data-e="❤️" title="Love it">❤️</button>
-        <button onclick="selectFeedbackEmoji('🙏')" class="fb-emoji-btn" data-e="🙏" title="Thank you">🙏</button>
-        <button onclick="selectFeedbackEmoji('🔥')" class="fb-emoji-btn" data-e="🔥" title="Amazing">🔥</button>
-        <button onclick="selectFeedbackEmoji('🐛')" class="fb-emoji-btn" data-e="🐛" title="Bug report">🐛</button>
-        <button onclick="selectFeedbackEmoji('💡')" class="fb-emoji-btn" data-e="💡" title="Suggestion">💡</button>
-        <button onclick="selectFeedbackEmoji('⭐')" class="fb-emoji-btn" data-e="⭐" title="Great tool">⭐</button>
-        <button onclick="selectFeedbackEmoji('⚠️')" class="fb-emoji-btn" data-e="⚠️" title="Issue">⚠️</button>
-      </div>
-    </div>
-    <!-- message -->
-    <div style="padding:8px 16px 12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">MESSAGE <span style="color:var(--text-muted)">(optional)</span></div>
-      <textarea id="fb-message-input" placeholder="Type your feedback, bug report, or suggestion…" style="width:100%;min-height:90px;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);border-radius:var(--r-sm);padding:9px 11px;font-family:var(--sans);font-size:12px;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='rgba(29,233,212,0.45)'" onblur="this.style.borderColor='var(--input-border)'"></textarea>
-    </div>
-    <!-- selected emoji display -->
-    <div id="fb-selected-emoji" style="padding:0 16px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);display:none">
-      Reaction: <span id="fb-emoji-display" style="font-size:16px"></span>
-    </div>
-    <!-- actions -->
-    <div style="padding:10px 16px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border)">
-      <button onclick="closeFeedbackModal()" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 16px;cursor:pointer;letter-spacing:0.5px">CANCEL</button>
-      <button onclick="submitFeedback()" id="fb-submit-btn" style="font-family:var(--mono);font-size:9px;color:#020617;background:var(--teal);border:none;border-radius:var(--r-sm);padding:7px 18px;cursor:pointer;font-weight:700;letter-spacing:0.5px">SEND →</button>
-    </div>
-  </div>
-</div>
-
-
-<script>
-(function(){
-  let _selectedEmoji = '';
-
-  window.openFeedbackModal = function() {
-    const m = document.getElementById('feedback-modal');
-    if (!m) return;
-    _selectedEmoji = '';
-    document.getElementById('fb-message-input').value = '';
-    document.getElementById('fb-selected-emoji').style.display = 'none';
-    document.querySelectorAll('.fb-emoji-btn').forEach(b => b.classList.remove('selected'));
-    m.style.display = 'flex';
-    setTimeout(() => document.getElementById('fb-message-input').focus(), 100);
-  };
-
-  window.closeFeedbackModal = function() {
-    const m = document.getElementById('feedback-modal');
-    if (m) m.style.display = 'none';
-  };
-
-  window.selectFeedbackEmoji = function(emoji) {
-    _selectedEmoji = emoji;
-    document.querySelectorAll('.fb-emoji-btn').forEach(b => {
-      b.classList.toggle('selected', b.dataset.e === emoji);
-    });
-    const wrap = document.getElementById('fb-selected-emoji');
-    const disp = document.getElementById('fb-emoji-display');
-    if (wrap && disp) { disp.textContent = emoji; wrap.style.display = 'block'; }
-  };
-
-  window.submitFeedback = async function() {
-    const msg  = (document.getElementById('fb-message-input')?.value || '').trim();
-    const btn  = document.getElementById('fb-submit-btn');
-    if (!msg && !_selectedEmoji) {
-      showToast('Please add a message or pick a reaction first.', 'warning');
-      return;
-    }
-    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
-    const _fp = (typeof getUserProfile !== 'undefined') ? getUserProfile() : null;
-    const _fi = localStorage.getItem('nc_institution') || '';
-    const payload = {
-      emoji:        _selectedEmoji || null,
-      message:      msg || null,
-      sessionId:    typeof SESSION_ID !== 'undefined' ? SESSION_ID : 'unknown',
-      sentAt:       (typeof firebase !== 'undefined')
-                      ? firebase.firestore.FieldValue.serverTimestamp()
-                      : new Date().toISOString(),
-      userAgent:    navigator.userAgent.slice(0, 120),
-      userName:     _fp?.name || '',
-      userRole:     _fp?.role || '',
-      institution:  _fi,
-      read:         false,
-    };
-    try {
-      if (typeof db !== 'undefined' && db) {
-        await db.collection('feedback').add(payload);
-      }
-      closeFeedbackModal();
-      showToast(_selectedEmoji
-        ? `${_selectedEmoji} Feedback sent — thank you!`
-        : ' Feedback sent to admin — thank you!', 'success');
-    } catch(e) {
-      console.error('[Feedback]', e);
-      showToast('Could not send feedback. Please try again.', 'error');
-    } finally {
-      if (btn) { btn.textContent = 'SEND →'; btn.disabled = false; }
-    }
-  };
-
-  // Close modal on backdrop click
-  document.addEventListener('click', function(e) {
-    const m = document.getElementById('feedback-modal');
-    if (m && e.target === m) closeFeedbackModal();
-  });
-})();
-</script>
-      </div>
-    </div>
-  </div>
-
-
-
 
 
 
@@ -9623,6 +9506,7 @@ function ntClear(scopeId, resultIds) {
 </script>
 
 <script src="pes.js"></script>
+<script src="whatsnew.js"></script>
 
 <!-- ════════════ UCT EXCHANGE LIST TOOLTIP ════════════ -->
 <div id="uct-exchange-tooltip" role="tooltip" aria-live="polite" style="

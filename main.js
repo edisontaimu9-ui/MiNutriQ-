@@ -2783,7 +2783,7 @@ function pdrHandlePhotoUpload(input){
         localStorage.setItem('oasis_profile_photo',out);
         // Clear any selected avatar since a custom photo now takes priority
         localStorage.removeItem('oasis_avatar_id');
-        if(typeof _updateHeaderAvatar==='function')_updateHeaderAvatar();
+        if(typeof _updateHeaderAvatar==='function')_updateHeaderAvatar(); if(typeof _updateProfileCompletionBadge==='function')_updateProfileCompletionBadge();
         if(typeof _populateProfileDrawer==='function')_populateProfileDrawer();
         if(typeof renderProfileCard==='function')renderProfileCard();
         if(typeof showToast==='function')showToast('Photo saved','success',2000);
@@ -3242,6 +3242,7 @@ function pdrSaveProfile(){
   _populateProfileDrawer();
   _applyStoredProfilePhoto(document.getElementById('pdr-avatar'),82);
   _updateHeaderAvatar();
+  _updateProfileCompletionBadge();
   if(typeof renderProfileCard==='function')renderProfileCard();
 
   pdrShowViewMode();
@@ -3339,6 +3340,7 @@ function selectAvatar(avId){
   _renderAvatarEl(document.getElementById('pdr-avatar'), avId, 72);
   // Update mini header avatar
   _updateHeaderAvatar();
+  _updateProfileCompletionBadge();
 }
 
 function _getAvatarDef(avId){ return OASIS_AVATARS.find(function(a){ return a.id === avId; }); }
@@ -3379,6 +3381,45 @@ function _updateHeaderAvatar(){
   }
 }
 
+/**
+ * Calculate profile completion % and update the badge near the Harbinger menu.
+ * Fields counted: name, uid (staff/student ID), institution, role, email, avatar/photo.
+ * Badge is hidden when no profile exists (unauthenticated).
+ */
+function _updateProfileCompletionBadge() {
+  var badge  = document.getElementById('profile-completion-badge');
+  var arcEl  = document.getElementById('pcb-arc');
+  var pctEl  = document.getElementById('pcb-pct');
+  if (!badge || !arcEl || !pctEl) return;
+
+  var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
+  if (!p) { badge.style.display = 'none'; return; }
+
+  // Six scored fields
+  var fields = [
+    !!(p.name        && p.name.trim()),
+    !!(p.uid         && p.uid.trim()),
+    !!(p.institution && p.institution.trim()),
+    !!(p.role        && p.role.trim()),
+    !!(p.email       && p.email.trim()),
+    !!(localStorage.getItem('oasis_profile_photo') || localStorage.getItem('oasis_avatar_id')),
+  ];
+  var filled = fields.filter(Boolean).length;
+  var pct    = Math.round((filled / fields.length) * 100);
+
+  // Circumference of r=7 circle = 2π×7 ≈ 43.98
+  var circ   = 43.98;
+  var offset = circ - (circ * pct / 100);
+  arcEl.style.strokeDashoffset = offset;
+  pctEl.textContent = pct + '%';
+
+  // Show green when complete, amber when nearly there, default teal otherwise
+  var color = pct === 100 ? 'var(--green, #34d399)' : (pct >= 67 ? 'var(--amber, #f0b429)' : 'var(--teal)');
+  arcEl.style.stroke = color;
+  pctEl.style.color  = color;
+  badge.style.display = (pct === 100) ? 'none' : 'flex';
+}
+
 function toggleAvatarPicker(){
   var panel = document.getElementById('avatar-picker-panel');
   if(!panel) return;
@@ -3397,9 +3438,10 @@ function hideAvatarPicker(){
 (function(){
   document.addEventListener('DOMContentLoaded', function(){
     _updateHeaderAvatar();
+  _updateProfileCompletionBadge();
   });
   // Also try immediately in case DOM is already ready
-  if(document.readyState !== 'loading'){ _updateHeaderAvatar(); }
+  if(document.readyState !== 'loading'){ _updateHeaderAvatar(); _updateProfileCompletionBadge(); }
 })();
 
 /* ── ABOUT DRAWER ── */
@@ -3461,11 +3503,11 @@ function _adrApplyDevProfile(d){
     var svgMail = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
     var svgGH   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>';
     var svgLI   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
-    var svgTW   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>';
+    var svgTW   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="var(--teal)" style="flex-shrink:0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L2.25 2.25h6.927l4.215 5.577 5.852-5.577zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
     if(d.links.email)    html += '<a href="mailto:'+d.links.email+'" style="'+baseStyle+'">'+svgMail+'<span style="'+labelStyle+'">'+d.links.email+'</span></a>';
     if(d.links.github)   html += '<a href="'+d.links.github+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgGH+'<span style="'+labelStyle+'">GitHub</span></a>';
     if(d.links.linkedin) html += '<a href="'+d.links.linkedin+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgLI+'<span style="'+labelStyle+'">LinkedIn</span></a>';
-    if(d.links.twitter)  html += '<a href="'+d.links.twitter+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgTW+'<span style="'+labelStyle+'">Twitter / X</span></a>';
+    if(d.links.twitter)  html += '<a href="'+d.links.twitter+'" target="_blank" rel="noopener" style="'+baseStyle+'">'+svgTW+'<span style="'+labelStyle+'">X</span></a>';
     if(!html) html = '<span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">No contact info available.</span>';
     linksWrap.innerHTML = html;
   }
@@ -9815,6 +9857,8 @@ function getUserProfile() {
 
 function saveUserProfile(p) {
   localStorage.setItem(USER_KEY, JSON.stringify(p));
+  // Refresh completion badge whenever profile is saved
+  try { _updateProfileCompletionBadge(); } catch(e) {}
   // Mirror to Firestore users collection (keyed by Firebase Auth UID when available)
   if (typeof db !== 'undefined' && db) {
     const auth = _getAuth();
@@ -9928,7 +9972,35 @@ async function obAuthSubmit() {
 
   try {
     if (_obIsRegisterMode) {
+      // ── REGISTRATION ──────────────────────────────────────────
+      // Purge any stale local profile BEFORE creating the new Firebase account
+      // so the new user never accidentally inherits the previous user's cached data.
+      const _staleProfile = localStorage.getItem(USER_KEY);
+      if (_staleProfile) {
+        console.warn('[Auth] Stale local profile detected before registration — clearing now.');
+        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem('oasis_profile_photo');
+        localStorage.removeItem('oasis_avatar_id');
+        localStorage.removeItem('nt_push_sub');
+        // Clear all nc_* DataService keys (settings, history, etc.)
+        const _ncKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('nc_')) _ncKeys.push(k);
+        }
+        _ncKeys.forEach(k => localStorage.removeItem(k));
+        sessionStorage.removeItem('_ntpPid');
+        sessionStorage.removeItem('nc_recall');
+        sessionStorage.removeItem('nc_mealplan');
+      }
+
       await auth.createUserWithEmailAndPassword(email, pwVal);
+
+      // Force-reload currentUser from Firebase to guarantee a fresh credential
+      await auth.currentUser?.reload().catch(() => {});
+      const newUid = auth.currentUser?.uid;
+      console.log('[Auth] Registration successful. New Firebase UID:', newUid);
+
     } else {
       // Both username AND password must be correct — Firebase verifies atomically
       await auth.signInWithEmailAndPassword(email, pwVal);
@@ -9937,6 +10009,8 @@ async function obAuthSubmit() {
     // Auth success — check if profile already exists in Firestore
     const auth2 = _getAuth();
     const fbUid = auth2?.currentUser?.uid;
+    console.log('[Auth] Authenticated UID after sign-in/register:', fbUid);
+
     let existingProfile = null;
     if (db && fbUid) {
       const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
@@ -9944,8 +10018,20 @@ async function obAuthSubmit() {
         existingProfile = snap.data();
       }
     }
-    if (existingProfile) {
-      // Returning user — restore full profile and proceed directly to home
+
+    if (_obIsRegisterMode && existingProfile) {
+      // A Firestore doc exists for this UID (e.g. registered on another device).
+      // Treat as returning user only if the stored Firebase UID matches exactly.
+      const storedFbUid = existingProfile.firebaseUid || null;
+      if (storedFbUid && storedFbUid !== fbUid) {
+        // UID mismatch — do NOT restore the old profile; go to fresh setup.
+        console.warn('[Auth] Firestore UID mismatch on register — forcing fresh profile setup.');
+        existingProfile = null;
+      }
+    }
+
+    if (existingProfile && !_obIsRegisterMode) {
+      // Sign-in: returning user — restore full profile and proceed directly to home
       const p = {
         name:        existingProfile.userName    || '',
         uid:         existingProfile.userId      || '',
@@ -9956,9 +10042,11 @@ async function obAuthSubmit() {
         firebaseUid: fbUid,
       };
       saveUserProfile(p);
+      console.log('[Auth] Returning user profile restored for UID:', fbUid);
       _obFinish(p.name, true);
     } else {
-      // New user — show profile setup step (Staff ID blank, user must fill manually)
+      // New user (or registration) — show profile setup step fresh
+      console.log('[Auth] New user setup — no pre-existing profile for UID:', fbUid);
       _obSkipToProfile();
     }
   } catch (err) {
@@ -10031,6 +10119,11 @@ function obSelectRole(btn) {
   document.querySelectorAll('.ob-role-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   _obSelectedRole = btn.dataset.role;
+  // Show/hide the custom role free-text field
+  const otherRow = document.getElementById('ob-role-other-row');
+  const otherVal = document.getElementById('ob-role-other-val');
+  if (otherRow) otherRow.style.display = (_obSelectedRole === 'other') ? 'block' : 'none';
+  if (_obSelectedRole !== 'other' && otherVal) otherVal.value = '';
 }
 
 function obSubmit() {
@@ -10053,6 +10146,11 @@ function obSubmit() {
   if (!inst) { errs.push('Please select your institution.'); instEl?.classList.add('error'); }
   else instEl?.classList.remove('error');
   if (!_obSelectedRole) errs.push('Please select your role.');
+  // If "other" chosen, require the custom label
+  if (_obSelectedRole === 'other') {
+    const _orv = (document.getElementById('ob-role-other-val')?.value || '').trim();
+    if (!_orv) errs.push('Please describe your role.');
+  }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errs.push('Please enter a valid email address.');
     emailEl?.classList.add('error');
@@ -10065,7 +10163,7 @@ function obSubmit() {
   const auth = _getAuth();
   const fbUid = auth?.currentUser?.uid || null;
 
-  const profile = { name, uid, institution: inst, role: _obSelectedRole, email, createdAt: new Date().toISOString(), firebaseUid: fbUid };
+  const profile = { name, uid, institution: inst, role: (_obSelectedRole === 'other' ? ((document.getElementById('ob-role-other-val')?.value || '').trim() || 'other') : _obSelectedRole), email, createdAt: new Date().toISOString(), firebaseUid: fbUid };
   saveUserProfile(profile);
 
   // If user provided a real email, update Firebase Auth so password reset works
@@ -10109,6 +10207,8 @@ function _obFinish(name, isReturning) {
   document.body.style.overflow = '';
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
+  try { _updateHeaderAvatar(); } catch(e) {}   // ensure fresh user's avatar (not previous user's) is shown
+  try { _updateProfileCompletionBadge(); } catch(e) {}
   showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
 }
 
@@ -10119,24 +10219,39 @@ function checkOnboarding() {
     // Let Firebase Auth state determine whether to show the overlay
     auth.onAuthStateChanged((user) => {
       if (user) {
-        // Already authenticated — check if profile is stored locally
-        if (!getUserProfile()) {
-          // Profile missing locally — they may have registered elsewhere; restore or re-prompt profile step
+        console.log('[Auth] onAuthStateChanged — active UID:', user.uid);
+        // Already authenticated — check if profile is stored locally AND belongs to this UID
+        const localProfile = getUserProfile();
+        const profileBelongsToUser = localProfile && localProfile.firebaseUid === user.uid;
+
+        if (!localProfile || !profileBelongsToUser) {
+          if (localProfile && !profileBelongsToUser) {
+            // Cached profile is from a DIFFERENT Firebase user — must not be used.
+            console.warn('[Auth] Cached profile UID mismatch. Cached:', localProfile.firebaseUid, '| Active:', user.uid, '— clearing stale profile.');
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem('oasis_profile_photo');
+            localStorage.removeItem('oasis_avatar_id');
+          }
+          // Profile missing or cleared — attempt restore from Firestore
           db && db.collection('users').doc(user.uid).get().then(snap => {
             if (snap.exists && snap.data().userName) {
               const d = snap.data();
               saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
+              console.log('[Auth] Profile restored from Firestore for UID:', user.uid);
               try { renderProfileCard(); } catch(e) {}
               _hideOnboardingOverlay();
             } else {
+              // No Firestore doc — new account, show profile setup
               _showOnboardingOverlay();
             }
           }).catch(() => _showOnboardingOverlay());
         } else {
-          // Profile present — hide overlay, let user in
+          // Profile present and belongs to the active user — let them in
+          console.log('[Auth] Valid local profile found for UID:', user.uid);
           _hideOnboardingOverlay();
         }
       } else {
+        console.log('[Auth] onAuthStateChanged — no user signed in.');
         // Not signed in — always block home screen
         _showOnboardingOverlay();
       }
@@ -10204,13 +10319,71 @@ function renderProfileCard() {
 }
 
 // ── Sign out ──────────────────────────────────────────────────────
+/**
+ * _clearAllUserSession — wipes every user-scoped key from localStorage,
+ * sessionStorage, and in-memory state so the next sign-in/registration
+ * starts from a completely blank slate.
+ *
+ * Keys preserved: SW version/dismissed flags, PWA install banner flag —
+ * these are device-level, not user-level.
+ */
+function _clearAllUserSession() {
+  // ── 1. Capture previous UID for debug log ────────────────────
+  let prevUid = '(none)';
+  try {
+    const prev = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    prevUid = prev?.firebaseUid || prev?.uid || '(none)';
+  } catch(_) {}
+  console.log('[Auth] Signing out. Previous UID:', prevUid);
+
+  // ── 2. User profile & auth flags ────────────────────────────
+  localStorage.removeItem(USER_KEY);
+
+  // ── 3. All DataService (nc_*) keys — calc history, settings,
+  //        saved records, meal plans, recall, etc. ─────────────
+  const NC_PREFIX = 'nc_';
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(NC_PREFIX)) keysToRemove.push(k);
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+
+  // ── 4. Profile photo / avatar ────────────────────────────────
+  localStorage.removeItem('oasis_profile_photo');
+  localStorage.removeItem('oasis_avatar_id');
+
+  // ── 5. Push-notification subscription cache ──────────────────
+  localStorage.removeItem('nt_push_sub');
+
+  // ── 6. sessionStorage — presence PID, recall, meal plan ──────
+  sessionStorage.removeItem('_ntpPid');
+  sessionStorage.removeItem('nc_recall');
+  sessionStorage.removeItem('nc_mealplan');
+
+  // ── 7. In-memory module state reset ─────────────────────────
+  try { if (typeof appState !== 'undefined') { Object.keys(appState).forEach(k => { appState[k] = null; }); } } catch(_) {}
+  try { _selectedAvatarId = null; } catch(_) {}
+  try { _pdrPhotoDataUrl  = null; } catch(_) {}
+
+  // ── 8. Mark sign-out so welcome screen says "Welcome back" ───
+  localStorage.setItem('ob_has_signed_out', '1');
+
+  console.log('[Auth] Session cleared. All user-scoped localStorage/sessionStorage keys removed.');
+}
+
 function obSignOut() {
   if (!confirm('Sign out of Oasis?')) return;
   const auth = _getAuth();
-  localStorage.removeItem(USER_KEY);
-  localStorage.setItem('ob_has_signed_out', '1');
-  (auth ? auth.signOut() : Promise.resolve()).then(() => {
+
+  // Clear all user data BEFORE Firebase signOut to avoid any race where
+  // onAuthStateChanged fires with the old user still in memory.
+  _clearAllUserSession();
+
+  const doUIReset = () => {
     try { renderProfileCard(); } catch(e) {}
+    try { _updateHeaderAvatar(); } catch(e) {}   // clear header mini-avatar photo/icon
+    try { _updateProfileCompletionBadge(); } catch(e) {}  // hide badge on sign-out
     showToast('Signed out.', 'success');
     // Reset overlay to sign-in step for next user
     document.getElementById('ob-step-auth').style.display    = 'block';
@@ -10224,11 +10397,15 @@ function obSignOut() {
     document.getElementById('ob-auth-heading').textContent = 'Welcome back';
     // Block home screen until signed in again
     _showOnboardingOverlay();
-  }).catch(() => {
-    localStorage.removeItem(USER_KEY);
-    try { renderProfileCard(); } catch(e) {}
-    _showOnboardingOverlay();
-  });
+  };
+
+  (auth ? auth.signOut() : Promise.resolve())
+    .then(doUIReset)
+    .catch(() => {
+      // Even if Firebase signOut fails, the local session is already wiped.
+      console.warn('[Auth] Firebase signOut failed — local session was already cleared.');
+      doUIReset();
+    });
 }
 
 // ── Settings profile sync ─────────────────────────────────────────
