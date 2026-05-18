@@ -311,7 +311,13 @@
     <div class="status-pill offline" id="db-pill"><span class="dot" id="db-dot"></span><span id="db-pill-txt">Offline</span></div>
 
     <div class="kebab-wrap" id="kebab-wrap">
-      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋮</button>
+      <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
+        <svg class="kebab-hamburger" width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="0" y1="1"  x2="16" y2="1"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          <line x1="0" y1="6"  x2="16" y2="6"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          <line x1="0" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+      </button>
       <div class="kebab-menu" id="kebab-menu" role="menu">
 
         <button class="kebab-item" role="menuitem" onclick="kebabOpenProfile()">
@@ -874,16 +880,19 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════
-     BOTTOM NAVIGATION BAR — Fixed 4-item primary nav
-     ANTHRO | PN | SCREEN | DNI
+     BOTTOM NAVIGATION BAR — scrollable secondary clinical tools
+     Anthro | NFPE | 24hr Recall | Meal Planner | + dynamic tabs
 ════════════════════════════════════════════════════════════ -->
 <div class="bottom-nav-wrap">
+  <!-- Fade indicators for scroll overflow -->
+  <div class="bnav-fade bnav-fade-left" id="bnav-fade-left"></div>
+  <div class="bnav-fade bnav-fade-right" id="bnav-fade-right"></div>
 
-<nav class="bottom-nav" role="navigation" aria-label="Primary navigation" id="bottom-nav-scroll">
+<nav class="bottom-nav" role="navigation" aria-label="Secondary navigation" id="bottom-nav-scroll">
 
   <!-- ── ANTHRO ── -->
   <div class="tab tab-clinical" id="bnav-anthro" onclick="switchTab('anthro')" role="button" tabindex="0" aria-label="Anthropometry">
-    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <line x1="12" y1="2" x2="12" y2="22"/>
   <line x1="2" y1="7" x2="22" y2="7"/>
   <line x1="2" y1="17" x2="22" y2="17"/>
@@ -891,40 +900,41 @@
     <span class="tab-label">Anthro</span>
   </div>
 
-  <!-- ── PN (Parenteral Nutrition) ── -->
-  <div class="tab tab-clinical" id="bnav-parenteral" onclick="switchTab('parenteral')" role="button" tabindex="0" aria-label="Parenteral Nutrition">
-    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <rect x="7" y="2" width="10" height="5" rx="1.5"/>
-      <path d="M12 7v3"/>
-      <path d="M9 10h6"/>
-      <path d="M9 10c0 5-4 8-4 12h14c0-4-4-7-4-12"/>
-      <line x1="10" y1="14" x2="14" y2="14" stroke-opacity="0.5"/>
-      <line x1="10" y1="17" x2="14" y2="17" stroke-opacity="0.3"/>
+  <!-- ── NFPE ── -->
+  <div class="tab tab-clinical" id="bnav-nfpe" onclick="switchTab('nfpe')" role="button" tabindex="0" aria-label="Nutrition-Focused Physical Exam">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="12" cy="8" r="3"/>
+  <path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+  <path d="M16 3.5c1.5.8 2.5 2.3 2.5 4" stroke="#f472b6" stroke-width="1.4"/>
+  <path d="M18.5 2c2.5 1.3 3.5 3.8 3.5 6" stroke="#f472b6" stroke-width="1.4" opacity="0.6"/>
     </svg></span>
-    <span class="tab-label">PN</span>
+    <span class="tab-label">NFPE</span>
   </div>
 
-  <!-- ── SCREEN (Nutrition Screening) ── -->
-  <div class="tab tab-clinical" id="bnav-screening" onclick="switchTab('screening')" role="button" tabindex="0" aria-label="Nutrition Screening">
-    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M9 11l3 3L22 4"/>
-      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+  <!-- ── 24HR RECALL ── -->
+  <div class="tab tab-assess" id="bnav-recall" onclick="switchTab('recall')" role="button" tabindex="0" aria-label="24-Hour Dietary Recall">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <circle cx="12" cy="13" r="7" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="12" y1="13" x2="12" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="13" x2="15.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="12" cy="13" r="1" fill="currentColor"/>
+  <text x="12" y="5.5" font-size="4" fill="currentColor" text-anchor="middle" font-family="monospace" font-weight="600" opacity="0.9">24h</text>
     </svg></span>
-    <span class="tab-label">Screen</span>
+    <span class="tab-label">24hr Recall</span>
   </div>
 
-  <!-- ── DNI (Drug–Nutrient Interactions) ── -->
-  <div class="tab tab-clinical" id="bnav-dni" onclick="switchTab('dni')" role="button" tabindex="0" aria-label="Drug-Nutrient Interactions">
-    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M10.5 20H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2v7"/>
-      <path d="M12 12h.01"/>
-      <path d="M8 12h.01"/>
-      <path d="M16 12h.01"/>
-      <circle cx="18" cy="18" r="4"/>
-      <line x1="18" y1="16" x2="18" y2="20"/>
-      <line x1="16" y1="18" x2="20" y2="18"/>
+  <!-- ── MEAL PLANNER ── -->
+  <div class="tab tab-assess" id="bnav-mealplan" onclick="switchTab('mealplan')" role="button" tabindex="0" aria-label="Meal Planner">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <circle cx="12" cy="14" r="8" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M12 14L12 8.5A5.5 5.5 0 0117.5 14Z" fill="#f0b429" opacity="0.35" stroke="#f0b429" stroke-width="1.2"/>
+  <path d="M12 14L17.5 14A5.5 5.5 0 0114 19Z" fill="#4fc3f7" opacity="0.35" stroke="#4fc3f7" stroke-width="1.2"/>
+  <path d="M12 14L14 19A5.5 5.5 0 0112 8.5Z" fill="#34d399" opacity="0.35" stroke="#34d399" stroke-width="1.2"/>
+  <circle cx="12" cy="14" r="1.2" fill="currentColor"/>
+  <line x1="8" y1="4" x2="8" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="16" y1="4" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg></span>
-    <span class="tab-label">DNI</span>
+    <span class="tab-label">Meal</span>
   </div>
 
 </nav>
@@ -1323,93 +1333,65 @@
   </div>
 
   <!-- ── QUICK ACCESS ── -->
-  <div class="hp-section-title">Quick Access</div>
-  <div class="hp-quick-grid">
-
-    <!-- 24hr Recall -->
-    <div class="hp-quick-card" onclick="switchTab('recall')"
-         style="--qcard-accent:rgba(96,165,250,0.35);--qcard-color:#60a5fa;--qcard-icon-bg:rgba(96,165,250,0.08);--qcard-icon-border:rgba(96,165,250,0.18);--qcard-glow:rgba(96,165,250,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><line x1="12" y1="13" x2="12" y2="8.5" stroke-width="2"/><line x1="12" y1="13" x2="15.5" y2="14.5"/><circle cx="12" cy="13" r="1" fill="#60a5fa" stroke="none"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">24hr Recall</div>
-        <div class="hp-quick-desc">Dietary intake assessment</div>
-      </div>
+  <div class="hp-section-title">Information</div>
+  <div class="hp-refs">
+    <div class="hp-ref-card" onclick="switchTab('database')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <ellipse cx="12" cy="5.5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M5 5.5V11.5" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M19 5.5V11.5" stroke="currentColor" stroke-width="1.5"/>
+  <ellipse cx="12" cy="11.5" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M5 11.5V17" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M19 11.5V17" stroke="currentColor" stroke-width="1.5"/>
+  <ellipse cx="12" cy="17" rx="7" ry="2.5" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M13 3.5C15 2.5 17.5 3 16.5 5.5C15.5 7 13 6.5 12.5 4.5" fill="#34d399" opacity="0.8" filter="url(#ni-glow)"/>
+</svg></span>
+      <div><div class="hp-ref-name">Food Database</div><div class="hp-ref-desc">Malawi FCT + local foods</div></div>
     </div>
-
-    <!-- Meal Planner -->
-    <div class="hp-quick-card" onclick="switchTab('mealplan')"
-         style="--qcard-accent:rgba(240,180,41,0.35);--qcard-color:#f0b429;--qcard-icon-bg:rgba(240,180,41,0.08);--qcard-icon-border:rgba(240,180,41,0.18);--qcard-glow:rgba(240,180,41,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="8"/><path d="M12 14L12 8.5A5.5 5.5 0 0117.5 14Z" stroke="#f0b429" stroke-width="1.4"/><path d="M12 14L17.5 14A5.5 5.5 0 0114 19Z" stroke="#f0b429" stroke-width="1.4" stroke-opacity="0.6"/><circle cx="12" cy="14" r="1.2" fill="#f0b429" stroke="none"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">Meal Planner</div>
-        <div class="hp-quick-desc">Build patient meal plans</div>
-      </div>
+    <div class="hp-ref-card" onclick="switchTab('history')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <rect x="4" y="3" width="13" height="17" rx="2" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <rect x="4" y="3" width="13" height="5" rx="2" fill="currentColor" fill-opacity="0.12"/>
+  <rect x="4" y="7" width="13" height="1" fill="currentColor" fill-opacity="0.12"/>
+  <line x1="7" y1="11.5" x2="14" y2="11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="7" y1="14" x2="13" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>
+  <line x1="7" y1="16.5" x2="14.5" y2="16.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="19" cy="18" r="5" fill="var(--surface2,#071525)" stroke="currentColor" stroke-width="1.3"/>
+  <line x1="19" y1="18" x2="19" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" filter="url(#ni-glow)"/>
+  <line x1="19" y1="18" x2="21.5" y2="19.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+</svg></span>
+      <div><div class="hp-ref-name">History</div><div class="hp-ref-desc">Saved patient records</div></div>
     </div>
-
-    <!-- NFPE -->
-    <div class="hp-quick-card" onclick="switchTab('nfpe')"
-         style="--qcard-accent:rgba(244,114,182,0.35);--qcard-color:#f472b6;--qcard-icon-bg:rgba(244,114,182,0.08);--qcard-icon-border:rgba(244,114,182,0.18);--qcard-glow:rgba(244,114,182,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.5c1.5.8 2.5 2.3 2.5 4" stroke="#f472b6" stroke-width="1.4"/><path d="M18.5 2c2.5 1.3 3.5 3.8 3.5 6" stroke="#f472b6" stroke-width="1.4" stroke-opacity="0.6"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">NFPE</div>
-        <div class="hp-quick-desc">Nutrition-focused exam</div>
-      </div>
+    <div class="hp-ref-card" onclick="switchTab('reference')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <path d="M3 6C3 4.895 3.895 4 5 4H12V20H5C3.895 20 3 19.105 3 18V6Z" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <path d="M21 6C21 4.895 20.105 4 19 4H12V20H19C20.105 20 21 19.105 21 18V6Z" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <line x1="6" y1="8" x2="10.5" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="6" y1="11" x2="10" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+  <line x1="6" y1="14" x2="10.5" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <rect x="13.5" y="7" width="6" height="2" rx="1" fill="#a78bfa" opacity="0.35" stroke="#a78bfa" stroke-width="0.8"/>
+  <line x1="13.5" y1="11.5" x2="19.5" y2="11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+  <line x1="13.5" y1="14.5" x2="18.5" y2="14.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M18.5 4L21 6L19.5 6Z" fill="currentColor" opacity="0.3"/>
+</svg></span>
+      <div><div class="hp-ref-name">Reference</div><div class="hp-ref-desc">ASPEN · ESPEN · WHO guidelines</div></div>
     </div>
-
-    <!-- Food Database -->
-    <div class="hp-quick-card" onclick="switchTab('database')"
-         style="--qcard-accent:rgba(52,211,153,0.35);--qcard-color:#34d399;--qcard-icon-bg:rgba(52,211,153,0.08);--qcard-icon-border:rgba(52,211,153,0.18);--qcard-glow:rgba(52,211,153,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5V11.5"/><path d="M19 5.5V11.5"/><ellipse cx="12" cy="11.5" rx="7" ry="2.5"/><path d="M5 11.5V17"/><path d="M19 11.5V17"/><ellipse cx="12" cy="17" rx="7" ry="2.5"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">Food Database</div>
-        <div class="hp-quick-desc">Malawi FCT + local foods</div>
-      </div>
+    <div class="hp-ref-card" onclick="switchTab('about')">
+      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
+  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
+</defs>
+  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
+  <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" filter="url(#ni-glow)"/>
+  <circle cx="12" cy="8" r="1.2" fill="currentColor" opacity="0.9"/>
+</svg></span>
+      <div><div class="hp-ref-name">About</div><div class="hp-ref-desc">Version · Support · Contact</div></div>
     </div>
-
-    <!-- History -->
-    <div class="hp-quick-card" onclick="switchTab('history')"
-         style="--qcard-accent:rgba(167,139,250,0.35);--qcard-color:#a78bfa;--qcard-icon-bg:rgba(167,139,250,0.08);--qcard-icon-border:rgba(167,139,250,0.18);--qcard-glow:rgba(167,139,250,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="13" height="17" rx="2"/><line x1="7" y1="11.5" x2="14" y2="11.5" stroke-opacity="0.6"/><line x1="7" y1="14" x2="13" y2="14" stroke-opacity="0.45"/><line x1="7" y1="16.5" x2="14.5" y2="16.5" stroke-opacity="0.6"/><circle cx="19" cy="18" r="5"/><line x1="19" y1="18" x2="19" y2="14.5" stroke-width="1.5"/><line x1="19" y1="18" x2="21.5" y2="19.2" stroke-opacity="0.7"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">History</div>
-        <div class="hp-quick-desc">Saved patient records</div>
-      </div>
-    </div>
-
-    <!-- Reference -->
-    <div class="hp-quick-card" onclick="switchTab('reference')"
-         style="--qcard-accent:rgba(29,233,212,0.35);--qcard-color:var(--teal);--qcard-icon-bg:rgba(29,233,212,0.08);--qcard-icon-border:rgba(29,233,212,0.18);--qcard-glow:rgba(29,233,212,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><path d="M3 6C3 4.895 3.895 4 5 4H12V20H5C3.895 20 3 19.105 3 18V6Z"/><path d="M21 6C21 4.895 20.105 4 19 4H12V20H19C20.105 20 21 19.105 21 18V6Z"/><line x1="6" y1="8" x2="10.5" y2="8" stroke-opacity="0.6"/><line x1="6" y1="11" x2="10" y2="11" stroke-opacity="0.4"/><line x1="6" y1="14" x2="10.5" y2="14" stroke-opacity="0.6"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">Reference</div>
-        <div class="hp-quick-desc">ASPEN · ESPEN · WHO</div>
-      </div>
-    </div>
-
-    <!-- About Oasis -->
-    <div class="hp-quick-card" onclick="switchTab('about')"
-         style="--qcard-accent:rgba(96,165,250,0.35);--qcard-color:#60a5fa;--qcard-icon-bg:rgba(96,165,250,0.08);--qcard-icon-border:rgba(96,165,250,0.18);--qcard-glow:rgba(96,165,250,0.2)">
-      <div class="hp-quick-icon-wrap">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="17" stroke-width="2"/><circle cx="12" cy="8" r="1.2" fill="#60a5fa" stroke="none"/></svg>
-      </div>
-      <div>
-        <div class="hp-quick-name">About Oasis</div>
-        <div class="hp-quick-desc">Version · Support · Contact</div>
-      </div>
-    </div>
-
   </div>
 
   <!-- ── FOOTER ── -->
