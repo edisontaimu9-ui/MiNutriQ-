@@ -1010,6 +1010,9 @@ async function initFirebase() {
     // ── PUSH UPDATE WATCHER — Firestore + RTDB + BroadcastChannel ─
     _initUpdateWatcher();
 
+    // ── DEVELOPER PROFILE — sync avatar + role from Firestore ─────
+    _fetchDeveloperProfile();
+
 
 
   } catch (err) {
@@ -1426,25 +1429,30 @@ function _initUpdateWatcher() {
   // ── Channel A: Firestore onSnapshot ────────────────────────────────
   if (db) {
     try {
-      db.collection('system').doc('app_version').onSnapshot((snap) => {
+      const _verFSUnsub = db.collection('system').doc('app_version').onSnapshot((snap) => {
         if (snap.exists) {
           _handle({ ...snap.data(), _channel: 'Firestore' });
         }
       }, (err) => {
         console.warn('[Oasis] app_version Firestore listener error:', err);
       });
+      if (!window._ntUnsubs) window._ntUnsubs = [];
+      window._ntUnsubs.push(_verFSUnsub);
     } catch (e) { /* silently ignore if Firestore not ready */ }
   }
 
   // ── Channel B: RTDB onValue ────────────────────────────────────────
   if (rtdb) {
     try {
-      rtdb.ref('/system/app_version').on('value', (snap) => {
+      const _appVerRef = rtdb.ref('/system/app_version');
+      _appVerRef.on('value', (snap) => {
         const val = snap.val();
         if (val) _handle({ ...val, _channel: 'RTDB' });
       }, (err) => {
         console.warn('[Oasis] app_version RTDB listener error:', err);
       });
+      if (!window._ntUnsubs) window._ntUnsubs = [];
+      window._ntUnsubs.push(() => { try { _appVerRef.off('value'); } catch(e) {} });
     } catch (e) { /* silently ignore if RTDB not ready */ }
   }
 
@@ -1460,6 +1468,71 @@ function _initUpdateWatcher() {
       // Keep reference so we can close it on pagehide
       window.addEventListener('pagehide', () => bc.close());
     } catch (e) { /* silently ignore if BroadcastChannel not supported */ }
+  }
+}
+
+/**
+ * Fetch developer profile (photo + role) from Firestore system/developer_profile
+ * and update the About Oasis card.
+ *
+ * Firestore document path: system/developer_profile
+ * Expected fields:
+ *   photoURL  {string}  — publicly accessible image URL
+ *   role      {string}  — role/title line
+ */
+var _devProfileCache = null;   // last known good data
+
+function _applyDevProfile(data) {
+  if (!data) return;
+  _devProfileCache = data;
+
+  // ── Role / title ─────────────────────────────────────────────────
+  var roleEl = document.getElementById('adr-dev-role');
+  if (roleEl) {
+    var roleVal = data.role || data.Role || data.title || data.Title || '';
+    if (roleVal) roleEl.textContent = roleVal.trim();
+  }
+
+  // ── Avatar ───────────────────────────────────────────────────────
+  var avatarEl = document.getElementById('adr-dev-avatar');
+  if (avatarEl) {
+    var photoVal = data.photoURL || data.photo_url || data.photoUrl || data.image || '';
+    if (photoVal && photoVal.trim()) {
+      // Write directly — let the browser handle load/error naturally
+      avatarEl.innerHTML =
+        '<img src="' + photoVal.trim() + '" alt="Edison Taimu" ' +
+        'style="width:100%;height:100%;object-fit:cover;border-radius:10px" ' +
+        'onerror="this.parentElement.innerHTML=\'&#129489;\'">';
+      avatarEl.style.padding = '0';
+      avatarEl.style.fontSize = '0';
+    }
+  }
+
+  console.log('[Oasis] Developer profile applied:', data);
+}
+
+function _fetchDeveloperProfile() {
+  if (!db) {
+    console.warn('[Oasis] _fetchDeveloperProfile: db not ready');
+    return;
+  }
+
+  try {
+    const _devUnsub = db.collection('system').doc('developer_profile')
+      .onSnapshot(function (snap) {
+        if (snap && snap.exists) {
+          console.log('[Oasis] developer_profile snapshot received:', snap.data());
+          _applyDevProfile(snap.data());
+        } else {
+          console.warn('[Oasis] developer_profile document does not exist or is empty');
+        }
+      }, function (err) {
+        console.warn('[Oasis] developer_profile listener error:', err);
+      });
+    if (!window._ntUnsubs) window._ntUnsubs = [];
+    window._ntUnsubs.push(_devUnsub);
+  } catch (e) {
+    console.warn('[Oasis] _fetchDeveloperProfile init error:', e);
   }
 }
 
@@ -1556,7 +1629,7 @@ function initOfflineMode() {
 // MODULE: UI CONTROLS
 
 // ── TABS ─────────────────────────────────────────────────────
-const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "about": {"label": "About", "accent": "var(--text-dim)"}, "parenteral": {"label": "Parenteral Nutrition", "accent": "#a78bfa"}, "anthro": {"label": "Anthropometry", "accent": "var(--teal)"}, "nfpe": {"label": "NFPE", "accent": "#f472b6"}};
+const TAB_META = {"calculator": {"label": "Adult Calculator", "accent": "var(--teal)"}, "pedi": {"label": "Pediatric", "accent": "var(--blue)"}, "enteral": {"label": "Enteral Feeding", "accent": "var(--amber)"}, "recall": {"label": "24-Hour Recall", "accent": "var(--blue)"}, "mealplan": {"label": "Meal Planner", "accent": "var(--green)"}, "database": {"label": "Food Database", "accent": "var(--teal)"}, "history": {"label": "History", "accent": "var(--text-dim)"}, "reference": {"label": "Reference", "accent": "var(--text-dim)"}, "parenteral": {"label": "Parenteral Nutrition", "accent": "#a78bfa"}, "anthro": {"label": "Anthropometry", "accent": "var(--teal)"}, "nfpe": {"label": "NFPE", "accent": "#f472b6"}};
 
 // ── Tab history for Back button ─────────────────────────────────
 let _tabHistory = ['home'];
@@ -2162,8 +2235,8 @@ function downloadCSV(filename,headers,rows) {
 
 
 // MODULE: SETTINGS & THEMES
-const THEMES={ocean:{bg:'#07111c',surface:'#0d1e30',surface2:'#112437',surface3:'#162c42',border:'#224060',teal:'#00d4b8',tealDim:'#00b8a0'},slate:{bg:'#0e0e14',surface:'#16162a',surface2:'#1c1c36',surface3:'#222240',border:'#2e2e50',teal:'#a78bfa',tealDim:'#8b6df5'},forest:{bg:'#071410',surface:'#0d2018',surface2:'#122a20',surface3:'#173428',border:'#1a3a28',teal:'#4ade80',tealDim:'#22c55e'},amber:{bg:'#130e05',surface:'#1c1508',surface2:'#261c0a',surface3:'#30230d',border:'#3a2a10',teal:'#fbbf24',tealDim:'#f59e0b'},clinical:{bg:'#e8f0f8',surface:'#f4f8fc',surface2:'#dde8f4',surface3:'#ccd8ec',border:'#a0bcd8',teal:'#0070c0',tealDim:'#005a9e'},midnight:{bg:'#000000',surface:'#080810',surface2:'#0e0e1a',surface3:'#141422',border:'#1e1e32',teal:'#00e5ff',tealDim:'#00b8cc'}};
-function applyTheme(name){const t=THEMES[name];if(!t)return;const r=document.documentElement.style;r.setProperty('--bg',t.bg);r.setProperty('--surface',t.surface);r.setProperty('--surface2',t.surface2);r.setProperty('--surface3',t.surface3);r.setProperty('--border',t.border);r.setProperty('--teal',t.teal);r.setProperty('--teal-dim',t.tealDim);r.setProperty('--teal-glow',`rgba(0,0,0,.15)`);if(name==='clinical'){r.setProperty('--text','#1a2a3a');r.setProperty('--text-dim','#4a6a8a');r.setProperty('--text-bright','#0a1a2a');}else{r.setProperty('--text','#cce0f5');r.setProperty('--text-dim','#6890b8');r.setProperty('--text-bright','#eaf4ff');}document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));const el=document.getElementById('th-'+name);if(el)el.classList.add('active');currentSettings.theme=name;}
+const THEMES={ocean:{bg:'#07111c',surface:'#0d1e30',surface2:'#112437',surface3:'#162c42',border:'#224060',teal:'#00d4b8',tealDim:'#00b8a0'},slate:{bg:'#0e0e14',surface:'#16162a',surface2:'#1c1c36',surface3:'#222240',border:'#2e2e50',teal:'#a78bfa',tealDim:'#8b6df5'},forest:{bg:'#071410',surface:'#0d2018',surface2:'#122a20',surface3:'#173428',border:'#1a3a28',teal:'#4ade80',tealDim:'#22c55e'},amber:{bg:'#130e05',surface:'#1c1508',surface2:'#261c0a',surface3:'#30230d',border:'#3a2a10',teal:'#fbbf24',tealDim:'#f59e0b'},clinical:{bg:'#040d18',surface:'#081624',surface2:'#0c1e30',surface3:'#10263c',border:'#1a3a58',teal:'#4db8e8',tealDim:'#2a9fd4'},midnight:{bg:'#000000',surface:'#080810',surface2:'#0e0e1a',surface3:'#141422',border:'#1e1e32',teal:'#00e5ff',tealDim:'#00b8cc'}};
+function applyTheme(name){const t=THEMES[name];if(!t)return;const r=document.documentElement.style;r.setProperty('--bg',t.bg);r.setProperty('--surface',t.surface);r.setProperty('--surface2',t.surface2);r.setProperty('--surface3',t.surface3);r.setProperty('--border',t.border);r.setProperty('--teal',t.teal);r.setProperty('--teal-dim',t.tealDim);r.setProperty('--teal-glow',`rgba(0,0,0,.15)`);if(name==='clinical'){r.setProperty('--text','#c8dff0');r.setProperty('--text-dim','#6899bb');r.setProperty('--text-bright','#e8f4ff');}else{r.setProperty('--text','#cce0f5');r.setProperty('--text-dim','#6890b8');r.setProperty('--text-bright','#eaf4ff');}document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));const el=document.getElementById('th-'+name);if(el)el.classList.add('active');currentSettings.theme=name;try{const _s=DataService.get('settings')||{};_s.theme=name;DataService.save('settings',_s);}catch(e){}}
 function applyFontSize(sz){
   const map={sm:'12px',md:'14px',lg:'16px',xl:'19px'};
   const size = map[sz] || '14px';
@@ -2499,6 +2572,7 @@ function openSettings(){
   document.getElementById('settings-drawer').classList.add('open');
   document.getElementById('settings-overlay').classList.add('open');
   loadSettingsUI();
+  if(typeof loadProfileIntoSettings==='function') loadProfileIntoSettings();
 }
 function closeSettings(){
   document.getElementById('settings-drawer').classList.remove('open');
@@ -2537,8 +2611,9 @@ document.addEventListener('keydown',function(e){
 function _kebabUpdateLabels(){
   var el=document.getElementById('kebab-theme-label');
   if(!el)return;
-  var t=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'dark';
-  el.textContent=t.toUpperCase();
+  var t=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'ocean';
+  if(!(t in THEMES)) t='ocean';
+  el.textContent=t.charAt(0).toUpperCase()+t.slice(1);
 }
 function _kebabShowSignOut(){
   var btn=document.getElementById('kebab-signout-btn');
@@ -2585,22 +2660,66 @@ function _populateProfileDrawer(){
   if(emailEl) emailEl.textContent = email;
   if(signOutRow) signOutRow.style.display = p ? 'block' : 'none';
 
-  // Avatar: initials or role icon
+  // Avatar: photo → initials → role icon
   if(avatarEl){
-    var initials = name !== 'No name set'
-      ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
-      : '?';
-    var svgIcons = {
-      student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-      dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
-      clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
-      nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
-    };
-    if(svgIcons[role]){
-      avatarEl.innerHTML = svgIcons[role];
+    var photoURL = (p && p.photoURL) ? p.photoURL : null;
+    if (photoURL) {
+      avatarEl.innerHTML = '<img src="' + photoURL + '" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     } else {
-      avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
+      var initials = name !== 'No name set'
+        ? name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)
+        : '?';
+      var svgIcons = {
+        student:   '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+        dietitian: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>',
+        clinician: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>',
+        nurse:     '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>',
+      };
+      if(svgIcons[role]){
+        avatarEl.innerHTML = svgIcons[role];
+      } else {
+        avatarEl.innerHTML = '<span style="font-family:var(--sans);font-size:22px;font-weight:800;color:var(--teal)">' + initials + '</span>';
+      }
     }
+  }
+
+  // ── Profile completion bar + photo reminder ───────────────────────
+  if (p) {
+    var comp      = (typeof getProfileCompletion === 'function') ? getProfileCompletion() : null;
+    var pct       = comp ? comp.pct       : 100;
+    var missing   = comp ? comp.missing   : [];
+    var noPhoto   = missing.some(function(m){ return m.key === 'photo'; });
+    var barColor  = pct === 100 ? 'var(--green)' : pct >= 67 ? 'var(--teal)' : 'var(--amber,#f59e0b)';
+
+    // Completion bar element (inject once, update on re-call)
+    var compEl = document.getElementById('pdr-completion-wrap');
+    if (!compEl) {
+      compEl = document.createElement('div');
+      compEl.id = 'pdr-completion-wrap';
+      compEl.style.cssText = 'padding:0 0 16px;';
+      var afterAvatar = document.querySelector('#profile-drawer-body > div:first-child');
+      if (afterAvatar && afterAvatar.parentNode) {
+        afterAvatar.parentNode.insertBefore(compEl, afterAvatar.nextSibling);
+      }
+    }
+    compEl.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">' +
+        '<span style="font-family:var(--mono);font-size:9px;letter-spacing:0.8px;color:var(--text-dim);text-transform:uppercase">Profile Completion</span>' +
+        '<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + barColor + '">' + pct + '%</span>' +
+      '</div>' +
+      '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:2px;transition:width .4s"></div>' +
+      '</div>' +
+      (noPhoto
+        ? '<div style="margin-top:10px;padding:9px 11px;background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.18);border-radius:7px;display:flex;align-items:center;gap:9px">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+            '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);flex:1">Add a profile photo to complete your profile</span>' +
+            '<button onclick="closeProfile();openProfileEdit()" style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.5px;background:var(--teal);color:#020617;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;white-space:nowrap">ADD PHOTO</button>' +
+          '</div>'
+        : '');
+  } else {
+    var compElOld = document.getElementById('pdr-completion-wrap');
+    if (compElOld) compElOld.remove();
   }
 }
 
@@ -2611,19 +2730,33 @@ function openAbout(){
   if(verEl && typeof APP_VERSION !== 'undefined') verEl.textContent = 'v' + APP_VERSION;
   document.getElementById('about-drawer').classList.add('open');
   document.getElementById('about-overlay').classList.add('open');
+  // Re-apply cached developer profile (in case snapshot fired before drawer opened)
+  if(typeof _devProfileCache !== 'undefined' && _devProfileCache) {
+    _applyDevProfile(_devProfileCache);
+  } else if(typeof _fetchDeveloperProfile === 'function') {
+    _fetchDeveloperProfile();
+  }
 }
 function closeAbout(){
   document.getElementById('about-drawer').classList.remove('open');
   document.getElementById('about-overlay').classList.remove('open');
 }
 function kebabCycleTheme(){
-  var order=['dark','amoled','clinical'];
-  var cur=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'dark';
-  var next=order[(order.indexOf(cur)+1)%order.length];
-  if(typeof applyTheme==='function'){
+  var order = Object.keys(THEMES); // ['ocean','slate','forest','amber','clinical','midnight']
+  var cur = (typeof currentSettings !== 'undefined' && currentSettings.theme) || 'ocean';
+  // If saved theme isn't in THEMES (e.g. old 'dark'/'amoled' value), reset to first
+  if (order.indexOf(cur) === -1) cur = order[0];
+  var next = order[(order.indexOf(cur) + 1) % order.length];
+  if(typeof applyTheme === 'function'){
     applyTheme(next);
-    if(typeof autoSaveSettings==='function')autoSaveSettings();
-    if(typeof showToast==='function')showToast('Theme: '+next.charAt(0).toUpperCase()+next.slice(1),'info',1800);
+    // Persist immediately so the choice survives reload
+    try {
+      const s = DataService.get('settings') || {};
+      s.theme = next;
+      DataService.save('settings', s);
+      currentSettings.theme = next;
+    } catch(e) {}
+    if(typeof showToast === 'function') showToast('Theme: ' + next.charAt(0).toUpperCase() + next.slice(1), 'info', 1800);
   }
   _kebabUpdateLabels();
 }
@@ -2879,7 +3012,10 @@ function applyInitialSettings(){
   currentSettings=s;
   // Restore appearance mode first (affects everything else)
   if(s.appearanceMode) applyAppearanceMode(s.appearanceMode);
-  if(s.theme)applyTheme(s.theme);
+  // Apply saved theme, default to 'ocean' if none/invalid saved
+  const savedTheme = (s.theme && THEMES[s.theme]) ? s.theme : 'ocean';
+  applyTheme(savedTheme);
+  _kebabUpdateLabels();
   if(s.fontSize)applyFontSize(s.fontSize);
   if(s['tog-compact'])applyCompact(true);
   if(s['tog-statusbar']===false)applyStatusBar(false);
@@ -8932,6 +9068,13 @@ function getUserProfile() {
 
 function saveUserProfile(p) {
   localStorage.setItem(USER_KEY, JSON.stringify(p));
+  // Refresh profile drawer completion UI if open
+  try {
+    if (typeof _populateProfileDrawer === 'function') {
+      var pdrOpen = document.getElementById('profile-drawer');
+      if (pdrOpen && pdrOpen.classList.contains('open')) _populateProfileDrawer();
+    }
+  } catch(e) {}
   // Mirror to Firestore users collection (keyed by Firebase Auth UID when available)
   if (typeof db !== 'undefined' && db) {
     const auth = _getAuth();
@@ -8945,6 +9088,7 @@ function saveUserProfile(p) {
         userRole:    p.role         || '',
         institution: p.institution  || '',
         email:       p.email        || '',
+        photoURL:    p.photoURL     || '',
         createdAt:   p.createdAt    || new Date().toISOString(),
         updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
         deviceInfo:  navigator.userAgent.slice(0, 120),
@@ -9069,6 +9213,7 @@ async function obAuthSubmit() {
         institution: existingProfile.institution || '',
         role:        existingProfile.userRole    || 'student',
         email:       existingProfile.email       || '',
+        photoURL:    existingProfile.photoURL    || '',
         createdAt:   existingProfile.createdAt   || new Date().toISOString(),
         firebaseUid: fbUid,
       };
@@ -9307,9 +9452,12 @@ function renderProfileCard() {
     ? ROLE_META[p.role]
     : { label: p.role || 'Other', icon: _ROLE_SVG.other, color: 'var(--teal)' };
   const signOutBtn = ``;
+  const avatarInner = p.photoURL
+    ? `<img src="${p.photoURL}" alt="Profile photo">`
+    : rm.icon;
   wrap.innerHTML = `
     <div class="hp-profile-card">
-      <div class="hp-profile-avatar">${rm.icon}</div>
+      <div class="hp-profile-avatar">${avatarInner}</div>
       <div class="hp-profile-info">
         <div class="hp-profile-name">${p.name}</div>
         <div class="hp-profile-inst">${p.institution}</div>
@@ -9321,15 +9469,64 @@ function renderProfileCard() {
 }
 
 // ── Sign out ──────────────────────────────────────────────────────
+// ── Listener cleanup — call on every logout ────────────────────
+function _cleanupListeners() {
+  (window._ntUnsubs || []).forEach(fn => { try { fn(); } catch(e) {} });
+  window._ntUnsubs = [];
+}
+
+// ── Wipe all user-specific localStorage keys on logout ───────────
+function _clearUserLocalStorage() {
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    // Preserve SW version flags and "welcome back" marker
+    if (
+      k.startsWith('nc_') ||       // DataService keys (settings, patient data, etc.)
+      k === 'nt_user_profile' ||   // user profile object
+      k === 'nt_push_sub'          // push subscription cache
+    ) toRemove.push(k);
+  }
+  toRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+  // Clear cached profile photo from sessionStorage too
+  try { sessionStorage.removeItem('_ntPendingPhoto'); } catch(e) {}
+}
+
+// ── Profile completion — tracks 6 fields including photo ─────────
+function getProfileCompletion() {
+  const p = getUserProfile();
+  if (!p) return { pct: 0, missing: [{ key:'name', label:'Full Name' }, { key:'photo', label:'Profile Photo' }], done: 0, total: 6 };
+  const fields = [
+    { key: 'name',        label: 'Full Name',       done: !!(p.name        && p.name.trim()) },
+    { key: 'id',          label: 'Staff/Student ID', done: !!(p.uid        && p.uid.trim()) },
+    { key: 'role',        label: 'Role',             done: !!(p.role       && p.role.trim()) },
+    { key: 'institution', label: 'Institution',      done: !!(p.institution && p.institution.trim()) },
+    { key: 'email',       label: 'Email',            done: !!(p.email      && p.email.trim()) },
+    { key: 'photo',       label: 'Profile Photo',    done: !!p.photoURL },
+  ];
+  const done    = fields.filter(f => f.done).length;
+  const missing = fields.filter(f => !f.done).map(f => ({ key: f.key, label: f.label }));
+  return { pct: Math.round((done / fields.length) * 100), missing, done, total: fields.length };
+}
+
 function obSignOut() {
   if (!confirm('Sign out of Oasis?')) return;
   const auth = _getAuth();
-  localStorage.removeItem(USER_KEY);
+
+  // 1. Detach all active Firestore / RTDB listeners
+  _cleanupListeners();
+
+  // 2. Wipe all user-specific localStorage data
+  _clearUserLocalStorage();
   localStorage.setItem('ob_has_signed_out', '1');
+
+  // 3. Firebase Auth sign-out
   (auth ? auth.signOut() : Promise.resolve()).then(() => {
+    // Reset cached profile state in memory
     try { renderProfileCard(); } catch(e) {}
     showToast('Signed out.', 'success');
-    // Reset overlay to sign-in step for next user
+    // Reset overlay to sign-in step for the next user
     document.getElementById('ob-step-auth').style.display    = 'block';
     document.getElementById('ob-step-profile').style.display = 'none';
     document.getElementById('ob-auth-uid').value = '';
@@ -9337,12 +9534,10 @@ function obSignOut() {
     document.getElementById('ob-auth-error').textContent = '';
     document.getElementById('ob-auth-error').style.display = 'none';
     if (_obIsRegisterMode) obToggleAuthMode(); // reset to sign-in mode
-    // Returning user sees "Welcome back"
     document.getElementById('ob-auth-heading').textContent = 'Welcome back';
-    // Block home screen until signed in again
     _showOnboardingOverlay();
   }).catch(() => {
-    localStorage.removeItem(USER_KEY);
+    _clearUserLocalStorage();
     try { renderProfileCard(); } catch(e) {}
     _showOnboardingOverlay();
   });

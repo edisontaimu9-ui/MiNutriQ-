@@ -312,10 +312,10 @@
 
     <div class="kebab-wrap" id="kebab-wrap">
       <button class="kebab-btn" id="kebab-btn" onclick="toggleKebabMenu(event)" aria-label="Menu" aria-haspopup="true" aria-expanded="false">
-        <svg class="kebab-hamburger" width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <line x1="0" y1="1"  x2="16" y2="1"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          <line x1="0" y1="6"  x2="16" y2="6"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          <line x1="0" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        <svg class="kebab-hamburger" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line class="hb-line hb-line-top"    x1="2" y1="4"  x2="16" y2="4"  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line class="hb-line hb-line-mid"    x1="2" y1="9"  x2="16" y2="9"  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line class="hb-line hb-line-bottom" x1="2" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </button>
       <div class="kebab-menu" id="kebab-menu" role="menu">
@@ -340,7 +340,7 @@
         <button class="kebab-item" role="menuitem" onclick="kebabCycleTheme()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
           Theme
-          <span class="kebab-item-sub" id="kebab-theme-label">DARK</span>
+          <span class="kebab-item-sub" id="kebab-theme-label">OCEAN</span>
         </button>
 
         <button class="kebab-item" role="menuitem" onclick="kebabPrint()">
@@ -371,6 +371,375 @@
 <div id="about-overlay" onclick="closeAbout()"></div>
 <div id="settings-overlay" onclick="closeSettings()"></div>
 
+<!-- ════════════ FEEDBACK MODAL ════════════ -->
+<div id="feedback-overlay" onclick="closeFeedbackModal()" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.72);z-index:1100;backdrop-filter:blur(4px)"></div>
+<div id="feedback-modal" role="dialog" aria-modal="true" aria-label="Feedback" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1101;width:min(520px,92vw);max-height:90vh;overflow-y:auto;background:var(--surface1,#0d1628);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-lg,14px);box-shadow:0 24px 60px rgba(0,0,0,0.6)">
+
+  <!-- Top gradient bar -->
+  <div style="height:3px;background:linear-gradient(90deg,var(--teal,#1de9d4),var(--blue,#60a5fa));border-radius:var(--r-lg,14px) var(--r-lg,14px) 0 0"></div>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue,#60a5fa)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span style="font-family:var(--cond,var(--sans));font-size:16px;font-weight:800;letter-spacing:1.5px;color:var(--text-bright,#f0f6fc)">FEEDBACK</span>
+    </div>
+    <button onclick="closeFeedbackModal()" aria-label="Close feedback" style="background:none;border:none;color:var(--text-dim,#8b949e);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1" onmouseover="this.style.color='var(--text-bright,#f0f6fc)'" onmouseout="this.style.color='var(--text-dim,#8b949e)'">✕</button>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:0 20px 22px;display:flex;flex-direction:column;gap:14px">
+
+    <!-- Intro -->
+    <p style="font-family:var(--sans);font-size:12.5px;color:var(--text,#c9d1d9);line-height:1.75;margin:0">
+      Your feedback directly shapes how Oasis improves. Report a bug, suggest a feature, flag a clinical error, or share any other thoughts.
+    </p>
+
+    <!-- Type selector -->
+    <div>
+      <label style="display:block;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue,#60a5fa);letter-spacing:1px;margin-bottom:7px">FEEDBACK TYPE</label>
+      <div style="display:flex;gap:7px;flex-wrap:wrap" id="fb-type-btns">
+        <button class="fb-type-btn fb-type-active" data-type="Bug Report"    onclick="fbSetType(this)">🐛 Bug Report</button>
+        <button class="fb-type-btn"                data-type="Feature Request" onclick="fbSetType(this)">💡 Feature Request</button>
+        <button class="fb-type-btn"                data-type="Clinical Error"  onclick="fbSetType(this)">⚕️ Clinical Error</button>
+        <button class="fb-type-btn"                data-type="General"         onclick="fbSetType(this)">💬 General</button>
+      </div>
+    </div>
+
+    <!-- Subject -->
+    <div>
+      <label for="fb-subject" style="display:block;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue,#60a5fa);letter-spacing:1px;margin-bottom:7px">SUBJECT <span style="color:var(--text-dim)">— optional</span></label>
+      <input id="fb-subject" type="text" maxlength="120" placeholder="Brief summary…"
+        style="width:100%;box-sizing:border-box;background:rgba(2,6,23,0.6);border:1px solid rgba(96,165,250,0.22);border-radius:var(--r-sm,7px);padding:9px 12px;font-family:var(--sans);font-size:12.5px;color:var(--text-bright,#f0f6fc);outline:none"
+        onfocus="this.style.borderColor='rgba(96,165,250,0.55)'" onblur="this.style.borderColor='rgba(96,165,250,0.22)'">
+    </div>
+
+    <!-- Message -->
+    <div>
+      <label for="fb-message" style="display:block;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue,#60a5fa);letter-spacing:1px;margin-bottom:7px">MESSAGE <span style="color:var(--error,#f87171)">*</span></label>
+      <textarea id="fb-message" rows="5" maxlength="2000" placeholder="Describe the issue or suggestion in as much detail as you like…"
+        style="width:100%;box-sizing:border-box;resize:vertical;background:rgba(2,6,23,0.6);border:1px solid rgba(96,165,250,0.22);border-radius:var(--r-sm,7px);padding:9px 12px;font-family:var(--sans);font-size:12.5px;color:var(--text-bright,#f0f6fc);outline:none;line-height:1.7"
+        onfocus="this.style.borderColor='rgba(96,165,250,0.55)'" onblur="this.style.borderColor='rgba(96,165,250,0.22)'"></textarea>
+      <div style="text-align:right;font-family:var(--mono);font-size:8px;color:var(--text-muted,#6e7681);margin-top:3px" id="fb-char-count">0 / 2000</div>
+    </div>
+
+    <!-- Error message (hidden by default) -->
+    <div id="fb-error" style="display:none;padding:9px 12px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:var(--r-sm,7px);font-family:var(--sans);font-size:12px;color:var(--error,#f87171)"></div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+      <button onclick="closeFeedbackModal()"
+        style="font-family:var(--mono);font-size:9px;letter-spacing:0.8px;padding:9px 18px;border-radius:var(--r-sm,7px);background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-dim,#8b949e);cursor:pointer"
+        onmouseover="this.style.borderColor='rgba(255,255,255,0.35)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">CANCEL</button>
+      <button id="fb-submit-btn" onclick="submitFeedback()"
+        style="font-family:var(--mono);font-size:9px;letter-spacing:0.8px;padding:9px 20px;border-radius:var(--r-sm,7px);background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.4);color:var(--blue,#60a5fa);cursor:pointer;display:inline-flex;align-items:center;gap:7px"
+        onmouseover="this.style.background='rgba(96,165,250,0.2)'" onmouseout="this.style.background='rgba(96,165,250,0.12)'">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        SEND FEEDBACK
+      </button>
+    </div>
+
+  </div>
+</div>
+<!-- ════════════ END FEEDBACK MODAL ════════════ -->
+<div id="profile-edit-overlay" onclick="closeProfileEdit()" style="display:none"></div>
+
+<!-- ════════════ PROFILE EDIT DRAWER ════════════ -->
+<div id="profile-edit-drawer">
+  <!-- Header -->
+  <div class="sdr-header">
+    <div class="sdr-title"> Edit Profile</div>
+    <span id="pedr-autosave-ind" style="font-family:var(--mono);font-size:9px;color:var(--accent,var(--teal));opacity:0;transition:opacity .3s;letter-spacing:0.5px">✓ Saved</span>
+    <button class="sdr-close" onclick="closeProfileEdit()" aria-label="Close">✕</button>
+  </div>
+
+  <!-- Body -->
+  <div class="sdr-body">
+
+    <!-- Avatar preview + upload -->
+    <div style="display:flex;align-items:center;gap:16px;padding:6px 0 20px">
+      <label class="avatar-upload-wrap" title="Tap to change photo" aria-label="Change profile photo">
+        <input type="file" id="pedr-photo-input" class="avatar-upload-input" accept="image/*" onchange="pedrHandlePhoto(this)">
+        <div id="pedr-avatar" class="avatar-upload-face"></div>
+        <div class="avatar-cam-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+      </label>
+      <div>
+        <div id="pedr-preview-name" style="font-family:var(--sans);font-size:16px;font-weight:700;color:var(--text-bright)">—</div>
+        <div id="pedr-preview-role" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-top:3px">—</div>
+        <div id="pedr-photo-hint" style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:var(--text-muted,#64748b);margin-top:5px">TAP PHOTO TO CHANGE</div>
+      </div>
+    </div>
+
+    <div class="sdr-group">
+      <div class="sdr-group-label">Identity</div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Full Name</div>
+        <input id="pedr-name" class="sdr-input" type="text" maxlength="60" placeholder="e.g. Edison Taimu" autocomplete="name" oninput="pedrLivePreview()">
+      </div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Student / Staff ID</div>
+        <input id="pedr-uid" class="sdr-input" type="text" maxlength="40" placeholder="e.g. 2024001" autocomplete="off">
+      </div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Email</div>
+        <input id="pedr-email" class="sdr-input" type="email" maxlength="120" placeholder="e.g. name@example.com" autocomplete="email">
+      </div>
+    </div>
+
+    <div class="sdr-group">
+      <div class="sdr-group-label">Role</div>
+
+      <div class="sdr-item sdr-item-col" style="gap:10px">
+        <div class="sdr-role-grid">
+          <button class="sdr-role-btn" data-role="student"    onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Student
+          </button>
+          <button class="sdr-role-btn" data-role="dietitian"  onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>Dietitian
+          </button>
+          <button class="sdr-role-btn" data-role="clinician"  onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>Clinician
+          </button>
+          <button class="sdr-role-btn" data-role="researcher" onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/></svg>Researcher
+          </button>
+          <button class="sdr-role-btn" data-role="nurse"      onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>Nurse
+          </button>
+          <button class="sdr-role-btn" data-role="other"      onclick="pedrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Other
+          </button>
+        </div>
+        <input type="hidden" id="pedr-role" value="student">
+        <div id="pedr-role-other-row" style="display:none;margin-top:4px">
+          <input id="pedr-role-other-val" class="sdr-input" type="text" maxlength="40" placeholder="Specify your role…" oninput="pedrLivePreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <div style="margin-top:4px;padding-bottom:8px">
+      <button onclick="pedrSaveAndClose()" class="pedr-save-btn"
+        style="width:100%;padding:12px;background:var(--accent,var(--teal));border:none;border-radius:8px;
+               color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;
+               letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:7px"
+        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Changes
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════ PROFILE EDIT DRAWER — self-contained, inline so load order never matters ════ */
+
+function openProfileEdit() {
+  var drawer  = document.getElementById('profile-edit-drawer');
+  var overlay = document.getElementById('profile-edit-overlay');
+  _pedrLoad();
+  if (overlay) { overlay.style.display = 'block'; }
+  if (drawer)  { drawer.classList.add('open'); drawer.style.pointerEvents = 'auto'; }
+}
+
+function closeProfileEdit() {
+  var drawer  = document.getElementById('profile-edit-drawer');
+  var overlay = document.getElementById('profile-edit-overlay');
+  if (drawer)  {
+    drawer.classList.remove('open');
+    drawer.style.pointerEvents = 'none';
+    // Re-enable pointer events after transition completes
+    setTimeout(function() { if (drawer) drawer.style.pointerEvents = ''; }, 320);
+  }
+  if (overlay) { overlay.style.display = 'none'; }
+}
+
+/* ── Photo upload handler ── */
+var _pedrPendingPhoto = null; // base64 string, set on file pick, saved on Save
+
+function pedrHandlePhoto(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) {
+    try { showToast('Image too large (max 4 MB)', 'warning'); } catch(e) {}
+    input.value = '';
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    _pedrPendingPhoto = ev.target.result; // data URL (base64)
+    _pedrPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function _pedrLoad() {
+  var p = (typeof getUserProfile === 'function') ? getUserProfile() : null;
+  var nameEl  = document.getElementById('pedr-name');
+  var uidEl   = document.getElementById('pedr-uid');
+  var emailEl = document.getElementById('pedr-email');
+  var roleEl  = document.getElementById('pedr-role');
+
+  _pedrPendingPhoto = null; // reset pending photo on open
+  if (nameEl)  nameEl.value  = (p && p.name)  ? p.name  : '';
+  if (uidEl)   uidEl.value   = (p && p.uid)   ? p.uid   : '';
+  if (emailEl) emailEl.value = (p && p.email) ? p.email : '';
+
+  var knownRoles = ['student','dietitian','clinician','researcher','nurse','other'];
+  var savedRole  = (p && p.role) ? p.role : 'student';
+  var isKnown    = knownRoles.indexOf(savedRole) !== -1;
+  var chipRole   = isKnown ? savedRole : 'other';
+  if (roleEl) roleEl.value = chipRole;
+
+  document.querySelectorAll('#profile-edit-drawer .sdr-role-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.role === chipRole);
+  });
+
+  var otherRow = document.getElementById('pedr-role-other-row');
+  var otherVal = document.getElementById('pedr-role-other-val');
+  if (chipRole === 'other') {
+    if (otherRow) otherRow.style.display = 'block';
+    if (otherVal && !isKnown) otherVal.value = savedRole;
+  } else {
+    if (otherRow) otherRow.style.display = 'none';
+    if (otherVal) otherVal.value = '';
+  }
+  _pedrPreview();
+}
+
+function pedrSelectRole(btn) {
+  document.querySelectorAll('#profile-edit-drawer .sdr-role-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  var roleEl   = document.getElementById('pedr-role');
+  var otherRow = document.getElementById('pedr-role-other-row');
+  if (roleEl) roleEl.value = btn.dataset.role;
+  if (otherRow) otherRow.style.display = btn.dataset.role === 'other' ? 'block' : 'none';
+  _pedrPreview();
+}
+
+function pedrLivePreview() { _pedrPreview(); }
+
+function _pedrPreview() {
+  var nameEl  = document.getElementById('pedr-name');
+  var roleEl  = document.getElementById('pedr-role');
+  var name    = nameEl ? nameEl.value.trim() : '';
+  var roleVal = roleEl ? roleEl.value : 'student';
+  if (roleVal === 'other') {
+    var ov = document.getElementById('pedr-role-other-val');
+    roleVal = (ov && ov.value.trim()) ? ov.value.trim() : 'other';
+  }
+
+  var namePreview = document.getElementById('pedr-preview-name');
+  var rolePreview = document.getElementById('pedr-preview-role');
+  var avatarEl    = document.getElementById('pedr-avatar');
+
+  if (namePreview) namePreview.textContent = name || '—';
+  if (rolePreview) rolePreview.textContent = roleVal
+    ? (roleVal.charAt(0).toUpperCase() + roleVal.slice(1)) : '—';
+
+  if (avatarEl) {
+    // Determine which photo to show: pending pick → saved → initials
+    var existingPhoto = null;
+    try {
+      var _pp = (typeof getUserProfile === 'function') ? getUserProfile() : null;
+      existingPhoto = _pp && _pp.photoURL ? _pp.photoURL : null;
+    } catch(e) {}
+    var photoSrc = _pedrPendingPhoto || existingPhoto;
+
+    if (photoSrc) {
+      avatarEl.innerHTML = '<img src="' + photoSrc + '" alt="Profile photo">';
+    } else {
+      var initials = name
+        ? name.split(/\s+/).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase()
+        : '?';
+      avatarEl.textContent = initials;
+    }
+  }
+}
+function pedrSaveAndClose() {
+  /* Collect values */
+  var nameEl  = document.getElementById('pedr-name');
+  var uidEl   = document.getElementById('pedr-uid');
+  var emailEl = document.getElementById('pedr-email');
+  var roleEl  = document.getElementById('pedr-role');
+
+  var p = (typeof getUserProfile === 'function') ? (getUserProfile() || {}) : {};
+
+  if (nameEl  && nameEl.value.trim())  p.name = nameEl.value.trim();
+  if (uidEl   && uidEl.value.trim())   p.uid  = uidEl.value.trim();
+
+  if (roleEl) {
+    var chipVal = roleEl.value;
+    if (chipVal === 'other') {
+      var otherTxt = document.getElementById('pedr-role-other-val');
+      p.role = (otherTxt && otherTxt.value.trim()) ? otherTxt.value.trim() : 'other';
+    } else {
+      p.role = chipVal;
+    }
+  }
+
+  if (emailEl && emailEl.value.trim()) {
+    var newEmail = emailEl.value.trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      var prevEmail = p.email || '';
+      p.email = newEmail;
+      if (newEmail !== prevEmail && typeof _getAuth === 'function') {
+        var auth = _getAuth();
+        if (auth && auth.currentUser) {
+          auth.currentUser.updateEmail(newEmail).catch(function(){});
+        }
+      }
+    }
+  }
+
+  // Persist uploaded photo if one was picked this session
+  if (_pedrPendingPhoto) {
+    p.photoURL = _pedrPendingPhoto;
+    _pedrPendingPhoto = null;
+  }
+
+  if (typeof saveUserProfile === 'function') saveUserProfile(p);
+  if (typeof renderProfileCard === 'function') try { renderProfileCard(); } catch(e) {}
+
+  /* ── Show save feedback on the button, then close ── */
+  var saveBtn = document.querySelector('#profile-edit-drawer .pedr-save-btn');
+  if (saveBtn) {
+    var orig = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saved!';
+    saveBtn.style.background = 'var(--accent,var(--teal))';
+    saveBtn.disabled = true;
+    setTimeout(function() {
+      closeProfileEdit();
+      saveBtn.innerHTML = orig;
+      saveBtn.disabled = false;
+      /* Refresh profile card and settings after close */
+      if (typeof _populateProfileDrawer === 'function') try { _populateProfileDrawer(); } catch(e) {}
+      if (typeof loadProfileIntoSettings === 'function') try { loadProfileIntoSettings(); } catch(e) {}
+    }, 1100);
+  } else {
+    closeProfileEdit();
+    if (typeof _populateProfileDrawer === 'function') try { _populateProfileDrawer(); } catch(e) {}
+    if (typeof loadProfileIntoSettings === 'function') try { loadProfileIntoSettings(); } catch(e) {}
+  }
+}
+
+/* Close on Escape */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var ped = document.getElementById('profile-edit-drawer');
+    if (ped && ped.classList.contains('open')) closeProfileEdit();
+  }
+});
+</script>
+
 <!-- SETTINGS DRAWER — 4 clean sections: Display, Clinical Defaults, Calculator Behavior, Data -->
 <div id="settings-drawer">
 
@@ -384,6 +753,64 @@
 
   <!-- ── SCROLLABLE BODY ── -->
   <div class="sdr-body">
+
+    <!-- ① PROFILE EDIT -->
+    <div class="sdr-group" id="sdr-profile-section">
+      <div class="sdr-group-label">Your Profile</div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Full Name</div>
+        <input id="sdr-user-name" class="sdr-input" type="text" maxlength="60" placeholder="e.g. Edison Taimu" autocomplete="name" oninput="autoSaveSettings()">
+      </div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Student / Staff ID</div>
+        <input id="sdr-user-uid" class="sdr-input" type="text" maxlength="40" placeholder="e.g. 2024001" autocomplete="off" oninput="autoSaveSettings()">
+      </div>
+
+      <div class="sdr-item">
+        <div class="sdr-item-lbl">Email</div>
+        <input id="sdr-user-email" class="sdr-input" type="email" maxlength="120" placeholder="e.g. name@example.com" autocomplete="email" oninput="autoSaveSettings()">
+      </div>
+
+      <div class="sdr-item sdr-item-col" style="gap:10px">
+        <div class="sdr-item-lbl">Role</div>
+        <div class="sdr-role-grid">
+          <button class="sdr-role-btn" data-role="student"    onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Student
+          </button>
+          <button class="sdr-role-btn" data-role="dietitian"  onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9z"/></svg>Dietitian
+          </button>
+          <button class="sdr-role-btn" data-role="clinician"  onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><circle cx="20" cy="10" r="2"/></svg>Clinician
+          </button>
+          <button class="sdr-role-btn" data-role="researcher" onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/></svg>Researcher
+          </button>
+          <button class="sdr-role-btn" data-role="nurse"      onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>Nurse
+          </button>
+          <button class="sdr-role-btn" data-role="other"      onclick="sdrSelectRole(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Other
+          </button>
+        </div>
+        <input type="hidden" id="sdr-user-role" value="student">
+        <div id="sdr-role-other-row" style="display:none;margin-top:4px">
+          <input id="sdr-role-other-val" class="sdr-input" type="text" maxlength="40" placeholder="Specify your role…" oninput="autoSaveSettings()">
+        </div>
+      </div>
+
+      <div id="sdr-signout-row" style="display:none;margin-top:8px">
+        <button onclick="closeSettings();if(typeof obSignOut==='function')obSignOut()"
+          style="width:100%;padding:9px;background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.25);border-radius:8px;
+                 color:rgba(251,113,133,0.85);font-family:var(--mono);font-size:11px;font-weight:700;
+                 letter-spacing:1px;cursor:pointer;transition:opacity .15s">
+          Sign Out
+        </button>
+      </div>
+
+    </div><!-- /① PROFILE EDIT -->
 
     <!-- ② APPEARANCE -->
     <div class="sdr-group">
@@ -673,7 +1100,9 @@
   <div class="sdr-body" id="profile-drawer-body">
     <!-- Avatar + name row -->
     <div style="display:flex;flex-direction:column;align-items:center;padding:24px 0 20px;gap:12px">
-      <div id="pdr-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--surface2);border:2px solid rgba(29,233,212,0.3);display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0"></div>
+      <div class="pdr-avatar-wrap">
+        <div id="pdr-avatar" class="pdr-avatar-face"></div>
+      </div>
       <div style="text-align:center">
         <div id="pdr-name" style="font-family:var(--sans);font-size:18px;font-weight:700;color:var(--text-bright);letter-spacing:0.3px">—</div>
         <div id="pdr-role-label" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-top:4px">—</div>
@@ -699,7 +1128,7 @@
 
     <!-- Edit button -->
     <div style="margin-top:4px">
-      <button onclick="closeProfile();openSettings();setTimeout(function(){var g=document.querySelector('#settings-drawer .sdr-group');if(g)g.scrollIntoView({behavior:'smooth',block:'start'});},320)"
+      <button onclick="closeProfile();openProfileEdit()"
         style="width:100%;padding:11px;background:var(--accent,var(--teal));border:none;border-radius:8px;
                color:#020617;font-family:var(--mono);font-size:11px;font-weight:800;
                letter-spacing:1px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:7px"
@@ -728,19 +1157,24 @@
   </div>
   <div class="sdr-body">
 
-    <!-- App identity -->
-    <div style="display:flex;align-items:center;gap:14px;padding:4px 0 18px">
-      <div style="width:52px;height:52px;flex-shrink:0;border-radius:14px;background:var(--teal-glow);border:1px solid rgba(29,233,212,0.25);display:flex;align-items:center;justify-content:center">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <!-- App identity row -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:4px 0 14px">
+      <div style="display:flex;align-items:center;gap:14px;min-width:0">
+        <div style="width:52px;height:52px;flex-shrink:0;border-radius:14px;background:var(--teal-glow);border:1px solid rgba(29,233,212,0.25);display:flex;align-items:center;justify-content:center">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        </div>
+        <div style="min-width:0">
+          <div style="font-family:var(--cond,var(--sans));font-size:22px;font-weight:800;letter-spacing:2px;color:var(--text-bright)">Oasis</div>
+          <div style="font-family:var(--sans);font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.4">Evidence-based nutrition support for clinical and community practice</div>
+        </div>
       </div>
-      <div>
-        <div style="font-family:var(--cond,var(--sans));font-size:22px;font-weight:800;letter-spacing:2px;color:var(--text-bright)">Oasis</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">NutriTrack Pro · Clinical Decision Support</div>
-      </div>
+      <button onclick="window.pwaInstall?window.pwaInstall():showToast('Install option available in browser address bar','info')" style="font-family:var(--mono);font-size:9px;color:var(--teal);background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.25);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px;white-space:nowrap;flex-shrink:0">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>INSTALL APP
+      </button>
     </div>
 
     <!-- Version chips -->
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px">
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">
       <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.25);color:var(--teal)">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span id="adr-version-text">v1.2.6</span>
@@ -748,51 +1182,130 @@
       <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);color:var(--blue)">
         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>May 2026
       </span>
-      <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:var(--purple,#a78bfa)">
-        PWA · Offline
-      </span>
+
     </div>
 
-    <!-- Description -->
+    <!-- Overview -->
     <div class="sdr-group">
       <div class="sdr-group-label">Overview</div>
-      <div style="font-family:var(--sans);font-size:12.5px;line-height:1.8;color:var(--text);padding:4px 0 8px">
-        Evidence-based nutrition decision support for clinical and community practice. Built for hospital and community settings, Oasis empowers dietitians, health professionals, and students to perform precise, guideline-driven assessments — from bedside screening to full nutrition support prescriptions.
+      <div style="font-family:var(--sans);font-size:12.5px;line-height:1.8;color:var(--text);padding:4px 0 10px">
+        Oasis is a specialised clinical decision support system designed to bridge the gap between nutritional theory and bedside practice. Built for both hospital and community settings, the platform empowers dietitians, health professionals, and students to perform precise, evidence-based assessments — from bedside screening to full nutrition support prescriptions — and deliver targeted, guideline-driven patient care.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
+          <span style="font-family:var(--sans);font-size:12px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">11 Clinical Modules:</strong> Adult and pediatric nutrition, burns, enteral and parenteral support, nutrition screening (MUST &amp; MNA-SF), drug-nutrient interactions, dietary assessment, meal planning, anthropometry, and NFPE.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
+          <span style="font-family:var(--sans);font-size:12px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">Guideline-Aligned:</strong> ASPEN, ESPEN, BAPEN, WHO, NICE, AND, and KDIGO frameworks, with locally relevant Malawian food composition data.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
+          <span style="font-family:var(--sans);font-size:12px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">Resilient Technology:</strong> Operates fully offline as a Progressive Web App, ensuring uninterrupted service across diverse clinical environments — from tertiary hospitals to community health posts.</span>
+        </div>
+      </div>
+      <div class="alert warning" style="margin-bottom:0">
+        <span class="ai"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <div><strong>Clinical Decision Support Only.</strong> All prescriptions and clinical decisions require review by a qualified dietitian or clinician. This tool does not replace professional judgement.</div>
       </div>
     </div>
 
-    <!-- Developer -->
+    <!-- Developer & Credits -->
     <div class="sdr-group">
-      <div class="sdr-group-label">Developer</div>
-      <div class="sdr-item">
-        <div class="sdr-item-lbl">Built by</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Edison Taimu</div>
-      </div>
-      <div class="sdr-item">
-        <div class="sdr-item-lbl">Affiliation</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">KUHeS, Malawi</div>
-      </div>
-      <div class="sdr-item" style="border:none">
-        <div class="sdr-item-lbl">Guidelines</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right;max-width:55%">ASPEN · ESPEN · WHO · KDIGO</div>
+      <div class="sdr-group-label">Developer &amp; Credits</div>
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;padding:4px 0 8px">
+        <div id="adr-dev-avatar" style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">‍</div>
+        <div style="flex:1;min-width:160px">
+          <div style="font-family:var(--cond);font-size:15px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Edison Taimu</div>
+          <div id="adr-dev-role" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px">BSc Nutrition &amp; Dietetics (Honours), Pioneer Cohort</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:2px">Kamuzu University of Health Sciences (KUHeS), Malawi</div>
+          <p style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-top:10px;margin-bottom:0">
+            Edison is the architect behind Oasis. With a background in Nutrition and Dietetics from the inaugural cohort at KUHeS, he brings a strong foundation in clinical nutrition principles and a passion for digital health innovation. He created Oasis to translate evidence-based nutrition guidelines into practical, easy-to-use digital tools — designed to support dietitians, health professionals, and students, especially in resource-limited settings.
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- Modules list -->
+    <!-- Social Links -->
+    <div class="sdr-group">
+      <div class="sdr-group-label">Connect</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;padding:4px 0 4px">
+
+        <!-- LinkedIn -->
+        <a href="https://www.linkedin.com/in/edison-taimu-a37415367?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+           target="_blank" rel="noopener noreferrer"
+           style="display:inline-flex;align-items:center;gap:8px;flex:1;min-width:130px;padding:10px 14px;background:rgba(10,102,194,0.08);border:1px solid rgba(10,102,194,0.28);border-radius:var(--r-sm);text-decoration:none;transition:border-color .2s"
+           onmouseover="this.style.borderColor='rgba(10,102,194,0.6)'" onmouseout="this.style.borderColor='rgba(10,102,194,0.28)'">
+          <!-- LinkedIn icon -->
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#0A66C2" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+          <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#60a5fa;letter-spacing:0.7px">LINKEDIN</span>
+        </a>
+
+        <!-- X / Twitter -->
+        <a href="https://x.com/edisontaimu"
+           target="_blank" rel="noopener noreferrer"
+           style="display:inline-flex;align-items:center;gap:8px;flex:1;min-width:100px;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-sm);text-decoration:none;transition:border-color .2s"
+           onmouseover="this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">
+          <!-- X icon -->
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#e7e9ea" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/>
+          </svg>
+          <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text-bright);letter-spacing:0.7px">X / TWITTER</span>
+        </a>
+
+        <!-- GitHub -->
+        <a href="https://github.com/"
+           target="_blank" rel="noopener noreferrer"
+           style="display:inline-flex;align-items:center;gap:8px;flex:1;min-width:100px;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-sm);text-decoration:none;transition:border-color .2s"
+           onmouseover="this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">
+          <!-- GitHub icon -->
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#e6edf3" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z"/>
+          </svg>
+          <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text-bright);letter-spacing:0.7px">GITHUB</span>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- Contact & Feedback -->
     <div class="sdr-group" style="margin-bottom:0">
-      <div class="sdr-group-label">Modules</div>
-      <div style="display:flex;flex-direction:column;gap:4px;padding:4px 0">
-        <div class="adr-mod-row"><span style="color:var(--teal)">01</span> Adult Clinical Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">02</span> Pediatric Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">03</span> Enteral Feeding</div>
-        <div class="adr-mod-row"><span style="color:var(--purple,#a78bfa)">04</span> TPN / Parenteral Nutrition</div>
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">05</span> Nutrition Screening (MUST · MNA-SF)</div>
-        <div class="adr-mod-row"><span style="color:var(--teal)">06</span> Drug–Nutrient Interactions</div>
-        <div class="adr-mod-row"><span style="color:var(--rose,#fb7185)">07</span> Dietary Assessment</div>
-        <div class="adr-mod-row"><span style="color:var(--amber)">08</span> Meal Planning</div>
-        <div class="adr-mod-row"><span style="color:var(--blue)">09</span> Anthropometry</div>
-        <div class="adr-mod-row"><span style="color:var(--green,#34d399)">10</span> NFPE</div>
-        <div class="adr-mod-row" style="border:none"><span style="color:var(--purple,#a78bfa)">11</span> References</div>
+      <div class="sdr-group-label">Support &amp; Contributions</div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 0">
+
+        <!-- Contact -->
+        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px">CONTACT THE DEVELOPER</span>
+          </div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-bottom:12px;padding:10px 12px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
+            <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
+          </div>
+          <a href="mailto:edisontaimu9@gmail.com" style="display:flex;align-items:center;gap:10px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:10px 12px;text-decoration:none;box-sizing:border-box;width:100%;overflow:hidden" onmouseover="this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.borderColor='rgba(29,233,212,0.22)'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">edisontaimu9@gmail.com</span>
+          </a>
+        </div>
+
+        <!-- Feedback -->
+        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md)">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:1px">FEEDBACK</span>
+          </div>
+          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.7;margin-bottom:12px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
+          <button onclick="closeAbout();openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -885,8 +1398,6 @@
 ════════════════════════════════════════════════════════════ -->
 <div class="bottom-nav-wrap">
   <!-- Fade indicators for scroll overflow -->
-  <div class="bnav-fade bnav-fade-left" id="bnav-fade-left"></div>
-  <div class="bnav-fade bnav-fade-right" id="bnav-fade-right"></div>
 
 <nav class="bottom-nav" role="navigation" aria-label="Secondary navigation" id="bottom-nav-scroll">
 
@@ -900,41 +1411,34 @@
     <span class="tab-label">Anthro</span>
   </div>
 
-  <!-- ── NFPE ── -->
-  <div class="tab tab-clinical" id="bnav-nfpe" onclick="switchTab('nfpe')" role="button" tabindex="0" aria-label="Nutrition-Focused Physical Exam">
+  <!-- ── PN ── -->
+  <div class="tab tab-clinical" id="bnav-parenteral" onclick="switchTab('parenteral')" role="button" tabindex="0" aria-label="Parenteral Nutrition">
     <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <circle cx="12" cy="8" r="3"/>
-  <path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
-  <path d="M16 3.5c1.5.8 2.5 2.3 2.5 4" stroke="#f472b6" stroke-width="1.4"/>
-  <path d="M18.5 2c2.5 1.3 3.5 3.8 3.5 6" stroke="#f472b6" stroke-width="1.4" opacity="0.6"/>
+      <path d="M9 3h6l1 4H8L9 3z"/>
+      <rect x="8" y="7" width="8" height="12" rx="1.5"/>
+      <line x1="12" y1="10" x2="12" y2="16"/>
+      <line x1="10" y1="13" x2="14" y2="13"/>
     </svg></span>
-    <span class="tab-label">NFPE</span>
+    <span class="tab-label">PN</span>
   </div>
 
-  <!-- ── 24HR RECALL ── -->
-  <div class="tab tab-assess" id="bnav-recall" onclick="switchTab('recall')" role="button" tabindex="0" aria-label="24-Hour Dietary Recall">
-    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <circle cx="12" cy="13" r="7" stroke="currentColor" stroke-width="1.5"/>
-  <line x1="12" y1="13" x2="12" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  <line x1="12" y1="13" x2="15.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <circle cx="12" cy="13" r="1" fill="currentColor"/>
-  <text x="12" y="5.5" font-size="4" fill="currentColor" text-anchor="middle" font-family="monospace" font-weight="600" opacity="0.9">24h</text>
+  <!-- ── SCREEN ── -->
+  <div class="tab tab-assess" id="bnav-screening" onclick="switchTab('screening')" role="button" tabindex="0" aria-label="Nutrition Screening">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11l3 3L22 4"/>
+      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
     </svg></span>
-    <span class="tab-label">24hr Recall</span>
+    <span class="tab-label">Screen</span>
   </div>
 
-  <!-- ── MEAL PLANNER ── -->
-  <div class="tab tab-assess" id="bnav-mealplan" onclick="switchTab('mealplan')" role="button" tabindex="0" aria-label="Meal Planner">
-    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <circle cx="12" cy="14" r="8" stroke="currentColor" stroke-width="1.5"/>
-  <path d="M12 14L12 8.5A5.5 5.5 0 0117.5 14Z" fill="#f0b429" opacity="0.35" stroke="#f0b429" stroke-width="1.2"/>
-  <path d="M12 14L17.5 14A5.5 5.5 0 0114 19Z" fill="#4fc3f7" opacity="0.35" stroke="#4fc3f7" stroke-width="1.2"/>
-  <path d="M12 14L14 19A5.5 5.5 0 0112 8.5Z" fill="#34d399" opacity="0.35" stroke="#34d399" stroke-width="1.2"/>
-  <circle cx="12" cy="14" r="1.2" fill="currentColor"/>
-  <line x1="8" y1="4" x2="8" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="16" y1="4" x2="16" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- ── DNI ── -->
+  <div class="tab tab-support" id="bnav-dni" onclick="switchTab('dni')" role="button" tabindex="0" aria-label="Drug-Nutrient Interactions">
+    <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
+      <path d="M11 8v6M8 11h6"/>
     </svg></span>
-    <span class="tab-label">Meal</span>
+    <span class="tab-label">DNI</span>
   </div>
 
 </nav>
@@ -1382,16 +1886,7 @@
 </svg></span>
       <div><div class="hp-ref-name">Reference</div><div class="hp-ref-desc">ASPEN · ESPEN · WHO guidelines</div></div>
     </div>
-    <div class="hp-ref-card" onclick="switchTab('about')">
-      <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
-  <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
-</defs>
-  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" filter="url(#ni-glow)"/>
-  <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" filter="url(#ni-glow)"/>
-  <circle cx="12" cy="8" r="1.2" fill="currentColor" opacity="0.9"/>
-</svg></span>
-      <div><div class="hp-ref-name">About</div><div class="hp-ref-desc">Version · Support · Contact</div></div>
-    </div>
+
   </div>
 
   <!-- ── FOOTER ── -->
@@ -4560,400 +5055,6 @@
 <!-- END NUTRITION DATABASE TAB -->
 
 <!-- ABOUT TAB -->
-<div class="main" id="tab-about">
-<div style="width:100%;box-sizing:border-box">
-
-  <!-- ── APP IDENTITY ── -->
-  <div style="padding:20px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px">
-    <!-- Row: icon + name/tagline + install button -->
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:14px;min-width:0">
-        <!-- SVG app icon -->
-        <div style="width:52px;height:52px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:12px;display:flex;align-items:center;justify-content:center">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-            <rect x="9" y="3" width="6" height="4" rx="1"/>
-            <path d="M9 12h6M9 16h4"/>
-          </svg>
-        </div>
-        <div style="min-width:0">
-          <div style="font-family:var(--cond);font-size:20px;font-weight:800;letter-spacing:2.5px;color:var(--text-bright)">Oasis</div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.4">Evidence-based nutrition support for clinical and community practice</div>
-        </div>
-      </div>
-      <button onclick="window.pwaInstall?window.pwaInstall():showToast('Install option available in browser address bar','info')" style="font-family:var(--mono);font-size:9px;color:var(--teal);background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.25);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px;white-space:nowrap;flex-shrink:0">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>INSTALL APP
-      </button>
-    </div>
-    <!-- Version metadata chips -->
-    <div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap">
-      <span id="about-version-chip" style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.25);color:var(--teal)">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span id="about-version-text"></span>
-      </span>
-      <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:3px 9px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);color:var(--blue)">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>May 2026
-      </span>
-    </div>
-
-  <!-- ── DESCRIPTION ── -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="card-header"><div class="card-title">Overview</div></div>
-    <div class="card-body" style="overflow-x:visible">
-      <p style="font-family:var(--sans);font-size:13px;line-height:1.8;color:var(--text);margin-bottom:10px">
-        Oasis is a specialised clinical decision support system designed to bridge the gap between nutritional theory and bedside practice. Built for both hospital and community settings, the platform empowers dietitians, health professionals, and students to perform precise, evidence-based assessments — from bedside screening to full nutrition support prescriptions — and deliver targeted, guideline-driven patient care.
-      </p>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
-          <span style="font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">11 Clinical Modules:</strong> Covers adult and pediatric nutrition, burns, enteral and parenteral support, nutrition screening (MUST &amp; MNA-SF), drug-nutrient interactions, dietary assessment, meal planning, anthropometry, and NFPE.</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
-          <span style="font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">Guideline-Aligned:</strong> Clinical decisions are grounded in ASPEN, ESPEN, BAPEN, WHO, NICE, AND, and KDIGO frameworks, with locally relevant Malawian food composition data.</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
-          <span style="font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">Screening to Prescription:</strong> From rapid malnutrition risk scoring and drug-nutrient interaction checks, through to full macro/micro prescriptions for complex conditions like burns, ICU, and renal disease.</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="color:var(--teal);flex-shrink:0;margin-top:2px">&#9658;</span>
-          <span style="font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--text)"><strong style="color:var(--text-bright)">Resilient Technology:</strong> Operates fully offline as a Progressive Web App, ensuring uninterrupted service across diverse clinical environments — from tertiary hospitals to community health posts.</span>
-        </div>
-      </div>
-      <div class="alert warning" style="margin-top:12px;margin-bottom:0">
-        <span class="ai"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-        <div><strong>Clinical Decision Support Only.</strong> All prescriptions and clinical decisions require review by a qualified dietitian or clinician. This tool does not replace professional judgement.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MODULES ── -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="card-header">
-      <div style="width:28px;height:28px;flex-shrink:0;background:var(--teal-glow);border:1px solid rgba(29,233,212,0.22);border-radius:8px;display:flex;align-items:center;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      </div>
-      <div class="card-title" style="margin-left:10px">Modules</div>
-    </div>
-
-    <!-- Module grid -->
-    <div class="mod-grid">
-
-      <!-- 1. Adult Clinical Nutrition — teal -->
-      <div class="mod-card"
-        style="--mod-accent:var(--teal);--mod-accent-border:rgba(29,233,212,0.38);--mod-icon-bg:var(--teal-glow);--mod-icon-border:rgba(29,233,212,0.22);--mod-icon-glow:rgba(29,233,212,0.2)"
-        onclick="switchTab('calculator')" title="Adult Clinical Nutrition">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-        </div>
-        <div class="mod-title">Adult Clinical Nutrition</div>
-        <div class="mod-desc">ICU · surgical · disease-specific</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 2. Pediatric Nutrition — blue -->
-      <div class="mod-card"
-        style="--mod-accent:var(--blue);--mod-accent-border:rgba(96,165,250,0.38);--mod-icon-bg:var(--blue-glow);--mod-icon-border:rgba(96,165,250,0.22);--mod-icon-glow:rgba(96,165,250,0.2)"
-        onclick="switchTab('pedi')" title="Pediatric Nutrition">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v5M9 9h6M10 11l-2 5M14 11l2 5"/><path d="M5 21h2v-3H5zM8.5 21h2v-5h-2zM12 21h2v-7h-2z" stroke-width="1.4"/></svg>
-        </div>
-        <div class="mod-title">Pediatric Nutrition</div>
-        <div class="mod-desc">Neonatal · SAM · PICU · growth</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 3. Enteral Feeding — amber -->
-      <div class="mod-card"
-        style="--mod-accent:var(--amber);--mod-accent-border:rgba(251,191,36,0.38);--mod-icon-bg:rgba(251,191,36,0.08);--mod-icon-border:rgba(251,191,36,0.22);--mod-icon-glow:rgba(251,191,36,0.2)"
-        onclick="switchTab('enteral')" title="Enteral Feeding">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M8 3h8l1 7H7L8 3z"/><path d="M10 3V2h4v1"/><line x1="12" y1="10" x2="12" y2="14"/><rect x="10" y="13" width="4" height="2.5" rx="1"/><path d="M12 16.5 C12 16.5 10.5 18.5 10.5 19.5 a1.5 1.5 0 0 0 3 0 C13.5 18.5 12 16.5 12 16.5z" stroke-width="1.4"/></svg>
-        </div>
-        <div class="mod-title">Enteral Feeding</div>
-        <div class="mod-desc">NG · PEG · formula selection</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 5. 24-Hour Dietary Recall — green -->
-      <div class="mod-card"
-        style="--mod-accent:var(--green);--mod-accent-border:rgba(52,211,153,0.38);--mod-icon-bg:rgba(52,211,153,0.08);--mod-icon-border:rgba(52,211,153,0.22);--mod-icon-glow:rgba(52,211,153,0.2)"
-        onclick="switchTab('recall')" title="24-Hour Dietary Recall">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M11 7v4l3 2"/><line x1="16.5" y1="15" x2="21" y2="15"/><line x1="16.5" y1="18" x2="21" y2="18"/><path d="M15 14.5l0.8 0.8 1.5-1.5" stroke-width="1.5"/><path d="M15 17.5l0.8 0.8 1.5-1.5" stroke-width="1.5"/></svg>
-        </div>
-        <div class="mod-title">24-Hour Dietary Recall</div>
-        <div class="mod-desc">Intake analysis · nutrient breakdown</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 6. Meal Planner — rose -->
-      <div class="mod-card"
-        style="--mod-accent:#fb7185;--mod-accent-border:rgba(251,113,133,0.38);--mod-icon-bg:rgba(251,113,133,0.08);--mod-icon-border:rgba(251,113,133,0.22);--mod-icon-glow:rgba(251,113,133,0.2)"
-        onclick="switchTab('mealplan')" title="Meal Planner">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><line x1="12" y1="13" x2="12" y2="5"/><line x1="12" y1="13" x2="5.1" y2="17"/><line x1="12" y1="13" x2="18.9" y2="17"/><rect x="14" y="2" width="7" height="6" rx="1" stroke-width="1.4"/><line x1="16" y1="2" x2="16" y2="1"/><line x1="19" y1="2" x2="19" y2="1"/><line x1="15" y1="5.5" x2="20" y2="5.5" stroke-width="0.9"/></svg>
-        </div>
-        <div class="mod-title">Meal Planner</div>
-        <div class="mod-desc">7-day plan · exchange lists</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 7. Parenteral Nutrition — purple -->
-      <div class="mod-card"
-        style="--mod-accent:#a78bfa;--mod-accent-border:rgba(167,139,250,0.38);--mod-icon-bg:rgba(167,139,250,0.08);--mod-icon-border:rgba(167,139,250,0.22);--mod-icon-glow:rgba(167,139,250,0.2)"
-        onclick="switchTab('parenteral')" title="Parenteral Nutrition">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M9 3h6l1 4H8L9 3z"/><rect x="8" y="7" width="8" height="12" rx="1.5"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="10" y1="13" x2="14" y2="13"/></svg>
-        </div>
-        <div class="mod-title">Parenteral Nutrition</div>
-        <div class="mod-desc">TPN · bag selector · custom PN</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 8. Nutrition Screening — sky blue -->
-      <div class="mod-card"
-        style="--mod-accent:#38bdf8;--mod-accent-border:rgba(56,189,248,0.38);--mod-icon-bg:rgba(56,189,248,0.08);--mod-icon-border:rgba(56,189,248,0.22);--mod-icon-glow:rgba(56,189,248,0.2)"
-        onclick="switchTab('screening')" title="Nutrition Screening">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        </div>
-        <div class="mod-title">Nutrition Screening</div>
-        <div class="mod-desc">MUST · MNA-SF · risk triage</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-      <!-- 9. Drug-Nutrient Interactions — orange -->
-      <div class="mod-card"
-        style="--mod-accent:#fb923c;--mod-accent-border:rgba(251,146,60,0.38);--mod-icon-bg:rgba(251,146,60,0.08);--mod-icon-border:rgba(251,146,60,0.22);--mod-icon-glow:rgba(251,146,60,0.2)"
-        onclick="switchTab('dni')" title="Drug-Nutrient Interactions">
-        <div class="mod-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="m22 22-1.5-1.5"/></svg>
-        </div>
-        <div class="mod-title">Drug-Nutrient Interactions</div>
-        <div class="mod-desc">DNI checker · food-drug alerts</div>
-        <div class="mod-open-badge">Open →</div>
-      </div>
-
-    </div><!-- /mod-grid -->
-
-    <!-- Footer strip -->
-    <div class="mod-card-footer">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div class="mod-card-footer-text">Tap any module to open its calculator &nbsp;·&nbsp; 11 modules total</div>
-      
-    </div>
-
-  </div>
-
-
-
-  <!-- ── DEVELOPER & CREDITS ── -->
-  <div class="card" style="margin-bottom:10px">
-    <div class="card-header">
-      <div style="width:28px;height:28px;flex-shrink:0;background:var(--teal-glow);border:1px solid rgba(29,233,212,0.22);border-radius:8px;display:flex;align-items:center;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
-      <div class="card-title" style="margin-left:10px">Developer &amp; Credits</div>
-    </div>
-    <div class="card-body" style="overflow-x:visible">
-      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-        <!-- Developer avatar icon -->
-        <div style="width:44px;height:44px;flex-shrink:0;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">‍</div>
-        <div style="flex:1;min-width:200px">
-          <div style="font-family:var(--cond);font-size:15px;font-weight:700;color:var(--text-bright);letter-spacing:1px">Edison Taimu</div>
-
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px">BSc Nutrition &amp; Dietetics (Honours), Pioneer Cohort</div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:2px">Kamuzu University of Health Sciences (KUHeS), Malawi</div>
-          <p style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-top:12px;margin-bottom:0">
-            Edison is the architect behind Oasis. With a background in Nutrition and Dietetics from the inaugural cohort at KUHeS, he brings a strong foundation in clinical nutrition principles and a passion for digital health innovation. He created Oasis to translate evidence-based nutrition guidelines into practical, easy-to-use digital tools — designed to support dietitians, health professionals, and students, especially in resource-limited settings.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-
-  <!-- ── CONTACT & FEEDBACK ── -->
-  <div class="card" id="support-section" style="margin-bottom:10px">
-    <div class="card-header">
-      <div style="width:28px;height:28px;flex-shrink:0;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.22);border-radius:8px;display:flex;align-items:center;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      </div>
-      <div class="card-title" style="margin-left:10px">Support &amp; Contributions</div>
-    </div>
-    <div class="card-body" style="overflow:hidden">
-      <div style="display:flex;flex-direction:column;gap:10px">
-
-        <!-- Contact the Developer -->
-        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden;box-sizing:border-box;width:100%">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px">CONTACT THE DEVELOPER</span>
-          </div>
-          <!-- Donation appeal -->
-          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-bottom:12px;padding:10px 12px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
-             <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;width:100%;box-sizing:border-box">
-            <a href="mailto:edisontaimu9@gmail.com" style="display:flex;align-items:center;gap:10px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:10px 12px;text-decoration:none;transition:border-color .15s;box-sizing:border-box;width:100%;min-width:0;overflow:hidden" onmouseover="this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.borderColor='rgba(29,233,212,0.22)'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              <div style="min-width:0;overflow:hidden">
-                <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">edisontaimu9@gmail.com</div>
-              </div>
-            </a>
-
-          </div>
-        </div>
-
-        <!-- Feedback -->
-        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(96,165,250,0.2);border-radius:var(--r-md);box-sizing:border-box;width:100%">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:1px">FEEDBACK</span>
-          </div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.7;margin-bottom:12px">Have a suggestion, found a bug, or want to collaborate? Your input directly shapes how Oasis improves.</div>
-          <button onclick="openFeedbackModal()" style="display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.28);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;letter-spacing:0.8px">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>OPEN FEEDBACK FORM
-          </button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-<!-- ── FEEDBACK MODAL ── -->
-<div id="feedback-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,6,23,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px">
-  <div style="background:var(--surface);border:1px solid rgba(29,233,212,0.2);border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6)">
-    <!-- header -->
-    <div style="padding:14px 16px;background:rgba(29,233,212,0.06);border-bottom:1px solid rgba(29,233,212,0.12);display:flex;align-items:center;justify-content:space-between">
-      <div style="font-family:var(--cond);font-size:12px;font-weight:700;color:var(--teal);letter-spacing:2px">SEND FEEDBACK</div>
-      <button onclick="closeFeedbackModal()" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px" title="Close">✕</button>
-    </div>
-    <!-- emoji quick-react -->
-    <div style="padding:12px 16px 6px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">QUICK REACTION</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Helpful"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Love it"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Thank you"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Amazing"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Bug report"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Suggestion"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Great tool"></button>
-        <button onclick="selectFeedbackEmoji('')" class="fb-emoji-btn" data-e="" title="Issue"></button>
-      </div>
-    </div>
-    <!-- message -->
-    <div style="padding:8px 16px 12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">MESSAGE <span style="color:var(--text-muted)">(optional)</span></div>
-      <textarea id="fb-message-input" placeholder="Type your feedback, bug report, or suggestion…" style="width:100%;min-height:90px;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);border-radius:var(--r-sm);padding:9px 11px;font-family:var(--sans);font-size:12px;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='rgba(29,233,212,0.45)'" onblur="this.style.borderColor='var(--input-border)'"></textarea>
-    </div>
-    <!-- selected emoji display -->
-    <div id="fb-selected-emoji" style="padding:0 16px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);display:none">
-      Reaction: <span id="fb-emoji-display" style="font-size:16px"></span>
-    </div>
-    <!-- actions -->
-    <div style="padding:10px 16px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border)">
-      <button onclick="closeFeedbackModal()" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 16px;cursor:pointer;letter-spacing:0.5px">CANCEL</button>
-      <button onclick="submitFeedback()" id="fb-submit-btn" style="font-family:var(--mono);font-size:9px;color:#020617;background:var(--teal);border:none;border-radius:var(--r-sm);padding:7px 18px;cursor:pointer;font-weight:700;letter-spacing:0.5px">SEND →</button>
-    </div>
-  </div>
-</div>
-
-
-<script>
-(function(){
-  let _selectedEmoji = '';
-
-  window.openFeedbackModal = function() {
-    const m = document.getElementById('feedback-modal');
-    if (!m) return;
-    _selectedEmoji = '';
-    document.getElementById('fb-message-input').value = '';
-    document.getElementById('fb-selected-emoji').style.display = 'none';
-    document.querySelectorAll('.fb-emoji-btn').forEach(b => b.classList.remove('selected'));
-    m.style.display = 'flex';
-    setTimeout(() => document.getElementById('fb-message-input').focus(), 100);
-  };
-
-  window.closeFeedbackModal = function() {
-    const m = document.getElementById('feedback-modal');
-    if (m) m.style.display = 'none';
-  };
-
-  window.selectFeedbackEmoji = function(emoji) {
-    _selectedEmoji = emoji;
-    document.querySelectorAll('.fb-emoji-btn').forEach(b => {
-      b.classList.toggle('selected', b.dataset.e === emoji);
-    });
-    const wrap = document.getElementById('fb-selected-emoji');
-    const disp = document.getElementById('fb-emoji-display');
-    if (wrap && disp) { disp.textContent = emoji; wrap.style.display = 'block'; }
-  };
-
-  window.submitFeedback = async function() {
-    const msg  = (document.getElementById('fb-message-input')?.value || '').trim();
-    const btn  = document.getElementById('fb-submit-btn');
-    if (!msg && !_selectedEmoji) {
-      showToast('Please add a message or pick a reaction first.', 'warning');
-      return;
-    }
-    if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
-    const _fp = (typeof getUserProfile !== 'undefined') ? getUserProfile() : null;
-    const _fi = localStorage.getItem('nc_institution') || '';
-    const payload = {
-      emoji:        _selectedEmoji || null,
-      message:      msg || null,
-      sessionId:    typeof SESSION_ID !== 'undefined' ? SESSION_ID : 'unknown',
-      sentAt:       (typeof firebase !== 'undefined')
-                      ? firebase.firestore.FieldValue.serverTimestamp()
-                      : new Date().toISOString(),
-      userAgent:    navigator.userAgent.slice(0, 120),
-      userName:     _fp?.name || '',
-      userRole:     _fp?.role || '',
-      institution:  _fi,
-      read:         false,
-    };
-    try {
-      if (typeof db !== 'undefined' && db) {
-        await db.collection('feedback').add(payload);
-      }
-      closeFeedbackModal();
-      showToast(_selectedEmoji
-        ? `${_selectedEmoji} Feedback sent — thank you!`
-        : ' Feedback sent to admin — thank you!', 'success');
-    } catch(e) {
-      console.error('[Feedback]', e);
-      showToast('Could not send feedback. Please try again.', 'error');
-    } finally {
-      if (btn) { btn.textContent = 'SEND →'; btn.disabled = false; }
-    }
-  };
-
-  // Close modal on backdrop click
-  document.addEventListener('click', function(e) {
-    const m = document.getElementById('feedback-modal');
-    if (m && e.target === m) closeFeedbackModal();
-  });
-})();
-</script>
-      </div>
-    </div>
-  </div>
-
-
-
-
-
-
-</div>
-</div>
-
 <!-- ═══════════════════════════════════════════════════════════════
      PEDIATRIC CALCULATOR TAB
      Sub-modules: Fenton 2013 · WHO (future) · BMI-for-age (future)
@@ -7907,6 +8008,10 @@ function ntClear(scopeId, resultIds) {
 .lfs-mv{font-family:var(--mono);font-size:12px;font-weight:500;display:block;line-height:1}
 .lfs-ml{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
          color:var(--text-dim);display:block;margin-top:3px}
+/* ── Feedback modal type buttons ── */
+.fb-type-btn{font-family:var(--mono);font-size:9px;letter-spacing:0.6px;padding:6px 12px;border-radius:20px;border:1px solid rgba(96,165,250,0.2);background:rgba(96,165,250,0.04);color:var(--text-dim,#8b949e);cursor:pointer;transition:border-color .18s,color .18s,background .18s}
+.fb-type-btn:hover{border-color:rgba(96,165,250,0.45);color:var(--blue,#60a5fa);background:rgba(96,165,250,0.08)}
+.fb-type-btn.fb-type-active{border-color:rgba(96,165,250,0.6);color:var(--blue,#60a5fa);background:rgba(96,165,250,0.12)}
 </style>
 
 <script>
@@ -9376,6 +9481,125 @@ function ntClear(scopeId, resultIds) {
   window.addEventListener('resize', function(){ if (_open) uctTooltipClose(); });
 })();
 </script>
+
+<!-- ════════════ FEEDBACK MODAL LOGIC ════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  var _fbType = 'Bug Report';
+
+  /* ── helpers ── */
+  function _el(id){ return document.getElementById(id); }
+  function _show(id){ var e=_el(id); if(e) e.style.display=''; }
+  function _hide(id){ var e=_el(id); if(e) e.style.display='none'; }
+  function _val(id){ var e=_el(id); return e ? (e.value||'').trim() : ''; }
+  function _setError(msg){ var e=_el('fb-error'); if(!e)return; if(msg){e.textContent=msg;e.style.display='';} else{e.style.display='none';} }
+  function _setBusy(busy){
+    var btn=_el('fb-submit-btn');
+    if(!btn)return;
+    btn.disabled=busy;
+    btn.innerHTML = busy
+      ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-4.76"/></svg> SENDING…'
+      : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> SEND FEEDBACK';
+  }
+  function _resetForm(){
+    var sub=_el('fb-subject'); if(sub) sub.value='';
+    var msg=_el('fb-message'); if(msg) msg.value='';
+    var cnt=_el('fb-char-count'); if(cnt) cnt.textContent='0 / 2000';
+    _setError(null);
+    _setBusy(false);
+    // Reset type buttons
+    _fbType='Bug Report';
+    document.querySelectorAll('.fb-type-btn').forEach(function(b){
+      b.classList.toggle('fb-type-active', b.getAttribute('data-type')==='Bug Report');
+    });
+  }
+
+  /* ── open/close ── */
+  window.openFeedbackModal = function(){
+    _resetForm();
+    var ov=_el('feedback-overlay'); if(ov) ov.style.display='';
+    var md=_el('feedback-modal');   if(md) md.style.display='';
+    // Attach char counter (idempotent)
+    var ta=_el('fb-message');
+    if(ta && !ta._fbListened){
+      ta._fbListened=true;
+      ta.addEventListener('input', function(){
+        var cnt=_el('fb-char-count');
+        if(cnt) cnt.textContent = ta.value.length + ' / 2000';
+      });
+    }
+  };
+
+  window.closeFeedbackModal = function(){
+    _hide('feedback-overlay');
+    _hide('feedback-modal');
+  };
+
+  /* ── type toggle ── */
+  window.fbSetType = function(btn){
+    if(!btn) return;
+    _fbType = btn.getAttribute('data-type') || 'General';
+    document.querySelectorAll('.fb-type-btn').forEach(function(b){
+      b.classList.toggle('fb-type-active', b===btn);
+    });
+  };
+
+  /* ── submit ── */
+  window.submitFeedback = async function(){
+    var message = _val('fb-message');
+    if(!message){ _setError('Please enter a message before submitting.'); return; }
+
+    _setError(null);
+    _setBusy(true);
+
+    var payload = {
+      type:      _fbType,
+      subject:   _val('fb-subject') || '(no subject)',
+      message:   message,
+      sessionId: (typeof SESSION_ID !== 'undefined') ? SESSION_ID : 'unknown',
+      url:       window.location.href,
+      userAgent: navigator.userAgent,
+      timestamp: null // filled below if db available
+    };
+
+    try {
+      /* ── Firestore write (if online & db ready) ── */
+      if (typeof db !== 'undefined' && db &&
+          typeof firebase !== 'undefined' && firebase.firestore) {
+        payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('feedback').add(payload);
+      } else {
+        /* ── Offline fallback: queue in localStorage ── */
+        payload.timestamp = new Date().toISOString();
+        var queued = [];
+        try { queued = JSON.parse(localStorage.getItem('oasis_feedback_queue')||'[]'); } catch(e){}
+        queued.push(payload);
+        localStorage.setItem('oasis_feedback_queue', JSON.stringify(queued));
+      }
+
+      closeFeedbackModal();
+      if(typeof showToast === 'function'){
+        showToast('✓ Feedback sent — thank you!', 'success', 3500);
+      }
+    } catch(err){
+      console.error('[Oasis] Feedback submit error:', err);
+      _setBusy(false);
+      _setError('Could not send feedback right now. Please try again or email edisontaimu9@gmail.com.');
+    }
+  };
+
+  /* ── Keyboard: Escape closes modal ── */
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      var md=_el('feedback-modal');
+      if(md && md.style.display!=='none') closeFeedbackModal();
+    }
+  });
+})();
+</script>
+<!-- ════════════ END FEEDBACK MODAL LOGIC ════════════ -->
 
 </body>
 </html>
