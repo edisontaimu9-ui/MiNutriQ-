@@ -9289,25 +9289,199 @@ function _obSkipToProfile(uidVal) {
   _obAuthBusy(false);
 }
 
+// ── Onboarding photo / avatar helpers ────────────────────────────
+
+/** Called when user picks a file from the file input */
+function obHandlePhotoUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    if (typeof showToast === 'function') showToast('Please choose an image file.', 'error', 3000);
+    return;
+  }
+  // Limit to 3 MB
+  if (file.size > 3 * 1024 * 1024) {
+    if (typeof showToast === 'function') showToast('Image must be under 3 MB.', 'error', 3000);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataURL = e.target.result;
+    // Resize to max 200×200 for storage
+    const img = new Image();
+    img.onload = function() {
+      const MAX = 200;
+      const canvas = document.createElement('canvas');
+      const ratio  = Math.min(MAX / img.width, MAX / img.height, 1);
+      canvas.width  = Math.round(img.width  * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const compressed = canvas.toDataURL('image/jpeg', 0.82);
+      _obSetAvatarPhoto(compressed);
+    };
+    img.src = dataURL;
+  };
+  reader.readAsDataURL(file);
+}
+
+/** Render a photo into the preview circle and store in hidden input */
+function _obSetAvatarPhoto(dataURL) {
+  const preview   = document.getElementById('ob-avatar-preview');
+  const imgEl     = document.getElementById('ob-avatar-img');
+  const placeholder = document.getElementById('ob-avatar-placeholder');
+  const removeBtn = document.getElementById('ob-avatar-remove');
+  const dataEl    = document.getElementById('ob-photo-data');
+  const colorEl   = document.getElementById('ob-avatar-color');
+  const colorRow  = document.getElementById('ob-avatar-color-row');
+
+  if (imgEl)      { imgEl.src = dataURL; imgEl.style.display = 'block'; }
+  if (placeholder) placeholder.style.display = 'none';
+  if (preview)    preview.style.borderStyle = 'solid';
+  if (removeBtn)  removeBtn.style.display = 'block';
+  if (dataEl)     dataEl.value = dataURL;
+  if (colorEl)    colorEl.value = '';
+  if (colorRow)   colorRow.style.opacity = '0.4';
+  // Show camera overlay on hover after photo set
+  if (preview) {
+    preview.onmouseover = function() {
+      const cam = document.getElementById('ob-avatar-cam');
+      if (cam) cam.style.display = 'flex';
+    };
+    preview.onmouseout = function() {
+      const cam = document.getElementById('ob-avatar-cam');
+      if (cam) cam.style.display = 'none';
+    };
+  }
+}
+
+/** Clear the selected photo, restore placeholder */
+function obClearPhoto() {
+  const preview    = document.getElementById('ob-avatar-preview');
+  const imgEl      = document.getElementById('ob-avatar-img');
+  const placeholder= document.getElementById('ob-avatar-placeholder');
+  const removeBtn  = document.getElementById('ob-avatar-remove');
+  const dataEl     = document.getElementById('ob-photo-data');
+  const colorEl    = document.getElementById('ob-avatar-color');
+  const colorRow   = document.getElementById('ob-avatar-color-row');
+  const fileInput  = document.getElementById('ob-photo-input');
+
+  if (imgEl)      { imgEl.src = ''; imgEl.style.display = 'none'; }
+  if (placeholder) placeholder.style.display = '';
+  if (preview)    {
+    preview.style.borderStyle = 'dashed';
+    preview.style.background  = 'var(--surface2)';
+    preview.onmouseover = null;
+    preview.onmouseout  = null;
+  }
+  if (removeBtn)  removeBtn.style.display = 'none';
+  if (dataEl)     dataEl.value = '';
+  if (colorEl)    colorEl.value = '';
+  if (colorRow)   colorRow.style.opacity = '1';
+  if (fileInput)  fileInput.value = '';
+  document.querySelectorAll('.ob-av-color').forEach(b => b.style.borderColor = 'transparent');
+}
+
+/** Pick an avatar colour — renders initials on coloured circle */
+function obPickAvatarColor(btn) {
+  const color    = btn.dataset.color;
+  const preview  = document.getElementById('ob-avatar-preview');
+  const imgEl    = document.getElementById('ob-avatar-img');
+  const placeholder = document.getElementById('ob-avatar-placeholder');
+  const removeBtn = document.getElementById('ob-avatar-remove');
+  const dataEl   = document.getElementById('ob-photo-data');
+  const colorEl  = document.getElementById('ob-avatar-color');
+  const fileInput= document.getElementById('ob-photo-input');
+
+  // Highlight selected swatch
+  document.querySelectorAll('.ob-av-color').forEach(b => b.style.borderColor = 'transparent');
+  btn.style.borderColor = '#fff';
+
+  // Clear any uploaded photo
+  if (imgEl)  { imgEl.src = ''; imgEl.style.display = 'none'; }
+  if (dataEl) dataEl.value = '';
+  if (fileInput) fileInput.value = '';
+  if (colorEl) colorEl.value = color;
+
+  // Show initials on coloured background
+  if (placeholder) placeholder.style.display = 'none';
+  if (preview) {
+    preview.style.background   = color;
+    preview.style.borderStyle  = 'solid';
+    preview.style.borderColor  = color;
+    // Render initials
+    const name     = (document.getElementById('ob-name')?.value || '').trim();
+    const initials = name
+      ? name.split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase()
+      : '?';
+    // Remove any existing initials span
+    const existing = preview.querySelector('.ob-av-initials');
+    if (existing) existing.remove();
+    const span = document.createElement('span');
+    span.className = 'ob-av-initials';
+    span.style.cssText = 'font-family:var(--cond,var(--sans));font-size:22px;font-weight:800;color:#020617;user-select:none;position:relative;z-index:1';
+    span.textContent = initials;
+    preview.appendChild(span);
+    if (removeBtn) removeBtn.style.display = 'block';
+  }
+}
+
+/** Update initials in the avatar preview when user types their name */
+function obUpdateAvatarInitials() {
+  const colorEl = document.getElementById('ob-avatar-color');
+  const preview = document.getElementById('ob-avatar-preview');
+  if (!colorEl?.value || !preview) return; // only update if colour-based avatar is active
+  const name     = (document.getElementById('ob-name')?.value || '').trim();
+  const initials = name
+    ? name.split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase()
+    : '?';
+  const span = preview.querySelector('.ob-av-initials');
+  if (span) span.textContent = initials;
+}
+
 function obSelectRole(btn) {
   document.querySelectorAll('.ob-role-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   _obSelectedRole = btn.dataset.role;
+  // Show/hide "Other — specify" input
+  var otherRow = document.getElementById('ob-role-other-row');
+  var otherVal = document.getElementById('ob-role-other-val');
+  if (otherRow) otherRow.style.display = (_obSelectedRole === 'other') ? 'block' : 'none';
+  if (_obSelectedRole !== 'other' && otherVal) otherVal.value = '';
 }
 
 function obSubmit() {
-  const nameEl  = document.getElementById('ob-name');
-  const uidEl   = document.getElementById('ob-uid');
-  const instEl  = document.getElementById('ob-inst');
-  const otherEl = document.getElementById('ob-inst-other');
-  const emailEl = document.getElementById('ob-email');
-  const errEl   = document.getElementById('ob-error');
+  const nameEl      = document.getElementById('ob-name');
+  const uidEl       = document.getElementById('ob-uid');
+  const instEl      = document.getElementById('ob-inst');
+  const otherEl     = document.getElementById('ob-inst-other');
+  const emailEl     = document.getElementById('ob-email');
+  const errEl       = document.getElementById('ob-error');
+  const photoDataEl = document.getElementById('ob-photo-data');
+  const avatarColorEl = document.getElementById('ob-avatar-color');
+  const roleOtherEl = document.getElementById('ob-role-other-val');
 
   const name    = nameEl?.value.trim();
   const uid     = uidEl?.value.trim();
   const instRaw = instEl?.value;
   const inst    = instRaw === '__other' ? otherEl?.value.trim() : instRaw;
   const email   = emailEl?.value.trim() || '';
+  const photoURL = photoDataEl?.value || '';
+  const avatarColor = avatarColorEl?.value || '';
+
+  // Resolve final role: if "other" was selected, use the typed value
+  let finalRole = _obSelectedRole;
+  if (finalRole === 'other') {
+    const otherRoleText = roleOtherEl?.value.trim();
+    if (!otherRoleText) {
+      if (errEl) { errEl.textContent = 'Please specify your role.'; errEl.style.display = 'block'; }
+      roleOtherEl?.classList.add('error');
+      return;
+    }
+    // Store as "other:<custom>" so ROLE_META fallback still works, but the free text is preserved
+    finalRole = 'other';
+    if (roleOtherEl) roleOtherEl.classList.remove('error');
+  }
+  const roleLabel = (finalRole === 'other' && roleOtherEl?.value.trim()) ? roleOtherEl.value.trim() : finalRole;
 
   const errs = [];
   if (!name) { errs.push('Please enter your name.'); nameEl?.classList.add('error'); }
@@ -9327,7 +9501,12 @@ function obSubmit() {
   const auth = _getAuth();
   const fbUid = auth?.currentUser?.uid || null;
 
-  const profile = { name, uid, institution: inst, role: _obSelectedRole, email, createdAt: new Date().toISOString(), firebaseUid: fbUid };
+  const profile = {
+    name, uid, institution: inst,
+    role: finalRole, roleLabel,
+    email, photoURL, avatarColor,
+    createdAt: new Date().toISOString(), firebaseUid: fbUid
+  };
   saveUserProfile(profile);
 
   // If user provided a real email, update Firebase Auth so password reset works
@@ -9350,7 +9529,9 @@ function obSubmit() {
     if (typeof db !== 'undefined' && db && typeof SESSION_ID !== 'undefined') {
       db.collection('sessions').doc(SESSION_ID).update({
         userName: profile.name, userId: profile.uid, userRole: profile.role,
+        roleLabel: profile.roleLabel || profile.role,
         institution: inst, institutionCat: typeof _getInstitutionCategory !== 'undefined' ? _getInstitutionCategory(inst) : '',
+        photoURL: profile.photoURL || '', avatarColor: profile.avatarColor || '',
       }).catch(() => {});
     }
     const _pid = sessionStorage.getItem('_ntpPid');
