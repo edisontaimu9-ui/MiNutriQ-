@@ -541,29 +541,57 @@
 
     <!-- Avatar preview + upload -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px">
-      <!-- Clickable avatar with camera badge -->
-      <label class="avatar-upload-wrap" title="Tap to change photo" aria-label="Change profile photo" style="width:80px;height:80px">
-        <input type="file" id="pedr-photo-input" class="avatar-upload-input" accept="image/*" onchange="pedrHandlePhoto(this)">
-        <div id="pedr-avatar" class="avatar-upload-face" style="width:80px;height:80px;font-size:26px"></div>
-        <div class="avatar-cam-badge" style="width:26px;height:26px;opacity:1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <!-- Hidden file inputs: gallery + camera (separate to allow capture attr) -->
+      <input type="file" id="pedr-gallery-input" accept="image/*" style="display:none" onchange="pedrHandlePhoto(this)">
+      <input type="file" id="pedr-camera-input"  accept="image/*" capture="environment" style="display:none" onchange="pedrHandlePhoto(this)">
+
+      <!-- Clickable avatar with camera badge — taps gallery -->
+      <div style="position:relative;width:92px;height:92px;cursor:pointer;flex-shrink:0"
+           onclick="document.getElementById('pedr-gallery-input').click()"
+           title="Tap to change photo" aria-label="Change profile photo" role="button" tabindex="0">
+        <div id="pedr-avatar" class="avatar-upload-face"
+             style="width:92px;height:92px;font-size:28px;border-radius:50%;overflow:hidden;
+                    box-shadow:0 0 0 2px rgba(29,233,212,0.4),0 0 0 5px rgba(29,233,212,0.08)"></div>
+        <div class="avatar-cam-badge" style="width:28px;height:28px;opacity:1;bottom:2px;right:2px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
         </div>
-      </label>
+      </div>
+
       <!-- Name + role live preview -->
       <div style="text-align:center">
         <div id="pedr-preview-name" style="font-family:var(--sans);font-size:16px;font-weight:700;color:var(--text-bright)">—</div>
         <div id="pedr-preview-role" style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin-top:3px">—</div>
       </div>
-      <!-- Photo status + action buttons -->
-      <div id="pedr-photo-status" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;padding-bottom:12px">
-        <label for="pedr-photo-input" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.3);border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.8px;color:var(--teal);white-space:nowrap;transition:background .15s" onmouseover="this.style.background='rgba(29,233,212,0.2)'" onmouseout="this.style.background='rgba(29,233,212,0.1)'">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          CHANGE PHOTO
-        </label>
-        <button id="pedr-remove-photo-btn" onclick="pedrRemovePhoto()" style="display:none;padding:6px 10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.25);border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.8px;color:rgba(251,113,133,0.85);white-space:nowrap;transition:background .15s" onmouseover="this.style.background='rgba(251,113,133,0.15)'" onmouseout="this.style.background='rgba(251,113,133,0.08)'">
+
+      <!-- Photo action row: Camera | Gallery | Remove -->
+      <div id="pedr-photo-status" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;padding-bottom:12px">
+        <!-- Camera -->
+        <button onclick="document.getElementById('pedr-camera-input').click()"
+          style="display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.3);border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.8px;color:var(--teal);white-space:nowrap;transition:background .15s"
+          onmouseover="this.style.background='rgba(29,233,212,0.2)'" onmouseout="this.style.background='rgba(29,233,212,0.1)'">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+          </svg>CAMERA
+        </button>
+        <!-- Gallery -->
+        <button onclick="document.getElementById('pedr-gallery-input').click()"
+          style="display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.3);border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.8px;color:var(--teal);white-space:nowrap;transition:background .15s"
+          onmouseover="this.style.background='rgba(29,233,212,0.2)'" onmouseout="this.style.background='rgba(29,233,212,0.1)'">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>GALLERY
+        </button>
+        <!-- Remove (shown only when photo is set) -->
+        <button id="pedr-remove-photo-btn" onclick="pedrRemovePhoto()"
+          style="display:none;padding:6px 10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.25);border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.8px;color:rgba(251,113,133,0.85);white-space:nowrap;transition:background .15s"
+          onmouseover="this.style.background='rgba(251,113,133,0.15)'" onmouseout="this.style.background='rgba(251,113,133,0.08)'">
           REMOVE
         </button>
-        <span id="pedr-photo-hint" style="font-family:var(--mono);font-size:8px;letter-spacing:0.5px;color:var(--text-muted,#64748b)"></span>
+        <span id="pedr-photo-hint" style="width:100%;text-align:center;font-family:var(--mono);font-size:8px;letter-spacing:0.5px;color:var(--text-muted,#64748b)"></span>
       </div>
     </div>
 
@@ -632,6 +660,117 @@
   </div>
 </div>
 
+<!-- ════════════ PHOTO CROP MODAL ════════════ -->
+<div id="photo-crop-overlay"
+  style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.9);z-index:10000;
+         backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)"></div>
+
+<div id="photo-crop-modal"
+  style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+         z-index:10001;width:min(340px,calc(100vw - 20px));
+         background:#0a1020;border:1px solid rgba(29,233,212,0.18);border-radius:16px;
+         box-shadow:0 24px 64px rgba(0,0,0,0.75);overflow:hidden">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;
+              padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.06)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.8)"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span style="font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:1.2px;
+                   color:var(--teal,#1de9d4);text-transform:uppercase">Edit Photo</span>
+    </div>
+    <button onclick="closeCropModal()"
+      style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:16px;
+             cursor:pointer;line-height:1;padding:3px 6px;border-radius:4px;transition:color .15s"
+      onmouseover="this.style.color='rgba(255,255,255,0.8)'"
+      onmouseout="this.style.color='rgba(255,255,255,0.4)'">✕</button>
+  </div>
+
+  <!-- Circular canvas viewport -->
+  <div style="display:flex;flex-direction:column;align-items:center;padding:18px 16px 10px">
+    <div id="crop-canvas-wrap"
+      style="position:relative;
+             width:min(272px,calc(100vw - 68px));height:min(272px,calc(100vw - 68px));
+             border-radius:50%;overflow:hidden;background:#000;cursor:grab;touch-action:none;
+             box-shadow:0 0 0 3px rgba(29,233,212,0.45),0 0 0 7px rgba(29,233,212,0.08),
+                        0 12px 40px rgba(0,0,0,0.55)">
+      <canvas id="crop-canvas" style="display:block;width:100%;height:100%"></canvas>
+    </div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:7.5px;letter-spacing:0.6px;
+                color:rgba(255,255,255,0.25);text-align:center">
+      Drag to reposition · Pinch or slider to zoom · Buttons to rotate
+    </div>
+  </div>
+
+  <!-- Zoom slider -->
+  <div style="display:flex;align-items:center;gap:10px;padding:6px 20px 10px">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.4)"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="range" id="crop-zoom-slider" min="100" max="400" value="100" step="1"
+      style="flex:1;height:4px;accent-color:var(--teal,#1de9d4);cursor:pointer"
+      oninput="photoCropper.onSlider(this.value)">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.4)"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+    </svg>
+  </div>
+
+  <!-- Rotate buttons -->
+  <div style="display:flex;justify-content:center;gap:10px;padding:0 16px 12px">
+    <button onclick="photoCropper.rotate(-90)"
+      style="display:inline-flex;align-items:center;gap:5px;padding:7px 18px;
+             background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.2);
+             border-radius:7px;cursor:pointer;font-family:var(--mono);font-size:9px;
+             font-weight:700;letter-spacing:0.8px;color:rgba(29,233,212,0.8);transition:background .15s"
+      onmouseover="this.style.background='rgba(29,233,212,0.15)'"
+      onmouseout="this.style.background='rgba(29,233,212,0.07)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+      </svg>−90°
+    </button>
+    <button onclick="photoCropper.rotate(90)"
+      style="display:inline-flex;align-items:center;gap:5px;padding:7px 18px;
+             background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.2);
+             border-radius:7px;cursor:pointer;font-family:var(--mono);font-size:9px;
+             font-weight:700;letter-spacing:0.8px;color:rgba(29,233,212,0.8);transition:background .15s"
+      onmouseover="this.style.background='rgba(29,233,212,0.15)'"
+      onmouseout="this.style.background='rgba(29,233,212,0.07)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-.49-4.5"/>
+      </svg>+90°
+    </button>
+  </div>
+
+  <!-- Cancel / Apply -->
+  <div style="display:flex;gap:10px;padding:0 16px 16px">
+    <button onclick="closeCropModal()"
+      style="flex:1;padding:11px;background:rgba(255,255,255,0.06);
+             border:1px solid rgba(255,255,255,0.12);border-radius:8px;cursor:pointer;
+             font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.8px;
+             color:rgba(255,255,255,0.5);transition:background .15s"
+      onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+      onmouseout="this.style.background='rgba(255,255,255,0.06)'">Cancel</button>
+    <button onclick="photoCropper.apply()"
+      style="flex:2;padding:11px;background:var(--teal,#1de9d4);border:none;border-radius:8px;
+             cursor:pointer;font-family:var(--mono);font-size:10px;font-weight:800;
+             letter-spacing:1px;color:#020617;transition:opacity .15s"
+      onmouseover="this.style.opacity='.85'"
+      onmouseout="this.style.opacity='1'">✓ Apply Photo</button>
+  </div>
+</div>
+<!-- ════════════ END PHOTO CROP MODAL ════════════ -->
+
 <script>
 /* ════ PROFILE EDIT DRAWER — self-contained, inline so load order never matters ════ */
 
@@ -655,23 +794,16 @@ function closeProfileEdit() {
   if (overlay) { overlay.style.display = 'none'; }
 }
 
-/* ── Photo upload handler ── */
-var _pedrPendingPhoto = null; // base64 string, set on file pick, saved on Save
+/* ── Photo upload handler — routes through crop modal ── */
+var _pedrPendingPhoto = null; // compressed JPEG data URL set by crop modal, saved on Save
 
 function pedrHandlePhoto(input) {
   var file = input && input.files && input.files[0];
   if (!file) return;
-  if (file.size > 4 * 1024 * 1024) {
-    try { showToast('Image too large (max 4 MB)', 'warning'); } catch(e) {}
-    input.value = '';
-    return;
-  }
   var reader = new FileReader();
-  reader.onload = function(ev) {
-    _pedrPendingPhoto = ev.target.result; // data URL (base64)
-    _pedrPreview();
-  };
+  reader.onload = function(ev) { openCropModal(ev.target.result); };
   reader.readAsDataURL(file);
+  input.value = ''; // reset so same file can be re-picked
 }
 
 function _pedrLoad() {
@@ -857,13 +989,219 @@ function pedrSaveAndClose() {
   }
 }
 
-/* Close on Escape */
+/* Close profile-edit on Escape */
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
+    var cropMd = document.getElementById('photo-crop-modal');
+    if (cropMd && cropMd.style.display !== 'none') { closeCropModal(); return; }
     var ped = document.getElementById('profile-edit-drawer');
     if (ped && ped.classList.contains('open')) closeProfileEdit();
   }
 });
+
+</script>
+
+<script>
+/* ════ PHOTO CROP MODAL — canvas pan/zoom/rotate + compression ════
+   Runs independently; no external deps.
+   Output: 320×320 JPEG @ 0.80 quality (~25–55 KB for a face photo)
+   Persists: stored as _pedrPendingPhoto → saved by pedrSaveAndClose()
+   ════════════════════════════════════════════════════════════════ */
+
+function openCropModal(src) {
+  var ov = document.getElementById('photo-crop-overlay');
+  var md = document.getElementById('photo-crop-modal');
+  if (ov) ov.style.display = 'block';
+  if (md) md.style.display = 'block';
+  photoCropper.load(src);
+}
+
+function closeCropModal() {
+  var ov = document.getElementById('photo-crop-overlay');
+  var md = document.getElementById('photo-crop-modal');
+  if (ov) ov.style.display = 'none';
+  if (md) md.style.display = 'none';
+}
+
+var photoCropper = (function () {
+  /* ── state ── */
+  var _img       = null;
+  var _scale     = 1;
+  var _baseScale = 1;
+  var _rotation  = 0;   // degrees (0 / 90 / 180 / 270)
+  var _ox        = 0;   // pan offset X (display pixels from centre)
+  var _oy        = 0;   // pan offset Y
+  var _drag      = false;
+  var _lx = 0, _ly = 0;
+  var _pinchDist = 0;
+  var _canvas    = null;
+  var _ctx       = null;
+
+  /* ── helpers ── */
+  function _gc() {
+    if (!_canvas) {
+      _canvas = document.getElementById('crop-canvas');
+      if (_canvas) _ctx = _canvas.getContext('2d');
+    }
+    return _canvas;
+  }
+
+  function _sz() { var c = _gc(); return c ? c.width : 272; }
+
+  function _setupCanvas() {
+    /* Match canvas internal res to its CSS display size */
+    var wrap = document.getElementById('crop-canvas-wrap');
+    if (!wrap) return;
+    var s = Math.round(Math.min(272, Math.max(180, wrap.offsetWidth || 272)));
+    var c = _gc();
+    if (c && (c.width !== s || c.height !== s)) { c.width = s; c.height = s; }
+  }
+
+  function _clamp() {
+    var s = _sz(), lim = s * 1.5;
+    _ox = Math.max(-lim, Math.min(lim, _ox));
+    _oy = Math.max(-lim, Math.min(lim, _oy));
+  }
+
+  /* ── draw ── */
+  function _draw() {
+    var c = _gc();
+    if (!c || !_img) return;
+    var s = c.width;
+    _ctx.clearRect(0, 0, s, s);
+    _ctx.save();
+    _ctx.translate(s / 2 + _ox, s / 2 + _oy);
+    _ctx.rotate(_rotation * Math.PI / 180);
+    var iw = _img.naturalWidth  * _scale;
+    var ih = _img.naturalHeight * _scale;
+    _ctx.drawImage(_img, -iw / 2, -ih / 2, iw, ih);
+    _ctx.restore();
+  }
+
+  /* ── load ── */
+  function _load(src) {
+    _setupCanvas();
+    var img = new Image();
+    img.onload = function () {
+      _img       = img;
+      _rotation  = 0; _ox = 0; _oy = 0;
+      var s      = _sz();
+      _baseScale = Math.max(s / img.naturalWidth, s / img.naturalHeight); // fill circle
+      _scale     = _baseScale;
+      var sl     = document.getElementById('crop-zoom-slider');
+      if (sl) sl.value = 100;
+      _draw();
+    };
+    img.src = src;
+  }
+
+  /* ── rotate ── */
+  function _rotate(deg) {
+    _rotation = (_rotation + deg + 360) % 360;
+    /* Swap offsets so image stays visually centred after 90° step */
+    var tmp = _ox;
+    if (deg === 90)  { _ox = -_oy; _oy =  tmp; }
+    if (deg === -90) { _ox =  _oy; _oy = -tmp; }
+    _draw();
+  }
+
+  /* ── zoom slider ── */
+  function _onSlider(val) {
+    _scale = _baseScale * (val / 100);
+    _clamp(); _draw();
+  }
+
+  /* ── apply: render 320×320 circular JPEG ── */
+  function _apply() {
+    if (!_img) { closeCropModal(); return; }
+    var OUT = 320;
+    var out = document.createElement('canvas');
+    out.width = OUT; out.height = OUT;
+    var ctx = out.getContext('2d');
+
+    /* Circular clip */
+    ctx.beginPath();
+    ctx.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2);
+    ctx.clip();
+
+    /* Scale offsets from display size → output size */
+    var ratio = OUT / _sz();
+    ctx.save();
+    ctx.translate(OUT / 2 + _ox * ratio, OUT / 2 + _oy * ratio);
+    ctx.rotate(_rotation * Math.PI / 180);
+    var iw = _img.naturalWidth  * _scale * ratio;
+    var ih = _img.naturalHeight * _scale * ratio;
+    ctx.drawImage(_img, -iw / 2, -ih / 2, iw, ih);
+    ctx.restore();
+
+    /* Compress: JPEG 0.80 ≈ 25–55 KB for a typical face photo */
+    _pedrPendingPhoto = out.toDataURL('image/jpeg', 0.80);
+    _pedrRemovedPhoto = false;
+    closeCropModal();
+    _pedrPreview();
+    try { showToast('✓ Photo cropped — tap Save to apply', 'success', 2500); } catch (e) {}
+  }
+
+  /* ── mouse events ── */
+  function _mDown(e) { _drag = true; _lx = e.clientX; _ly = e.clientY; }
+  function _mMove(e) {
+    if (!_drag) return;
+    _ox += e.clientX - _lx; _oy += e.clientY - _ly;
+    _lx = e.clientX; _ly = e.clientY;
+    _clamp(); _draw();
+  }
+  function _mUp() { _drag = false; }
+
+  /* ── touch events ── */
+  function _tStart(e) {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      _drag = true; _lx = e.touches[0].clientX; _ly = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      _drag = false;
+      _pinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }
+  function _tMove(e) {
+    e.preventDefault();
+    if (e.touches.length === 1 && _drag) {
+      _ox += e.touches[0].clientX - _lx; _oy += e.touches[0].clientY - _ly;
+      _lx = e.touches[0].clientX; _ly = e.touches[0].clientY;
+      _clamp(); _draw();
+    } else if (e.touches.length === 2) {
+      var d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      var r = d / (_pinchDist || d);
+      _scale = Math.max(_baseScale * 0.85, Math.min(_baseScale * 6, _scale * r));
+      var sl = document.getElementById('crop-zoom-slider');
+      if (sl) sl.value = Math.round((_scale / _baseScale) * 100);
+      _pinchDist = d;
+      _clamp(); _draw();
+    }
+  }
+  function _tEnd() { _drag = false; }
+
+  /* ── bind events (idempotent) ── */
+  function _bind() {
+    var c = _gc();
+    if (!c || c._cropBound) return;
+    c._cropBound = true;
+    c.addEventListener('mousedown',  _mDown);
+    c.addEventListener('mousemove',  _mMove);
+    c.addEventListener('mouseup',    _mUp);
+    c.addEventListener('mouseleave', _mUp);
+    c.addEventListener('touchstart', _tStart, { passive: false });
+    c.addEventListener('touchmove',  _tMove,  { passive: false });
+    c.addEventListener('touchend',   _tEnd);
+  }
+
+  return { load: function (s) { _bind(); _load(s); }, rotate: _rotate, onSlider: _onSlider, apply: _apply };
+})();
 </script>
 
 <style>
