@@ -9038,22 +9038,15 @@ function dbExportCSV() {
 
 // ══════════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════════
-// USER IDENTITY SYSTEM — Firebase Auth (username + password)
+// USER IDENTITY SYSTEM — Firebase Auth (email + password)
 // ══════════════════════════════════════════════════════════════════
-// Strategy: Firebase requires an email address for email/password auth.
-// We store the user's Staff ID / username and synthesise a stable
-// internal email: <sanitised-uid>@oasis.app — never shown to the user.
-// The real Staff ID is stored in Firestore and localStorage as `uid`.
+// Users authenticate directly with their email address and password.
+// Email is sourced from Firebase Auth and automatically stored in
+// the user profile/database — no synthesis or mapping required.
 
 const USER_KEY = 'nt_user_profile';
 
 // ── Helpers ───────────────────────────────────────────────────────
-function _uidToEmail(uid) {
-  // Sanitise: lowercase, replace non-alphanumeric (except . - _) with dots
-  const safe = uid.trim().toLowerCase().replace(/[^a-z0-9.\-_]/g, '.');
-  return safe + '@oasis.app';
-}
-
 function _getAuth() {
   if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
     return firebase.auth();
@@ -9153,13 +9146,23 @@ function obToggleAuthMode() {
 
   document.getElementById('ob-auth-heading').textContent  = _obIsRegisterMode ? 'Create account' : (localStorage.getItem('ob_has_signed_out') ? 'Welcome back' : 'Welcome');
   document.getElementById('ob-auth-sub').textContent      = _obIsRegisterMode
-    ? 'Choose a username and password.'
-    : 'Sign in to sync your profile across devices.';
+    ? 'Register with your email and a password.'
+    : 'Sign in with your email and password.';
   document.getElementById('ob-auth-btn').innerHTML      = _obIsRegisterMode ? 'Register →' : 'Sign In →';
   document.getElementById('ob-auth-toggle-text').textContent = _obIsRegisterMode ? 'Already have an account?' : 'Don\'t have an account?';
   document.getElementById('ob-auth-toggle-btn').textContent  = _obIsRegisterMode ? 'Sign In' : 'Register';
   document.getElementById('ob-auth-error').style.display  = 'none';
   document.getElementById('ob-auth-pw').autocomplete      = _obIsRegisterMode ? 'new-password' : 'current-password';
+
+  // Show confirm-password field only in register mode
+  const confirmField = document.getElementById('ob-confirm-pw-field');
+  if (confirmField) {
+    confirmField.style.display = _obIsRegisterMode ? 'block' : 'none';
+    // Clear confirm field when toggling
+    const confirmInput = document.getElementById('ob-auth-confirm-pw');
+    if (confirmInput) confirmInput.value = '';
+  }
+
   const forgotRow = document.getElementById('ob-forgot-row');
   if (forgotRow) forgotRow.style.display = _obIsRegisterMode ? 'none' : 'block';
 }
@@ -9182,15 +9185,18 @@ function _obAuthBusy(busy) {
 }
 
 async function obAuthSubmit() {
-  const uidVal = document.getElementById('ob-auth-uid')?.value.trim();
-  const pwVal  = document.getElementById('ob-auth-pw')?.value;
+  const emailVal   = document.getElementById('ob-auth-email')?.value.trim();
+  const pwVal      = document.getElementById('ob-auth-pw')?.value;
+  const confirmVal = document.getElementById('ob-auth-confirm-pw')?.value;
 
   document.getElementById('ob-auth-error').style.display = 'none';
 
-  if (!uidVal) { _obSetAuthError('Please enter your username.'); return; }
+  // ── Input validation ─────────────────────────────────────────────
+  if (!emailVal) { _obSetAuthError('Please enter your email address.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) { _obSetAuthError('Please enter a valid email address.'); return; }
   if (!pwVal)  { _obSetAuthError('Please enter your password.'); return; }
-  if (!_obIsRegisterMode && pwVal.length < 1) { _obSetAuthError('Please enter your password.'); return; }
-  if (_obIsRegisterMode  && pwVal.length < 6) { _obSetAuthError('Password must be at least 6 characters.'); return; }
+  if (_obIsRegisterMode && pwVal.length < 6) { _obSetAuthError('Password must be at least 6 characters.'); return; }
+  if (_obIsRegisterMode && pwVal !== confirmVal) { _obSetAuthError('Passwords do not match.'); return; }
 
   const auth = _getAuth();
   if (!auth) {
@@ -9198,22 +9204,22 @@ async function obAuthSubmit() {
     return;
   }
 
-  const email = _uidToEmail(uidVal);
+  const email = emailVal;
 
   // ── REGISTRATION path ────────────────────────────────────────────
-  // Step 1 of 2: validate credentials locally, check username availability,
+  // Step 1 of 2: validate credentials, check email availability,
   // then advance to profile setup WITHOUT creating the Firebase account yet.
   // Account creation is deferred to obSubmit() so the user cannot be
   // authenticated until their profile is fully completed.
   if (_obIsRegisterMode) {
     _obAuthBusy(true);
 
-    // Username availability check before advancing
+    // Email availability check before advancing
     try {
       const methods = await auth.fetchSignInMethodsForEmail(email);
       if (methods && methods.length > 0) {
         _obAuthBusy(false);
-        _obSetAuthError('Username already taken. Try signing in.');
+        _obSetAuthError('An account with this email already exists. Try signing in.');
         return;
       }
     } catch(e) {
@@ -9241,6 +9247,7 @@ async function obAuthSubmit() {
 
     const auth2 = _getAuth();
     const fbUid = auth2?.currentUser?.uid;
+    const fbEmail = auth2?.currentUser?.email || email;
     let existingProfile = null;
     if (db && fbUid) {
       const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
@@ -9254,7 +9261,7 @@ async function obAuthSubmit() {
         uid:         existingProfile.userId      || '',
         institution: existingProfile.institution || '',
         role:        existingProfile.userRole    || 'student',
-        email:       existingProfile.email       || '',
+        email:       fbEmail,
         photoURL:    existingProfile.photoURL    || '',
         createdAt:   existingProfile.createdAt   || new Date().toISOString(),
         firebaseUid: fbUid,
@@ -9268,16 +9275,16 @@ async function obAuthSubmit() {
   } catch (err) {
     _obAuthBusy(false);
     const codes = {
-      'auth/user-not-found':         'Invalid username or password.',
-      'auth/wrong-password':         'Invalid username or password.',
-      'auth/invalid-credential':     'Invalid username or password.',
-      'auth/invalid-email':          'Invalid username or password.',
-      'auth/email-already-in-use':   'Username already taken. Try signing in.',
+      'auth/user-not-found':         'Invalid email or password.',
+      'auth/wrong-password':         'Invalid email or password.',
+      'auth/invalid-credential':     'Invalid email or password.',
+      'auth/invalid-email':          'Please enter a valid email address.',
+      'auth/email-already-in-use':   'An account with this email already exists. Try signing in.',
       'auth/weak-password':          'Password must be at least 6 characters.',
       'auth/too-many-requests':      'Too many attempts. Please wait a moment.',
       'auth/network-request-failed': 'Network error. Check your connection.',
     };
-    _obSetAuthError(codes[err.code] || 'Invalid username or password.');
+    _obSetAuthError(codes[err.code] || 'Invalid email or password.');
   }
 }
 
@@ -9291,25 +9298,23 @@ async function obForgotPassword() {
     return;
   }
 
-  // Check if this user has a real email stored locally
-  const profile = getUserProfile();
-  const storedEmail = profile?.email || '';
+  // Use email from the sign-in input field
+  const emailVal = document.getElementById('ob-auth-email')?.value.trim();
 
-  if (!storedEmail) {
-    // No email on file — guide them to add one in Settings, or contact admin
-    errorEl.textContent = 'No email on file. Add your email in Settings → Profile, then try again.';
+  if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+    errorEl.textContent = 'Enter your email address above, then click Forgot Password.';
     errorEl.style.color = 'var(--amber, #f0b429)';
     errorEl.style.display = 'block';
     return;
   }
 
   try {
-    await auth.sendPasswordResetEmail(storedEmail);
-    errorEl.textContent = '✓ Reset email sent to ' + storedEmail.replace(/(.{2}).+(@.+)/, '$1…$2');
+    await auth.sendPasswordResetEmail(emailVal);
+    errorEl.textContent = '✓ Reset email sent to ' + emailVal.replace(/(.{2}).+(@.+)/, '$1…$2');
     errorEl.style.color = 'var(--teal, #00f5e4)';
     errorEl.style.display = 'block';
   } catch (err) {
-    // Still show a vague success — don't leak account existence
+    // Show a vague success — don't leak account existence
     errorEl.textContent = '✓ If a reset email can be sent, it\'s on its way.';
     errorEl.style.color = 'var(--teal, #00f5e4)';
     errorEl.style.display = 'block';
@@ -9324,10 +9329,13 @@ function _obSkipToProfile(uidVal) {
   _obSelectedRole = '';
 
   // Text inputs
-  ['ob-name', 'ob-uid', 'ob-email'].forEach(id => {
+  ['ob-name', 'ob-uid'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  // Also clear the confirm-password field (auth step) in case user goes back
+  const confirmPw = document.getElementById('ob-auth-confirm-pw');
+  if (confirmPw) confirmPw.value = '';
 
   // Institution select + free-text
   const instSel = document.getElementById('ob-inst');
@@ -9556,7 +9564,6 @@ function _obCollectProfileForm() {
   const uidEl       = document.getElementById('ob-uid');
   const instEl      = document.getElementById('ob-inst');
   const otherEl     = document.getElementById('ob-inst-other');
-  const emailEl     = document.getElementById('ob-email');
   const errEl       = document.getElementById('ob-error');
   const photoDataEl = document.getElementById('ob-photo-data');
   const avatarColorEl = document.getElementById('ob-avatar-color');
@@ -9566,7 +9573,6 @@ function _obCollectProfileForm() {
   const uid      = uidEl?.value.trim()   || '';
   const instRaw  = instEl?.value         || '';
   const inst     = instRaw === '__other' ? (otherEl?.value.trim() || '') : instRaw;
-  const email    = emailEl?.value.trim() || '';
   const photoURL = photoDataEl?.value    || '';
   const avatarColor = avatarColorEl?.value || '';
 
@@ -9589,10 +9595,6 @@ function _obCollectProfileForm() {
   if (!inst) { errs.push('Please select your institution.'); instEl?.classList.add('error'); }
   else instEl?.classList.remove('error');
   if (!finalRole) errs.push('Please select your role.');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errs.push('Please enter a valid email address.');
-    emailEl?.classList.add('error');
-  } else emailEl?.classList.remove('error');
 
   if (errs.length) {
     if (errEl) { errEl.textContent = errs[0]; errEl.style.display = 'block'; }
@@ -9600,12 +9602,16 @@ function _obCollectProfileForm() {
   }
   if (errEl) errEl.style.display = 'none';
 
-  return { name, uid, inst, email, photoURL, avatarColor, finalRole, roleLabel };
+  return { name, uid, inst, photoURL, avatarColor, finalRole, roleLabel };
 }
 
 // ── Persist profile and update Firestore (after Firebase UID known) ──
 function _obSaveAndFinish(fields, fbUid) {
-  const { name, uid, inst, email, photoURL, avatarColor, finalRole, roleLabel } = fields;
+  const { name, uid, inst, photoURL, avatarColor, finalRole, roleLabel } = fields;
+
+  // Email comes from Firebase Auth — the user's actual sign-in credential
+  const auth = _getAuth();
+  const email = auth?.currentUser?.email || '';
 
   const profile = {
     name, uid, institution: inst,
@@ -9614,11 +9620,6 @@ function _obSaveAndFinish(fields, fbUid) {
     createdAt: new Date().toISOString(), firebaseUid: fbUid || null,
   };
   saveUserProfile(profile);
-
-  const auth = _getAuth();
-  if (email && auth?.currentUser) {
-    auth.currentUser.updateEmail(email).catch(() => {});
-  }
 
   try {
     const s = DataService.get('settings') || {};
@@ -9687,7 +9688,7 @@ async function obSubmit() {
     } catch(err) {
       if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Complete Registration →'; }
       const codes = {
-        'auth/email-already-in-use':   'Username already taken. Please go back and choose another.',
+        'auth/email-already-in-use':   'An account with this email already exists. Please go back and use a different email.',
         'auth/weak-password':          'Password must be at least 6 characters.',
         'auth/network-request-failed': 'Network error. Check your connection and try again.',
         'auth/too-many-requests':      'Too many attempts. Please wait a moment.',
@@ -9777,7 +9778,7 @@ function _obResolveProfile(user) {
       db.collection('users').doc(user.uid).get().then(snap => {
         if (snap.exists && snap.data().userName) {
           const d = snap.data();
-          saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
+          saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', email: user.email || d.email || '', photoURL: d.photoURL || '', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
           try { renderProfileCard(); } catch(e) {}
           _hideOnboardingOverlay();
         } else {
@@ -9983,8 +9984,10 @@ function obSignOut() {
         showToast('Signed out.', 'success');
         document.getElementById('ob-step-auth').style.display    = 'block';
         document.getElementById('ob-step-profile').style.display = 'none';
-        document.getElementById('ob-auth-uid').value = '';
+        document.getElementById('ob-auth-email').value = '';
         document.getElementById('ob-auth-pw').value  = '';
+        const confirmPwEl = document.getElementById('ob-auth-confirm-pw');
+        if (confirmPwEl) confirmPwEl.value = '';
         document.getElementById('ob-auth-error').textContent  = '';
         document.getElementById('ob-auth-error').style.display = 'none';
         if (_obIsRegisterMode) obToggleAuthMode();

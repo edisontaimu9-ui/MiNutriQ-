@@ -156,8 +156,8 @@
       <div class="ob-sub" id="ob-auth-sub">Sign in to sync your profile across devices.</div>
 
       <div class="ob-field">
-        <label class="ob-label" for="ob-auth-uid">USERNAME <span>*</span></label>
-        <input id="ob-auth-uid" class="ob-input" type="text" placeholder="e.g. Edison" maxlength="60" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <label class="ob-label" for="ob-auth-email">EMAIL ADDRESS <span>*</span></label>
+        <input id="ob-auth-email" class="ob-input" type="email" placeholder="e.g. yourname@example.com" maxlength="120" autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false">
       </div>
 
       <div class="ob-field">
@@ -172,6 +172,15 @@
             style="background:none;border:none;color:var(--accent,var(--teal));font-family:var(--mono);font-size:10px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">
             Forgot Password?
           </button>
+        </div>
+      </div>
+
+      <!-- Confirm Password — only shown in register mode -->
+      <div class="ob-field" id="ob-confirm-pw-field" style="display:none">
+        <label class="ob-label" for="ob-auth-confirm-pw">Confirm Password <span>*</span></label>
+        <div style="position:relative">
+          <input id="ob-auth-confirm-pw" class="ob-input" type="password" placeholder="Re-enter your password" maxlength="128" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" onclick="obTogglePw('ob-auth-confirm-pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:0;line-height:1"></button>
         </div>
       </div>
 
@@ -271,7 +280,7 @@
       </div>
 
       <div class="ob-field">
-        <label class="ob-label" for="ob-name">Full Name / Username <span>*</span></label>
+        <label class="ob-label" for="ob-name">Full Name <span>*</span></label>
         <input id="ob-name" class="ob-input" type="text" placeholder="e.g. Edison Taimu" maxlength="60" autocomplete="name"
           oninput="obUpdateAvatarInitials()">
       </div>
@@ -279,12 +288,6 @@
       <div class="ob-field">
         <label class="ob-label" for="ob-uid">Student / Staff ID</label>
         <input id="ob-uid" class="ob-input" type="text" placeholder="e.g. KUHeS/2021/0042" maxlength="40" autocomplete="off">
-      </div>
-
-      <div class="ob-field">
-        <label class="ob-label" for="ob-email">Email Address <span style="color:var(--text-dim);font-weight:400">(optional — for password reset)</span></label>
-        <input id="ob-email" class="ob-input" type="email" placeholder="e.g. yourname@example.com" maxlength="120" autocomplete="email">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px">Used only for account recovery. Never shared.</div>
       </div>
 
       <div class="ob-field">
