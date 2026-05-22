@@ -9118,8 +9118,13 @@ const ROLE_META = {
 };
 
 // ── Auth step state ───────────────────────────────────────────────
-let _obSelectedRole = '';
+let _obSelectedRole   = '';
 let _obIsRegisterMode = false;
+
+// Deferred registration: credentials held here after step-1 validation.
+// Firebase account is NOT created until profile setup (step 2) is submitted.
+// Cleared immediately after successful account creation in obSubmit().
+let _obPendingReg = null;  // { email: string, pw: string } | null
 
 // Set heading on load: "Welcome back" for returning users, "Welcome" for new
 (function() {
@@ -9136,6 +9141,16 @@ function obTogglePw(inputId, btn) {
 
 function obToggleAuthMode() {
   _obIsRegisterMode = !_obIsRegisterMode;
+
+  // ── Data isolation: wipe all previous-user data when entering register mode ──
+  // This ensures a new account starts with a completely clean slate,
+  // even if someone navigated to the auth screen without formally signing out.
+  if (_obIsRegisterMode) {
+    _wipeAllUserData();
+    // Re-set the sign-out flag so it's available for heading logic below
+    try { localStorage.setItem('ob_has_signed_out', '1'); } catch(e) {}
+  }
+
   document.getElementById('ob-auth-heading').textContent  = _obIsRegisterMode ? 'Create account' : (localStorage.getItem('ob_has_signed_out') ? 'Welcome back' : 'Welcome');
   document.getElementById('ob-auth-sub').textContent      = _obIsRegisterMode
     ? 'Choose a username and password.'
@@ -9175,27 +9190,55 @@ async function obAuthSubmit() {
   if (!uidVal) { _obSetAuthError('Please enter your username.'); return; }
   if (!pwVal)  { _obSetAuthError('Please enter your password.'); return; }
   if (!_obIsRegisterMode && pwVal.length < 1) { _obSetAuthError('Please enter your password.'); return; }
-  if (_obIsRegisterMode && pwVal.length < 6)  { _obSetAuthError('Password must be at least 6 characters.'); return; }
+  if (_obIsRegisterMode  && pwVal.length < 6) { _obSetAuthError('Password must be at least 6 characters.'); return; }
 
   const auth = _getAuth();
   if (!auth) {
-    // Firebase unavailable — cannot verify credentials, block sign-in
     _obSetAuthError('Unable to connect. Please check your internet and try again.');
     return;
   }
 
   const email = _uidToEmail(uidVal);
-  _obAuthBusy(true);
 
-  try {
-    if (_obIsRegisterMode) {
-      await auth.createUserWithEmailAndPassword(email, pwVal);
-    } else {
-      // Both username AND password must be correct — Firebase verifies atomically
-      await auth.signInWithEmailAndPassword(email, pwVal);
+  // ── REGISTRATION path ────────────────────────────────────────────
+  // Step 1 of 2: validate credentials locally, check username availability,
+  // then advance to profile setup WITHOUT creating the Firebase account yet.
+  // Account creation is deferred to obSubmit() so the user cannot be
+  // authenticated until their profile is fully completed.
+  if (_obIsRegisterMode) {
+    _obAuthBusy(true);
+
+    // Username availability check before advancing
+    try {
+      const methods = await auth.fetchSignInMethodsForEmail(email);
+      if (methods && methods.length > 0) {
+        _obAuthBusy(false);
+        _obSetAuthError('Username already taken. Try signing in.');
+        return;
+      }
+    } catch(e) {
+      // fetchSignInMethods unavailable (network/config) — proceed optimistically;
+      // createUserWithEmailAndPassword in obSubmit() will catch the duplicate.
     }
 
-    // Auth success — check if profile already exists in Firestore
+    _obAuthBusy(false);
+
+    // Wipe all previous-user data before advancing
+    _wipeAllUserData();
+
+    // Store credentials for deferred account creation in obSubmit()
+    _obPendingReg = { email, pw: pwVal };
+
+    // Advance to profile step with a guaranteed-blank form
+    _obSkipToProfile();
+    return;
+  }
+
+  // ── SIGN IN path ─────────────────────────────────────────────────
+  _obAuthBusy(true);
+  try {
+    await auth.signInWithEmailAndPassword(email, pwVal);
+
     const auth2 = _getAuth();
     const fbUid = auth2?.currentUser?.uid;
     let existingProfile = null;
@@ -9206,7 +9249,6 @@ async function obAuthSubmit() {
       }
     }
     if (existingProfile) {
-      // Returning user — restore full profile and proceed directly to home
       const p = {
         name:        existingProfile.userName    || '',
         uid:         existingProfile.userId      || '',
@@ -9220,7 +9262,7 @@ async function obAuthSubmit() {
       saveUserProfile(p);
       _obFinish(p.name, true);
     } else {
-      // New user — show profile setup step (Staff ID blank, user must fill manually)
+      // Signed in but no profile (rare) — show setup
       _obSkipToProfile();
     }
   } catch (err) {
@@ -9275,11 +9317,70 @@ async function obForgotPassword() {
 }
 
 function _obSkipToProfile(uidVal) {
-  // Do NOT pre-fill Staff ID — username on page 1 is a login credential, not a Staff ID
-  const uidEl = document.getElementById('ob-uid');
-  if (uidEl) uidEl.value = '';
+  // ── Reset all profile form fields to blank ───────────────────
+  // Prevents previous user's data bleeding into a new registration.
+
+  // In-memory role state
+  _obSelectedRole = '';
+
+  // Text inputs
+  ['ob-name', 'ob-uid', 'ob-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Institution select + free-text
+  const instSel = document.getElementById('ob-inst');
+  if (instSel) instSel.selectedIndex = 0;
+  const instOther = document.getElementById('ob-inst-other');
+  if (instOther) { instOther.value = ''; instOther.style.display = 'none'; }
+
+  // Role chip buttons — deselect all, hide "other" row
+  document.querySelectorAll('.ob-role-btn').forEach(b => {
+    b.classList.remove('active', 'selected');
+  });
+  const roleOtherRow = document.getElementById('ob-role-other-row');
+  if (roleOtherRow) roleOtherRow.style.display = 'none';
+  const roleOtherVal = document.getElementById('ob-role-other-val');
+  if (roleOtherVal) roleOtherVal.value = '';
+
+  // Avatar / photo — restore to blank state
+  const avatarImg     = document.getElementById('ob-avatar-img');
+  const placeholder   = document.getElementById('ob-avatar-placeholder');
+  const removeBtn     = document.getElementById('ob-avatar-remove');
+  const photoData     = document.getElementById('ob-photo-data');
+  const avatarColor   = document.getElementById('ob-avatar-color');
+  const photoInput    = document.getElementById('ob-photo-input');
+  const avatarPreview = document.getElementById('ob-avatar-preview');
+
+  if (avatarImg)   { avatarImg.src = ''; avatarImg.style.display = 'none'; }
+  if (placeholder) placeholder.style.display = '';
+  if (removeBtn)   removeBtn.style.display = 'none';
+  if (photoData)   photoData.value = '';
+  if (avatarColor) avatarColor.value = '';
+  if (photoInput)  photoInput.value = '';
+  if (avatarPreview) avatarPreview.style.background = 'var(--surface2)';
+
+  // Deselect any active colour chip
+  document.querySelectorAll('.ob-av-color').forEach(b => {
+    b.style.border = '2px solid transparent';
+  });
+
+  // Error message
+  const errEl = document.getElementById('ob-error');
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  // Submit button label: "Complete Registration →" for new users, "Save Profile →" otherwise
+  const submitBtn = document.querySelector('#ob-step-profile .ob-submit');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = _obPendingReg ? 'Complete Registration →' : 'Save Profile →';
+  }
+
+  // Show profile step
   document.getElementById('ob-step-auth').style.display    = 'none';
   document.getElementById('ob-step-profile').style.display = 'block';
+
   // Wire institution "other" toggle
   const sel = document.getElementById('ob-inst');
   const other = document.getElementById('ob-inst-other');
@@ -9449,7 +9550,8 @@ function obSelectRole(btn) {
   if (_obSelectedRole !== 'other' && otherVal) otherVal.value = '';
 }
 
-function obSubmit() {
+// ── Profile form value collector (shared by sync + async paths) ──
+function _obCollectProfileForm() {
   const nameEl      = document.getElementById('ob-name');
   const uidEl       = document.getElementById('ob-uid');
   const instEl      = document.getElementById('ob-inst');
@@ -9460,63 +9562,64 @@ function obSubmit() {
   const avatarColorEl = document.getElementById('ob-avatar-color');
   const roleOtherEl = document.getElementById('ob-role-other-val');
 
-  const name    = nameEl?.value.trim();
-  const uid     = uidEl?.value.trim();
-  const instRaw = instEl?.value;
-  const inst    = instRaw === '__other' ? otherEl?.value.trim() : instRaw;
-  const email   = emailEl?.value.trim() || '';
-  const photoURL = photoDataEl?.value || '';
+  const name     = nameEl?.value.trim()  || '';
+  const uid      = uidEl?.value.trim()   || '';
+  const instRaw  = instEl?.value         || '';
+  const inst     = instRaw === '__other' ? (otherEl?.value.trim() || '') : instRaw;
+  const email    = emailEl?.value.trim() || '';
+  const photoURL = photoDataEl?.value    || '';
   const avatarColor = avatarColorEl?.value || '';
 
-  // Resolve final role: if "other" was selected, use the typed value
-  let finalRole = _obSelectedRole;
+  let finalRole = _obSelectedRole || '';
   if (finalRole === 'other') {
     const otherRoleText = roleOtherEl?.value.trim();
     if (!otherRoleText) {
       if (errEl) { errEl.textContent = 'Please specify your role.'; errEl.style.display = 'block'; }
       roleOtherEl?.classList.add('error');
-      return;
+      return null;
     }
-    // Store as "other:<custom>" so ROLE_META fallback still works, but the free text is preserved
-    finalRole = 'other';
     if (roleOtherEl) roleOtherEl.classList.remove('error');
   }
-  const roleLabel = (finalRole === 'other' && roleOtherEl?.value.trim()) ? roleOtherEl.value.trim() : finalRole;
+  const roleLabel = (finalRole === 'other' && roleOtherEl?.value.trim())
+    ? roleOtherEl.value.trim() : finalRole;
 
   const errs = [];
   if (!name) { errs.push('Please enter your name.'); nameEl?.classList.add('error'); }
   else nameEl?.classList.remove('error');
   if (!inst) { errs.push('Please select your institution.'); instEl?.classList.add('error'); }
   else instEl?.classList.remove('error');
-  if (!_obSelectedRole) errs.push('Please select your role.');
+  if (!finalRole) errs.push('Please select your role.');
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errs.push('Please enter a valid email address.');
     emailEl?.classList.add('error');
   } else emailEl?.classList.remove('error');
 
-  if (errs.length) { errEl.textContent = errs[0]; errEl.style.display = 'block'; return; }
-  errEl.style.display = 'none';
+  if (errs.length) {
+    if (errEl) { errEl.textContent = errs[0]; errEl.style.display = 'block'; }
+    return null;
+  }
+  if (errEl) errEl.style.display = 'none';
 
-  // Attach Firebase UID if signed in
-  const auth = _getAuth();
-  const fbUid = auth?.currentUser?.uid || null;
+  return { name, uid, inst, email, photoURL, avatarColor, finalRole, roleLabel };
+}
+
+// ── Persist profile and update Firestore (after Firebase UID known) ──
+function _obSaveAndFinish(fields, fbUid) {
+  const { name, uid, inst, email, photoURL, avatarColor, finalRole, roleLabel } = fields;
 
   const profile = {
     name, uid, institution: inst,
     role: finalRole, roleLabel,
     email, photoURL, avatarColor,
-    createdAt: new Date().toISOString(), firebaseUid: fbUid
+    createdAt: new Date().toISOString(), firebaseUid: fbUid || null,
   };
   saveUserProfile(profile);
 
-  // If user provided a real email, update Firebase Auth so password reset works
+  const auth = _getAuth();
   if (email && auth?.currentUser) {
-    auth.currentUser.updateEmail(email).catch(() => {
-      // Non-fatal — user may need to re-authenticate; silently ignore
-    });
+    auth.currentUser.updateEmail(email).catch(() => {});
   }
 
-  // Sync settings
   try {
     const s = DataService.get('settings') || {};
     s.institution = inst;
@@ -9524,7 +9627,6 @@ function obSubmit() {
     localStorage.setItem('nc_institution', inst);
   } catch(e) {}
 
-  // Update Firestore session + presence
   try {
     if (typeof db !== 'undefined' && db && typeof SESSION_ID !== 'undefined') {
       db.collection('sessions').doc(SESSION_ID).update({
@@ -9546,6 +9648,64 @@ function obSubmit() {
   _obFinish(name, false);
 }
 
+async function obSubmit() {
+  const errEl = document.getElementById('ob-error');
+
+  // Collect and validate profile form
+  const fields = _obCollectProfileForm();
+  if (!fields) return;  // validation failed — error already shown
+
+  const submitBtn = document.querySelector('#ob-step-profile .ob-submit');
+
+  // ── NEW REGISTRATION: create Firebase account then save profile ──
+  // _obPendingReg is set in obAuthSubmit() when Register is clicked.
+  // Account creation is deferred to here so the user is never
+  // authenticated until their profile is fully completed.
+  if (_obPendingReg) {
+    const { email: regEmail, pw: regPw } = _obPendingReg;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="ob-spinner"></span><span>Creating account…</span>';
+    }
+
+    const auth = _getAuth();
+    if (!auth) {
+      if (errEl) { errEl.textContent = 'Unable to connect. Please check your internet.'; errEl.style.display = 'block'; }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Complete Registration →'; }
+      return;
+    }
+
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(regEmail, regPw);
+      const fbUid = cred.user?.uid || null;
+
+      // Account created — clear the pending credentials immediately
+      _obPendingReg = null;
+
+      _obSaveAndFinish(fields, fbUid);
+    } catch(err) {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Complete Registration →'; }
+      const codes = {
+        'auth/email-already-in-use':   'Username already taken. Please go back and choose another.',
+        'auth/weak-password':          'Password must be at least 6 characters.',
+        'auth/network-request-failed': 'Network error. Check your connection and try again.',
+        'auth/too-many-requests':      'Too many attempts. Please wait a moment.',
+      };
+      if (errEl) {
+        errEl.textContent = codes[err.code] || 'Account creation failed. Please try again.';
+        errEl.style.display = 'block';
+      }
+    }
+    return;
+  }
+
+  // ── EXISTING USER: profile setup after sign-in (no account creation needed) ──
+  const auth = _getAuth();
+  const fbUid = auth?.currentUser?.uid || null;
+  _obSaveAndFinish(fields, fbUid);
+}
+
 function _obFinish(name, isReturning) {
   document.getElementById('ob-overlay').classList.add('hidden');
   document.body.classList.add('ob-authed');
@@ -9562,22 +9722,37 @@ function checkOnboarding() {
     // Let Firebase Auth state determine whether to show the overlay
     auth.onAuthStateChanged((user) => {
       if (user) {
-        // Already authenticated — check if profile is stored locally
-        if (!getUserProfile()) {
-          // Profile missing locally — they may have registered elsewhere; restore or re-prompt profile step
-          db && db.collection('users').doc(user.uid).get().then(snap => {
-            if (snap.exists && snap.data().userName) {
-              const d = snap.data();
-              saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
-              try { renderProfileCard(); } catch(e) {}
-              _hideOnboardingOverlay();
-            } else {
-              _showOnboardingOverlay();
-            }
-          }).catch(() => _showOnboardingOverlay());
+        // ── Session revocation check ──────────────────────────────
+        // Cross-check sign-in time against the Firestore revocation
+        // registry. If this user was signed out from another session
+        // (or a stale session was revoked on logout), the revokedAt
+        // timestamp will be newer than their lastSignInTime → force
+        // an immediate re-logout so no stale session can persist.
+        if (typeof db !== 'undefined' && db) {
+          db.collection('session_revocations').doc(user.uid).get()
+            .then(rSnap => {
+              if (rSnap.exists) {
+                const revokedAt   = rSnap.data().revokedAt ? rSnap.data().revokedAt.toDate() : null;
+                const lastSignIn  = user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime) : null;
+                if (revokedAt && lastSignIn && revokedAt > lastSignIn) {
+                  // Stale session detected — wipe and re-authenticate
+                  _wipeAllUserData();
+                  try { localStorage.setItem('ob_has_signed_out', '1'); } catch(e) {}
+                  auth.signOut().catch(() => {});
+                  _showOnboardingOverlay();
+                  return; // Do not proceed with profile load
+                }
+              }
+              // Not revoked — proceed with normal profile check
+              _obResolveProfile(user);
+            })
+            .catch(() => {
+              // Revocation check failed (offline) — proceed normally
+              // (fail-open: don't lock user out when Firestore is unreachable)
+              _obResolveProfile(user);
+            });
         } else {
-          // Profile present — hide overlay, let user in
-          _hideOnboardingOverlay();
+          _obResolveProfile(user);
         }
       } else {
         // Not signed in — always block home screen
@@ -9591,6 +9766,30 @@ function checkOnboarding() {
     } else {
       _hideOnboardingOverlay();
     }
+  }
+}
+
+// ── Shared profile resolution after revocation check passes ──────
+function _obResolveProfile(user) {
+  if (!getUserProfile()) {
+    // Profile missing locally — restore from Firestore or re-prompt
+    if (typeof db !== 'undefined' && db) {
+      db.collection('users').doc(user.uid).get().then(snap => {
+        if (snap.exists && snap.data().userName) {
+          const d = snap.data();
+          saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
+          try { renderProfileCard(); } catch(e) {}
+          _hideOnboardingOverlay();
+        } else {
+          _showOnboardingOverlay();
+        }
+      }).catch(() => _showOnboardingOverlay());
+    } else {
+      _showOnboardingOverlay();
+    }
+  } else {
+    // Profile present — hide overlay, let user in
+    _hideOnboardingOverlay();
   }
 }
 
@@ -9656,23 +9855,78 @@ function _cleanupListeners() {
   window._ntUnsubs = [];
 }
 
-// ── Wipe all user-specific localStorage keys on logout ───────────
-function _clearUserLocalStorage() {
-  const toRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k) continue;
-    // Preserve SW version flags and "welcome back" marker
-    if (
-      k.startsWith('nc_') ||       // DataService keys (settings, patient data, etc.)
-      k === 'nt_user_profile' ||   // user profile object
-      k === 'nt_push_sub'          // push subscription cache
-    ) toRemove.push(k);
-  }
-  toRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
-  // Clear cached profile photo from sessionStorage too
-  try { sessionStorage.removeItem('_ntPendingPhoto'); } catch(e) {}
+// ── Comprehensive user-data wipe ─────────────────────────────────
+// Clears all user-owned storage and in-memory state.
+// Preserves only app-infrastructure keys (SW version flags, PWA
+// install state) that are not tied to any individual user.
+//
+// PRESERVED keys (app infrastructure — not user data):
+//   nt-sw-ver               Service worker version gate
+//   nt-sw-update-dismissed  SW update toast dismiss flag
+//   nt-update-dismissed-ver In-app update banner dismiss
+//   pwa-banner-dismissed    PWA install prompt dismiss
+//   ob_has_signed_out       Controls "Welcome back" heading text
+//
+// WIPED keys (user data):
+//   nt_user_profile         User profile object
+//   nt_push_sub             Push notification subscription
+//   nt_custom_foods_v1      User-imported custom foods
+//   nc_*                    All DataService keys (settings, patient data)
+//   oasis_bc_cache_v1       Barcode scan cache
+//   oasis_bc_history_v1     Barcode scan history
+//   oasis_feedback_queue    Queued offline feedback
+//
+// sessionStorage (all wiped — tab-scoped, no app-infra content):
+//   _ntPendingPhoto         Pending profile photo blob URL
+//   _ntpPid                 Anonymous page-view tracking ID
+//   nc_recall               Dietary recall in-progress data
+//   nc_mealplan             Meal plan in-progress data
+
+const _PRESERVE_KEYS = new Set([
+  'nt-sw-ver',
+  'nt-sw-update-dismissed',
+  'nt-update-dismissed-ver',
+  'pwa-banner-dismissed',
+  'ob_has_signed_out',
+]);
+
+function _wipeAllUserData() {
+  // 1. localStorage — scan and remove all keys not in the preserve list
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && !_PRESERVE_KEYS.has(k)) toRemove.push(k);
+    }
+    toRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+  } catch(e) {}
+
+  // 2. sessionStorage — wipe entirely (tab-scoped; no cross-user infra content)
+  try { sessionStorage.clear(); } catch(e) {}
+
+  // 3. In-memory application state reset
+  try {
+    // Reset calculation counter
+    if (typeof calcCount !== 'undefined') window.calcCount = 0;
+    // Clear active module tracker
+    window._activeModule = 'home';
+    // Null out any cached patient/profile references held on window
+    window._ntLastProfile = null;
+    window._ntLastPatient = null;
+    // Reset pending photo reference (was in sessionStorage; also clear blob URL)
+    if (window._ntPendingPhotoURL) {
+      try { URL.revokeObjectURL(window._ntPendingPhotoURL); } catch(_) {}
+      window._ntPendingPhotoURL = null;
+    }
+    window._pedrRemovedPhoto = false;
+  } catch(e) {}
+
+  // 4. Detach all active Firestore / RTDB listeners
+  _cleanupListeners();
 }
+
+// Backward-compat alias used by any legacy call sites
+function _clearUserLocalStorage() { _wipeAllUserData(); }
 
 // ── Profile completion — tracks 6 fields including photo ─────────
 function getProfileCompletion() {
@@ -9691,37 +9945,91 @@ function getProfileCompletion() {
   return { pct: Math.round((done / fields.length) * 100), missing, done, total: fields.length };
 }
 
+// ── Secure logout with Firestore-backed session revocation ───────
+//
+// Security sequence:
+//   1. Capture UID BEFORE any wipe (needed for revocation record)
+//   2. Write revocation record to Firestore session_revocations/{uid}
+//      — acts as the "backend token invalidation"; any future
+//        onAuthStateChanged that finds a sign-in time predating this
+//        record will force an immediate re-logout.
+//   3. Only AFTER Firestore confirms the write: wipe all local data
+//      (localStorage, sessionStorage, in-memory state, listeners).
+//   4. Call Firebase Auth signOut() to revoke local tokens.
+//   5. Reset UI to auth screen.
+//
+//   On Firestore write failure: proceed with local wipe + signOut
+//   after a 3-second timeout, so network issues can never lock the
+//   user in (fail-open for UX, fail-closed on data — local data is
+//   still wiped even if the remote record couldn't be written).
+
 function obSignOut() {
   if (!confirm('Sign out of Oasis?')) return;
-  const auth = _getAuth();
+  const auth    = _getAuth();
+  const fbUser  = auth ? auth.currentUser : null;
+  const uid     = fbUser ? fbUser.uid : null;
 
-  // 1. Detach all active Firestore / RTDB listeners
-  _cleanupListeners();
+  // ── Helper: execute the local wipe + Firebase signOut ──────────
+  function _doLocalSignOut() {
+    // Wipe all user data (localStorage, sessionStorage, in-memory state)
+    _wipeAllUserData();
+    // Re-set the "has signed out" flag so next auth screen says "Welcome back"
+    try { localStorage.setItem('ob_has_signed_out', '1'); } catch(e) {}
 
-  // 2. Wipe all user-specific localStorage data
-  _clearUserLocalStorage();
-  localStorage.setItem('ob_has_signed_out', '1');
+    // Firebase Auth signOut — revokes local ID token and refresh token
+    (auth ? auth.signOut() : Promise.resolve())
+      .then(() => {
+        try { renderProfileCard(); } catch(e) {}
+        showToast('Signed out.', 'success');
+        document.getElementById('ob-step-auth').style.display    = 'block';
+        document.getElementById('ob-step-profile').style.display = 'none';
+        document.getElementById('ob-auth-uid').value = '';
+        document.getElementById('ob-auth-pw').value  = '';
+        document.getElementById('ob-auth-error').textContent  = '';
+        document.getElementById('ob-auth-error').style.display = 'none';
+        if (_obIsRegisterMode) obToggleAuthMode();
+        document.getElementById('ob-auth-heading').textContent = 'Welcome back';
+        _showOnboardingOverlay();
+      })
+      .catch(() => {
+        // signOut() failed (e.g. network). Local data already wiped.
+        try { renderProfileCard(); } catch(e) {}
+        _showOnboardingOverlay();
+      });
+  }
 
-  // 3. Firebase Auth sign-out
-  (auth ? auth.signOut() : Promise.resolve()).then(() => {
-    // Reset cached profile state in memory
-    try { renderProfileCard(); } catch(e) {}
-    showToast('Signed out.', 'success');
-    // Reset overlay to sign-in step for the next user
-    document.getElementById('ob-step-auth').style.display    = 'block';
-    document.getElementById('ob-step-profile').style.display = 'none';
-    document.getElementById('ob-auth-uid').value = '';
-    document.getElementById('ob-auth-pw').value  = '';
-    document.getElementById('ob-auth-error').textContent = '';
-    document.getElementById('ob-auth-error').style.display = 'none';
-    if (_obIsRegisterMode) obToggleAuthMode(); // reset to sign-in mode
-    document.getElementById('ob-auth-heading').textContent = 'Welcome back';
-    _showOnboardingOverlay();
-  }).catch(() => {
-    _clearUserLocalStorage();
-    try { renderProfileCard(); } catch(e) {}
-    _showOnboardingOverlay();
-  });
+  // ── Step 1: Write Firestore revocation record, then wipe ───────
+  if (uid && typeof db !== 'undefined' && db) {
+    // 3-second timeout ensures network issues don't block the logout
+    let _done = false;
+    const _timer = setTimeout(() => {
+      if (_done) return;
+      _done = true;
+      _doLocalSignOut();
+    }, 3000);
+
+    db.collection('session_revocations').doc(uid).set({
+      revokedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      revokedBy:   SESSION_ID,  // which session triggered the logout
+      userAgent:   navigator.userAgent.slice(0, 200),
+    })
+    .then(() => {
+      if (_done) return;
+      _done = true;
+      clearTimeout(_timer);
+      _doLocalSignOut();
+    })
+    .catch(() => {
+      if (_done) return;
+      _done = true;
+      clearTimeout(_timer);
+      // Firestore write failed — proceed anyway (fail-open for UX)
+      _doLocalSignOut();
+    });
+  } else {
+    // No Firestore or no UID — just do the local wipe directly
+    _doLocalSignOut();
+  }
 }
 
 // ── Settings profile sync ─────────────────────────────────────────
