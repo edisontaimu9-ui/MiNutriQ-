@@ -179,6 +179,13 @@
 
       <button class="ob-submit" id="ob-auth-btn" onclick="obAuthSubmit()">Sign In →</button>
 
+      <p style="text-align:center;margin:12px 0 0;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">
+        By continuing, you agree to our
+        <button type="button" onclick="openLegalModal('terms')" style="background:none;border:none;color:var(--accent,var(--teal));font-family:var(--mono);font-size:10px;cursor:pointer;padding:0;text-decoration:underline">Terms</button>
+        and
+        <button type="button" onclick="openLegalModal('privacy')" style="background:none;border:none;color:var(--accent,var(--teal));font-family:var(--mono);font-size:10px;cursor:pointer;padding:0;text-decoration:underline">Privacy Policy</button>
+      </p>
+
       <div style="text-align:center;margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
         <span id="ob-auth-toggle-text">Don't have an account?</span>
         <button type="button" onclick="obToggleAuthMode()" id="ob-auth-toggle-btn"
