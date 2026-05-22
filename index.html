@@ -2422,6 +2422,13 @@ var photoCropper = (function () {
   <div class="hp-footer">
     Oasis · Clinical Nutrition Decision Support System<br>
     &copy; 2026 All Rights Reserved
+    <div class="hp-footer-links">
+      <button class="hp-footer-btn" onclick="openLegalModal('privacy')">Privacy Policy</button>
+      <span class="hp-footer-sep">·</span>
+      <button class="hp-footer-btn" onclick="openLegalModal('terms')">Terms of Service</button>
+      <span class="hp-footer-sep">·</span>
+      <button class="hp-footer-btn" onclick="openLegalModal('disclaimer')">Medical Disclaimer</button>
+    </div>
   </div>
 
 </div><!-- /tab-home -->
@@ -10147,6 +10154,179 @@ function ntClear(scopeId, resultIds) {
 })();
 </script>
 <!-- ════════════ END FEEDBACK MODAL LOGIC ════════════ -->
+
+<!-- ════════════ LEGAL MODALS (Privacy · ToS · Disclaimer) ════════════ -->
+<div id="legal-overlay" onclick="closeLegalModal()" aria-hidden="true"></div>
+<div id="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
+  <div class="legal-modal-header">
+    <span id="legal-modal-title" class="legal-modal-title"></span>
+    <button class="legal-modal-close" onclick="closeLegalModal()" aria-label="Close">✕</button>
+  </div>
+  <div id="legal-modal-body" class="legal-modal-body"></div>
+</div>
+
+<script>
+/* ── Legal Modal Logic ── */
+(function(){
+  var CONTENT = {
+    privacy: {
+      title: 'Privacy Policy — Oasis',
+      html: `<p class="legal-effective">Effective Date: May 20, 2026</p>
+<p>Oasis respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how Oasis collects, uses, stores, and protects user data.</p>
+
+<h3>Information We Collect</h3>
+<p>Oasis may collect:</p>
+<ul>
+  <li>Full name</li>
+  <li>Email address</li>
+  <li>Profile photo</li>
+  <li>Staff or student ID</li>
+  <li>Nutrition and anthropometric data</li>
+  <li>Screening and assessment records</li>
+  <li>Device and usage information</li>
+</ul>
+
+<h3>How We Use Information</h3>
+<p>We use collected data to:</p>
+<ul>
+  <li>Provide app functionality</li>
+  <li>Store nutrition assessments</li>
+  <li>Improve user experience</li>
+  <li>Maintain security</li>
+  <li>Support educational and clinical workflows</li>
+  <li>Respond to feedback and support requests</li>
+</ul>
+
+<h3>Data Security</h3>
+<p>We use reasonable security measures including secure authentication, encrypted connections (HTTPS), restricted database access, and protected cloud storage. However, no system can guarantee complete security.</p>
+
+<h3>Sharing of Information</h3>
+<p>Oasis does not sell user data. Information may only be shared with essential service providers, when required by law, or to protect the safety and security of users and the platform.</p>
+
+<h3>User Responsibilities</h3>
+<p>Users are responsible for maintaining account confidentiality, providing accurate information, and using Oasis ethically and professionally.</p>
+
+<h3>Data Retention</h3>
+<p>User data may be retained as necessary for app functionality, record keeping, and legal and security purposes. Users may request account deletion where applicable.</p>
+
+<h3>Third-Party Services</h3>
+<p>Oasis may use third-party platforms including <a href="https://firebase.google.com/" target="_blank" rel="noopener">Firebase</a> and <a href="https://cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a>. These services operate under their own privacy policies.</p>
+
+<h3>Changes to This Policy</h3>
+<p>This Privacy Policy may be updated periodically. Continued use of Oasis means acceptance of updated policies.</p>
+
+<h3>Contact</h3>
+<p>For questions or concerns: <a href="mailto:edisontaimu9@gmail.com">edisontaimu9@gmail.com</a></p>`
+    },
+
+    terms: {
+      title: 'Terms of Service — Oasis',
+      html: `<p class="legal-effective">Effective Date: May 20, 2026</p>
+<p>By accessing or using Oasis, you agree to these Terms of Service.</p>
+
+<h3>Purpose of Oasis</h3>
+<p>Oasis is a nutrition and clinical support platform intended for educational and professional assistance purposes. Oasis does not replace licensed healthcare professionals or clinical judgment.</p>
+
+<h3>User Accounts</h3>
+<p>Users agree to provide accurate account information, keep login credentials secure, and accept responsibility for activity under their account. Oasis reserves the right to suspend accounts involved in misuse or unauthorized activity.</p>
+
+<h3>Acceptable Use</h3>
+<p>Users must not:</p>
+<ul>
+  <li>Upload malicious or illegal content</li>
+  <li>Attempt unauthorized access</li>
+  <li>Misuse clinical information</li>
+  <li>Reverse engineer or disrupt the platform</li>
+  <li>Use Oasis for unlawful purposes</li>
+</ul>
+
+<h3>Intellectual Property</h3>
+<p>All Oasis branding, design, and original content remain the property of Oasis unless otherwise stated. Users may not copy, redistribute, or commercially exploit Oasis content without permission.</p>
+
+<h3>Limitation of Liability</h3>
+<p>Oasis is provided "as is" without warranties of any kind. Oasis and its developers are not liable for clinical decisions made using the platform, data loss, service interruptions, inaccuracies in generated outputs, or damages arising from app usage. Users are responsible for verifying all information independently.</p>
+
+<h3>Service Availability</h3>
+<p>Oasis may be modified, updated, suspended, or discontinued at any time without prior notice.</p>
+
+<h3>Termination</h3>
+<p>Oasis reserves the right to suspend or terminate accounts that violate these terms.</p>
+
+<h3>Governing Principles</h3>
+<p>Users are expected to comply with applicable laws, institutional policies, and professional ethical standards when using Oasis.</p>
+
+<h3>Contact</h3>
+<p><a href="mailto:edisontaimu9@gmail.com">edisontaimu9@gmail.com</a></p>`
+    },
+
+    disclaimer: {
+      title: 'Medical Disclaimer — Oasis',
+      html: `<div class="legal-warning-box">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  <span>Important Notice</span>
+</div>
+
+<p>Oasis is a nutrition and clinical decision-support platform designed for educational and professional assistance purposes only.</p>
+
+<p>Oasis:</p>
+<ul>
+  <li>Does not provide medical diagnosis</li>
+  <li>Does not replace healthcare professionals</li>
+  <li>Does not guarantee clinical accuracy</li>
+  <li>Should not be used as the sole basis for patient care decisions</li>
+</ul>
+
+<p>All information, calculations, recommendations, and AI-generated outputs must be independently reviewed and verified by qualified professionals before clinical application.</p>
+
+<h3>User Responsibility</h3>
+<p>Users are solely responsible for:</p>
+<ul>
+  <li>Clinical interpretation</li>
+  <li>Patient management decisions</li>
+  <li>Verification of calculations and recommendations</li>
+  <li>Compliance with institutional and professional guidelines</li>
+</ul>
+
+<div class="legal-emergency-box">
+  If you are experiencing a medical emergency, seek immediate assistance from qualified healthcare professionals or emergency services.
+</div>
+
+<h3>Acknowledgement</h3>
+<p>By using Oasis, you acknowledge and agree that:</p>
+<ul>
+  <li>Oasis is an assistive tool only</li>
+  <li>Use of the platform is at your own discretion and risk</li>
+  <li>Oasis developers are not responsible for clinical outcomes resulting from use of the platform</li>
+</ul>`
+    }
+  };
+
+  window.openLegalModal = function(type) {
+    var data = CONTENT[type];
+    if (!data) return;
+    document.getElementById('legal-modal-title').textContent = data.title;
+    document.getElementById('legal-modal-body').innerHTML = data.html;
+    document.getElementById('legal-modal-body').scrollTop = 0;
+    document.getElementById('legal-overlay').classList.add('open');
+    document.getElementById('legal-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeLegalModal = function() {
+    document.getElementById('legal-overlay').classList.remove('open');
+    document.getElementById('legal-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var m = document.getElementById('legal-modal');
+      if (m && m.classList.contains('open')) closeLegalModal();
+    }
+  });
+})();
+</script>
+<!-- ════════════ END LEGAL MODALS ════════════ -->
 
 </body>
 </html>
