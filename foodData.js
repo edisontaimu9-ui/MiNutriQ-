@@ -7244,19 +7244,19 @@ const UCT_EXCHANGE_DB = [
 // 3. UCT EXCHANGE TYPE LABELS, COLORS & MACROS
 // ══════════════════════════════════════════════════════════════
 const UCT_EXCHANGE_TYPE_LABELS = {
-  starch:         'Starch',
-  protein_lean:   'Protein (Lean)',
-  protein_medium: 'Protein (Medium-fat)',
-  protein_high:   'Protein (High-fat)',
-  milk_ff:        'Milk (Fat-free)',
-  milk_lf:        'Milk (Low-fat)',
-  milk_fc:        'Milk (Full cream)',
-  vegetable:      'Vegetables',
-  fruit:          'Fruits',
-  fat:            'Fats & Oils',
-  sugar:          'Sugar/Sweets',
-  alcohol:        'Alcohol',
-  combo:          'Combination Foods',
+  starch:   'Starch',
+  lean:     'Protein (Lean)',
+  medium:   'Protein (Medium-fat)',
+  highfat:  'Protein (High-fat)',
+  milk_ff:  'Milk (Fat-free)',
+  milk_lf:  'Milk (Low-fat)',
+  milk_fc:  'Milk (Full cream)',
+  veg:      'Vegetables',
+  fruit:    'Fruits',
+  fat:      'Fats & Oils',
+  sugar:    'Sugar/Sweets',
+  alcohol:  'Alcohol',
+  combo:    'Combination Foods',
 };
 const UCT_TYPE_LABELS = {
   starch:'Starch', lean:'Protein (Lean)', medium:'Protein (Med-fat)',
