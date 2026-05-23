@@ -1,7 +1,7 @@
 /**
  * library.js — Oasis Nutrition Resource Library Module
  * ─────────────────────────────────────────────────────────────
- * Version  : 1.0.0
+ * Version  : 1.1.0
  * Author   : Edison Taimu
  * Project  : Oasis Clinical Nutrition Decision Support Tool
  *
@@ -62,7 +62,7 @@
   /* ════════════════════════════════════════════════════
      CONSTANTS
   ════════════════════════════════════════════════════ */
-  var LIB_VERSION       = '1.0.0';
+  var LIB_VERSION       = '1.1.0';
   var LIB_COL           = 'library_resources';
   var LIB_BM_COL        = 'library_bookmarks';
   var LIB_STORAGE       = 'library_uploads';
@@ -121,6 +121,27 @@
   var _selectedFile  = null;
   var _unsubMine     = null;    // Firestore real-time unsubscribe fn
   var _initDone      = false;
+
+  /* ── API credentials ── */
+  var RS_PUBMED_KEY      = 'fc03ed1b136070a34347982eb7950c9e3307';
+  var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
+  var RS_PAGE_SIZE       = 10;
+
+  /* ── Unified background search state ── */
+  var _bgLoading         = false;   // background API fetch in progress
+  var _bgCurrentQuery    = '';      // guards against stale async updates
+  var _bgPubMedPage      = 1;
+  var _bgOAPage          = 1;
+  var _bgPubMedTotal     = 0;
+  var _bgOATotal         = 0;
+  var _bgHasMore         = { pubmed: false, oa: false };
+  var _bgExternalResults = [];      // deduped PubMed + OpenAlex results
+  var _bgObserver        = null;    // IntersectionObserver for infinite scroll
+  /* Legacy RS vars kept for internal reuse */
+  var _rsYearFrom        = '';
+  var _rsYearTo          = '';
+  var _rsOpenAccess      = false;
+
 
   /* ════════════════════════════════════════════════════
      CSS INJECTION
@@ -364,7 +385,79 @@
         'padding:7px 14px;border-radius:7px;font-family:var(--mono);font-size:9.5px;font-weight:700;',
         'letter-spacing:.5px;background:rgba(29,233,212,.08);border:1px solid rgba(29,233,212,.25);',
         'color:var(--teal);cursor:pointer;transition:all .15s}',
-      '.lib-act-link:hover{background:rgba(29,233,212,.15)}'
+      '.lib-act-link:hover{background:rgba(29,233,212,.15)}',
+
+      /* ── Research Search panel ── */
+      '.rs-source-tabs{display:flex;gap:6px;margin-bottom:12px}',
+      '.rs-stab{flex:1;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);',
+        'border-radius:8px;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.5px;',
+        'color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;white-space:nowrap}',
+      '.rs-stab:hover{border-color:rgba(29,233,212,.35);color:var(--text)}',
+      '.rs-stab.active{background:rgba(29,233,212,.1);border-color:rgba(29,233,212,.4);color:var(--teal)}',
+      '.rs-result{background:var(--surface);border:1px solid var(--border);border-radius:12px;',
+        'padding:13px 14px;margin-bottom:9px;transition:border-color .15s}',
+      '.rs-result:hover{border-color:rgba(29,233,212,.3)}',
+      '.rs-result-title{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-bright);',
+        'margin-bottom:4px;line-height:1.35}',
+      '.rs-result-authors{font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:5px;',
+        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.rs-result-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}',
+      '.rs-result-journal{font-family:var(--mono);font-size:9px;color:var(--teal);',
+        'background:rgba(29,233,212,.06);border:1px solid rgba(29,233,212,.15);',
+        'border-radius:100px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}',
+      '.rs-result-year{font-family:var(--mono);font-size:9px;color:var(--text-muted)}',
+      '.rs-result-cite{font-family:var(--mono);font-size:9px;color:var(--text-muted)}',
+      '.rs-result-abstract{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6;',
+        'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}',
+      '.rs-result-abstract.expanded{-webkit-line-clamp:unset;display:block}',
+      '.rs-result-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}',
+      '.rs-act-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:6px;',
+        'font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.4px;',
+        'background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);',
+        'cursor:pointer;transition:all .15s;text-decoration:none}',
+      '.rs-act-btn:hover{border-color:var(--teal);color:var(--teal)}',
+      '.rs-act-btn.primary{background:rgba(29,233,212,.08);border-color:rgba(29,233,212,.25);color:var(--teal)}',
+      '.rs-source-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.5px;',
+        'padding:2px 7px;border-radius:100px;text-transform:uppercase}',
+      '.rs-badge-pubmed{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa}',
+      '.rs-badge-openalex{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:#a78bfa}',
+      '.rs-filter-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}',
+      '.rs-filter-sel{background:var(--surface2);border:1px solid var(--border);border-radius:7px;',
+        'padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);',
+        'outline:none;cursor:pointer;flex:1;min-width:120px}',
+      '.rs-filter-sel:focus{border-color:rgba(29,233,212,.4)}',
+      '.rs-sort-info{font-family:var(--mono);font-size:9px;color:var(--text-muted);',
+        'margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}',
+      '.rs-oa-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;',
+        'border-radius:100px;font-family:var(--mono);font-size:8px;font-weight:700;',
+        'background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--green)}',
+      '.rs-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px}',
+      '.rs-pg-btn{padding:6px 16px;background:var(--surface2);border:1px solid var(--border);',
+        'border-radius:7px;font-family:var(--mono);font-size:10px;color:var(--text-dim);',
+        'cursor:pointer;transition:all .15s}',
+      '.rs-pg-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}',
+      '.rs-pg-btn:disabled{opacity:.35;cursor:not-allowed}',
+      '.rs-pg-info{font-family:var(--mono);font-size:9.5px;color:var(--text-dim)}',
+
+      /* ── Layer selector tabs (kept for theme compat) ── */
+      /* ── Mixed results divider ── */
+      '.lib-src-divider{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.8px;',
+        'text-transform:uppercase;color:var(--text-muted);padding:10px 0 6px;display:flex;align-items:center;gap:8px}',
+      '.lib-src-divider::after{content:"";flex:1;height:1px;background:var(--border)}',
+      /* ── Oasis Library source badge ── */
+      '.rs-badge-oasis{background:rgba(29,233,212,.1);border:1px solid rgba(29,233,212,.25);color:var(--teal)}',
+      /* ── Background loading status bar ── */
+      '.lib-bg-status{display:flex;align-items:center;gap:8px;padding:8px 12px;',
+        'font-family:var(--mono);font-size:9.5px;color:var(--text-muted);',
+        'border:1px solid var(--border);border-radius:8px;margin-bottom:8px}',
+      '.lib-bg-spin{width:14px;height:14px;border-radius:50%;',
+        'border:2px solid var(--border);border-top-color:var(--teal);',
+        'animation:libSpin .65s linear infinite;flex-shrink:0}',
+      /* ── Load-more button ── */
+      '.lib-load-more{width:100%;padding:10px;margin-top:8px;background:var(--surface2);',
+        'border:1px solid var(--border);border-radius:9px;font-family:var(--mono);',
+        'font-size:10px;color:var(--text-dim);cursor:pointer;transition:all .15s}',
+      '.lib-load-more:hover{border-color:var(--teal);color:var(--teal)}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -479,7 +572,7 @@
   /* ════════════════════════════════════════════════════
      RENDER: RESOURCE CARD
   ════════════════════════════════════════════════════ */
-  function _cardHTML(r, showStatus) {
+  function _cardHTML(r, showStatus, showOasisBadge) {
     var tags = (r.tags || []).slice(0,6).map(function(t){
       return '<span class="lib-tag">'+_esc(t)+'</span>';
     }).join('');
@@ -499,7 +592,10 @@
         '</div>' +
       '</div>' +
       '<div class="lib-card-foot">' +
-        '<div class="lib-card-cat">'+statusBadge+_esc(_catLabel(r.category))+'</div>' +
+        '<div class="lib-card-cat">' +
+          (showOasisBadge ? '<span class="rs-source-badge rs-badge-oasis" style="margin-right:5px">Oasis</span>' : '') +
+          statusBadge+_esc(_catLabel(r.category))+
+        '</div>' +
         '<div class="lib-card-acts" onclick="event.stopPropagation()">' +
           '<button class="lib-ibtn'+(bm?' bm-active':'')+'" data-bmid="'+r.id+'" title="'+(bm?'Remove bookmark':'Bookmark')+'" '+
             'onclick="LibraryModule.toggleBookmark(\''+r.id+'\')">'+(bm?'🔖':'☆')+'</button>' +
@@ -533,17 +629,274 @@
     });
   }
 
+  /* ─────────────────────────────────────────────────────────────────────────
+     _renderBrowse — called when no query is active (shows local library only)
+     _renderUnified — called when a query is active (shows merged results)
+  ───────────────────────────────────────────────────────────────────────── */
   function _renderBrowse() {
-    var cont = document.getElementById('lib-browse-cards');
+    var cont   = document.getElementById('lib-browse-cards');
+    var badge  = document.getElementById('lib-res-count');
+    var label  = document.getElementById('lib-results-label');
+    var pgCont = document.getElementById('rs-pagination');
+    var infoEl = document.getElementById('rs-sort-info');
     if (!cont) return;
+
+    // Always show local filters when no query
+    var localFilters = document.getElementById('lib-local-filters');
+    if (localFilters) localFilters.style.display = 'block';
+    if (pgCont) pgCont.innerHTML = '';
+    if (infoEl) infoEl.style.display = 'none';
+    if (label)  label.textContent = 'Library Resources';
+
+    _removeSentinel();
     var filtered = _applyFilters(_resources);
-    var badge = document.getElementById('lib-res-count');
     if (badge) badge.textContent = filtered.length;
-    if (!filtered.length) {
-      cont.innerHTML = _renderEmpty('No approved resources found.<br>Try different search terms or filters.');
+    cont.innerHTML = filtered.length
+      ? filtered.map(function(r){ return _cardHTML(r, false, false); }).join('')
+      : _renderEmpty('No approved resources found.<br>Try different filters or upload a resource.');
+  }
+
+  function _renderUnified() {
+    var cont   = document.getElementById('lib-browse-cards');
+    var badge  = document.getElementById('lib-res-count');
+    var label  = document.getElementById('lib-results-label');
+    var pgCont = document.getElementById('rs-pagination');
+    var infoEl = document.getElementById('rs-sort-info');
+    if (!cont) return;
+
+    // Hide local filters while a query is active
+    var localFilters = document.getElementById('lib-local-filters');
+    if (localFilters) localFilters.style.display = 'none';
+    if (pgCont) pgCont.innerHTML = '';
+
+    var localResults  = _applyFilters(_resources);
+    var extResults    = _bgExternalResults;
+    var totalVisible  = localResults.length + extResults.length;
+
+    if (label) label.textContent = 'Search Results';
+    if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa ? '+' : '');
+
+    var html = '';
+
+    // ── Oasis Library results first ─────────────────────────────────────────
+    if (localResults.length) {
+      html += '<div class="lib-src-divider">Oasis Library (' + localResults.length + ')</div>';
+      html += localResults.map(function(r){ return _cardHTML(r, false, true); }).join('');
+    }
+
+    // ── Background loading indicator ────────────────────────────────────────
+    if (_bgLoading && extResults.length === 0) {
+      html +=
+        '<div class="lib-bg-status">' +
+          '<span class="lib-bg-spin"></span>' +
+          '<span>Searching PubMed &amp; OpenAlex…</span>' +
+        '</div>';
+    }
+
+    // ── External results ────────────────────────────────────────────────────
+    if (extResults.length) {
+      var pmCount = extResults.filter(function(r){ return r._src === 'pubmed'; }).length;
+      var oaCount = extResults.filter(function(r){ return r._src === 'openalex'; }).length;
+      var extLabel = [];
+      if (pmCount) extLabel.push(pmCount + ' PubMed');
+      if (oaCount) extLabel.push(oaCount + ' OpenAlex');
+      html += '<div class="lib-src-divider">' + extLabel.join(' · ') + '</div>';
+      html += extResults.map(function(r, i){ return _rsCardHTML(r, i); }).join('');
+    }
+
+    // ── Nothing found ───────────────────────────────────────────────────────
+    if (!html) {
+      html = _bgLoading
+        ? '<div class="lib-bg-status"><span class="lib-bg-spin"></span><span>Searching…</span></div>'
+        : _renderEmpty('No results found.<br>Try different keywords.');
+    }
+
+    cont.innerHTML = html;
+
+    // ── Sort info bar ────────────────────────────────────────────────────────
+    if (infoEl) {
+      if (extResults.length) {
+        var totParts = [];
+        if (_bgPubMedTotal) totParts.push(_bgPubMedTotal.toLocaleString() + ' PubMed');
+        if (_bgOATotal)     totParts.push(_bgOATotal.toLocaleString() + ' OpenAlex');
+        infoEl.style.display = 'flex';
+        infoEl.innerHTML =
+          '<span>' + totParts.join(' · ') + ' total results</span>' +
+          (_rsOpenAccess ? '<span class="rs-oa-badge">🔓 Open Access</span>' : '');
+      } else {
+        infoEl.style.display = 'none';
+      }
+    }
+
+    // ── Infinite scroll sentinel ─────────────────────────────────────────────
+    if (_bgHasMore.pubmed || _bgHasMore.oa) {
+      _addSentinel();
+    } else {
+      _removeSentinel();
+    }
+  }
+
+  /* ── Deduplication helpers ────────────────────────────────────────────────── */
+  function _normalizeTitle(t) {
+    return String(t || '').toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function _titleSimilarity(a, b) {
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    var aW = a.split(' ').filter(function(w){ return w.length > 3; });
+    var bW = b.split(' ').filter(function(w){ return w.length > 3; });
+    if (!aW.length || !bW.length) return 0;
+    var shared = aW.filter(function(w){ return bW.indexOf(w) !== -1; });
+    return shared.length / Math.max(aW.length, bW.length);
+  }
+
+  function _deduplicateExternal(candidates) {
+    // Build lookup from local library items
+    var localTitles = _resources.map(function(r){ return _normalizeTitle(r.title); });
+    var localDois = {};
+    _resources.forEach(function(r){ if (r.doi) localDois[r.doi] = true; });
+    // Build lookup from already-loaded external results
+    var existingIds = {};
+    _bgExternalResults.forEach(function(r){ existingIds[r.id] = true; });
+    var existingTitles = _bgExternalResults.map(function(r){ return _normalizeTitle(r.title); });
+
+    return candidates.filter(function(c) {
+      if (existingIds[c.id]) return false;
+      var cTitle = _normalizeTitle(c.title);
+      if (c.doi && localDois[c.doi]) return false;
+      if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
+      if (existingTitles.some(function(et){ return _titleSimilarity(et, cTitle) > 0.80; })) return false;
+      return true;
+    });
+  }
+
+  /* ── Unified search — fires on every keystroke (with debounce) ────────────── */
+  var _bgSearchTimer = null;
+  function _unifiedSearch(q) {
+    clearTimeout(_bgSearchTimer);
+    _bgSearchTimer = setTimeout(function(){ _doUnifiedSearch(q); }, 300);
+  }
+
+  function _doUnifiedSearch(q) {
+    _bgCurrentQuery    = q;
+    _bgExternalResults = [];
+    _bgPubMedPage      = 1;
+    _bgOAPage          = 1;
+    _bgPubMedTotal     = 0;
+    _bgOATotal         = 0;
+    _bgHasMore         = { pubmed: false, oa: false };
+    _removeSentinel();
+
+    if (!q || q.trim().length < 2) {
+      _bgLoading = false;
+      _renderBrowse();
       return;
     }
-    cont.innerHTML = filtered.map(function(r){ return _cardHTML(r, false); }).join('');
+
+    // Show local results immediately (offline-safe)
+    _bgLoading = navigator.onLine !== false;
+    _renderUnified();
+
+    if (!_bgLoading) {
+      _toast('Offline — showing Oasis Library results only', 'info');
+      return;
+    }
+
+    var capturedQuery = q;
+    Promise.all([
+      _rsPubMedSearch(q, 1, _rsYearFrom, _rsYearTo)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _rsOASearch(q, 1, _rsYearFrom, _rsYearTo, _rsOpenAccess)
+        .catch(function(){ return { results: [], total: 0 }; })
+    ]).then(function(arrs) {
+      if (_bgCurrentQuery !== capturedQuery) return; // stale
+      var pmData = arrs[0], oaData = arrs[1];
+      _bgPubMedTotal    = pmData.total;
+      _bgOATotal        = oaData.total;
+      _bgHasMore.pubmed = pmData.results.length === RS_PAGE_SIZE && pmData.total > RS_PAGE_SIZE;
+      _bgHasMore.oa     = oaData.results.length === RS_PAGE_SIZE && oaData.total > RS_PAGE_SIZE;
+
+      var allExt = pmData.results.concat(oaData.results);
+      _bgExternalResults = _deduplicateExternal(allExt);
+      _bgLoading = false;
+      _renderUnified();
+    }).catch(function() {
+      if (_bgCurrentQuery !== capturedQuery) return;
+      _bgLoading = false;
+      _renderUnified();
+    });
+  }
+
+  /* ── Load more (infinite scroll) ─────────────────────────────────────────── */
+  function _loadMoreExternal() {
+    if (_bgLoading) return;
+    var q = _searchQ.trim();
+    if (!q || (!_bgHasMore.pubmed && !_bgHasMore.oa)) return;
+    _bgLoading = true;
+
+    var promises = [];
+    if (_bgHasMore.pubmed) {
+      _bgPubMedPage++;
+      promises.push(
+        _rsPubMedSearch(q, _bgPubMedPage, _rsYearFrom, _rsYearTo)
+          .then(function(d){
+            _bgPubMedTotal    = d.total;
+            _bgHasMore.pubmed = d.results.length === RS_PAGE_SIZE;
+            return d.results;
+          }).catch(function(){ _bgHasMore.pubmed = false; return []; })
+      );
+    }
+    if (_bgHasMore.oa) {
+      _bgOAPage++;
+      promises.push(
+        _rsOASearch(q, _bgOAPage, _rsYearFrom, _rsYearTo, _rsOpenAccess)
+          .then(function(d){
+            _bgOATotal    = d.total;
+            _bgHasMore.oa = d.results.length === RS_PAGE_SIZE;
+            return d.results;
+          }).catch(function(){ _bgHasMore.oa = false; return []; })
+      );
+    }
+
+    Promise.all(promises).then(function(arrs) {
+      var newResults = [].concat.apply([], arrs);
+      var deduped = _deduplicateExternal(newResults);
+      deduped.forEach(function(r){ _bgExternalResults.push(r); });
+      _bgLoading = false;
+      _renderUnified();
+    });
+  }
+
+  /* ── IntersectionObserver sentinel ───────────────────────────────────────── */
+  function _addSentinel() {
+    var cont = document.getElementById('lib-browse-cards');
+    if (!cont) return;
+    if (_bgObserver) _bgObserver.disconnect();
+    // Append sentinel if not present
+    var sentinel = document.getElementById('lib-scroll-sentinel');
+    if (!sentinel) {
+      sentinel = document.createElement('div');
+      sentinel.id = 'lib-scroll-sentinel';
+      sentinel.style.cssText = 'height:48px;display:flex;align-items:center;justify-content:center';
+      sentinel.innerHTML = '<div class="lib-bg-spin"></div>';
+      cont.appendChild(sentinel);
+    }
+    if (typeof IntersectionObserver !== 'undefined') {
+      _bgObserver = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting && !_bgLoading) _loadMoreExternal();
+      }, { rootMargin: '200px' });
+      _bgObserver.observe(sentinel);
+    }
+  }
+
+  function _removeSentinel() {
+    if (_bgObserver) { _bgObserver.disconnect(); _bgObserver = null; }
+    var s = document.getElementById('lib-scroll-sentinel');
+    if (s) s.remove();
   }
 
   function _renderMine() {
@@ -1152,6 +1505,228 @@
     if (fi) fi.value = '';
   }
 
+
+  /* ════════════════════════════════════════════════════
+     RESEARCH SEARCH — PubMed + OpenAlex
+  ════════════════════════════════════════════════════ */
+
+  /* ── PubMed: search → fetch summaries ── */
+  function _rsPubMedSearch(query, page, yearFrom, yearTo) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var retstart = (page - 1) * RS_PAGE_SIZE;
+    var base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+    var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + RS_PAGE_SIZE +
+      '&retstart=' + retstart +
+      '&api_key=' + RS_PUBMED_KEY +
+      '&term=' + encodeURIComponent(query) +
+      (yearFrom || yearTo
+        ? '&datetype=pdat&mindate=' + (yearFrom || '1900') + '/01/01' +
+          '&maxdate=' + (yearTo || new Date().getFullYear()) + '/12/31'
+        : '');
+
+    return fetch(searchUrl)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var ids = (data.esearchresult && data.esearchresult.idlist) || [];
+        var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
+        if (!ids.length) return { results: [], total: total };
+
+        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + RS_PUBMED_KEY +
+          '&id=' + ids.join(',');
+        return fetch(summaryUrl)
+          .then(function(r){ return r.json(); })
+          .then(function(sd) {
+            var uids = (sd.result && sd.result.uids) || [];
+            var results = uids.map(function(uid) {
+              var doc = sd.result[uid] || {};
+              var authors = (doc.authors || []).slice(0,4).map(function(a){ return a.name; });
+              if ((doc.authors||[]).length > 4) authors.push('et al.');
+              return {
+                _src:     'pubmed',
+                id:       'pm_' + uid,
+                pmid:     uid,
+                title:    doc.title  || 'Untitled',
+                authors:  authors.join(', '),
+                journal:  (doc.source || ''),
+                year:     (doc.pubdate || '').slice(0, 4),
+                doi:      doc.elocationid ? doc.elocationid.replace(/^doi: /i,'') : '',
+                abstract: '',   // fetched on expand
+                openAccess: false,
+                url:      'https://pubmed.ncbi.nlm.nih.gov/' + uid + '/'
+              };
+            });
+            return { results: results, total: total };
+          });
+      });
+  }
+
+  /* ── PubMed: fetch abstract for a single PMID ── */
+  function _rsPubMedAbstract(pmid, callback) {
+    var url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?' +
+      'db=pubmed&retmode=xml&rettype=abstract&api_key=' + RS_PUBMED_KEY +
+      '&id=' + pmid;
+    fetch(url)
+      .then(function(r){ return r.text(); })
+      .then(function(xml) {
+        var m = xml.match(/<AbstractText[^>]*>([\s\S]*?)<\/AbstractText>/);
+        callback(m ? m[1].replace(/<[^>]+>/g,'').trim() : '');
+      })
+      .catch(function(){ callback(''); });
+  }
+
+  /* ── OpenAlex: search ── */
+  function _rsOASearch(query, page, yearFrom, yearTo, openAccess) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var filters = [];
+    if (yearFrom)   filters.push('from_publication_date:' + yearFrom + '-01-01');
+    if (yearTo)     filters.push('to_publication_date:' + yearTo + '-12-31');
+    if (openAccess) filters.push('is_oa:true');
+
+    var url = 'https://api.openalex.org/works?' +
+      'search=' + encodeURIComponent(query) +
+      '&page=' + page + '&per-page=' + RS_PAGE_SIZE +
+      '&mailto=' + encodeURIComponent(RS_OPENALEX_MAILTO) +
+      (filters.length ? '&filter=' + encodeURIComponent(filters.join(',')) : '');
+
+    return fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var works = data.results || [];
+        var total = (data.meta && data.meta.count) || 0;
+        var results = works.map(function(w) {
+          var authors = (w.authorships || []).slice(0,4).map(function(a){
+            return a.author && a.author.display_name ? a.author.display_name : '';
+          }).filter(Boolean);
+          if ((w.authorships||[]).length > 4) authors.push('et al.');
+          var journal = (w.primary_location && w.primary_location.source &&
+                         w.primary_location.source.display_name) || '';
+          var doi = (w.doi || '').replace('https://doi.org/','');
+          var oaUrl = (w.primary_location && w.primary_location.pdf_url) ||
+                      (w.open_access && w.open_access.oa_url) || '';
+          return {
+            _src:      'openalex',
+            id:        'oa_' + (w.id || '').replace('https://openalex.org/',''),
+            oaId:      w.id || '',
+            title:     w.title || 'Untitled',
+            authors:   authors.join(', '),
+            journal:   journal,
+            year:      w.publication_year ? String(w.publication_year) : '',
+            doi:       doi,
+            abstract:  w.abstract || '',
+            openAccess: !!(w.open_access && w.open_access.is_oa),
+            oaUrl:     oaUrl,
+            citedBy:   w.cited_by_count || 0,
+            url:       doi ? 'https://doi.org/' + doi : (w.id || '#')
+          };
+        });
+        return { results: results, total: total };
+      });
+  }
+
+  /* ── _rsSearch / pagination removed — replaced by _unifiedSearch / _loadMoreExternal ── */
+
+  /* ── Individual result card ── */
+  function _rsCardHTML(r, idx) {
+    var srcBadge = r._src === 'pubmed'
+      ? '<span class="rs-source-badge rs-badge-pubmed">PubMed</span>'
+      : '<span class="rs-source-badge rs-badge-openalex">OpenAlex</span>';
+    var oaBadge = r.openAccess ? '<span class="rs-oa-badge">🔓 Open Access</span>' : '';
+    var citeStr = (r.citedBy !== undefined && r.citedBy !== null)
+      ? '<span class="rs-result-cite">Cited by ' + r.citedBy.toLocaleString() + '</span>'
+      : '';
+
+    var actBtns = '<a class="rs-act-btn primary" href="' + _esc(r.url) + '" target="_blank" rel="noopener noreferrer">View Article ↗</a>';
+    if (r.doi) {
+      actBtns += '<a class="rs-act-btn" href="https://doi.org/' + _esc(r.doi) + '" target="_blank" rel="noopener noreferrer">DOI ↗</a>';
+    }
+    if (r.oaUrl) {
+      actBtns += '<a class="rs-act-btn" href="' + _esc(r.oaUrl) + '" target="_blank" rel="noopener noreferrer">Free PDF ↗</a>';
+    }
+    actBtns += '<button class="rs-act-btn" onclick="LibraryModule.rsCopyRef(\''+idx+'\')" title="Copy citation">📋 Cite</button>';
+
+    var hasAbstract = !!r.abstract;
+    var abstractHtml = hasAbstract
+      ? '<div class="rs-result-abstract" id="rs-abs-'+idx+'">' + _esc(r.abstract) + '</div>' +
+        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          'onclick="LibraryModule.rsToggleAbstract(\''+idx+'\',\'' + (r._src === 'pubmed' ? r.pmid : '') + '\')">Show more</button>'
+      : (r._src === 'pubmed'
+        ? '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+            'onclick="LibraryModule.rsToggleAbstract(\''+idx+'\',\''+r.pmid+'\')">Load abstract</button>'
+        : '');
+
+    return '<div class="rs-result" id="rs-card-'+idx+'">' +
+      '<div class="rs-result-title">'+_esc(r.title)+'</div>' +
+      (r.authors ? '<div class="rs-result-authors">'+_esc(r.authors)+'</div>' : '') +
+      '<div class="rs-result-meta">' +
+        srcBadge +
+        (r.journal ? '<span class="rs-result-journal" title="'+_esc(r.journal)+'">'+_esc(r.journal)+'</span>' : '') +
+        (r.year ? '<span class="rs-result-year">'+_esc(r.year)+'</span>' : '') +
+        oaBadge +
+        citeStr +
+      '</div>' +
+      abstractHtml +
+      '<div class="rs-result-acts">' + actBtns + '</div>' +
+    '</div>';
+  }
+
+  /* ── Toggle / load abstract ── */
+  function _rsToggleAbstract(idx, pmid) {
+    var absEl = document.getElementById('rs-abs-' + idx);
+    var r = _bgExternalResults[idx];
+
+    if (!absEl) {
+      // Create the element and fetch if needed
+      var card = document.getElementById('rs-card-' + idx);
+      if (!card) return;
+      var actsDiv = card.querySelector('.rs-result-acts');
+      var newAbs = document.createElement('div');
+      newAbs.id = 'rs-abs-' + idx;
+      newAbs.className = 'rs-result-abstract';
+      newAbs.textContent = 'Loading abstract…';
+      card.insertBefore(newAbs, actsDiv ? actsDiv.previousSibling : null);
+      absEl = newAbs;
+
+      if (pmid && r && !r.abstract) {
+        _rsPubMedAbstract(pmid, function(text) {
+          if (r) r.abstract = text;
+          absEl.textContent = text || 'No abstract available.';
+        });
+      } else if (r && r.abstract) {
+        absEl.textContent = r.abstract;
+      } else {
+        absEl.textContent = 'No abstract available.';
+      }
+      return;
+    }
+
+    // Toggle expand/collapse
+    var btn = absEl.nextElementSibling;
+    var expanded = absEl.classList.toggle('expanded');
+    if (btn && btn.tagName === 'BUTTON') btn.textContent = expanded ? 'Show less' : 'Show more';
+  }
+
+  /* ── Copy citation for a research result ── */
+  function _rsCopyRef(idx) {
+    var r = _bgExternalResults[idx];
+    if (!r) return;
+    var cit = (r.authors || 'Unknown') + '. ' + (r.title || '') + '. ' +
+      (r.journal ? r.journal + '. ' : '') +
+      (r.year ? r.year + '. ' : '') +
+      (r.doi ? 'doi:' + r.doi : r.url || '');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(cit)
+        .then(function(){ _toast('Citation copied!','success'); })
+        .catch(function(){ _toast('Could not copy','warning'); });
+    } else {
+      _toast('Clipboard not supported','info');
+    }
+  }
+
+  /* ── Open-access filter (still used internally) ── */
+  function _rsSetOpenAccess(val) {
+    _rsOpenAccess = val;
+  }
+
   /* ════════════════════════════════════════════════════
      PANEL SWITCH
   ════════════════════════════════════════════════════ */
@@ -1223,25 +1798,38 @@
           '<button class="lib-sntab"        data-lpanel="bookmarks" onclick="LibraryModule.switchPanel(\'bookmarks\')">Bookmarks</button>'+
         '</nav>'+
 
-        /* ── Browse panel ── */
+        /* ── Browse panel — unified layered search ── */
         '<div class="lib-panel active" id="lib-panel-browse">'+
+          /* Search bar — single unified input */
           '<div class="lib-searchbar">'+
             '<span class="lib-search-icon">⌕</span>'+
-            '<input type="text" id="lib-q" placeholder="Search resources…" autocomplete="off" spellcheck="false" '+
+            '<input type="text" id="lib-q" '+
+              'placeholder="Search Oasis Library · PubMed · OpenAlex…" '+
+              'autocomplete="off" spellcheck="false" '+
               'oninput="LibraryModule.onSearch(this.value)" '+
               'onkeydown="if(event.key===\'Enter\')LibraryModule.onSearch(this.value)">'+
             '<button class="lib-search-btn" onclick="LibraryModule.onSearch(document.getElementById(\'lib-q\').value)">Search</button>'+
           '</div>'+
-          '<div class="lib-chips" id="lib-cat-chips">'+
-            '<button class="lib-chip active" data-cat="" onclick="LibraryModule.filterByCategory(\'\')">All</button>'+
-            catChips+
+          /* Category / type chips — hidden while query is active */
+          '<div id="lib-local-filters">'+
+            '<div class="lib-chips" id="lib-cat-chips">'+
+              '<button class="lib-chip active" data-cat="" onclick="LibraryModule.filterByCategory(\'\')">All</button>'+
+              catChips+
+            '</div>'+
+            '<div class="lib-chips" id="lib-type-chips">'+
+              '<button class="lib-chip active" data-ftype="" onclick="LibraryModule.filterByType(\'\')">All Types</button>'+
+              typeChips+
+            '</div>'+
           '</div>'+
-          '<div class="lib-chips" id="lib-type-chips">'+
-            '<button class="lib-chip active" data-ftype="" onclick="LibraryModule.filterByType(\'\')">All Types</button>'+
-            typeChips+
+          /* Results info bar */
+          '<div class="lib-sec-hdr" style="margin-top:4px">'+
+            '<div class="lib-sec-title" id="lib-results-label">Library Resources</div>'+
+            '<div class="lib-badge" id="lib-res-count">0</div>'+
           '</div>'+
-          '<div class="lib-sec-hdr"><div class="lib-sec-title">Resources</div><div class="lib-badge" id="lib-res-count">0</div></div>'+
+          '<div class="rs-sort-info" id="rs-sort-info" style="display:none"></div>'+
+          /* Unified results container */
           '<div id="lib-browse-cards" class="lib-cards"><div class="lib-spin"></div></div>'+
+          '<div id="rs-pagination"></div>'+
         '</div>'+
 
         /* ── Upload panel ── */
@@ -1563,8 +2151,19 @@
     /* Browse */
     onSearch: function(val) {
       _searchQ = val || '';
-      _renderBrowse();
+      if (_searchQ.trim().length >= 2) {
+        _unifiedSearch(_searchQ);
+      } else {
+        // Clear query — fall back to local library view
+        clearTimeout(_bgSearchTimer);
+        _bgLoading         = false;
+        _bgExternalResults = [];
+        _bgHasMore         = { pubmed: false, oa: false };
+        _removeSentinel();
+        _renderBrowse();
+      }
     },
+
     filterByCategory: function(cat) {
       _filterCat = cat;
       document.querySelectorAll('[data-cat]').forEach(function(el) {
@@ -1605,7 +2204,15 @@
     getCitation:    function(resourceId, style) {
       var r = _resources.concat(_myResources).filter(function(x){return x.id===resourceId;})[0];
       return r ? _genCitation(r, style || 'apa') : '';
-    }
+    },
+
+    /* Research Search */
+    rsToggleAbstract:  _rsToggleAbstract,
+    rsCopyRef:         _rsCopyRef,
+    loadMoreExternal:  _loadMoreExternal,
+    rsSetOpenAccess:   _rsSetOpenAccess,
+    rsSetYearFrom:     function(val) { _rsYearFrom = val || ''; },
+    rsSetYearTo:       function(val) { _rsYearTo = val || ''; }
   };
 
   /* Boot */
