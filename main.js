@@ -2660,6 +2660,18 @@ function _populateProfileDrawer(){
   if(emailEl) emailEl.textContent = email;
   if(signOutRow) signOutRow.style.display = p ? 'block' : 'none';
 
+  // Email verification badge
+  var badgeEl = document.getElementById('pdr-email-verify-badge');
+  if (badgeEl) {
+    var authInst = (typeof _getAuth === 'function') ? _getAuth() : null;
+    var fbUser   = authInst ? authInst.currentUser : null;
+    if (fbUser && email !== '—') {
+      _ntUpdateVerifyStatusUI(fbUser.emailVerified);
+    } else {
+      badgeEl.innerHTML = '';
+    }
+  }
+
   // Avatar: photo → initials → role icon
   if(avatarEl){
     var photoURL = (p && p.photoURL) ? p.photoURL : null;
@@ -9321,6 +9333,133 @@ async function obForgotPassword() {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// EMAIL VERIFICATION & IN-APP PASSWORD RESET
+// ═══════════════════════════════════════════════════════════════
+
+// ── Verification banner ───────────────────────────────────────
+
+/** Show the "please verify your email" banner at the top of the app. */
+function _ntShowVerifyBanner() {
+  const banner = document.getElementById('email-verify-banner');
+  if (!banner) return;
+  banner.style.display = 'flex';
+}
+
+/**
+ * Dismiss the verification banner for this session.
+ * Stored in sessionStorage so it reappears on next page load
+ * until the email is actually verified.
+ */
+function ntDismissVerifyBanner() {
+  const banner = document.getElementById('email-verify-banner');
+  if (banner) banner.style.display = 'none';
+  try { sessionStorage.setItem('nt_verify_banner_dismissed', '1'); } catch(e) {}
+}
+
+/**
+ * Check whether the signed-in user's email is verified.
+ * Shows the banner if not. Called after every sign-in, registration,
+ * and session restore.
+ */
+function _ntCheckEmailVerification(user) {
+  if (!user) return;
+  if (user.emailVerified) {
+    // Hide banner in case it was showing from a prior state
+    const banner = document.getElementById('email-verify-banner');
+    if (banner) banner.style.display = 'none';
+    _ntUpdateVerifyStatusUI(true);
+    return;
+  }
+  // Unverified — show banner unless the user dismissed it this session
+  try {
+    if (sessionStorage.getItem('nt_verify_banner_dismissed')) return;
+  } catch(e) {}
+  _ntShowVerifyBanner();
+}
+
+/**
+ * Update the verified / unverified badge inside the profile drawer.
+ * @param {boolean} verified
+ */
+function _ntUpdateVerifyStatusUI(verified) {
+  const badge = document.getElementById('pdr-email-verify-badge');
+  if (!badge) return;
+  if (verified) {
+    badge.innerHTML = `<span style="color:var(--green,#34d399);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">✓ Verified</span>`;
+  } else {
+    badge.innerHTML = `<span style="color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">⚠ Unverified · <button type="button" onclick="ntResendVerification()" style="background:none;border:none;color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline">Resend</button></span>`;
+  }
+}
+
+// ── Resend verification email ─────────────────────────────────
+
+/**
+ * Resend a verification email to the currently signed-in user.
+ * Called from the top banner and from the profile drawer badge.
+ */
+async function ntResendVerification() {
+  const auth = _getAuth();
+  const user = auth?.currentUser;
+
+  if (!user) {
+    if (typeof showToast === 'function') showToast('Sign in first to resend a verification email.', 'info');
+    return;
+  }
+
+  // Reload the user object from Firebase to get the latest emailVerified flag
+  try { await user.reload(); } catch(e) {}
+
+  if (auth.currentUser?.emailVerified) {
+    if (typeof showToast === 'function') showToast('✓ Your email is already verified!', 'success');
+    ntDismissVerifyBanner();
+    _ntUpdateVerifyStatusUI(true);
+    return;
+  }
+
+  try {
+    await user.sendEmailVerification();
+    if (typeof showToast === 'function') {
+      showToast('✓ Verification email sent to ' + (user.email || 'your address'), 'success');
+    }
+  } catch(err) {
+    const msg = err.code === 'auth/too-many-requests'
+      ? 'Too many requests — please wait a moment before trying again.'
+      : 'Could not send verification email. Please try again.';
+    if (typeof showToast === 'function') showToast(msg, 'error');
+  }
+}
+
+// ── Password reset from profile drawer ───────────────────────
+
+/**
+ * Send a password reset email to the currently signed-in user's address.
+ * Accessible from the Profile drawer so the user never has to sign out first.
+ */
+async function ntSendPasswordResetFromProfile() {
+  const auth = _getAuth();
+  if (!auth) {
+    if (typeof showToast === 'function') showToast('Password reset unavailable in offline mode.', 'info');
+    return;
+  }
+
+  const email = auth.currentUser?.email || getUserProfile()?.email || '';
+  if (!email) {
+    if (typeof showToast === 'function') showToast('No email address on file.', 'info');
+    return;
+  }
+
+  try {
+    await auth.sendPasswordResetEmail(email);
+    if (typeof showToast === 'function') {
+      showToast('✓ Password reset email sent to ' + email.replace(/(.{2}).+(@.+)/, '$1…$2'), 'success');
+    }
+  } catch(err) {
+    // Intentionally vague — don't leak account existence
+    if (typeof showToast === 'function') showToast('✓ If a reset email can be sent, it\'s on its way.', 'success');
+  }
+}
+
 function _obSkipToProfile(uidVal) {
   // ── Reset all profile form fields to blank ───────────────────
   // Prevents previous user's data bleeding into a new registration.
@@ -9681,6 +9820,9 @@ async function obSubmit() {
       const cred = await auth.createUserWithEmailAndPassword(regEmail, regPw);
       const fbUid = cred.user?.uid || null;
 
+      // Send email verification immediately — user must confirm ownership
+      cred.user.sendEmailVerification().catch(() => {});
+
       // Account created — clear the pending credentials immediately
       _obPendingReg = null;
 
@@ -9714,6 +9856,9 @@ function _obFinish(name, isReturning) {
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
   showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
+  // Check whether the signed-in user's email is verified and surface the banner if not
+  const auth = _getAuth();
+  if (auth?.currentUser) _ntCheckEmailVerification(auth.currentUser);
 }
 
 // ── Onboarding gate ───────────────────────────────────────────────
@@ -9781,6 +9926,7 @@ function _obResolveProfile(user) {
           saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', email: user.email || d.email || '', photoURL: d.photoURL || '', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
           try { renderProfileCard(); } catch(e) {}
           _hideOnboardingOverlay();
+          _ntCheckEmailVerification(user);
         } else {
           _showOnboardingOverlay();
         }
@@ -9791,6 +9937,7 @@ function _obResolveProfile(user) {
   } else {
     // Profile present — hide overlay, let user in
     _hideOnboardingOverlay();
+    _ntCheckEmailVerification(user);
   }
 }
 
