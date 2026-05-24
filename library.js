@@ -127,6 +127,17 @@
   var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
   var RS_PAGE_SIZE       = 10;
 
+  /* ── Frontiers Search API config ── */
+  var RS_FRONTIERS_KEY  = 'e41a769c392c4760760a1b4702795e77';   // Elsevier-registered key
+  var RS_FRONTIERS_BASE = 'https://search-api.frontiersin.org/api/V1';
+  var RS_FRONTIERS_SIZE = 10;
+
+  /* ── Layer 3: Elsevier (Scopus + ScienceDirect) config ── */
+  var RS_ELSEVIER_KEY    = 'e41a769c392c4760760a1b4702795e77';
+  var RS_ELSEVIER_SCOPUS = 'https://api.elsevier.com/content/search/scopus';
+  var RS_ELSEVIER_SD     = 'https://api.elsevier.com/content/search/sciencedirect';
+  var RS_ELSEVIER_SIZE   = 10;
+
   /* ── Layer 2: Clinical Guidelines config ── */
   var GL_PAGE_SIZE = 8;
   /* Journal anchors + affiliation filters for target guideline orgs:
@@ -178,6 +189,16 @@
   var _bgGLPage      = 1;
   var _bgGLTotal     = 0;
   var _bgHasMoreGL   = false;
+  /* ── Layer 3: Frontiers in Research state ── */
+  var _bgFRResults   = [];          // deduped Frontiers results
+  var _bgFRPage      = 1;
+  var _bgFRTotal     = 0;
+  var _bgHasMoreFR   = false;
+  /* ── Layer 3b: Elsevier (Scopus + ScienceDirect) state ── */
+  var _bgELResults   = [];          // deduped Elsevier results (Scopus + ScienceDirect merged)
+  var _bgELPage      = 1;
+  var _bgELTotal     = 0;
+  var _bgHasMoreEL   = false;
   /* Legacy RS vars kept for internal reuse */
   var _rsYearFrom        = '';
   var _rsYearTo          = '';
@@ -462,6 +483,15 @@
         'padding:2px 7px;border-radius:100px;text-transform:uppercase}',
       '.rs-badge-pubmed{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa}',
       '.rs-badge-openalex{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:#a78bfa}',
+      /* ── Frontiers badge ── */
+      '.rs-badge-frontiers{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:#f97316}',
+      '.lib-fr-divider{color:#f97316!important}',
+      '.lib-fr-divider::after{background:rgba(249,115,22,.2)!important}',
+      /* ── Elsevier (Scopus + ScienceDirect) badges ── */
+      '.rs-badge-scopus{background:rgba(255,102,0,.12);border:1px solid rgba(255,102,0,.3);color:#ff6600}',
+      '.rs-badge-scidir{background:rgba(230,46,0,.1);border:1px solid rgba(230,46,0,.25);color:#e62e00}',
+      '.lib-el-divider{color:#ff6600!important}',
+      '.lib-el-divider::after{background:rgba(255,102,0,.2)!important}',
       /* ── Layer 2 guideline badges ── */
       '.rs-badge-guideline{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#34d399}',
       '.rs-badge-review{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24}',
@@ -720,10 +750,10 @@
 
     var localResults  = _applyFilters(_resources);
     var extResults    = _bgExternalResults;
-    var totalVisible  = localResults.length + _bgGLResults.length + extResults.length;
+    var totalVisible  = localResults.length + _bgGLResults.length + _bgFRResults.length + _bgELResults.length + extResults.length;
 
     if (label) label.textContent = 'Search Results';
-    if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreGL ? '+' : '');
+    if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreGL || _bgHasMoreFR || _bgHasMoreEL ? '+' : '');
 
     var html = '';
 
@@ -742,12 +772,31 @@
       html += _bgGLResults.map(function(r, i){ return _glCardHTML(r, i); }).join('');
     }
 
+    // ── Layer 3: Frontiers in Research ──────────────────────────────────────
+    if (_bgFRResults.length) {
+      var frLabel = 'Frontiers in Research (' + _bgFRResults.length + (_bgHasMoreFR ? '+' : '') + ')';
+      html += '<div class="lib-src-divider lib-fr-divider">' + frLabel + '</div>';
+      html += _bgFRResults.map(function(r, i){ return _frCardHTML(r, i); }).join('');
+    }
+
+    // ── Layer 3b: Elsevier (Scopus + ScienceDirect) ──────────────────────────
+    if (_bgELResults.length) {
+      var elScopusCount = _bgELResults.filter(function(r){ return r._sub === 'scopus'; }).length;
+      var elSDCount     = _bgELResults.filter(function(r){ return r._sub === 'sciencedirect'; }).length;
+      var elParts = [];
+      if (elScopusCount) elParts.push(elScopusCount + ' Scopus');
+      if (elSDCount)     elParts.push(elSDCount + ' ScienceDirect');
+      var elLabel = 'Elsevier — ' + elParts.join(' · ') + (_bgHasMoreEL ? '+' : '');
+      html += '<div class="lib-src-divider lib-el-divider">' + elLabel + '</div>';
+      html += _bgELResults.map(function(r, i){ return _elCardHTML(r, i); }).join('');
+    }
+
     // ── Background loading indicator ────────────────────────────────────────
     if (_bgLoading && extResults.length === 0) {
       html +=
         '<div class="lib-bg-status">' +
           '<span class="lib-bg-spin"></span>' +
-          '<span>Searching guidelines &amp; research…</span>' +
+          '<span>Searching guidelines, Frontiers, Elsevier &amp; research…</span>' +
         '</div>';
     }
 
@@ -773,10 +822,12 @@
 
     // ── Sort info bar ────────────────────────────────────────────────────────
     if (infoEl) {
-      if (extResults.length) {
+      if (extResults.length || _bgFRResults.length || _bgELResults.length) {
         var totParts = [];
         if (_bgPubMedTotal) totParts.push(_bgPubMedTotal.toLocaleString() + ' PubMed');
         if (_bgOATotal)     totParts.push(_bgOATotal.toLocaleString() + ' OpenAlex');
+        if (_bgFRTotal)     totParts.push(_bgFRTotal.toLocaleString() + ' Frontiers');
+        if (_bgELTotal)     totParts.push(_bgELTotal.toLocaleString() + ' Elsevier');
         infoEl.style.display = 'flex';
         infoEl.innerHTML =
           '<span>' + totParts.join(' · ') + ' total results</span>' +
@@ -787,7 +838,7 @@
     }
 
     // ── Infinite scroll sentinel ─────────────────────────────────────────────
-    if (_bgHasMore.pubmed || _bgHasMore.oa) {
+    if (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreFR || _bgHasMoreEL) {
       _addSentinel();
     } else {
       _removeSentinel();
@@ -821,19 +872,24 @@
     var existingIds = {};
     _bgExternalResults.forEach(function(r){ existingIds[r.id] = true; });
     var existingTitles = _bgExternalResults.map(function(r){ return _normalizeTitle(r.title); });
-    // Exclude items already shown in Layer 2 (Clinical Guidelines)
+    // Exclude items already shown in Layer 2 (Clinical Guidelines) or Layer 3 (Frontiers)
     var glPmids = {};
     _bgGLResults.forEach(function(r){ if (r.pmid) glPmids[r.pmid] = true; });
     var glTitles = _bgGLResults.map(function(r){ return _normalizeTitle(r.title); });
+    var frDois = {};
+    _bgFRResults.forEach(function(r){ if (r.doi) frDois[r.doi] = true; });
+    var frTitles = _bgFRResults.map(function(r){ return _normalizeTitle(r.title); });
 
     return candidates.filter(function(c) {
       if (existingIds[c.id]) return false;
       if (c.pmid && glPmids[c.pmid]) return false;
       var cTitle = _normalizeTitle(c.title);
       if (c.doi && localDois[c.doi]) return false;
+      if (c.doi && frDois[c.doi]) return false;
       if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
       if (existingTitles.some(function(et){ return _titleSimilarity(et, cTitle) > 0.80; })) return false;
       if (glTitles.some(function(gt){ return _titleSimilarity(gt, cTitle) > 0.80; })) return false;
+      if (frTitles.some(function(ft){ return _titleSimilarity(ft, cTitle) > 0.80; })) return false;
       return true;
     });
   }
@@ -857,6 +913,14 @@
     _bgGLPage          = 1;
     _bgGLTotal         = 0;
     _bgHasMoreGL       = false;
+    _bgFRResults       = [];
+    _bgFRPage          = 1;
+    _bgFRTotal         = 0;
+    _bgHasMoreFR       = false;
+    _bgELResults       = [];
+    _bgELPage          = 1;
+    _bgELTotal         = 0;
+    _bgHasMoreEL       = false;
     _removeSentinel();
 
     if (!q || q.trim().length < 2) {
@@ -880,11 +944,15 @@
         .catch(function(){ return { results: [], total: 0 }; }),
       _rsOASearch(q, 1, _rsYearFrom, _rsYearTo, _rsOpenAccess)
         .catch(function(){ return { results: [], total: 0 }; }),
-      _glPubMedSearch(q, 1)
+      _glUnifiedSearch(q, 1)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _rsFrontiersSearch(q, 1)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _rsElsevierSearch(q, 1)
         .catch(function(){ return { results: [], total: 0 }; })
     ]).then(function(arrs) {
       if (_bgCurrentQuery !== capturedQuery) return; // stale
-      var pmData = arrs[0], oaData = arrs[1], glData = arrs[2];
+      var pmData = arrs[0], oaData = arrs[1], glData = arrs[2], frData = arrs[3], elData = arrs[4];
       _bgPubMedTotal    = pmData.total;
       _bgOATotal        = oaData.total;
       _bgHasMore.pubmed = pmData.results.length === RS_PAGE_SIZE && pmData.total > RS_PAGE_SIZE;
@@ -894,6 +962,16 @@
       _bgGLTotal        = glData.total;
       _bgHasMoreGL      = glData.results.length === GL_PAGE_SIZE && glData.total > GL_PAGE_SIZE;
       _bgGLResults      = _deduplicateGL(glData.results);
+
+      // Layer 3: Frontiers — deduplicated against local library + GL
+      _bgFRTotal        = frData.total;
+      _bgHasMoreFR      = frData.results.length === RS_FRONTIERS_SIZE && frData.total > RS_FRONTIERS_SIZE;
+      _bgFRResults      = _deduplicateFR(frData.results);
+
+      // Layer 3b: Elsevier — deduplicated against local library + GL + FR
+      _bgELTotal        = elData.total;
+      _bgHasMoreEL      = elData.results.length === RS_ELSEVIER_SIZE && elData.total > RS_ELSEVIER_SIZE;
+      _bgELResults      = _deduplicateEL(elData.results);
 
       var allExt = pmData.results.concat(oaData.results);
       _bgExternalResults = _deduplicateExternal(allExt);
@@ -910,7 +988,7 @@
   function _loadMoreExternal() {
     if (_bgLoading) return;
     var q = _searchQ.trim();
-    if (!q || (!_bgHasMore.pubmed && !_bgHasMore.oa)) return;
+    if (!q || (!_bgHasMore.pubmed && !_bgHasMore.oa && !_bgHasMoreFR && !_bgHasMoreEL)) return;
     _bgLoading = true;
 
     var promises = [];
@@ -935,6 +1013,26 @@
             return d.results;
           }).catch(function(){ _bgHasMore.oa = false; return []; })
       );
+    }
+    if (_bgHasMoreFR) {
+      _bgFRPage++;
+      _rsFrontiersSearch(q, _bgFRPage)
+        .then(function(d) {
+          _bgFRTotal   = d.total;
+          _bgHasMoreFR = d.results.length === RS_FRONTIERS_SIZE;
+          var deduped  = _deduplicateFR(d.results);
+          deduped.forEach(function(r){ _bgFRResults.push(r); });
+        }).catch(function(){ _bgHasMoreFR = false; });
+    }
+    if (_bgHasMoreEL) {
+      _bgELPage++;
+      _rsElsevierSearch(q, _bgELPage)
+        .then(function(d) {
+          _bgELTotal   = d.total;
+          _bgHasMoreEL = d.results.length === RS_ELSEVIER_SIZE;
+          var deduped  = _deduplicateEL(d.results);
+          deduped.forEach(function(r){ _bgELResults.push(r); });
+        }).catch(function(){ _bgHasMoreEL = false; });
     }
 
     Promise.all(promises).then(function(arrs) {
@@ -1702,8 +1800,8 @@
 
   /* ═══════════════════════════════════════════════════════════════
      LAYER 2: CLINICAL GUIDELINES SEARCH
-     Auto-searches PubMed filtered by guideline/review pub-types
-     and org-specific journal + affiliation anchors.
+     Auto-searches PubMed, OpenAlex, Frontiers, and Elsevier (Scopus)
+     — all filtered/boosted toward guidelines and systematic reviews.
      Results tagged GUIDELINE (green) or REVIEW (amber).
      Ranked: guideline > review > article.
   ═══════════════════════════════════════════════════════════════ */
@@ -1726,6 +1824,174 @@
     if (j.indexOf('gastroenterol') !== -1)      return 'ACG';
     if (j.indexOf('crit care med') !== -1)      return 'ESICM';
     return '';
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LAYER 2: CLINICAL GUIDELINES — UNIFIED MULTI-SOURCE SEARCH
+     Fires PubMed, OpenAlex, Frontiers, and Elsevier (Scopus) in
+     parallel — all filtered/boosted toward guidelines and reviews.
+     Results are merged, deduped within the batch, then ranked:
+       guideline > review > article.
+  ═══════════════════════════════════════════════════════════════ */
+
+  /* GL query boost terms — appended to user query for non-PubMed sources */
+  var GL_BOOST_TERMS = 'guideline systematic review meta-analysis clinical practice consensus';
+
+  /* Detect pub-type from title / subtype strings */
+  function _glDetectPubType(title, subtype) {
+    var t = ((title || '') + ' ' + (subtype || '')).toLowerCase();
+    if (t.indexOf('guideline') !== -1 || t.indexOf('clinical practice') !== -1 ||
+        t.indexOf('position statement') !== -1 || t.indexOf('consensus') !== -1) return 'guideline';
+    if (t.indexOf('systematic review') !== -1 || t.indexOf('meta-analysis') !== -1 ||
+        t.indexOf('review') !== -1) return 'review';
+    return 'article';
+  }
+
+  /* Unified wrapper — fires all 4 sources in parallel */
+  function _glUnifiedSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    return Promise.all([
+      _glPubMedSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glOASearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glFrontiersGLSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glElsevierSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; })
+    ]).then(function(arrs) {
+      var combinedTotal = arrs.reduce(function(s, d){ return s + (d.total || 0); }, 0);
+      var all = [].concat.apply([], arrs.map(function(d){ return d.results; }));
+      /* Dedup within batch by DOI then title */
+      var seenDois = {}, seenTitles = [];
+      var merged = all.filter(function(r) {
+        if (r.doi && seenDois[r.doi.toLowerCase()]) return false;
+        if (r.doi) seenDois[r.doi.toLowerCase()] = true;
+        var t = _normalizeTitle(r.title);
+        if (seenTitles.some(function(st){ return _titleSimilarity(st, t) > 0.80; })) return false;
+        seenTitles.push(t);
+        return true;
+      });
+      /* Rank: guidelines first, reviews second, articles last */
+      merged.sort(function(a, b) {
+        var rank = { guideline: 0, review: 1, article: 2 };
+        return (rank[a._pubType] || 2) - (rank[b._pubType] || 2);
+      });
+      return { results: merged, total: combinedTotal };
+    });
+  }
+
+  /* ── GL sub-source: OpenAlex ── */
+  function _glOASearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var boosted = query + ' ' + GL_BOOST_TERMS;
+    var url = 'https://api.openalex.org/works?' +
+      'search=' + encodeURIComponent(boosted) +
+      '&filter=type:review' +
+      '&sort=cited_by_count:desc' +
+      '&per-page=' + GL_PAGE_SIZE +
+      '&page=' + page +
+      '&mailto=' + RS_OPENALEX_MAILTO;
+    return fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var total = (data.meta && data.meta.count) || 0;
+        var items = (data.results || []);
+        var results = items.map(function(w) {
+          var authors = (w.authorships || []).slice(0, 4).map(function(a){
+            return a.author && (a.author.display_name || '');
+          }).filter(Boolean);
+          if ((w.authorships || []).length > 4) authors.push('et al.');
+          var doi = (w.doi || '').replace(/^https?:\/\/doi\.org\//i, '');
+          var journal = (w.primary_location && w.primary_location.source &&
+            w.primary_location.source.display_name) || '';
+          return {
+            _src:      'guideline',
+            _sub:      'openalex',
+            _pubType:  _glDetectPubType(w.title, ''),
+            _org:      _glDetectOrg(journal, journal),
+            id:        'gl_oa_' + (w.id || '').replace('https://openalex.org/', ''),
+            pmid:      '',
+            title:     w.title || 'Untitled',
+            authors:   authors.join(', '),
+            journal:   journal,
+            year:      w.publication_year ? String(w.publication_year) : '',
+            doi:       doi,
+            abstract:  w.abstract || '',
+            openAccess: !!(w.open_access && w.open_access.is_oa),
+            url:       doi ? 'https://doi.org/' + doi : (w.id || '#')
+          };
+        });
+        return { results: results, total: total };
+      });
+  }
+
+  /* ── GL sub-source: Frontiers ── */
+  function _glFrontiersGLSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var enhanced = query + ' ' + GL_BOOST_TERMS;
+    return _rsFrontiersSearch(enhanced, page).then(function(data) {
+      var results = data.results.map(function(r) {
+        return Object.assign({}, r, {
+          _src:     'guideline',
+          _sub:     'frontiers',
+          _pubType: _glDetectPubType(r.title, ''),
+          _org:     _glDetectOrg(r.journal, r.journal),
+          id:       'gl_fr_' + r.id
+        });
+      });
+      return { results: results, total: data.total };
+    });
+  }
+
+  /* ── GL sub-source: Elsevier Scopus ── */
+  function _glElsevierSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var start = (page - 1) * GL_PAGE_SIZE;
+    var scopusQ = 'TITLE-ABS-KEY((' + query + ') AND (' +
+      'guideline OR "systematic review" OR "meta-analysis" OR ' +
+      '"clinical practice" OR consensus))';
+    var url = RS_ELSEVIER_SCOPUS +
+      '?query=' + encodeURIComponent(scopusQ) +
+      '&count=' + GL_PAGE_SIZE +
+      '&start=' + start +
+      '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,' +
+             'prism:doi,prism:url,dc:description,openaccess,subtype,subtypeDescription,eid';
+    return fetch(url, {
+      headers: { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var sr    = (data && data['search-results']) || {};
+      var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
+      var items = sr.entry || [];
+      var results = items.map(function(e, i) {
+        var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
+        var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+        var year = '';
+        var m = String(e['prism:coverDate'] || '').match(/\d{4}/);
+        if (m) year = m[0];
+        var journal = e['prism:publicationName'] || '';
+        return {
+          _src:      'guideline',
+          _sub:      'elsevier',
+          _pubType:  _glDetectPubType(e['dc:title'], e['subtypeDescription']),
+          _org:      _glDetectOrg(journal, journal),
+          id:        'gl_el_' + (e['eid'] || i + '_' + page),
+          pmid:      '',
+          title:     e['dc:title'] || 'Untitled',
+          authors:   e['dc:creator'] || '',
+          journal:   journal,
+          year:      year,
+          doi:       doi,
+          abstract:  e['dc:description'] || '',
+          openAccess: e['openaccess'] === '1' || e['openaccess'] === 1,
+          url:       url
+        };
+      });
+      return { results: results, total: total };
+    })
+    .catch(function(){ return { results: [], total: 0 }; });
   }
 
   /* PubMed search scoped to guideline orgs + guideline/review pub-types */
@@ -1811,6 +2077,13 @@
     var orgBadge  = r._org
       ? '<span class="rs-org-badge">' + _esc(r._org) + '</span>'
       : '';
+    /* Sub-source badge — shown for non-PubMed GL results */
+    var subLabels = { openalex: 'OpenAlex', frontiers: 'Frontiers', elsevier: 'Scopus' };
+    var subCls    = { openalex: 'rs-badge-openalex', frontiers: 'rs-badge-frontiers', elsevier: 'rs-badge-scopus' };
+    var subBadge  = (r._sub && subLabels[r._sub])
+      ? '<span class="rs-source-badge ' + (subCls[r._sub] || '') + '" style="opacity:.75">' +
+          subLabels[r._sub] + '</span>'
+      : '';
 
     var actBtns = '<a class="rs-act-btn primary" href="' + _esc(r.url) + '" ' +
       'target="_blank" rel="noopener noreferrer">View Guideline ↗</a>';
@@ -1833,7 +2106,7 @@
       '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
       (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
       '<div class="rs-result-meta">' +
-        typeBadge + orgBadge +
+        typeBadge + orgBadge + subBadge +
         (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
         (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
       '</div>' +
@@ -1887,6 +2160,411 @@
         .catch(function(){ _toast('Could not copy','warning'); });
     } else {
       _toast('Clipboard not supported','info');
+    }
+  }
+
+  /* ════════════════════════════════════════════════════
+     LAYER 3: FRONTIERS IN RESEARCH SEARCH API
+     Base: https://search-api.frontiersin.org/api/V1
+     Auth: X-ELS-APIKey header (Elsevier-registered key)
+  ════════════════════════════════════════════════════ */
+
+  /**
+   * Search the Frontiers Search API V1.
+   * Robust parsing handles multiple possible response shapes.
+   */
+  function _rsFrontiersSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var offset = (page - 1) * RS_FRONTIERS_SIZE;
+    var url = RS_FRONTIERS_BASE + '/search?' +
+      'query=' + encodeURIComponent(query) +
+      '&limit=' + RS_FRONTIERS_SIZE +
+      '&offset=' + offset;
+
+    return fetch(url, {
+      headers: {
+        'X-ELS-APIKey': RS_FRONTIERS_KEY,
+        'Accept':       'application/json'
+      }
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Frontiers API ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      /* ── Normalise response — multiple possible shapes ── */
+      var rawItems = [];
+      var total    = 0;
+
+      if (data && data.hits && Array.isArray(data.hits.hits)) {
+        // Shape A: Elasticsearch-style { hits: { total, hits: [...] } }
+        rawItems = data.hits.hits;
+        total    = (typeof data.hits.total === 'object')
+          ? (data.hits.total.value || 0)
+          : (data.hits.total || 0);
+      } else if (data && Array.isArray(data.results)) {
+        // Shape B: { results: [...], total: n }
+        rawItems = data.results;
+        total    = data.total || rawItems.length;
+      } else if (data && data.data && Array.isArray(data.data.results)) {
+        // Shape C: { data: { results: [...], total: n } }
+        rawItems = data.data.results;
+        total    = data.data.total || rawItems.length;
+      } else if (Array.isArray(data)) {
+        // Shape D: bare array
+        rawItems = data;
+        total    = rawItems.length;
+      }
+
+      var results = rawItems.map(function(item, i) {
+        /* source may be nested under _source (Elasticsearch) or flat */
+        var src = (item._source || item);
+
+        /* ── Authors ── */
+        var rawAuthors = src.authors || src.author || [];
+        var authors = [];
+        if (Array.isArray(rawAuthors)) {
+          authors = rawAuthors.slice(0, 4).map(function(a) {
+            return typeof a === 'string' ? a : (a.name || a.displayName || a.full_name || '');
+          }).filter(Boolean);
+          if (rawAuthors.length > 4) authors.push('et al.');
+        } else if (typeof rawAuthors === 'string') {
+          authors = [rawAuthors];
+        }
+
+        /* ── Journal ── */
+        var journal = src.journal || src.journalName || src.journal_name ||
+          (src.journal_abbr) || '';
+        if (journal && typeof journal === 'object') {
+          journal = journal.name || journal.title || '';
+        }
+
+        /* ── Year ── */
+        var year = '';
+        var pubDate = src.publicationDate || src.published || src.date ||
+          src.publication_date || src.publishedDate || '';
+        if (pubDate) {
+          var m = String(pubDate).match(/\d{4}/);
+          if (m) year = m[0];
+        }
+
+        /* ── DOI ── */
+        var doi = (src.doi || src.DOI || '').replace(/^https?:\/\/doi\.org\//i, '');
+
+        /* ── URL ── */
+        var articleUrl = src.url || src.articleUrl || src.article_url ||
+          src.frontiers_url || src.link || '';
+        if (!articleUrl && doi) {
+          articleUrl = 'https://doi.org/' + doi;
+        }
+        if (!articleUrl) {
+          articleUrl = 'https://www.frontiersin.org/search?query=' +
+            encodeURIComponent(src.title || query);
+        }
+
+        /* ── Abstract ── */
+        var abstract = src.abstract || src.abstractText || src.abstract_text || '';
+
+        /* ── Open Access — Frontiers is fully open access ── */
+        var oa = src.isOpenAccess !== undefined ? !!src.isOpenAccess : true;
+
+        return {
+          _src:       'frontiers',
+          id:         'fr_' + (src.id || src.articleId || src.pmid || i + '_' + page),
+          title:      src.title || 'Untitled',
+          authors:    authors.join(', '),
+          journal:    journal,
+          year:       year,
+          doi:        doi,
+          abstract:   abstract,
+          openAccess: oa,
+          url:        articleUrl
+        };
+      });
+
+      return { results: results, total: total };
+    });
+  }
+
+  /* Deduplicate Frontiers results against local library + GL results */
+  function _deduplicateFR(candidates) {
+    var localTitles = _resources.map(function(r){ return _normalizeTitle(r.title); });
+    var localDois   = {};
+    _resources.forEach(function(r){ if (r.doi) localDois[r.doi] = true; });
+    var glTitles = _bgGLResults.map(function(r){ return _normalizeTitle(r.title); });
+    var existingIds = {};
+    _bgFRResults.forEach(function(r){ existingIds[r.id] = true; });
+    var existingTitles = _bgFRResults.map(function(r){ return _normalizeTitle(r.title); });
+
+    return candidates.filter(function(c) {
+      if (existingIds[c.id]) return false;
+      var cTitle = _normalizeTitle(c.title);
+      if (c.doi && localDois[c.doi]) return false;
+      if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
+      if (existingTitles.some(function(et){ return _titleSimilarity(et, cTitle) > 0.80; })) return false;
+      if (glTitles.some(function(gt){ return _titleSimilarity(gt, cTitle) > 0.80; })) return false;
+      return true;
+    });
+  }
+
+  /* ── Frontiers result card ── */
+  function _frCardHTML(r, idx) {
+    var srcBadge = '<span class="rs-source-badge rs-badge-frontiers">Frontiers</span>';
+    var oaBadge  = r.openAccess ? '<span class="rs-oa-badge">🔓 Open Access</span>' : '';
+
+    var actBtns = '<a class="rs-act-btn primary" href="' + _esc(r.url) + '" ' +
+      'target="_blank" rel="noopener noreferrer">View Article ↗</a>';
+    if (r.doi) {
+      actBtns += '<a class="rs-act-btn" href="https://doi.org/' + _esc(r.doi) + '" ' +
+        'target="_blank" rel="noopener noreferrer">DOI ↗</a>';
+    }
+    actBtns += '<button class="rs-act-btn" onclick="LibraryModule.frCopyRef(' + idx + ')" ' +
+      'title="Copy citation">📋 Cite</button>';
+
+    var hasAbstract  = !!r.abstract;
+    var abstractHtml = hasAbstract
+      ? '<div class="rs-result-abstract" id="fr-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
+        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          'onclick="LibraryModule.frToggleAbstract(' + idx + ')">Show more</button>'
+      : '';
+
+    return '<div class="rs-result" id="fr-card-' + idx + '">' +
+      '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
+      (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
+      '<div class="rs-result-meta">' +
+        srcBadge + oaBadge +
+        (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
+        (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
+      '</div>' +
+      abstractHtml +
+      '<div class="rs-result-acts">' + actBtns + '</div>' +
+    '</div>';
+  }
+
+  /* Toggle abstract for Frontiers card */
+  function _frToggleAbstract(idx) {
+    var absEl = document.getElementById('fr-abs-' + idx);
+    if (!absEl) return;
+    var btn     = absEl.nextElementSibling;
+    var expanded = absEl.classList.toggle('expanded');
+    if (btn && btn.tagName === 'BUTTON') btn.textContent = expanded ? 'Show less' : 'Show more';
+  }
+
+  /* Copy APA-style citation for a Frontiers result */
+  function _frCopyRef(idx) {
+    var r = _bgFRResults[idx];
+    if (!r) return;
+    var cit = (r.authors || 'Unknown') + '. ' + (r.title || '') + '. ' +
+      (r.journal ? r.journal + '. ' : '') +
+      (r.year    ? r.year    + '. '  : '') +
+      (r.doi     ? 'doi:' + r.doi   : r.url || '');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(cit)
+        .then(function(){ _toast('Citation copied!', 'success'); })
+        .catch(function(){ _toast('Could not copy', 'warning'); });
+    } else {
+      _toast('Clipboard not supported', 'info');
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * Layer 3b: Elsevier — searches both Scopus and ScienceDirect in parallel,
+   * normalises their responses, tags each result by sub-source, and merges
+   * into one unified feed.  No UI selection required — always auto-queries.
+   * ────────────────────────────────────────────────────────────────────────── */
+  function _rsElsevierSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var start = (page - 1) * RS_ELSEVIER_SIZE;
+    var headers = {
+      'X-ELS-APIKey': RS_ELSEVIER_KEY,
+      'Accept':       'application/json'
+    };
+
+    /* ── Scopus ── */
+    var scopusUrl = RS_ELSEVIER_SCOPUS +
+      '?query=TITLE-ABS-KEY(' + encodeURIComponent(query) + ')' +
+      '&count=' + RS_ELSEVIER_SIZE +
+      '&start=' + start +
+      '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess,citedby-count,eid';
+
+    var scopusPromise = fetch(scopusUrl, { headers: headers })
+      .then(function(r) {
+        if (!r.ok) throw new Error('Scopus ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        var sr     = (data && data['search-results']) || {};
+        var total  = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
+        var items  = sr.entry || [];
+        var results = items.map(function(e, i) {
+          var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
+          var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+          var year = '';
+          var d = e['prism:coverDate'] || '';
+          var m = String(d).match(/\d{4}/);
+          if (m) year = m[0];
+          return {
+            _src:      'elsevier',
+            _sub:      'scopus',
+            id:        'el_sc_' + (e['eid'] || i + '_' + page),
+            title:     e['dc:title'] || 'Untitled',
+            authors:   e['dc:creator'] || '',
+            journal:   e['prism:publicationName'] || '',
+            year:      year,
+            doi:       doi,
+            abstract:  e['dc:description'] || '',
+            openAccess: e['openaccess'] === '1' || e['openaccess'] === 1,
+            cited:     e['citedby-count'] || '',
+            url:       url
+          };
+        });
+        return { results: results, total: total };
+      })
+      .catch(function() { return { results: [], total: 0 }; });
+
+    /* ── ScienceDirect ── */
+    var sdUrl = RS_ELSEVIER_SD +
+      '?query=' + encodeURIComponent(query) +
+      '&count=' + RS_ELSEVIER_SIZE +
+      '&start=' + start +
+      '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess';
+
+    var sdPromise = fetch(sdUrl, { headers: headers })
+      .then(function(r) {
+        if (!r.ok) throw new Error('ScienceDirect ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        var sr    = (data && data['search-results']) || {};
+        var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
+        var items = sr.entry || [];
+        var results = items.map(function(e, i) {
+          var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
+          var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+          var year = '';
+          var d = e['prism:coverDate'] || '';
+          var m = String(d).match(/\d{4}/);
+          if (m) year = m[0];
+          return {
+            _src:      'elsevier',
+            _sub:      'sciencedirect',
+            id:        'el_sd_' + (e['eid'] || e['dc:identifier'] || i + '_' + page),
+            title:     e['dc:title'] || 'Untitled',
+            authors:   e['dc:creator'] || '',
+            journal:   e['prism:publicationName'] || '',
+            year:      year,
+            doi:       doi,
+            abstract:  e['dc:description'] || '',
+            openAccess: e['openaccess'] === '1' || e['openaccess'] === 1,
+            url:       url
+          };
+        });
+        return { results: results, total: total };
+      })
+      .catch(function() { return { results: [], total: 0 }; });
+
+    /* ── Merge parallel results ── */
+    return Promise.all([scopusPromise, sdPromise]).then(function(both) {
+      var scData = both[0], sdData = both[1];
+      /* Interleave: Scopus first, then ScienceDirect.  Dedup by DOI within
+         this batch before handing off to _deduplicateEL. */
+      var seen = {};
+      var merged = [];
+      scData.results.concat(sdData.results).forEach(function(r) {
+        var key = r.doi ? r.doi.toLowerCase() : r.id;
+        if (!seen[key]) { seen[key] = true; merged.push(r); }
+      });
+      var combinedTotal = (scData.total || 0) + (sdData.total || 0);
+      return { results: merged, total: combinedTotal };
+    });
+  }
+
+  /* Deduplicate Elsevier results against local library + GL + FR + existing EL */
+  function _deduplicateEL(candidates) {
+    var localTitles = _resources.map(function(r){ return _normalizeTitle(r.title); });
+    var localDois   = {};
+    _resources.forEach(function(r){ if (r.doi) localDois[r.doi] = true; });
+    var glTitles = _bgGLResults.map(function(r){ return _normalizeTitle(r.title); });
+    var frDois   = {};
+    _bgFRResults.forEach(function(r){ if (r.doi) frDois[r.doi] = true; });
+    var frTitles = _bgFRResults.map(function(r){ return _normalizeTitle(r.title); });
+    var existingIds = {};
+    _bgELResults.forEach(function(r){ existingIds[r.id] = true; });
+    var existingTitles = _bgELResults.map(function(r){ return _normalizeTitle(r.title); });
+
+    return candidates.filter(function(c) {
+      if (existingIds[c.id]) return false;
+      var cTitle = _normalizeTitle(c.title);
+      if (c.doi && (localDois[c.doi] || frDois[c.doi])) return false;
+      if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
+      if (existingTitles.some(function(et){ return _titleSimilarity(et, cTitle) > 0.80; })) return false;
+      if (glTitles.some(function(gt){ return _titleSimilarity(gt, cTitle) > 0.80; })) return false;
+      if (frTitles.some(function(ft){ return _titleSimilarity(ft, cTitle) > 0.80; })) return false;
+      return true;
+    });
+  }
+
+  /* ── Elsevier result card ── */
+  function _elCardHTML(r, idx) {
+    var isScopus  = r._sub === 'scopus';
+    var srcBadge  = isScopus
+      ? '<span class="rs-source-badge rs-badge-scopus">Scopus</span>'
+      : '<span class="rs-source-badge rs-badge-scidir">ScienceDirect</span>';
+    var oaBadge   = r.openAccess ? '<span class="rs-oa-badge">🔓 Open Access</span>' : '';
+    var citBadge  = r.cited ? '<span class="rs-result-year" title="Cited by">📊 ' + r.cited + '</span>' : '';
+
+    var actBtns = '<a class="rs-act-btn primary" href="' + _esc(r.url || '#') + '" ' +
+      'target="_blank" rel="noopener noreferrer">View Article ↗</a>';
+    if (r.doi) {
+      actBtns += '<a class="rs-act-btn" href="https://doi.org/' + _esc(r.doi) + '" ' +
+        'target="_blank" rel="noopener noreferrer">DOI ↗</a>';
+    }
+    actBtns += '<button class="rs-act-btn" onclick="LibraryModule.elCopyRef(' + idx + ')" ' +
+      'title="Copy citation">📋 Cite</button>';
+
+    var hasAbstract  = !!r.abstract;
+    var abstractHtml = hasAbstract
+      ? '<div class="rs-result-abstract" id="el-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
+        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          'onclick="LibraryModule.elToggleAbstract(' + idx + ')">Show more</button>'
+      : '';
+
+    return '<div class="rs-result" id="el-card-' + idx + '">' +
+      '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
+      (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
+      '<div class="rs-result-meta">' +
+        srcBadge + oaBadge + citBadge +
+        (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
+        (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
+      '</div>' +
+      abstractHtml +
+      '<div class="rs-result-acts">' + actBtns + '</div>' +
+    '</div>';
+  }
+
+  /* Toggle abstract for Elsevier card */
+  function _elToggleAbstract(idx) {
+    var absEl = document.getElementById('el-abs-' + idx);
+    if (!absEl) return;
+    var btn     = absEl.nextElementSibling;
+    var expanded = absEl.classList.toggle('expanded');
+    if (btn && btn.tagName === 'BUTTON') btn.textContent = expanded ? 'Show less' : 'Show more';
+  }
+
+  /* Copy APA-style citation for an Elsevier result */
+  function _elCopyRef(idx) {
+    var r = _bgELResults[idx];
+    if (!r) return;
+    var cit = (r.authors || 'Unknown') + '. ' + (r.title || '') + '. ' +
+      (r.journal ? r.journal + '. ' : '') +
+      (r.year    ? r.year    + '. '  : '') +
+      (r.doi     ? 'doi:' + r.doi   : r.url || '');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(cit)
+        .then(function(){ _toast('Citation copied!', 'success'); })
+        .catch(function(){ _toast('Could not copy', 'warning'); });
+    } else {
+      _toast('Clipboard not supported', 'info');
     }
   }
 
@@ -2069,7 +2747,7 @@
           '<div class="lib-searchbar">'+
             '<span class="lib-search-icon">⌕</span>'+
             '<input type="text" id="lib-q" '+
-              'placeholder="Search Oasis Library · PubMed · OpenAlex…" '+
+              'placeholder="Search Oasis Library · PubMed · OpenAlex · Frontiers…" '+
               'autocomplete="off" spellcheck="false" '+
               'oninput="LibraryModule.onSearch(this.value)" '+
               'onkeydown="if(event.key===\'Enter\')LibraryModule.onSearch(this.value)">'+
@@ -2427,6 +3105,12 @@
         _bgGLResults       = [];
         _bgGLTotal         = 0;
         _bgHasMoreGL       = false;
+        _bgFRResults       = [];
+        _bgFRTotal         = 0;
+        _bgHasMoreFR       = false;
+        _bgELResults       = [];
+        _bgELTotal         = 0;
+        _bgHasMoreEL       = false;
         _removeSentinel();
         _renderBrowse();
       }
@@ -2484,7 +3168,15 @@
 
     /* Layer 2: Clinical Guidelines */
     glToggleAbstract:  _glToggleAbstract,
-    glCopyRef:         _glCopyRef
+    glCopyRef:         _glCopyRef,
+
+    /* Layer 3: Frontiers in Research */
+    frToggleAbstract:  _frToggleAbstract,
+    frCopyRef:         _frCopyRef,
+
+    /* Layer 3b: Elsevier (Scopus + ScienceDirect) */
+    elToggleAbstract:  _elToggleAbstract,
+    elCopyRef:         _elCopyRef
   };
 
   /* Boot */

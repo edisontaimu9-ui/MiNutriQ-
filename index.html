@@ -30,7 +30,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org;
+  connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -46,7 +46,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.2.7';
+  const APP_VERSION = '1.2.8';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -10329,7 +10329,9 @@ function ntClear(scopeId, resultIds) {
         <p style="margin:0 0 6px">The Platform integrates with the following third-party services. Each provider operates under its own privacy policy, and users are encouraged to review those policies independently:</p>
         <p style="margin:0 0 4px">— <strong>Firebase / Google LLC</strong> — Authentication, Firestore database, and cloud infrastructure. Subject to Google's Privacy Policy and Firebase Terms of Service.</p>
         <p style="margin:0 0 4px">— <strong>USDA FoodData Central API</strong> — Provides nutritional composition data for food search functionality. No personal data is transmitted with queries.</p>
-        <p style="margin:0 0 10px">— <strong>CalorieNinjas API</strong> — Supplementary food data retrieval. No personally identifiable information is included in API requests.</p>
+        <p style="margin:0 0 4px">— <strong>CalorieNinjas API</strong> — Supplementary food data retrieval. No personally identifiable information is included in API requests.</p>
+        <p style="margin:0 0 10px">— <strong>Frontiers in Research Search API</strong> — Powers library search for open-access research articles via the Frontiers Search API V1. No personal or patient data is transmitted with search queries.</p>
+        <p style="margin:0 0 10px">— <strong>Elsevier APIs (Scopus &amp; ScienceDirect)</strong> — Powers library search for peer-reviewed journal articles and abstracts via the Elsevier Scopus Search API and ScienceDirect Search API. Search queries (keywords only) are transmitted to Elsevier servers. No personal or patient data is included in API requests. Subject to Elsevier's API Terms of Service and Privacy Policy.</p>
         <p style="margin:0 0 10px">We select third-party providers with regard for data security and appropriateness for a healthcare technology context. We are not responsible for the data practices of third-party service providers beyond the scope of our integration.</p>
 
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">7. DATA STORAGE AND RETENTION</p>
