@@ -127,6 +127,42 @@
   var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
   var RS_PAGE_SIZE       = 10;
 
+  /* ── Layer 2: Clinical Guidelines config ── */
+  var GL_PAGE_SIZE = 8;
+  /* Journal anchors + affiliation filters for target guideline orgs:
+     ASPEN, ESPEN, KDIGO, KDOQI, ADA, EatRight/AND, WHO, NICE, ACS, BDA,
+     AACE, ISN, ESICM, ACG, EASL, ESC-nutrition, BAPEN, ESPGHAN */
+  var GL_ORG_FILTER = [
+    '"JPEN J Parenter Enteral Nutr"[ta]',
+    '"Nutr Clin Pract"[ta]',
+    '"Clin Nutr"[ta]',
+    '"Clin Nutr ESPEN"[ta]',
+    '"Kidney Int Suppl"[ta]',
+    '"Am J Kidney Dis"[ta]',
+    '"Kidney Int"[ta]',
+    '"Diabetes Care"[ta]',
+    '"CA Cancer J Clin"[ta]',
+    '"J Hum Nutr Diet"[ta]',
+    '"Endocr Pract"[ta]',
+    '"J Gastroenterol Hepatol"[ta]',
+    '"J Hepatol"[ta]',
+    '"Crit Care Med"[ta]',
+    'ASPEN[ad]',
+    'ESPEN[ad]',
+    'KDIGO[ad]',
+    'KDOQI[ad]',
+    '"World Health Organization"[ad]',
+    '"Academy of Nutrition and Dietetics"[ad]',
+    '"National Institute for Health and Care Excellence"[ad]',
+    '"British Dietetic Association"[ad]',
+    '"American Cancer Society"[ad]',
+    '"American Diabetes Association"[ad]',
+    'BAPEN[ad]',
+    'ESPGHAN[ad]'
+  ].join(' OR ');
+  var GL_PT_FILTER = '(guideline[pt] OR "practice guideline"[pt] OR ' +
+    '"systematic review"[pt] OR "meta-analysis"[pt])';
+
   /* ── Unified background search state ── */
   var _bgLoading         = false;   // background API fetch in progress
   var _bgCurrentQuery    = '';      // guards against stale async updates
@@ -137,6 +173,11 @@
   var _bgHasMore         = { pubmed: false, oa: false };
   var _bgExternalResults = [];      // deduped PubMed + OpenAlex results
   var _bgObserver        = null;    // IntersectionObserver for infinite scroll
+  /* ── Layer 2: Clinical Guidelines state ── */
+  var _bgGLResults   = [];          // deduped guideline results
+  var _bgGLPage      = 1;
+  var _bgGLTotal     = 0;
+  var _bgHasMoreGL   = false;
   /* Legacy RS vars kept for internal reuse */
   var _rsYearFrom        = '';
   var _rsYearTo          = '';
@@ -421,6 +462,14 @@
         'padding:2px 7px;border-radius:100px;text-transform:uppercase}',
       '.rs-badge-pubmed{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa}',
       '.rs-badge-openalex{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:#a78bfa}',
+      /* ── Layer 2 guideline badges ── */
+      '.rs-badge-guideline{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#34d399}',
+      '.rs-badge-review{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24}',
+      '.rs-org-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:100px;',
+        'font-family:var(--mono);font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;',
+        'background:rgba(29,233,212,.07);border:1px solid rgba(29,233,212,.18);color:var(--teal)}',
+      '.lib-gl-divider{color:#34d399!important}',
+      '.lib-gl-divider::after{background:rgba(52,211,153,.2)!important}',
       '.rs-filter-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}',
       '.rs-filter-sel{background:var(--surface2);border:1px solid var(--border);border-radius:7px;',
         'padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);',
@@ -671,10 +720,10 @@
 
     var localResults  = _applyFilters(_resources);
     var extResults    = _bgExternalResults;
-    var totalVisible  = localResults.length + extResults.length;
+    var totalVisible  = localResults.length + _bgGLResults.length + extResults.length;
 
     if (label) label.textContent = 'Search Results';
-    if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa ? '+' : '');
+    if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreGL ? '+' : '');
 
     var html = '';
 
@@ -684,12 +733,21 @@
       html += localResults.map(function(r){ return _cardHTML(r, false, true); }).join('');
     }
 
+    // ── Layer 2: Clinical Guidelines ────────────────────────────────────────
+    if (_bgGLResults.length) {
+      var glGCount = _bgGLResults.filter(function(r){ return r._pubType === 'guideline'; }).length;
+      var glRCount = _bgGLResults.filter(function(r){ return r._pubType === 'review'; }).length;
+      var glLabel = 'Clinical Guidelines (' + _bgGLResults.length + (_bgHasMoreGL ? '+' : '') + ')';
+      html += '<div class="lib-src-divider lib-gl-divider">' + glLabel + '</div>';
+      html += _bgGLResults.map(function(r, i){ return _glCardHTML(r, i); }).join('');
+    }
+
     // ── Background loading indicator ────────────────────────────────────────
     if (_bgLoading && extResults.length === 0) {
       html +=
         '<div class="lib-bg-status">' +
           '<span class="lib-bg-spin"></span>' +
-          '<span>Searching PubMed &amp; OpenAlex…</span>' +
+          '<span>Searching guidelines &amp; research…</span>' +
         '</div>';
     }
 
@@ -763,13 +821,19 @@
     var existingIds = {};
     _bgExternalResults.forEach(function(r){ existingIds[r.id] = true; });
     var existingTitles = _bgExternalResults.map(function(r){ return _normalizeTitle(r.title); });
+    // Exclude items already shown in Layer 2 (Clinical Guidelines)
+    var glPmids = {};
+    _bgGLResults.forEach(function(r){ if (r.pmid) glPmids[r.pmid] = true; });
+    var glTitles = _bgGLResults.map(function(r){ return _normalizeTitle(r.title); });
 
     return candidates.filter(function(c) {
       if (existingIds[c.id]) return false;
+      if (c.pmid && glPmids[c.pmid]) return false;
       var cTitle = _normalizeTitle(c.title);
       if (c.doi && localDois[c.doi]) return false;
       if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
       if (existingTitles.some(function(et){ return _titleSimilarity(et, cTitle) > 0.80; })) return false;
+      if (glTitles.some(function(gt){ return _titleSimilarity(gt, cTitle) > 0.80; })) return false;
       return true;
     });
   }
@@ -789,6 +853,10 @@
     _bgPubMedTotal     = 0;
     _bgOATotal         = 0;
     _bgHasMore         = { pubmed: false, oa: false };
+    _bgGLResults       = [];
+    _bgGLPage          = 1;
+    _bgGLTotal         = 0;
+    _bgHasMoreGL       = false;
     _removeSentinel();
 
     if (!q || q.trim().length < 2) {
@@ -811,14 +879,21 @@
       _rsPubMedSearch(q, 1, _rsYearFrom, _rsYearTo)
         .catch(function(){ return { results: [], total: 0 }; }),
       _rsOASearch(q, 1, _rsYearFrom, _rsYearTo, _rsOpenAccess)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glPubMedSearch(q, 1)
         .catch(function(){ return { results: [], total: 0 }; })
     ]).then(function(arrs) {
       if (_bgCurrentQuery !== capturedQuery) return; // stale
-      var pmData = arrs[0], oaData = arrs[1];
+      var pmData = arrs[0], oaData = arrs[1], glData = arrs[2];
       _bgPubMedTotal    = pmData.total;
       _bgOATotal        = oaData.total;
       _bgHasMore.pubmed = pmData.results.length === RS_PAGE_SIZE && pmData.total > RS_PAGE_SIZE;
       _bgHasMore.oa     = oaData.results.length === RS_PAGE_SIZE && oaData.total > RS_PAGE_SIZE;
+
+      // Layer 2: Guidelines — deduplicated against local library
+      _bgGLTotal        = glData.total;
+      _bgHasMoreGL      = glData.results.length === GL_PAGE_SIZE && glData.total > GL_PAGE_SIZE;
+      _bgGLResults      = _deduplicateGL(glData.results);
 
       var allExt = pmData.results.concat(oaData.results);
       _bgExternalResults = _deduplicateExternal(allExt);
@@ -1625,6 +1700,196 @@
 
   /* ── _rsSearch / pagination removed — replaced by _unifiedSearch / _loadMoreExternal ── */
 
+  /* ═══════════════════════════════════════════════════════════════
+     LAYER 2: CLINICAL GUIDELINES SEARCH
+     Auto-searches PubMed filtered by guideline/review pub-types
+     and org-specific journal + affiliation anchors.
+     Results tagged GUIDELINE (green) or REVIEW (amber).
+     Ranked: guideline > review > article.
+  ═══════════════════════════════════════════════════════════════ */
+
+  /* Detect issuing organisation from journal abbreviation */
+  function _glDetectOrg(journal, fullJournal) {
+    var j = ((journal || '') + ' ' + (fullJournal || '')).toLowerCase();
+    if (j.indexOf('jpen') !== -1 || j.indexOf('parenter enteral') !== -1) return 'ASPEN';
+    if (j.indexOf('nutr clin pract') !== -1)   return 'ASPEN';
+    if (j.indexOf('clin nutr espen') !== -1)    return 'ESPEN';
+    if (j.indexOf('clin nutr') !== -1)          return 'ESPEN';
+    if (j.indexOf('kidney int suppl') !== -1)   return 'KDIGO';
+    if (j.indexOf('kidney int') !== -1)         return 'KDIGO';
+    if (j.indexOf('am j kidney') !== -1)        return 'KDOQI';
+    if (j.indexOf('diabetes care') !== -1)      return 'ADA';
+    if (j.indexOf('ca cancer') !== -1)          return 'ACS';
+    if (j.indexOf('hum nutr diet') !== -1)      return 'BDA';
+    if (j.indexOf('endocr pract') !== -1)       return 'AACE';
+    if (j.indexOf('hepatol') !== -1)            return 'EASL';
+    if (j.indexOf('gastroenterol') !== -1)      return 'ACG';
+    if (j.indexOf('crit care med') !== -1)      return 'ESICM';
+    return '';
+  }
+
+  /* PubMed search scoped to guideline orgs + guideline/review pub-types */
+  function _glPubMedSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var retstart = (page - 1) * GL_PAGE_SIZE;
+    var base     = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+    var fullTerm = '(' + query + ') AND ' + GL_PT_FILTER + ' AND (' + GL_ORG_FILTER + ')';
+    var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + GL_PAGE_SIZE +
+      '&retstart=' + retstart + '&api_key=' + RS_PUBMED_KEY +
+      '&term=' + encodeURIComponent(fullTerm);
+
+    return fetch(searchUrl)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var ids   = (data.esearchresult && data.esearchresult.idlist) || [];
+        var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
+        if (!ids.length) return { results: [], total: total };
+
+        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + RS_PUBMED_KEY +
+          '&id=' + ids.join(',');
+        return fetch(summaryUrl)
+          .then(function(r){ return r.json(); })
+          .then(function(sd) {
+            var uids = (sd.result && sd.result.uids) || [];
+            var results = uids.map(function(uid) {
+              var doc     = sd.result[uid] || {};
+              var authors = (doc.authors || []).slice(0,4).map(function(a){ return a.name; });
+              if ((doc.authors||[]).length > 4) authors.push('et al.');
+              var pubTypes    = (doc.pubtype || []).map(function(t){ return t.toLowerCase(); });
+              var isGuideline = pubTypes.some(function(t){ return t.indexOf('guideline') !== -1; });
+              var isReview    = pubTypes.some(function(t){
+                return t.indexOf('review') !== -1 || t.indexOf('meta-analysis') !== -1;
+              });
+              var journal = doc.source || '';
+              return {
+                _src:     'guideline',
+                _pubType: isGuideline ? 'guideline' : (isReview ? 'review' : 'article'),
+                _org:     _glDetectOrg(journal, doc.fulljournalname || ''),
+                id:       'gl_' + uid,
+                pmid:     uid,
+                title:    doc.title  || 'Untitled',
+                authors:  authors.join(', '),
+                journal:  journal,
+                year:     (doc.pubdate || '').slice(0, 4),
+                doi:      doc.elocationid ? doc.elocationid.replace(/^doi: /i,'') : '',
+                abstract: '',
+                url:      'https://pubmed.ncbi.nlm.nih.gov/' + uid + '/'
+              };
+            });
+            // Rank: guidelines first, reviews second, articles last
+            results.sort(function(a, b) {
+              var rank = { guideline: 0, review: 1, article: 2 };
+              return (rank[a._pubType] || 2) - (rank[b._pubType] || 2);
+            });
+            return { results: results, total: total };
+          });
+      });
+  }
+
+  /* Deduplicate GL results against local Oasis Library */
+  function _deduplicateGL(candidates) {
+    var localTitles = _resources.map(function(r){ return _normalizeTitle(r.title); });
+    var localDois   = {};
+    _resources.forEach(function(r){ if (r.doi) localDois[r.doi] = true; });
+    return candidates.filter(function(c) {
+      if (c.doi && localDois[c.doi]) return false;
+      var cTitle = _normalizeTitle(c.title);
+      if (localTitles.some(function(lt){ return _titleSimilarity(lt, cTitle) > 0.80; })) return false;
+      return true;
+    });
+  }
+
+  /* Layer 2 result card — GUIDELINE (green) / REVIEW (amber) / ARTICLE badges */
+  function _glCardHTML(r, idx) {
+    var typeLabel = r._pubType === 'guideline' ? 'GUIDELINE'
+                  : r._pubType === 'review'    ? 'REVIEW'
+                  : 'ARTICLE';
+    var typeCls   = r._pubType === 'guideline' ? 'rs-badge-guideline'
+                  : r._pubType === 'review'    ? 'rs-badge-review'
+                  : 'rs-badge-openalex';
+    var typeBadge = '<span class="rs-source-badge ' + typeCls + '">' + typeLabel + '</span>';
+    var orgBadge  = r._org
+      ? '<span class="rs-org-badge">' + _esc(r._org) + '</span>'
+      : '';
+
+    var actBtns = '<a class="rs-act-btn primary" href="' + _esc(r.url) + '" ' +
+      'target="_blank" rel="noopener noreferrer">View Guideline ↗</a>';
+    if (r.doi) {
+      actBtns += '<a class="rs-act-btn" href="https://doi.org/' + _esc(r.doi) + '" ' +
+        'target="_blank" rel="noopener noreferrer">DOI ↗</a>';
+    }
+    actBtns += '<button class="rs-act-btn" onclick="LibraryModule.glCopyRef(' + idx + ')" ' +
+      'title="Copy citation">📋 Cite</button>';
+
+    var hasAbstract  = !!r.abstract;
+    var abstractHtml = hasAbstract
+      ? '<div class="rs-result-abstract" id="gl-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
+        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          'onclick="LibraryModule.glToggleAbstract(' + idx + ',\'' + r.pmid + '\')">Show more</button>'
+      : '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          'onclick="LibraryModule.glToggleAbstract(' + idx + ',\'' + r.pmid + '\')">Load abstract</button>';
+
+    return '<div class="rs-result" id="gl-card-' + idx + '">' +
+      '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
+      (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
+      '<div class="rs-result-meta">' +
+        typeBadge + orgBadge +
+        (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
+        (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
+      '</div>' +
+      abstractHtml +
+      '<div class="rs-result-acts">' + actBtns + '</div>' +
+    '</div>';
+  }
+
+  /* Toggle / lazy-load abstract for a Layer 2 card */
+  function _glToggleAbstract(idx, pmid) {
+    var absEl = document.getElementById('gl-abs-' + idx);
+    var r     = _bgGLResults[idx];
+    if (!absEl) {
+      var card = document.getElementById('gl-card-' + idx);
+      if (!card) return;
+      var actsDiv = card.querySelector('.rs-result-acts');
+      var newAbs  = document.createElement('div');
+      newAbs.id        = 'gl-abs-' + idx;
+      newAbs.className = 'rs-result-abstract';
+      newAbs.textContent = 'Loading abstract…';
+      card.insertBefore(newAbs, actsDiv || null);
+      absEl = newAbs;
+      if (pmid && r && !r.abstract) {
+        _rsPubMedAbstract(pmid, function(text) {
+          if (r) r.abstract = text;
+          absEl.textContent = text || 'No abstract available.';
+        });
+      } else if (r && r.abstract) {
+        absEl.textContent = r.abstract;
+      } else {
+        absEl.textContent = 'No abstract available.';
+      }
+      return;
+    }
+    var btn      = absEl.nextElementSibling;
+    var expanded = absEl.classList.toggle('expanded');
+    if (btn && btn.tagName === 'BUTTON') btn.textContent = expanded ? 'Show less' : 'Show more';
+  }
+
+  /* Copy APA-style citation for a Layer 2 guideline result */
+  function _glCopyRef(idx) {
+    var r = _bgGLResults[idx];
+    if (!r) return;
+    var cit = (r.authors || 'Unknown') + '. ' + (r.title || '') + '. ' +
+      (r.journal ? r.journal + '. ' : '') +
+      (r.year    ? r.year    + '. '  : '') +
+      (r.doi     ? 'doi:' + r.doi   : r.url || '');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(cit)
+        .then(function(){ _toast('Citation copied!','success'); })
+        .catch(function(){ _toast('Could not copy','warning'); });
+    } else {
+      _toast('Clipboard not supported','info');
+    }
+  }
+
   /* ── Individual result card ── */
   function _rsCardHTML(r, idx) {
     var srcBadge = r._src === 'pubmed'
@@ -2159,6 +2424,9 @@
         _bgLoading         = false;
         _bgExternalResults = [];
         _bgHasMore         = { pubmed: false, oa: false };
+        _bgGLResults       = [];
+        _bgGLTotal         = 0;
+        _bgHasMoreGL       = false;
         _removeSentinel();
         _renderBrowse();
       }
@@ -2212,7 +2480,11 @@
     loadMoreExternal:  _loadMoreExternal,
     rsSetOpenAccess:   _rsSetOpenAccess,
     rsSetYearFrom:     function(val) { _rsYearFrom = val || ''; },
-    rsSetYearTo:       function(val) { _rsYearTo = val || ''; }
+    rsSetYearTo:       function(val) { _rsYearTo = val || ''; },
+
+    /* Layer 2: Clinical Guidelines */
+    glToggleAbstract:  _glToggleAbstract,
+    glCopyRef:         _glCopyRef
   };
 
   /* Boot */
