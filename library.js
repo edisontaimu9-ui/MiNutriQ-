@@ -1,7 +1,7 @@
 /**
  * library.js — Oasis Nutrition Resource Library Module
  * ─────────────────────────────────────────────────────────────
- * Version  : 1.1.0
+ * Version  : 1.2.0
  * Author   : Edison Taimu
  * Project  : Oasis Clinical Nutrition Decision Support Tool
  *
@@ -62,7 +62,7 @@
   /* ════════════════════════════════════════════════════
      CONSTANTS
   ════════════════════════════════════════════════════ */
-  var LIB_VERSION       = '1.1.0';
+  var LIB_VERSION       = '1.2.0';
   var LIB_COL           = 'library_resources';
   var LIB_BM_COL        = 'library_bookmarks';
   var LIB_STORAGE       = 'library_uploads';
@@ -133,10 +133,11 @@
   var RS_FRONTIERS_SIZE = 10;
 
   /* ── Layer 3: Elsevier (Scopus + ScienceDirect) config ── */
-  var RS_ELSEVIER_KEY    = 'e41a769c392c4760760a1b4702795e77';
-  var RS_ELSEVIER_SCOPUS = 'https://api.elsevier.com/content/search/scopus';
-  var RS_ELSEVIER_SD     = 'https://api.elsevier.com/content/search/sciencedirect';
-  var RS_ELSEVIER_SIZE   = 10;
+  var RS_ELSEVIER_KEY      = 'e41a769c392c4760760a1b4702795e77';
+  var RS_ELSEVIER_SCOPUS   = 'https://api.elsevier.com/content/search/scopus';
+  var RS_ELSEVIER_SD       = 'https://api.elsevier.com/content/search/sciencedirect';
+  var RS_ELSEVIER_ABSTRACT = 'https://api.elsevier.com/content/abstract/scopus_id/';
+  var RS_ELSEVIER_SIZE     = 10;
 
   /* ── Layer 2: Clinical Guidelines config ── */
   var GL_PAGE_SIZE = 8;
@@ -169,7 +170,12 @@
     '"American Cancer Society"[ad]',
     '"American Diabetes Association"[ad]',
     'BAPEN[ad]',
-    'ESPGHAN[ad]'
+    'ESPGHAN[ad]',
+    '"Food and Agriculture Organization"[ad]',
+    '"Ministry of Health, Malawi"[ad]',
+    '"Malawi Ministry of Health"[ad]',
+    '"Kamuzu University of Health Sciences"[ad]',
+    '"Queen Elizabeth Central Hospital"[ad]'
   ].join(' OR ');
   var GL_PT_FILTER = '(guideline[pt] OR "practice guideline"[pt] OR ' +
     '"systematic review"[pt] OR "meta-analysis"[pt])';
@@ -495,6 +501,10 @@
       /* ── Layer 2 guideline badges ── */
       '.rs-badge-guideline{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#34d399}',
       '.rs-badge-review{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24}',
+      /* ── WHO / FAO / MoH Malawi source badges ── */
+      '.rs-badge-who{background:rgba(0,147,213,.1);border:1px solid rgba(0,147,213,.3);color:#0093d5}',
+      '.rs-badge-fao{background:rgba(0,107,60,.1);border:1px solid rgba(0,107,60,.3);color:#006b3c}',
+      '.rs-badge-moh{background:rgba(196,18,47,.1);border:1px solid rgba(196,18,47,.3);color:#c4122f}',
       '.rs-org-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:100px;',
         'font-family:var(--mono);font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;',
         'background:rgba(29,233,212,.07);border:1px solid rgba(29,233,212,.18);color:var(--teal)}',
@@ -695,17 +705,226 @@
            '<div class="lib-empty-txt">'+msg+'</div></div>';
   }
 
+  /* ════════════════════════════════════════════════════
+     SEARCH QUALITY ENGINE — v2
+     ─────────────────────────────────────────────────
+     Implements:
+       • Phrase detection & exact-phrase boosting
+       • Fuzzy similarity with configurable threshold
+       • Weighted relevance scoring
+         (exact title phrase > title kw > tags > cat > desc > fulltext)
+       • Minimum relevance gate (no weak matches shown)
+       • Result deduplication
+       • Search cache (last 20 queries)
+  ════════════════════════════════════════════════════ */
+
+  /* ── Scoring weights ── */
+  var SQ_W = {
+    EXACT_TITLE_PHRASE : 20,
+    TITLE_KEYWORD      : 10,
+    TAG                :  6,
+    CATEGORY           :  5,
+    DESCRIPTION        :  3,
+    FULLTEXT           :  1
+  };
+
+  /* ── Minimum total score to appear in results ── */
+  var SQ_MIN_SCORE = 3;
+
+  /* ── Fuzzy match threshold (0–1). Below this → ignored. ── */
+  var SQ_FUZZY_THRESHOLD = 0.72;
+
+  /* ── Search result cache ── */
+  var _sqCache = {};           // { normalizedQuery: scoredAndSorted[] }
+  var _sqCacheKeys = [];       // LRU ordered keys
+  var SQ_CACHE_MAX = 20;
+
+  /**
+   * Normalise a string for comparison: lowercase, strip punctuation, collapse spaces.
+   */
+  function _sqNorm(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  /**
+   * Extract the set of meaningful tokens from a query string (words ≥ 2 chars).
+   */
+  function _sqTokens(q) {
+    return _sqNorm(q).split(' ').filter(function(w){ return w.length >= 2; });
+  }
+
+  /**
+   * Detect whether the query contains one or more quoted phrases OR
+   * a multi-word phrase that should be treated atomically.
+   * Returns an array of phrase strings (already normalised, no quotes).
+   */
+  function _sqPhrases(raw) {
+    var phrases = [];
+    // 1. Explicit quoted phrases — "renal nutrition"
+    var quoted = raw.match(/"([^"]+)"/g);
+    if (quoted) {
+      quoted.forEach(function(q){ phrases.push(_sqNorm(q.replace(/"/g, ''))); });
+    }
+    // 2. The whole unquoted query as an implicit phrase (if ≥ 2 words)
+    var unquoted = _sqNorm(raw.replace(/"[^"]*"/g, '').trim());
+    if (unquoted && unquoted.split(' ').length >= 2) phrases.push(unquoted);
+    return phrases;
+  }
+
+  /**
+   * Levenshtein distance — used for fuzzy single-word matching.
+   */
+  function _sqLevenshtein(a, b) {
+    if (a === b) return 0;
+    var la = a.length, lb = b.length;
+    if (!la) return lb;
+    if (!lb) return la;
+    var prev = [], curr = [];
+    for (var j = 0; j <= lb; j++) prev[j] = j;
+    for (var i = 1; i <= la; i++) {
+      curr[0] = i;
+      for (var j2 = 1; j2 <= lb; j2++) {
+        var cost = a[i-1] === b[j2-1] ? 0 : 1;
+        curr[j2] = Math.min(curr[j2-1]+1, prev[j2]+1, prev[j2-1]+cost);
+      }
+      prev = curr.slice();
+    }
+    return prev[lb];
+  }
+
+  /**
+   * Similarity score (0–1) between two words via Levenshtein.
+   */
+  function _sqWordSim(a, b) {
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    var maxLen = Math.max(a.length, b.length);
+    if (!maxLen) return 1;
+    return 1 - _sqLevenshtein(a, b) / maxLen;
+  }
+
+  /**
+   * Check whether a query token matches a field token — exact or fuzzy.
+   * Returns true if sim >= threshold OR exact substring.
+   */
+  function _sqTokenMatches(qTok, fieldTok) {
+    if (fieldTok.indexOf(qTok) !== -1) return true;          // substring
+    if (qTok.length <= 3) return fieldTok === qTok;          // short tokens: exact only
+    return _sqWordSim(qTok, fieldTok) >= SQ_FUZZY_THRESHOLD;
+  }
+
+  /**
+   * Score a single resource against the parsed query.
+   * Returns numeric score (0 = no match / below threshold).
+   */
+  function _sqScore(r, tokens, phrases) {
+    if (!tokens.length && !phrases.length) return 0;
+
+    var titleNorm = _sqNorm(r.title);
+    var descNorm  = _sqNorm(r.description);
+    var tagsNorm  = (r.tags || []).map(_sqNorm);
+    var catLabel  = _sqNorm(_catLabel(r.category));
+    var srcNorm   = _sqNorm(r.source);
+    var fullText  = [titleNorm, descNorm, tagsNorm.join(' '), catLabel, srcNorm].join(' ');
+
+    var score = 0;
+
+    // ── 1. Exact phrase in title ─────────────────────────────────────────────
+    phrases.forEach(function(ph) {
+      if (ph && titleNorm.indexOf(ph) !== -1) {
+        score += SQ_W.EXACT_TITLE_PHRASE;
+      }
+    });
+
+    // ── 2. Token-level scoring ───────────────────────────────────────────────
+    var titleWords = titleNorm.split(' ');
+    var descWords  = descNorm.split(' ');
+    var fullWords  = fullText.split(' ');
+
+    var allTokensFoundInTitle = tokens.length > 0;
+    tokens.forEach(function(tok) {
+      var foundInTitle = titleWords.some(function(tw){ return _sqTokenMatches(tok, tw); });
+      var foundInTag   = tagsNorm.some(function(tag){
+        return tag.split(' ').some(function(tw){ return _sqTokenMatches(tok, tw); });
+      });
+      var foundInCat   = catLabel.split(' ').some(function(tw){ return _sqTokenMatches(tok, tw); });
+      var foundInDesc  = descWords.some(function(dw){ return _sqTokenMatches(tok, dw); });
+      var foundInFull  = fullWords.some(function(fw){ return _sqTokenMatches(tok, fw); });
+
+      if (foundInTitle) {
+        score += SQ_W.TITLE_KEYWORD;
+      } else {
+        allTokensFoundInTitle = false;
+      }
+      if (foundInTag)  score += SQ_W.TAG;
+      if (foundInCat)  score += SQ_W.CATEGORY;
+      if (!foundInTitle && foundInDesc) score += SQ_W.DESCRIPTION;
+      if (!foundInTitle && !foundInDesc && foundInFull) score += SQ_W.FULLTEXT;
+
+      // If not found anywhere → penalise heavily (prevents weak multi-token mismatches)
+      if (!foundInFull) score -= 5;
+    });
+
+    // Bonus: all query tokens found in title → phrase-level coherence boost
+    if (tokens.length > 1 && allTokensFoundInTitle) score += 5;
+
+    return score;
+  }
+
+  /**
+   * Main search function: filter + score + sort + gate local resources.
+   */
   function _applyFilters(list) {
-    return list.filter(function(r) {
+    // Apply hard category / type filters first
+    var filtered = list.filter(function(r) {
       if (_filterCat  && r.category !== _filterCat)  return false;
       if (_filterType && r.fileType !== _filterType) return false;
-      if (_searchQ) {
-        var q = _searchQ.toLowerCase();
-        var haystack = (r.title+' '+r.description+' '+(r.tags||[]).join(' ')+' '+r.source).toLowerCase();
-        if (haystack.indexOf(q) === -1) return false;
-      }
       return true;
     });
+
+    if (!_searchQ || !_searchQ.trim()) return filtered;
+
+    var raw     = _searchQ.trim();
+    var cacheKey = _sqNorm(raw) + '|' + _filterCat + '|' + _filterType;
+
+    // Check cache
+    if (_sqCache[cacheKey]) return _sqCache[cacheKey];
+
+    var tokens  = _sqTokens(raw);
+    var phrases = _sqPhrases(raw);
+
+    // Score every resource
+    var scored = [];
+    var seen   = {};   // dedup by normalised title
+    filtered.forEach(function(r) {
+      var normTitle = _sqNorm(r.title);
+      if (seen[normTitle]) return;   // deduplicate
+      seen[normTitle] = true;
+
+      var s = _sqScore(r, tokens, phrases);
+      if (s >= SQ_MIN_SCORE) scored.push({ r: r, score: s });
+    });
+
+    // Sort highest score first
+    scored.sort(function(a, b){ return b.score - a.score; });
+    var result = scored.map(function(x){ return x.r; });
+
+    // Cache result
+    if (_sqCacheKeys.length >= SQ_CACHE_MAX) {
+      delete _sqCache[_sqCacheKeys.shift()];
+    }
+    _sqCache[cacheKey] = result;
+    _sqCacheKeys.push(cacheKey);
+
+    return result;
+  }
+
+  /**
+   * Invalidate local search cache (call when _resources changes).
+   */
+  function _sqClearCache() {
+    _sqCache = {};
+    _sqCacheKeys = [];
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -748,9 +967,21 @@
     if (localFilters) localFilters.style.display = 'none';
     if (pgCont) pgCont.innerHTML = '';
 
+    var isMalawiFilter = _filterCat === 'malawi_context';
+
     var localResults  = _applyFilters(_resources);
-    var extResults    = _bgExternalResults;
-    var totalVisible  = localResults.length + _bgGLResults.length + _bgFRResults.length + _bgELResults.length + extResults.length;
+    // When the Malawi category filter is active, restrict GL results to the
+    // MoH / Malawi-institution sub-source only (country_code:MW from OpenAlex).
+    // All other external layers (Frontiers, Elsevier, PubMed, OpenAlex general)
+    // are suppressed because they are not specifically Malawian content.
+    var glResults  = isMalawiFilter
+      ? _bgGLResults.filter(function(r){ return r._sub === 'moh'; })
+      : _bgGLResults;
+    var frResults  = isMalawiFilter ? [] : _bgFRResults;
+    var elResults  = isMalawiFilter ? [] : _bgELResults;
+    var extResults = isMalawiFilter ? [] : _bgExternalResults;
+
+    var totalVisible  = localResults.length + glResults.length + frResults.length + elResults.length + extResults.length;
 
     if (label) label.textContent = 'Search Results';
     if (badge) badge.textContent = totalVisible + (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreGL || _bgHasMoreFR || _bgHasMoreEL ? '+' : '');
@@ -764,43 +995,44 @@
     }
 
     // ── Layer 2: Clinical Guidelines ────────────────────────────────────────
-    if (_bgGLResults.length) {
-      var glGCount = _bgGLResults.filter(function(r){ return r._pubType === 'guideline'; }).length;
-      var glRCount = _bgGLResults.filter(function(r){ return r._pubType === 'review'; }).length;
-      var glLabel = 'Clinical Guidelines (' + _bgGLResults.length + (_bgHasMoreGL ? '+' : '') + ')';
+    // When Malawi filter is active, only MoH/Malawi-institution results are shown.
+    if (glResults.length) {
+      var glLabel = isMalawiFilter
+        ? 'Malawi MoH &amp; Institutions (' + glResults.length + (_bgHasMoreGL ? '+' : '') + ')'
+        : 'Clinical Guidelines (' + glResults.length + (_bgHasMoreGL ? '+' : '') + ')';
       html += '<div class="lib-src-divider lib-gl-divider">' + glLabel + '</div>';
-      html += _bgGLResults.map(function(r, i){ return _glCardHTML(r, i); }).join('');
+      html += glResults.map(function(r, i){ return _glCardHTML(r, i); }).join('');
     }
 
-    // ── Layer 3: Frontiers in Research ──────────────────────────────────────
-    if (_bgFRResults.length) {
-      var frLabel = 'Frontiers in Research (' + _bgFRResults.length + (_bgHasMoreFR ? '+' : '') + ')';
+    // ── Layer 3: Frontiers in Research (hidden for Malawi filter) ───────────
+    if (frResults.length) {
+      var frLabel = 'Frontiers in Research (' + frResults.length + (_bgHasMoreFR ? '+' : '') + ')';
       html += '<div class="lib-src-divider lib-fr-divider">' + frLabel + '</div>';
-      html += _bgFRResults.map(function(r, i){ return _frCardHTML(r, i); }).join('');
+      html += frResults.map(function(r, i){ return _frCardHTML(r, i); }).join('');
     }
 
-    // ── Layer 3b: Elsevier (Scopus + ScienceDirect) ──────────────────────────
-    if (_bgELResults.length) {
-      var elScopusCount = _bgELResults.filter(function(r){ return r._sub === 'scopus'; }).length;
-      var elSDCount     = _bgELResults.filter(function(r){ return r._sub === 'sciencedirect'; }).length;
+    // ── Layer 3b: Elsevier (hidden for Malawi filter) ───────────────────────
+    if (elResults.length) {
+      var elScopusCount = elResults.filter(function(r){ return r._sub === 'scopus'; }).length;
+      var elSDCount     = elResults.filter(function(r){ return r._sub === 'sciencedirect'; }).length;
       var elParts = [];
       if (elScopusCount) elParts.push(elScopusCount + ' Scopus');
       if (elSDCount)     elParts.push(elSDCount + ' ScienceDirect');
       var elLabel = 'Elsevier — ' + elParts.join(' · ') + (_bgHasMoreEL ? '+' : '');
       html += '<div class="lib-src-divider lib-el-divider">' + elLabel + '</div>';
-      html += _bgELResults.map(function(r, i){ return _elCardHTML(r, i); }).join('');
+      html += elResults.map(function(r, i){ return _elCardHTML(r, i); }).join('');
     }
 
     // ── Background loading indicator ────────────────────────────────────────
-    if (_bgLoading && extResults.length === 0) {
+    if (_bgLoading && extResults.length === 0 && glResults.length === 0) {
       html +=
         '<div class="lib-bg-status">' +
           '<span class="lib-bg-spin"></span>' +
-          '<span>Searching guidelines, Frontiers, Elsevier &amp; research…</span>' +
+          '<span>Searching…</span>' +
         '</div>';
     }
 
-    // ── External results ────────────────────────────────────────────────────
+    // ── External results (hidden for Malawi filter) ─────────────────────────
     if (extResults.length) {
       var pmCount = extResults.filter(function(r){ return r._src === 'pubmed'; }).length;
       var oaCount = extResults.filter(function(r){ return r._src === 'openalex'; }).length;
@@ -822,7 +1054,7 @@
 
     // ── Sort info bar ────────────────────────────────────────────────────────
     if (infoEl) {
-      if (extResults.length || _bgFRResults.length || _bgELResults.length) {
+      if (!isMalawiFilter && (extResults.length || frResults.length || elResults.length)) {
         var totParts = [];
         if (_bgPubMedTotal) totParts.push(_bgPubMedTotal.toLocaleString() + ' PubMed');
         if (_bgOATotal)     totParts.push(_bgOATotal.toLocaleString() + ' OpenAlex');
@@ -838,7 +1070,9 @@
     }
 
     // ── Infinite scroll sentinel ─────────────────────────────────────────────
-    if (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreFR || _bgHasMoreEL) {
+    // For the Malawi filter, none of the load-more sources are relevant.
+    var _canLoadMore = !isMalawiFilter && (_bgHasMore.pubmed || _bgHasMore.oa || _bgHasMoreFR || _bgHasMoreEL);
+    if (_canLoadMore) {
       _addSentinel();
     } else {
       _removeSentinel();
@@ -894,11 +1128,32 @@
     });
   }
 
-  /* ── Unified search — fires on every keystroke (with debounce) ────────────── */
+  /* ── Unified search — debounced at 400 ms to reduce excessive API calls ─── */
   var _bgSearchTimer = null;
   function _unifiedSearch(q) {
     clearTimeout(_bgSearchTimer);
-    _bgSearchTimer = setTimeout(function(){ _doUnifiedSearch(q); }, 300);
+    // Show local scored results immediately (fast, no network) while debouncing API
+    var tokens  = _sqTokens(q);
+    var phrases = _sqPhrases(q);
+    var localPreview = _resources.filter(function(r) {
+      if (_filterCat  && r.category !== _filterCat)  return false;
+      if (_filterType && r.fileType !== _filterType) return false;
+      return _sqScore(r, tokens, phrases) >= SQ_MIN_SCORE;
+    });
+    localPreview.sort(function(a, b) {
+      return _sqScore(b, tokens, phrases) - _sqScore(a, tokens, phrases);
+    });
+    // Render local preview while waiting for API
+    var cont = document.getElementById('lib-browse-cards');
+    var localFilters = document.getElementById('lib-local-filters');
+    if (cont && localPreview.length) {
+      if (localFilters) localFilters.style.display = 'none';
+      cont.innerHTML =
+        '<div class="lib-src-divider">Oasis Library (' + localPreview.length + ')</div>' +
+        localPreview.map(function(r){ return _cardHTML(r, false, true); }).join('') +
+        '<div class="lib-bg-status"><span class="lib-bg-spin"></span><span>Searching…</span></div>';
+    }
+    _bgSearchTimer = setTimeout(function(){ _doUnifiedSearch(q); }, 400);
   }
 
   function _doUnifiedSearch(q) {
@@ -1133,6 +1388,7 @@
       .get()
       .then(function(snap) {
         _resources = snap.docs.map(function(doc){ return Object.assign({id:doc.id},doc.data()); });
+        _sqClearCache();   // invalidate scored search cache after fresh data
         _renderBrowse();
         _renderBookmarks();
       })
@@ -1823,6 +2079,16 @@
     if (j.indexOf('hepatol') !== -1)            return 'EASL';
     if (j.indexOf('gastroenterol') !== -1)      return 'ACG';
     if (j.indexOf('crit care med') !== -1)      return 'ESICM';
+    if (j.indexOf('bulletin of the world health') !== -1 ||
+        j.indexOf('who') !== -1 ||
+        j.indexOf('world health organ') !== -1) return 'WHO';
+    if (j.indexOf('food and agriculture') !== -1 ||
+        j.indexOf('fao') !== -1 ||
+        j.indexOf('agris') !== -1)              return 'FAO';
+    if (j.indexOf('malawi') !== -1 ||
+        j.indexOf('kamuzu') !== -1 ||
+        j.indexOf('kuhes') !== -1 ||
+        j.indexOf('qech') !== -1)               return 'MoH Malawi';
     return '';
   }
 
@@ -1833,6 +2099,185 @@
      Results are merged, deduped within the batch, then ranked:
        guideline > review > article.
   ═══════════════════════════════════════════════════════════════ */
+
+  /* ──────────────────────────────────────────────────────────────────────────
+   * _glDSpaceSearch — generic DSpace 7 REST search helper.
+   * Used for WHO IRIS and FAO OpenKnowledge (both run DSpace 7).
+   * Base URL e.g. 'https://iris.who.int'  →  /server/api/discover/search/objects
+   * orgTag: short label used for logging and result tagging ('WHO', 'FAO')
+   * ────────────────────────────────────────────────────────────────────────── */
+  function _glDSpaceSearch(baseUrl, orgTag, query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var signal;
+    try { signal = AbortSignal.timeout(12000); } catch(_) { /* Safari < 17 */ }
+    var url = baseUrl + '/server/api/discover/search/objects?' +
+      'query=' + encodeURIComponent(query) +
+      '&size=' + GL_PAGE_SIZE +
+      '&page=' + (page - 1) +   /* DSpace pages are 0-indexed */
+      '&embed=item';
+    var subKey = orgTag.toLowerCase();
+    return fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      signal:  signal
+    })
+    .then(function(r) {
+      if (r.status === 429) {
+        console.error('[GL ' + orgTag + '] Rate-limit (429).');
+        throw new Error(orgTag + '_RATE_LIMIT');
+      }
+      if (!r.ok) {
+        console.error('[GL ' + orgTag + '] HTTP ' + r.status);
+        throw new Error(orgTag + '_HTTP_' + r.status);
+      }
+      return r.json();
+    })
+    .then(function(data) {
+      if (!data || typeof data !== 'object') {
+        console.warn('[GL ' + orgTag + '] Empty or non-object response.');
+        return { results: [], total: 0 };
+      }
+      var sr      = (data._embedded && data._embedded.searchResult) || {};
+      var total   = (sr.page && sr.page.totalElements) || 0;
+      var objects = (sr._embedded && sr._embedded.objects) || [];
+
+      var results = objects.map(function(obj, i) {
+        /* DSpace 7: item is at obj._embedded.indexableObject */
+        var item   = (obj._embedded && obj._embedded.indexableObject) || {};
+        var meta   = item.metadata || {};
+
+        function first(key) {
+          var v = meta[key];
+          return (Array.isArray(v) && v[0]) ? (v[0].value || '') : '';
+        }
+        function all(key) {
+          var v = meta[key];
+          if (!Array.isArray(v)) return '';
+          return v.map(function(m){ return m.value || ''; }).filter(Boolean).join(', ');
+        }
+
+        var title    = first('dc.title');
+        var authors  = all('dc.contributor.author') || all('dc.creator');
+        var rawDate  = first('dc.date.issued') || first('dc.date.available') || '';
+        var year     = (rawDate.match(/\d{4}/) || [''])[0];
+        var doi      = first('dc.identifier.doi').replace(/^https?:\/\/doi\.org\//i, '');
+        var handle   = first('dc.identifier.uri') || first('dc.identifier') || '';
+        var url_     = doi ? 'https://doi.org/' + doi : (handle || '');
+        var abstract = first('dc.description.abstract');
+        var journal  = first('prism:publicationName') || first('dc.relation.journal') || first('dc.source') || '';
+        var docType  = first('dc.type');
+
+        if (!title) return null;
+        return {
+          _src:       'guideline',
+          _sub:       subKey,
+          _pubType:   _glDetectPubType(title, docType),
+          _org:       orgTag,
+          id:         subKey + '_' + (item.uuid || (i + '_' + page)),
+          pmid:       '',
+          title:      title,
+          authors:    authors,
+          journal:    journal,
+          year:       year,
+          doi:        doi,
+          abstract:   abstract,
+          openAccess: true,   /* WHO / FAO repositories are open access */
+          url:        url_
+        };
+      }).filter(Boolean);
+
+      return { results: results, total: total };
+    })
+    .catch(function(err) {
+      if (err && err.name === 'TimeoutError')
+        console.error('[GL ' + orgTag + '] Request timed out.');
+      else if (err && err.name === 'TypeError')
+        console.error('[GL ' + orgTag + '] Network failure:', err.message);
+      else if (err && err.message && err.message.indexOf(orgTag + '_') !== 0)
+        console.error('[GL ' + orgTag + '] Unexpected error:', err);
+      return { results: [], total: 0 };
+    });
+  }
+
+  /* ── GL sub-source: WHO IRIS ────────────────────────────────────────────── */
+  function _glWHOSearch(query, page) {
+    return _glDSpaceSearch('https://iris.who.int', 'WHO', query, page);
+  }
+
+  /* ── GL sub-source: FAO OpenKnowledge ──────────────────────────────────── */
+  function _glFAOSearch(query, page) {
+    return _glDSpaceSearch('https://openknowledge.fao.org', 'FAO', query, page);
+  }
+
+  /* ── GL sub-source: Ministry of Health Malawi & Malawi institutions ─────
+   * Uses OpenAlex filtered to Malawi (country_code:MW).  This surfaces MoH
+   * Malawi, KUHES, QECH, COM, NHSRC, and other Malawian health bodies.
+   * ────────────────────────────────────────────────────────────────────── */
+  function _glMoHMalawiSearch(query, page) {
+    if (!query) return Promise.resolve({ results: [], total: 0 });
+    var url = 'https://api.openalex.org/works?' +
+      'search=' + encodeURIComponent(query) +
+      '&filter=authorships.institutions.country_code:MW' +
+      '&sort=cited_by_count:desc' +
+      '&per-page=' + GL_PAGE_SIZE +
+      '&page=' + page +
+      '&mailto=' + RS_OPENALEX_MAILTO;
+    return fetch(url)
+      .then(function(r) {
+        if (!r.ok) {
+          console.error('[GL MoH Malawi] HTTP ' + r.status);
+          throw new Error('MOH_HTTP_' + r.status);
+        }
+        return r.json();
+      })
+      .then(function(data) {
+        var total = (data.meta && data.meta.count) || 0;
+        var items = data.results || [];
+        var results = items.map(function(w) {
+          var doi     = (w.doi || '').replace(/^https?:\/\/doi\.org\//i, '');
+          var authors = (w.authorships || []).slice(0, 4).map(function(a) {
+            return a.author ? (a.author.display_name || '') : '';
+          }).filter(Boolean);
+          if ((w.authorships || []).length > 4) authors.push('et al.');
+          var journal = (w.primary_location && w.primary_location.source &&
+                         w.primary_location.source.display_name) || '';
+          var url_    = doi ? 'https://doi.org/' + doi
+                            : (w.primary_location && w.primary_location.landing_page_url) || '';
+          /* Detect if any authoring institution is specifically MoH */
+          var instNames = (w.authorships || []).reduce(function(acc, a) {
+            return acc.concat((a.institutions || []).map(function(ins){ return (ins.display_name || '').toLowerCase(); }));
+          }, []);
+          var isMoH = instNames.some(function(n) {
+            return n.indexOf('ministry of health') !== -1 ||
+                   (n.indexOf('malawi') !== -1 && n.indexOf('national') !== -1);
+          });
+          var orgLabel = isMoH ? 'MoH Malawi'
+                       : (instNames.some(function(n){ return n.indexOf('kamuzu') !== -1 || n.indexOf('kuhes') !== -1; }) ? 'KUHES'
+                       : (instNames.some(function(n){ return n.indexOf('queen elizabeth') !== -1 || n.indexOf('qech') !== -1; }) ? 'QECH'
+                       : 'Malawi'));
+          return {
+            _src:       'guideline',
+            _sub:       'moh',
+            _pubType:   _glDetectPubType(w.title, w.type),
+            _org:       orgLabel,
+            id:         'moh_' + (w.id || '').replace('https://openalex.org/', ''),
+            pmid:       '',
+            title:      w.title || 'Untitled',
+            authors:    authors.join(', '),
+            journal:    journal,
+            year:       w.publication_year ? String(w.publication_year) : '',
+            doi:        doi,
+            abstract:   w.abstract || '',
+            openAccess: !!(w.open_access && w.open_access.is_oa),
+            url:        url_
+          };
+        });
+        return { results: results, total: total };
+      })
+      .catch(function(err) {
+        console.error('[GL MoH Malawi] Search failed:', err && (err.message || err));
+        return { results: [], total: 0 };
+      });
+  }
 
   /* GL query boost terms — appended to user query for non-PubMed sources */
   var GL_BOOST_TERMS = 'guideline systematic review meta-analysis clinical practice consensus';
@@ -1847,7 +2292,7 @@
     return 'article';
   }
 
-  /* Unified wrapper — fires all 4 sources in parallel */
+  /* Unified wrapper — fires all 7 sources in parallel */
   function _glUnifiedSearch(query, page) {
     if (!query) return Promise.resolve({ results: [], total: 0 });
     return Promise.all([
@@ -1858,6 +2303,12 @@
       _glFrontiersGLSearch(query, page)
         .catch(function(){ return { results: [], total: 0 }; }),
       _glElsevierSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glWHOSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glFAOSearch(query, page)
+        .catch(function(){ return { results: [], total: 0 }; }),
+      _glMoHMalawiSearch(query, page)
         .catch(function(){ return { results: [], total: 0 }; })
     ]).then(function(arrs) {
       var combinedTotal = arrs.reduce(function(s, d){ return s + (d.total || 0); }, 0);
@@ -1957,17 +2408,15 @@
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,' +
              'prism:doi,prism:url,dc:description,openaccess,subtype,subtypeDescription,eid';
-    return fetch(url, {
-      headers: { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' }
-    })
-    .then(function(r){ return r.json(); })
+    return _elsFetch(url, { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' }, 'GL-Scopus')
     .then(function(data) {
       var sr    = (data && data['search-results']) || {};
       var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
-      var items = sr.entry || [];
+      var rawEntry = sr.entry;
+      var items = Array.isArray(rawEntry) ? rawEntry : (rawEntry ? [rawEntry] : []);
       var results = items.map(function(e, i) {
         var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
-        var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+        var url = _elsHumanUrl(e['prism:url'] || '', doi);
         var year = '';
         var m = String(e['prism:coverDate'] || '').match(/\d{4}/);
         if (m) year = m[0];
@@ -1991,7 +2440,10 @@
       });
       return { results: results, total: total };
     })
-    .catch(function(){ return { results: [], total: 0 }; });
+    .catch(function(err) {
+      console.error('[ELS GL-Scopus] Guideline search failed:', err && (err.message || err));
+      return { results: [], total: 0 };
+    });
   }
 
   /* PubMed search scoped to guideline orgs + guideline/review pub-types */
@@ -2078,8 +2530,8 @@
       ? '<span class="rs-org-badge">' + _esc(r._org) + '</span>'
       : '';
     /* Sub-source badge — shown for non-PubMed GL results */
-    var subLabels = { openalex: 'OpenAlex', frontiers: 'Frontiers', elsevier: 'Scopus' };
-    var subCls    = { openalex: 'rs-badge-openalex', frontiers: 'rs-badge-frontiers', elsevier: 'rs-badge-scopus' };
+    var subLabels = { openalex: 'OpenAlex', frontiers: 'Frontiers', elsevier: 'Scopus', who: 'WHO IRIS', fao: 'FAO', moh: 'Malawi' };
+    var subCls    = { openalex: 'rs-badge-openalex', frontiers: 'rs-badge-frontiers', elsevier: 'rs-badge-scopus', who: 'rs-badge-who', fao: 'rs-badge-fao', moh: 'rs-badge-moh' };
     var subBadge  = (r._sub && subLabels[r._sub])
       ? '<span class="rs-source-badge ' + (subCls[r._sub] || '') + '" style="opacity:.75">' +
           subLabels[r._sub] + '</span>'
@@ -2106,7 +2558,7 @@
       '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
       (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
       '<div class="rs-result-meta">' +
-        typeBadge + orgBadge + subBadge +
+        typeBadge + orgBadge +
         (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
         (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
       '</div>' +
@@ -2332,7 +2784,7 @@
       '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
       (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
       '<div class="rs-result-meta">' +
-        srcBadge + oaBadge +
+        oaBadge +
         (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
         (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
       '</div>' +
@@ -2368,6 +2820,213 @@
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
+   * _elsFetch — shared Elsevier fetch wrapper used by every Scopus /
+   * ScienceDirect request.  Guarantees:
+   *   • X-ELS-APIKey + Accept:application/json on every call (caller supplies)
+   *   • 12-second AbortSignal timeout
+   *   • Detects XML responses (Elsevier returns XML on bad keys / quota)
+   *     and converts them safely via DOMParser before returning a stub
+   *   • Dedicated handling for 429 (rate-limit), 401/403 (auth), 400 (bad ID)
+   *   • Full error logging to console for every failure path
+   *   • Guards empty / undefined response objects before returning
+   * ────────────────────────────────────────────────────────────────────────── */
+  /* ── Sanitize a raw Elsevier API URL into a human-facing article URL ──────
+   * prism:url from Scopus returns api.elsevier.com/content/abstract/scopus_id/…
+   * which browsers open as raw XML.  Convert these to the Scopus record viewer
+   * and fall back to doi.org when a DOI is available.
+   * ────────────────────────────────────────────────────────────────────────── */
+  function _elsHumanUrl(rawUrl, doi) {
+    if (!rawUrl && !doi) return '';
+    /* Prefer DOI link as it always resolves to the publisher's landing page */
+    if (doi) return 'https://doi.org/' + doi;
+    /* If the URL is already a human-facing page (ScienceDirect, Scopus, DOI), keep it */
+    if (/^https?:\/\/(www\.)?(sciencedirect|scopus|doi)\.org\//i.test(rawUrl)) return rawUrl;
+    /* Convert api.elsevier.com/content/abstract/scopus_id/<ID> → Scopus record */
+    var sidMatch = rawUrl.match(/content\/abstract\/scopus_id\/(\d+)/i);
+    if (sidMatch) return 'https://www.scopus.com/record/display.uri?eid=2-s2.0-' + sidMatch[1] + '&origin=inward';
+    /* Convert api.elsevier.com/content/article/pii/<PII> → ScienceDirect article */
+    var piiMatch = rawUrl.match(/content\/article\/pii\/([A-Z0-9]+)/i);
+    if (piiMatch) return 'https://www.sciencedirect.com/science/article/pii/' + piiMatch[1];
+    /* Last resort: keep the raw URL (may still be useful) */
+    return rawUrl;
+  }
+
+  /* ── Parse an Elsevier XML response body into a normalised article object ─
+   * Used as fallback when the server ignores Accept:application/json.
+   * Handles both search-results XML and abstract-retrieval-response XML.
+   * ────────────────────────────────────────────────────────────────────────── */
+  function _parseElsXML(xml, source) {
+    try {
+      var parser = new DOMParser();
+      var doc    = parser.parseFromString(xml, 'application/xml');
+      /* ── Search-results response ── */
+      var totalEl = doc.querySelector('totalResults');
+      if (totalEl) {
+        var total = parseInt(totalEl.textContent, 10) || 0;
+        var entries = Array.from(doc.querySelectorAll('entry'));
+        var items = entries.map(function(e) {
+          var getText = function(sel) {
+            var el = e.querySelector(sel); return el ? el.textContent.trim() : '';
+          };
+          var doi = getText('doi').replace(/^https?:\/\/doi\.org\//i, '');
+          var rawUrl = getText('url') || getText('prism\\:url') || '';
+          return {
+            'dc:title':              getText('title') || getText('dc\\:title'),
+            'dc:creator':            getText('creator') || getText('dc\\:creator'),
+            'prism:publicationName': getText('publicationName') || getText('prism\\:publicationName'),
+            'prism:coverDate':       getText('coverDate') || getText('prism\\:coverDate'),
+            'prism:doi':             doi,
+            'prism:url':             _elsHumanUrl(rawUrl, doi),
+            'dc:description':        getText('description') || getText('dc\\:description'),
+            'openaccess':            getText('openaccess'),
+            'citedby-count':         getText('citedby-count'),
+            'eid':                   getText('eid')
+          };
+        });
+        return { 'search-results': { 'opensearch:totalResults': String(total), entry: items } };
+      }
+      /* ── Abstract retrieval response (single article) ── */
+      var coredata = doc.querySelector('coredata');
+      if (coredata) {
+        var get = function(sel) {
+          var el = coredata.querySelector(sel); return el ? el.textContent.trim() : '';
+        };
+        var doi = get('doi').replace(/^https?:\/\/doi\.org\//i, '');
+        return {
+          'abstracts-retrieval-response': {
+            coredata: {
+              'dc:title':              get('title') || get('dc\\:title'),
+              'dc:creator':            get('creator') || get('dc\\:creator'),
+              'prism:publicationName': get('publicationName') || get('prism\\:publicationName'),
+              'prism:coverDate':       get('coverDate') || get('prism\\:coverDate'),
+              'prism:doi':             doi,
+              'dc:description':        get('description') || get('dc\\:description') ||
+                                       get('abstract') || get('Abstract'),
+              'openaccess':            get('openaccess'),
+              'citedby-count':         get('citedby-count'),
+              'eid':                   get('eid'),
+              'prism:url':             _elsHumanUrl('', doi)
+            }
+          }
+        };
+      }
+      console.warn('[ELS ' + source + '] XML response has unrecognised structure; returning empty.');
+      return {};
+    } catch(xmlErr) {
+      console.error('[ELS ' + source + '] DOMParser XML conversion failed:', xmlErr);
+      return {};
+    }
+  }
+
+  function _elsFetch(url, headers, source) {
+    /* ── Always append httpAccept=application/json so the server returns JSON
+       even when a proxy or CDN strips the Accept request header ── */
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var fetchUrl = url + sep + 'httpAccept=application%2Fjson';
+
+    /* Ensure Accept header is always set (caller may supply its own copy) */
+    var hdrs = Object.assign({ 'Accept': 'application/json' }, headers);
+
+    var signal;
+    try { signal = AbortSignal.timeout(12000); } catch(_) { /* older Safari */ }
+    var opts = signal ? { headers: hdrs, signal: signal } : { headers: hdrs };
+
+    return fetch(fetchUrl, opts)
+      .then(function(r) {
+        var ct = (r.headers.get('Content-Type') || '').toLowerCase();
+        var isXML = ct.indexOf('xml') !== -1;
+
+        /* ── Rate limit ── */
+        if (r.status === 429) {
+          var reset = r.headers.get('X-RateLimit-Reset') || r.headers.get('Retry-After') || 'unknown';
+          console.error('[ELS ' + source + '] Rate-limit hit (429). X-RateLimit-Reset:', reset);
+          throw new Error('ELS_RATE_LIMIT');
+        }
+
+        /* ── Auth / API key problems ── */
+        if (r.status === 401 || r.status === 403) {
+          console.error('[ELS ' + source + '] Auth error (' + r.status + '): verify RS_ELSEVIER_KEY is valid and has Scopus entitlement.');
+          throw new Error('ELS_AUTH_' + r.status);
+        }
+
+        /* ── Bad request — often an invalid Scopus ID or malformed query ── */
+        if (r.status === 400) {
+          return r.text().then(function(body) {
+            console.error('[ELS ' + source + '] Bad request (400) — possible invalid Scopus ID or query syntax. Body:', body.slice(0, 400));
+            throw new Error('ELS_BAD_REQUEST');
+          });
+        }
+
+        /* ── Any other non-2xx ── */
+        if (!r.ok) {
+          return r.text().then(function(body) {
+            console.error('[ELS ' + source + '] HTTP', r.status, 'error. Body:', body.slice(0, 400));
+            throw new Error('ELS_HTTP_' + r.status);
+          });
+        }
+
+        /* ── XML body — server ignored Accept/httpAccept; parse gracefully ── */
+        if (isXML) {
+          return r.text().then(function(xml) {
+            console.warn('[ELS ' + source + '] Received XML despite JSON request (check API key/quota). Attempting XML parse.');
+            return _parseElsXML(xml, source);
+          });
+        }
+
+        /* ── Sniff: sometimes Content-Type is wrong; detect XML by body start ── */
+        return r.text().then(function(body) {
+          var trimmed = body.trimStart();
+          if (trimmed.charAt(0) === '<') {
+            console.warn('[ELS ' + source + '] Response body is XML despite non-XML Content-Type. Attempting XML parse.');
+            return _parseElsXML(trimmed, source);
+          }
+          try {
+            var data = JSON.parse(body);
+            if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+              console.warn('[ELS ' + source + '] Received empty JSON response.');
+              return {};
+            }
+            return data;
+          } catch(parseErr) {
+            console.error('[ELS ' + source + '] Failed to parse response as JSON:', parseErr, 'Body snippet:', body.slice(0, 200));
+            return {};
+          }
+        });
+      })
+      .catch(function(err) {
+        /* Network-level failures (offline, DNS, CORS, timeout) */
+        if (err && err.name === 'TimeoutError') {
+          console.error('[ELS ' + source + '] Request timed out after 12 s.');
+        } else if (err && err.name === 'AbortError') {
+          console.error('[ELS ' + source + '] Request aborted (timeout or manual cancel).');
+        } else if (err && err.name === 'TypeError') {
+          console.error('[ELS ' + source + '] Network failure (offline / CORS / DNS):', err.message);
+        } else if (err && err.message && err.message.slice(0, 4) !== 'ELS_') {
+          /* Re-log anything not already logged above */
+          console.error('[ELS ' + source + '] Unexpected error:', err);
+        }
+        throw err; /* propagate so callers can return their safe fallback */
+      });
+  }
+
+  /* ── Fetch abstract for a single Scopus ID via the Abstract Retrieval API ─
+   * Falls back to an empty string on any error so the card still renders.
+   * ────────────────────────────────────────────────────────────────────────── */
+  function _elsAbstractFetch(scopusId, callback) {
+    if (!scopusId) { callback(''); return; }
+    var url  = RS_ELSEVIER_ABSTRACT + encodeURIComponent(scopusId);
+    var hdrs = { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' };
+    _elsFetch(url, hdrs, 'AbstractRetrieval')
+      .then(function(data) {
+        /* JSON path */
+        var core = (data && data['abstracts-retrieval-response'] && data['abstracts-retrieval-response'].coredata) || {};
+        var abstract = core['dc:description'] || core['abstract'] || '';
+        callback(abstract);
+      })
+      .catch(function() { callback(''); });
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
    * Layer 3b: Elsevier — searches both Scopus and ScienceDirect in parallel,
    * normalises their responses, tags each result by sub-source, and merges
    * into one unified feed.  No UI selection required — always auto-queries.
@@ -2387,26 +3046,28 @@
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess,citedby-count,eid';
 
-    var scopusPromise = fetch(scopusUrl, { headers: headers })
-      .then(function(r) {
-        if (!r.ok) throw new Error('Scopus ' + r.status);
-        return r.json();
-      })
+    var scopusPromise = _elsFetch(scopusUrl, headers, 'Scopus')
       .then(function(data) {
         var sr     = (data && data['search-results']) || {};
         var total  = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
-        var items  = sr.entry || [];
+        var rawEntry = sr.entry;
+        var items  = Array.isArray(rawEntry) ? rawEntry : (rawEntry ? [rawEntry] : []);
         var results = items.map(function(e, i) {
           var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
-          var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+          var url = _elsHumanUrl(e['prism:url'] || '', doi);
           var year = '';
           var d = e['prism:coverDate'] || '';
           var m = String(d).match(/\d{4}/);
           if (m) year = m[0];
+          /* Extract Scopus ID from eid (format: 2-s2.0-<number>) for lazy abstract fetch */
+          var eid = e['eid'] || '';
+          var scopusIdMatch = eid.match(/2-s2\.0-(\d+)/);
+          var scopusId = scopusIdMatch ? scopusIdMatch[1] : '';
           return {
             _src:      'elsevier',
             _sub:      'scopus',
-            id:        'el_sc_' + (e['eid'] || i + '_' + page),
+            _scopusId: scopusId,
+            id:        'el_sc_' + (eid || i + '_' + page),
             title:     e['dc:title'] || 'Untitled',
             authors:   e['dc:creator'] || '',
             journal:   e['prism:publicationName'] || '',
@@ -2420,7 +3081,10 @@
         });
         return { results: results, total: total };
       })
-      .catch(function() { return { results: [], total: 0 }; });
+      .catch(function(err) {
+        console.error('[ELS Scopus] Layer 3b search failed:', err && (err.message || err));
+        return { results: [], total: 0 };
+      });
 
     /* ── ScienceDirect ── */
     var sdUrl = RS_ELSEVIER_SD +
@@ -2429,18 +3093,15 @@
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess';
 
-    var sdPromise = fetch(sdUrl, { headers: headers })
-      .then(function(r) {
-        if (!r.ok) throw new Error('ScienceDirect ' + r.status);
-        return r.json();
-      })
+    var sdPromise = _elsFetch(sdUrl, headers, 'ScienceDirect')
       .then(function(data) {
         var sr    = (data && data['search-results']) || {};
         var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
-        var items = sr.entry || [];
+        var rawEntry = sr.entry;
+        var items = Array.isArray(rawEntry) ? rawEntry : (rawEntry ? [rawEntry] : []);
         var results = items.map(function(e, i) {
           var doi = (e['prism:doi'] || '').replace(/^https?:\/\/doi\.org\//i, '');
-          var url = e['prism:url'] || (doi ? 'https://doi.org/' + doi : '');
+          var url = _elsHumanUrl(e['prism:url'] || '', doi);
           var year = '';
           var d = e['prism:coverDate'] || '';
           var m = String(d).match(/\d{4}/);
@@ -2461,7 +3122,10 @@
         });
         return { results: results, total: total };
       })
-      .catch(function() { return { results: [], total: 0 }; });
+      .catch(function(err) {
+        console.error('[ELS ScienceDirect] Layer 3b search failed:', err && (err.message || err));
+        return { results: [], total: 0 };
+      });
 
     /* ── Merge parallel results ── */
     return Promise.all([scopusPromise, sdPromise]).then(function(both) {
@@ -2523,17 +3187,23 @@
       'title="Copy citation">📋 Cite</button>';
 
     var hasAbstract  = !!r.abstract;
+    /* Scopus cards without an abstract can lazy-fetch it via the Abstract Retrieval API */
+    var canLazyFetch = !hasAbstract && r._sub === 'scopus' && !!r._scopusId;
     var abstractHtml = hasAbstract
       ? '<div class="rs-result-abstract" id="el-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
         '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
           'onclick="LibraryModule.elToggleAbstract(' + idx + ')">Show more</button>'
-      : '';
+      : canLazyFetch
+        ? '<div class="rs-result-abstract" id="el-abs-' + idx + '" style="display:none"></div>' +
+          '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+            'onclick="LibraryModule.elToggleAbstract(' + idx + ')">Load abstract</button>'
+        : '';
 
     return '<div class="rs-result" id="el-card-' + idx + '">' +
       '<div class="rs-result-title">'    + _esc(r.title)   + '</div>' +
       (r.authors ? '<div class="rs-result-authors">' + _esc(r.authors) + '</div>' : '') +
       '<div class="rs-result-meta">' +
-        srcBadge + oaBadge + citBadge +
+        oaBadge + citBadge +
         (r.journal ? '<span class="rs-result-journal" title="' + _esc(r.journal) + '">' + _esc(r.journal) + '</span>' : '') +
         (r.year    ? '<span class="rs-result-year">'    + _esc(r.year)    + '</span>' : '') +
       '</div>' +
@@ -2542,12 +3212,35 @@
     '</div>';
   }
 
-  /* Toggle abstract for Elsevier card */
+  /* Toggle / lazy-load abstract for Elsevier card.
+   * If the card has no abstract yet but has a Scopus ID, fetches it via
+   * the Abstract Retrieval API (JSON) and populates the placeholder. */
   function _elToggleAbstract(idx) {
+    var r     = _bgELResults[idx];
     var absEl = document.getElementById('el-abs-' + idx);
     if (!absEl) return;
-    var btn     = absEl.nextElementSibling;
+    var btn = absEl.nextElementSibling;
+
+    /* ── Lazy-fetch path: abstract not yet loaded ── */
+    if (!r.abstract && r._scopusId) {
+      absEl.style.display = 'block';
+      absEl.textContent   = 'Loading abstract…';
+      if (btn && btn.tagName === 'BUTTON') btn.disabled = true;
+      _elsAbstractFetch(r._scopusId, function(text) {
+        if (r) r.abstract = text;
+        absEl.textContent = text || 'No abstract available.';
+        absEl.classList.add('expanded');
+        if (btn && btn.tagName === 'BUTTON') {
+          btn.disabled    = false;
+          btn.textContent = 'Show less';
+        }
+      });
+      return;
+    }
+
+    /* ── Toggle expand/collapse for already-loaded abstract ── */
     var expanded = absEl.classList.toggle('expanded');
+    absEl.style.display = '';
     if (btn && btn.tagName === 'BUTTON') btn.textContent = expanded ? 'Show less' : 'Show more';
   }
 
@@ -2601,7 +3294,6 @@
       '<div class="rs-result-title">'+_esc(r.title)+'</div>' +
       (r.authors ? '<div class="rs-result-authors">'+_esc(r.authors)+'</div>' : '') +
       '<div class="rs-result-meta">' +
-        srcBadge +
         (r.journal ? '<span class="rs-result-journal" title="'+_esc(r.journal)+'">'+_esc(r.journal)+'</span>' : '') +
         (r.year ? '<span class="rs-result-year">'+_esc(r.year)+'</span>' : '') +
         oaBadge +
@@ -2747,7 +3439,7 @@
           '<div class="lib-searchbar">'+
             '<span class="lib-search-icon">⌕</span>'+
             '<input type="text" id="lib-q" '+
-              'placeholder="Search Oasis Library · PubMed · OpenAlex · Frontiers…" '+
+              'placeholder="Search guidelines, articles, books, protocols…" '+
               'autocomplete="off" spellcheck="false" '+
               'oninput="LibraryModule.onSearch(this.value)" '+
               'onkeydown="if(event.key===\'Enter\')LibraryModule.onSearch(this.value)">'+
@@ -3111,6 +3803,7 @@
         _bgELResults       = [];
         _bgELTotal         = 0;
         _bgHasMoreEL       = false;
+        _sqClearCache();   // reset scored search cache
         _removeSentinel();
         _renderBrowse();
       }
@@ -3118,17 +3811,21 @@
 
     filterByCategory: function(cat) {
       _filterCat = cat;
+      _sqClearCache();
       document.querySelectorAll('[data-cat]').forEach(function(el) {
         el.classList.toggle('active', el.getAttribute('data-cat') === cat);
       });
-      _renderBrowse();
+      if (_searchQ.trim().length >= 2) _doUnifiedSearch(_searchQ);
+      else _renderBrowse();
     },
     filterByType: function(type) {
       _filterType = type;
+      _sqClearCache();
       document.querySelectorAll('[data-ftype]').forEach(function(el) {
         el.classList.toggle('active', el.getAttribute('data-ftype') === type);
       });
-      _renderBrowse();
+      if (_searchQ.trim().length >= 2) _doUnifiedSearch(_searchQ);
+      else _renderBrowse();
     },
 
     /* Resource actions */
