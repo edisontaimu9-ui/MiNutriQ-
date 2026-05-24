@@ -724,16 +724,319 @@ function _scoreSTRONGkids(item1, item2, item3, item4) {
   return { total: total, risk: risk, riskColor: riskColor, action: action, checkWeight: checkWeight };
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// 5.  NRS-2002 SCORING LOGIC
+//     Nutritional Risk Screening 2002
+//     Kondrup J et al. (2003). Clinical Nutrition 22(3):321–336.
+//     Martindale RG et al. (2018). PRS 142(3); Appendix 1.
+//     Adults admitted to hospital. Score ≥ 3 = at nutritional risk.
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Score NRS-2002 from component values.
+ * @param {number} nutScore   0|1|2|3  — Impaired Nutritional Status
+ * @param {number} disScore   0|1|2|3  — Severity of Disease
+ * @param {boolean} ageAdj   true if patient age ≥ 70 (adds 1 point)
+ * @returns {{ nutScore, disScore, ageBonus, total, atRisk, riskColor, recommendation, rescrInterval }}
+ */
+function _scoreNRS2002(nutScore, disScore, ageAdj) {
+  var ageBonus = ageAdj ? 1 : 0;
+  var total    = nutScore + disScore + ageBonus;
+  var atRisk   = total >= 3;
+
+  var riskColor, recommendation, rescrInterval;
+
+  if (!atRisk) {
+    riskColor        = '#34d399';
+    rescrInterval    = 'Weekly';
+    recommendation   = 'Score < 3: Patient is not currently at nutritional risk. Re-screen weekly. '
+      + 'If patient is scheduled for major surgery, consider a preventive nutritional care plan to avoid the associated risk status.';
+  } else {
+    riskColor      = '#fb7185';
+    rescrInterval  = 'As clinically indicated';
+    // ESPEN / NRS-2002 matrix-based recommendation
+    if (nutScore === 3 || disScore === 3) {
+      recommendation = 'Score ≥ 3 (Severely undernourished OR severely ill): Initiate individual nutritional care plan immediately. '
+        + 'Set energy & protein goals. Consult dietitian / nutrition support team. Monitor tolerance and response. '
+        + 'Note: critically ill patients (disease score 3) may not achieve full requirements even via artificial nutrition — '
+        + 'protein breakdown can be attenuated but not fully reversed.';
+    } else if ((nutScore === 2 && disScore >= 1) || (nutScore >= 1 && disScore === 2)) {
+      recommendation = 'Score ≥ 3 (Moderate undernutrition + mild illness, or mild undernutrition + moderate illness): '
+        + 'Initiate nutritional care plan. Oral supplements or artificial feeding as appropriate. '
+        + 'Set protein-energy targets (ESPEN: ≥1.2–1.5 g protein/kg/day in at-risk adults). Review weekly.';
+    } else {
+      recommendation = 'Score ≥ 3: Nutritional risk identified. Initiate nutritional care plan. '
+        + 'Refer to dietitian. Set individualised protein-energy targets. Monitor weekly.';
+    }
+  }
+
+  return {
+    nutScore:      nutScore,
+    disScore:      disScore,
+    ageBonus:      ageBonus,
+    total:         total,
+    atRisk:        atRisk,
+    riskColor:     riskColor,
+    recommendation: recommendation,
+    rescrInterval: rescrInterval,
+  };
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// NRS-2002 RENDER
+// ══════════════════════════════════════════════════════════════════════
+
+function _renderNRS2002() {
+  var COLOR = '#f472b6';   // NRS-2002 accent (pink-400)
+
+  // ── Collect initial screening answers ────────────────────────────
+  var initBmi    = document.getElementById('nrs-init-bmi')?.checked    || false;
+  var initWtLoss = document.getElementById('nrs-init-wtloss')?.checked || false;
+  var initIntake = document.getElementById('nrs-init-intake')?.checked || false;
+  var initIll    = document.getElementById('nrs-init-ill')?.checked    || false;
+  var anyInitYes = initBmi || initWtLoss || initIntake || initIll;
+
+  // ── Collect final screening values ────────────────────────────────
+  var nutVal = document.querySelector('input[name="nrs-nut"]:checked')?.value;
+  var disVal = document.querySelector('input[name="nrs-dis"]:checked')?.value;
+  var ageAdj = document.getElementById('nrs-age-adj')?.checked || false;
+  var ptName = (document.getElementById('nrs-pt-name') || {}).value || '';
+  var ptDOB  = (document.getElementById('nrs-pt-dob')  || {}).value || '';
+  var ptWard = (document.getElementById('nrs-pt-ward') || {}).value || '';
+
+  // If initial screening is all NO, show re-screen message
+  if (!anyInitYes) {
+    // Check whether user actually filled it (at least one must be interacted with)
+    var anyChecked = [initBmi,initWtLoss,initIntake,initIll].some(function(v){ return v; });
+    // We allow calculation if final screening is filled regardless
+    if (nutVal === undefined && disVal === undefined) {
+      document.getElementById('nrs-results').innerHTML =
+        '<div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:10px;color:#34d399;line-height:1.7">'
+        + '<span style="font-weight:700;letter-spacing:1px;display:block;margin-bottom:6px">✅ INITIAL SCREENING — ALL NO</span>'
+        + 'All 4 initial screening questions are answered NO. The patient is <strong>not at obvious nutritional risk</strong> at this time.<br>'
+        + 'Re-screen weekly, or proceed to Final Screening below if clinically indicated.'
+        + '</div>';
+      return;
+    }
+  }
+
+  // ── Validate final screening fields ──────────────────────────────
+  if (nutVal === undefined || disVal === undefined) {
+    document.getElementById('nrs-results').innerHTML =
+      '<div style="color:#fb7185;font-family:var(--mono);font-size:11px;padding:12px;text-align:center;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.25);border-radius:8px">'
+      + '⚠ Select a Nutritional Status score AND a Disease Severity score in the Final Screening section to calculate NRS-2002.</div>';
+    return;
+  }
+
+  var ns     = parseInt(nutVal, 10);
+  var ds     = parseInt(disVal, 10);
+  var result = _scoreNRS2002(ns, ds, ageAdj);
+
+  function _rgb(c) {
+    if (c === '#34d399') return '52,211,153';
+    if (c === '#f0b429') return '240,180,41';
+    if (c === '#fb7185') return '251,113,133';
+    return '244,114,182';
+  }
+
+  var NUT_LABELS = ['Absent (0)','Mild (1)','Moderate (2)','Severe (3)'];
+  var DIS_LABELS = ['Absent (0)','Mild (1)','Moderate (2)','Severe (3)'];
+
+  var scrDate = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+  var html = '<div style="display:flex;flex-direction:column;gap:12px">';
+
+  // Action bar
+  html += `
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="_nrs2002SaveToHistory()"
+      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
+      💾 SAVE
+    </button>
+    <button onclick="saveToPDF('nrs-results','Oasis — NRS-2002 Screening')"
+      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      📄 PDF
+    </button>
+    <button onclick="_nrs2002Clear()"
+      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      ↺ CLEAR
+    </button>
+  </div>`;
+
+  // Score card
+  html += `
+  <div style="background:var(--surface2);border:2px solid ${result.riskColor};border-radius:12px;overflow:hidden">
+
+    <!-- Header -->
+    <div style="background:${result.riskColor}18;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:${result.riskColor};text-transform:uppercase">🏥 NRS-2002 SCORE</div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:2px">Kondrup J et al. Clin Nutr 2003 · ESPEN Guidelines</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--mono);font-size:40px;font-weight:900;color:${result.riskColor};line-height:1">${result.total}</div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1px">/ 7 MAX</div>
+      </div>
+    </div>
+
+    <!-- Score bar -->
+    <div style="height:5px;background:rgba(255,255,255,0.05)">
+      <div style="height:100%;width:${Math.min(100,Math.round(result.total/7*100))}%;background:${result.riskColor};transition:width .4s"></div>
+    </div>
+
+    <!-- Risk badge -->
+    <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:${result.riskColor}18;border:1px solid ${result.riskColor}40;border-radius:8px;padding:7px 14px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${result.riskColor}"></div>
+        <span style="font-family:var(--mono);font-size:12px;font-weight:800;color:${result.riskColor};letter-spacing:2px">${result.atRisk ? 'AT NUTRITIONAL RISK' : 'NOT AT NUTRITIONAL RISK'}</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:6px">Re-screen: ${result.rescrInterval}</div>
+    </div>
+
+    <!-- Score breakdown -->
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">SCORE COMPONENTS</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${[
+          { label:'NUTRITIONAL STATUS', score:result.nutScore, sub: NUT_LABELS[result.nutScore], max:3, c: result.nutScore===0?'#34d399':result.nutScore===1?'#f0b429':'#fb7185' },
+          { label:'DISEASE SEVERITY',   score:result.disScore, sub: DIS_LABELS[result.disScore], max:3, c: result.disScore===0?'#34d399':result.disScore===1?'#f0b429':'#fb7185' },
+          { label:'AGE ADJUSTMENT',     score:result.ageBonus, sub: ageAdj?'Age ≥ 70':'Age < 70',  max:1, c: result.ageBonus?'#f0b429':'#34d399' },
+        ].map(function(s){
+          return '<div style="background:var(--surface3);border-radius:8px;padding:9px;text-align:center">'
+            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);letter-spacing:0.8px;margin-bottom:4px">' + s.label + '</div>'
+            + '<div style="font-size:24px;font-weight:800;color:' + s.c + ';line-height:1.1">' + s.score + '</div>'
+            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);margin-top:1px">/ ' + s.max + '</div>'
+            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);margin-top:2px;line-height:1.3">' + s.sub + '</div>'
+          + '</div>';
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Score equation display -->
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.12)">
+      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);text-align:center">
+        Nutritional Status
+        <span style="color:var(--text)">${result.nutScore}</span>
+        &nbsp;+&nbsp; Disease Severity
+        <span style="color:var(--text)">${result.disScore}</span>
+        ${result.ageBonus ? '&nbsp;+&nbsp; Age Bonus <span style="color:#f0b429">1</span>' : ''}
+        &nbsp;=&nbsp; Total
+        <span style="color:${result.riskColor};font-weight:800;font-size:12px">${result.total}</span>
+        &nbsp;
+        <span style="color:${result.riskColor};font-weight:700">${result.atRisk ? '(≥ 3 — AT RISK)' : '(< 3 — NOT AT RISK)'}</span>
+      </div>
+    </div>
+
+    <!-- Recommendation -->
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">CLINICAL RECOMMENDATION</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7;background:rgba(${_rgb(result.riskColor)},0.06);border:1px solid rgba(${_rgb(result.riskColor)},0.22);border-radius:8px;padding:10px 12px">${result.recommendation}</div>
+    </div>
+
+    <!-- NRS-2002 quick-reference matrix -->
+    <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:7px">NRS-2002 RISK MATRIX (ESPEN)</div>
+      <div style="font-family:var(--mono);font-size:8px;line-height:1.9;color:var(--text-dim)">
+        <span style="color:#fb7185;font-weight:700">● Score ≥ 3</span> — At nutritional risk → initiate nutritional care plan<br>
+        <span style="color:#34d399;font-weight:700">● Score &lt; 3</span> — Not at risk → re-screen weekly<br>
+        <span style="color:var(--text)">Indication:</span> (1) severely undernourished (nut=3), or (2) severely ill (dis=3),<br>
+        &nbsp;&nbsp;or (3) moderately undernourished + mildly ill (2+1), or (4) mildly undernourished + moderately ill (1+2)
+      </div>
+    </div>
+
+    <!-- Patient info footer -->
+    <div style="padding:10px 14px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);line-height:1.9">
+        <span style="color:var(--text)">Patient:</span> ${ptName || '—'} &nbsp;|&nbsp;
+        <span style="color:var(--text)">DOB:</span> ${ptDOB || '—'} &nbsp;|&nbsp;
+        <span style="color:var(--text)">Ward:</span> ${ptWard || '—'} &nbsp;|&nbsp;
+        <span style="color:var(--text)">Date:</span> ${scrDate}<br>
+        Ref: Kondrup J, Allison SP, Elia M, Vellas B, Plauth M. ESPEN guidelines for nutrition screening 2002.
+        Clin Nutr. 2003;22(4):415–421. Martindale RG et al. PRS 2018;142(3) Appendix 1.
+      </div>
+    </div>
+
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('nrs-results').innerHTML = html;
+  try { document.getElementById('nrs-results').scrollIntoView({ behavior:'smooth', block:'nearest' }); } catch(e){}
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// NRS-2002 SAVE / CLEAR
+// ══════════════════════════════════════════════════════════════════════
+
+function _nrs2002SaveToHistory() {
+  var rs = document.getElementById('nrs-results');
+  if (!rs || !rs.querySelector('[style*="NRS-2002 SCORE"]')) {
+    try { showToast('Run NRS-2002 calculation first','warning'); } catch(e){} return;
+  }
+  var entry = {
+    id: Date.now(), savedAt: new Date().toLocaleString(),
+    module: 'screening-nrs2002', label: 'NRS-2002 Screening',
+    snapshot: rs.innerText.slice(0, 600),
+  };
+  try {
+    DataService.addToList('history', entry, 50);
+    showToast('✅ NRS-2002 screening saved to history','success');
+    try { renderActivityStrip(); } catch(e){}
+  } catch(e) {
+    try { showToast('Save failed: '+e.message,'error'); } catch(e2){}
+  }
+}
+
+function _nrs2002Clear() {
+  // Clear initial screening checkboxes
+  ['nrs-init-bmi','nrs-init-wtloss','nrs-init-intake','nrs-init-ill'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  // Clear final screening radios
+  ['nrs-nut','nrs-dis'].forEach(function(n){
+    var radios = document.querySelectorAll('input[name="'+n+'"]');
+    radios.forEach(function(r){ r.checked = false; });
+  });
+  // Clear age adjustment
+  var ageEl = document.getElementById('nrs-age-adj');
+  if (ageEl) ageEl.checked = false;
+  // Clear patient details
+  ['nrs-pt-name','nrs-pt-dob','nrs-pt-ward'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('nrs-results').innerHTML =
+    _placeholderDiv('Complete Initial Screening, then select Nutritional Status and Disease Severity scores to calculate NRS-2002.');
+  try { showToast('NRS-2002 cleared','info'); } catch(e){}
+}
+
+// Expose globally (needed by onclick attrs in innerHTML)
+window._renderNRS2002         = _renderNRS2002;
+window._nrs2002SaveToHistory  = _nrs2002SaveToHistory;
+window._nrs2002Clear          = _nrs2002Clear;
+
+
 function _scrSwitchTool(tool) {
-  ['must','mna','stamp','strongkids'].forEach(function(t) {
+  // Per-tool accent colours for active state
+  var TOOL_ACCENTS = {
+    must:       { bg:'rgba(56,189,248,0.12)',  color:'#38bdf8', border:'rgba(56,189,248,0.4)'  },
+    mna:        { bg:'rgba(52,211,153,0.12)',  color:'#34d399', border:'rgba(52,211,153,0.4)'  },
+    stamp:      { bg:'rgba(251,146,60,0.12)',  color:'#fb923c', border:'rgba(251,146,60,0.4)'  },
+    strongkids: { bg:'rgba(167,139,250,0.12)', color:'#a78bfa', border:'rgba(167,139,250,0.4)' },
+    nrs2002:    { bg:'rgba(244,114,182,0.12)', color:'#f472b6', border:'rgba(244,114,182,0.4)' },
+  };
+  ['must','mna','stamp','strongkids','nrs2002'].forEach(function(t) {
     var panel = document.getElementById('scr-panel-'+t);
     var btn   = document.getElementById('scr-btn-'+t);
     if (!panel || !btn) return;
-    var active = (t === tool);
-    panel.style.display = active ? 'block' : 'none';
-    btn.style.background  = active ? 'rgba(56,189,248,0.12)' : 'transparent';
-    btn.style.color       = active ? '#38bdf8' : 'var(--text-dim)';
-    btn.style.borderColor = active ? 'rgba(56,189,248,0.4)' : 'var(--border)';
+    var active  = (t === tool);
+    var accents = TOOL_ACCENTS[t] || TOOL_ACCENTS.must;
+    panel.style.display   = active ? 'block' : 'none';
+    btn.style.background  = active ? accents.bg    : 'transparent';
+    btn.style.color       = active ? accents.color : 'var(--text-dim)';
+    btn.style.borderColor = active ? accents.border : 'var(--border)';
   });
 }
 window._scrSwitchTool = _scrSwitchTool;
@@ -786,7 +1089,7 @@ function _buildScreeningTab() {
       <span style="font-size:26px">📋</span>
       <div>
         <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Nutrition Screening</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">MUST · MNA-SF · STAMP · STRONGkids · IDENTIFY · REFER · MONITOR</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">MUST · MNA-SF · STAMP · STRONGkids · NRS-2002 · IDENTIFY · REFER · MONITOR</div>
       </div>
     </div>
     <div style="height:2px;background:linear-gradient(90deg,#38bdf8,rgba(56,189,248,0));border-radius:2px;margin:10px 0 14px"></div>
@@ -800,25 +1103,30 @@ function _buildScreeningTab() {
     <span style="color:#34d399;margin-left:10px">● MNA-SF</span> — older adults ≥ 65 years.
     <span style="color:#fb923c;margin-left:10px">● STAMP</span> — paediatric in-patients (ages 2–17 yrs).
     <span style="color:#a78bfa;margin-left:10px">● STRONGkids</span> — hospitalised children 1 month – 18 years.
+    <span style="color:#f472b6;margin-left:10px">● NRS-2002</span> — hospitalised adults; evidence-based RCT-validated tool (ESPEN 2002).
   </div>
 
-  <!-- Tool selector sub-tabs -->
-  <div style="margin:0 16px 14px;display:flex;gap:8px">
+  <!-- Tool selector sub-tabs (2-row grid, mobile-safe) -->
+  <div style="margin:0 16px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
     <button id="scr-btn-must" onclick="_scrSwitchTool('must')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;border-radius:8px;border:1px solid rgba(56,189,248,0.4);background:rgba(56,189,248,0.12);color:#38bdf8;cursor:pointer;transition:all .15s">
+      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid rgba(56,189,248,0.4);background:rgba(56,189,248,0.12);color:#38bdf8;cursor:pointer;transition:all .15s;white-space:nowrap">
       📋 MUST
     </button>
     <button id="scr-btn-mna" onclick="_scrSwitchTool('mna')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s">
+      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       🧓 MNA-SF
     </button>
     <button id="scr-btn-stamp" onclick="_scrSwitchTool('stamp')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s">
+      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       🧒 STAMP
     </button>
     <button id="scr-btn-strongkids" onclick="_scrSwitchTool('strongkids')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s">
+      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       👶 STRONGkids
+    </button>
+    <button id="scr-btn-nrs2002" onclick="_scrSwitchTool('nrs2002')"
+      style="grid-column:span 2;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
+      🏥 NRS-2002
     </button>
   </div>
 
@@ -1362,6 +1670,196 @@ function _buildScreeningTab() {
   </div>
   <!-- /STRONGkids PANEL -->
 
+  <!-- ════════════════ NRS-2002 PANEL ════════════════ -->
+  <div id="scr-panel-nrs2002" style="display:none">
+
+    <!-- Descriptor banner -->
+    <div style="background:rgba(244,114,182,0.05);border-top:1px solid rgba(244,114,182,0.15);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+      <span style="color:#f472b6;font-weight:700">NRS-2002 (Nutritional Risk Screening 2002) — </span>
+      Two-step screening validated by 128 RCTs. Step 1: Initial Screening (4 questions). Step 2: Final Screening (Nutritional Status + Disease Severity + Age).
+      <strong style="color:var(--text)">Score ≥ 3 = At nutritional risk → initiate care plan.</strong>
+      For hospitalised adults. Ref: Kondrup J et al. Clin Nutr 2003.
+    </div>
+
+    <!-- Patient details (optional) -->
+    <div style="padding:0 16px;margin-bottom:12px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">
+          PATIENT DETAILS (OPTIONAL)
+        </div>
+        <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+          <div>
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PATIENT NAME</label>
+            <input id="nrs-pt-name" type="text" placeholder="Name"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
+          </div>
+          <div>
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
+            <input id="nrs-pt-dob" type="date"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
+          </div>
+          <div>
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WARD / UNIT</label>
+            <input id="nrs-pt-ward" type="text" placeholder="Ward"
+              style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 1: INITIAL SCREENING ── -->
+    <div style="padding:0 16px;margin-bottom:12px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+
+        <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 1 — INITIAL SCREENING</div>
+          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">If ANY answer is YES → proceed to Final Screening. If ALL NO → re-screen weekly.</div>
+        </div>
+
+        <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+          ${[
+            { id:'nrs-init-bmi',    q:'1. Is BMI &lt; 20.5?' },
+            { id:'nrs-init-wtloss', q:'2. Has the patient lost weight within the last 3 months?' },
+            { id:'nrs-init-intake', q:'3. Has the patient had a reduced dietary intake in the last week?' },
+            { id:'nrs-init-ill',    q:'4. Is the patient severely ill (e.g. in intensive therapy)?' },
+          ].map(function(item){
+            return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
+              + '<input type="checkbox" id="' + item.id + '" style="accent-color:#f472b6;width:15px;height:15px;margin-top:1px;flex-shrink:0">'
+              + '<span style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.5">' + item.q + '</span>'
+              + '</label>';
+          }).join('')}
+        </div>
+
+        <div style="padding:0 12px 12px">
+          <div style="background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.15);border-radius:7px;padding:8px 12px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.6">
+            <span style="color:#f472b6;font-weight:700">Note: </span>
+            If all 4 answers are NO, re-screen at weekly intervals. If a major operation is planned, consider a preventive nutritional care plan.
+            If any answer is YES, complete the Final Screening below.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: FINAL SCREENING ── -->
+    <div style="padding:0 16px;margin-bottom:12px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+
+        <!-- Nutritional Status -->
+        <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2A — IMPAIRED NUTRITIONAL STATUS</div>
+          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
+        </div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${[
+            {
+              val:'0', color:'#34d399',
+              title:'Absent — Score 0',
+              detail:'Normal nutritional status.',
+            },
+            {
+              val:'1', color:'#f0b429',
+              title:'Mild — Score 1',
+              detail:'Weight loss &gt; 5% in 3 months, OR food intake below 50–75% of normal requirement in the preceding week.',
+            },
+            {
+              val:'2', color:'#fb923c',
+              title:'Moderate — Score 2',
+              detail:'Weight loss &gt; 5% in 2 months, OR BMI 18.5–20.5 + impaired general condition, OR food intake 20–60% of normal requirement in preceding week.',
+            },
+            {
+              val:'3', color:'#fb7185',
+              title:'Severe — Score 3',
+              detail:'Weight loss &gt; 5% in 1 month (&gt; 15% in 3 months), OR BMI &lt; 18.5 + impaired general condition, OR food intake 0–25% of normal requirement in preceding week.',
+            },
+          ].map(function(o){
+            return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
+              + '<input type="radio" name="nrs-nut" value="' + o.val + '" style="accent-color:' + o.color + ';width:15px;height:15px;margin-top:2px;flex-shrink:0">'
+              + '<div style="flex:1">'
+              + '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
+              + '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
+              + '</div>'
+              + '</label>';
+          }).join('')}
+        </div>
+
+        <!-- Disease Severity -->
+        <div style="background:rgba(244,114,182,0.08);border-top:1px solid rgba(244,114,182,0.1);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2B — SEVERITY OF DISEASE (= increase in requirements)</div>
+          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
+        </div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
+          ${[
+            {
+              val:'0', color:'#34d399',
+              title:'Absent — Score 0',
+              detail:'Normal nutritional requirements.',
+            },
+            {
+              val:'1', color:'#f0b429',
+              title:'Mild — Score 1',
+              detail:'Hip fracture.* Chronic patients with acute complications: cirrhosis,* COPD,* chronic haemodialysis, diabetes, oncology.',
+              proto:'Patient is weak but out of bed regularly. Protein requirement is increased but coverable by oral diet or supplements.',
+            },
+            {
+              val:'2', color:'#fb923c',
+              title:'Moderate — Score 2',
+              detail:'Major abdominal surgery,* stroke,* severe pneumonia, haematologic malignancy.',
+              proto:'Patient confined to bed due to illness. Protein requirement is substantially increased; artificial feeding often required.',
+            },
+            {
+              val:'3', color:'#fb7185',
+              title:'Severe — Score 3',
+              detail:'Head injury,* bone marrow transplantation,* intensive care patients (APACHE &gt; 10).',
+              proto:'Patient in intensive care (assisted ventilation). Protein requirement is increased and cannot be fully covered even by artificial feeding.',
+            },
+          ].map(function(o){
+            return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
+              + '<input type="radio" name="nrs-dis" value="' + o.val + '" style="accent-color:' + o.color + ';width:15px;height:15px;margin-top:2px;flex-shrink:0">'
+              + '<div style="flex:1">'
+              + '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
+              + '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
+              + (o.proto ? '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:4px;padding:5px 7px;border-left:2px solid rgba(255,255,255,0.1);line-height:1.5;font-style:italic">' + o.proto + '</div>' : '')
+              + '</div>'
+              + '</label>';
+          }).join('')}
+        </div>
+
+        <!-- Age adjustment -->
+        <div style="background:rgba(244,114,182,0.08);border-top:1px solid rgba(244,114,182,0.1);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2C — AGE ADJUSTMENT</div>
+        </div>
+        <div style="padding:12px">
+          <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
+            <input type="checkbox" id="nrs-age-adj" style="accent-color:#f472b6;width:15px;height:15px;flex-shrink:0">
+            <div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text)">Patient is aged <strong>≥ 70 years</strong> — add 1 point to total score</div>
+              <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:2px">Age-adjusted total score = Nutritional Status + Disease Severity + 1</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Calculate button -->
+        <div style="padding:0 12px 12px">
+          <button onclick="_renderNRS2002()"
+            style="width:100%;padding:12px;background:linear-gradient(135deg,#be185d,#f472b6);color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;border:none;border-radius:8px;cursor:pointer;transition:opacity .15s"
+            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            CALCULATE NRS-2002 SCORE
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- NRS-2002 results -->
+    <div style="padding:0 16px;margin-bottom:12px" id="nrs-results">
+      <div style="color:var(--text-dim);font-family:var(--mono);font-size:11px;padding:20px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px">
+        Complete Initial Screening, then select Nutritional Status and Disease Severity scores to calculate NRS-2002.
+      </div>
+    </div>
+
+  </div>
+  <!-- /NRS-2002 PANEL -->
+
 
 
 </div>`;
@@ -1401,6 +1899,9 @@ function _init() {
   window._renderSTRONGkids    = _renderSTRONGkids;
   window._skSaveToHistory     = _skSaveToHistory;
   window._skClear             = _skClear;
+  window._renderNRS2002       = _renderNRS2002;
+  window._nrs2002SaveToHistory= _nrs2002SaveToHistory;
+  window._nrs2002Clear        = _nrs2002Clear;
 }
 
 
