@@ -2573,6 +2573,7 @@ function openSettings(){
   document.getElementById('settings-overlay').classList.add('open');
   loadSettingsUI();
   if(typeof loadProfileIntoSettings==='function') loadProfileIntoSettings();
+  checkEmailVerification();
 }
 function closeSettings(){
   document.getElementById('settings-drawer').classList.remove('open');
@@ -2632,6 +2633,7 @@ function openProfile(){
   _populateProfileDrawer();
   document.getElementById('profile-drawer').classList.add('open');
   document.getElementById('profile-overlay').classList.add('open');
+  checkEmailVerification();
 }
 function closeProfile(){
   document.getElementById('profile-drawer').classList.remove('open');
@@ -9347,35 +9349,34 @@ function _ntShowVerifyBanner() {
 }
 
 /**
- * Dismiss the verification banner for this session.
- * Stored in sessionStorage so it reappears on next page load
- * until the email is actually verified.
+ * Dismiss the verification banner immediately.
+ * No session storage — banner can reappear the next time
+ * Profile or Settings is opened if email is still unverified.
  */
 function ntDismissVerifyBanner() {
   const banner = document.getElementById('email-verify-banner');
   if (banner) banner.style.display = 'none';
-  try { sessionStorage.setItem('nt_verify_banner_dismissed', '1'); } catch(e) {}
 }
 
 /**
- * Check whether the signed-in user's email is verified.
- * Shows the banner if not. Called after every sign-in, registration,
- * and session restore.
+ * Check whether the currently signed-in user's email is verified.
+ * Shows the banner (display:flex) if unverified, hides it (display:none) if verified.
+ * Call this only when the user opens the Profile or Settings panel — NOT on app load.
  */
-function _ntCheckEmailVerification(user) {
-  if (!user) return;
-  if (user.emailVerified) {
-    // Hide banner in case it was showing from a prior state
-    const banner = document.getElementById('email-verify-banner');
-    if (banner) banner.style.display = 'none';
-    _ntUpdateVerifyStatusUI(true);
-    return;
-  }
-  // Unverified — show banner unless the user dismissed it this session
+function checkEmailVerification() {
+  const banner = document.getElementById('email-verify-banner');
+  if (!banner) return;
   try {
-    if (sessionStorage.getItem('nt_verify_banner_dismissed')) return;
-  } catch(e) {}
-  _ntShowVerifyBanner();
+    const user = firebase.auth().currentUser;
+    if (user && !user.emailVerified) {
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (e) {
+    // Firebase auth unavailable — leave banner hidden
+    banner.style.display = 'none';
+  }
 }
 
 /**
@@ -9396,21 +9397,17 @@ function _ntUpdateVerifyStatusUI(verified) {
 
 /**
  * Resend a verification email to the currently signed-in user.
- * Called from the top banner and from the profile drawer badge.
+ * Called from the top banner resend button and the profile drawer badge.
  */
 async function ntResendVerification() {
-  const auth = _getAuth();
-  const user = auth?.currentUser;
+  const user = firebase.auth().currentUser;
 
   if (!user) {
     if (typeof showToast === 'function') showToast('Sign in first to resend a verification email.', 'info');
     return;
   }
 
-  // Reload the user object from Firebase to get the latest emailVerified flag
-  try { await user.reload(); } catch(e) {}
-
-  if (auth.currentUser?.emailVerified) {
+  if (user.emailVerified) {
     if (typeof showToast === 'function') showToast('✓ Your email is already verified!', 'success');
     ntDismissVerifyBanner();
     _ntUpdateVerifyStatusUI(true);
@@ -9418,11 +9415,11 @@ async function ntResendVerification() {
   }
 
   try {
-    await user.sendEmailVerification();
+    await firebase.auth().currentUser.sendEmailVerification();
     if (typeof showToast === 'function') {
       showToast('✓ Verification email sent to ' + (user.email || 'your address'), 'success');
     }
-  } catch(err) {
+  } catch (err) {
     const msg = err.code === 'auth/too-many-requests'
       ? 'Too many requests — please wait a moment before trying again.'
       : 'Could not send verification email. Please try again.';
@@ -9856,9 +9853,6 @@ function _obFinish(name, isReturning) {
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
   showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
-  // Check whether the signed-in user's email is verified and surface the banner if not
-  const auth = _getAuth();
-  if (auth?.currentUser) _ntCheckEmailVerification(auth.currentUser);
 }
 
 // ── Onboarding gate ───────────────────────────────────────────────
@@ -9926,7 +9920,6 @@ function _obResolveProfile(user) {
           saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', email: user.email || d.email || '', photoURL: d.photoURL || '', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
           try { renderProfileCard(); } catch(e) {}
           _hideOnboardingOverlay();
-          _ntCheckEmailVerification(user);
         } else {
           _showOnboardingOverlay();
         }
@@ -9937,7 +9930,6 @@ function _obResolveProfile(user) {
   } else {
     // Profile present — hide overlay, let user in
     _hideOnboardingOverlay();
-    _ntCheckEmailVerification(user);
   }
 }
 
