@@ -46,7 +46,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.2.8';
+  const APP_VERSION = '1.2.9';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -2423,6 +2423,31 @@ var photoCropper = (function () {
 
   </div>
 
+  <!-- ── ASSESSMENT TOOLS ── -->
+  <div class="hp-section-title" style="margin-top:24px">Assessment Tools</div>
+  <div style="padding:0 16px;margin-bottom:4px">
+    <div class="hp-assess-entry" onclick="switchTab('assessments')" role="button" tabindex="0" aria-label="Open Assessment Tools">
+      <div class="hp-assess-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="8" y="2" width="8" height="4" rx="1.5" fill="none"/>
+          <path d="M8 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-2"/>
+          <line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/>
+          <polyline points="9 7 10.5 8.5 13 6" stroke="#a78bfa" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="hp-assess-body">
+        <div class="hp-assess-title">Assessment Tools</div>
+        <div class="hp-assess-desc">SGA · MNA · PG-SGA · more coming</div>
+      </div>
+      <div class="hp-assess-meta">
+        <span class="hp-assess-live-badge">3 LIVE</span>
+      </div>
+      <div class="hp-assess-arrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+
   <!-- ── QUICK ACCESS ── -->
   <div class="hp-section-title" style="margin-top:24px">Information</div>
   <div class="hp-refs">
@@ -2486,6 +2511,1029 @@ var photoCropper = (function () {
   </div>
 
 </div><!-- /tab-home -->
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     ASSESSMENT TOOLS  |  tab-assessments
+     Modular registry of validated clinical assessment instruments.
+     Currently live: Subjective Global Assessment (SGA)
+     Architecture: tool list → inner routing → per-tool form view
+════════════════════════════════════════════════════════════════════════ -->
+<div class="main" id="tab-assessments" style="padding:0">
+
+  <!-- ── Tool list view ── -->
+  <div id="at-list">
+    <div class="at-form" style="padding-bottom:0">
+      <div class="at-list-intro">
+        Validated clinical nutrition assessment instruments. Select a tool to open the full form. Assessments run locally — no patient data is transmitted.
+      </div>
+
+      <!-- SGA — LIVE -->
+      <div class="at-item" onclick="atOpenTool('sga')" role="button" tabindex="0" aria-label="Open Subjective Global Assessment">
+        <div class="at-item-abbr-wrap" style="background:rgba(167,139,250,0.10);border:1px solid rgba(167,139,250,0.22);color:#a78bfa">SGA</div>
+        <div class="at-item-body">
+          <div class="at-item-name">Subjective Global Assessment</div>
+          <div class="at-item-desc">Clinician-rated nutrition status · Weight · Symptoms · Physical exam</div>
+        </div>
+        <div class="at-item-right">
+          <span class="at-badge at-badge-live">LIVE</span>
+          <span class="at-open-btn">Open →</span>
+        </div>
+      </div>
+
+      <!-- MNA — LIVE -->
+      <div class="at-item" onclick="atOpenTool('mna-full')" role="button" tabindex="0" aria-label="Open Mini Nutritional Assessment">
+        <div class="at-item-abbr-wrap" style="background:rgba(96,165,250,0.10);border:1px solid rgba(96,165,250,0.22);color:#60a5fa">MNA</div>
+        <div class="at-item-body">
+          <div class="at-item-name">Mini Nutritional Assessment (Full)</div>
+          <div class="at-item-desc">18-item validated tool for geriatric populations (≥65 years)</div>
+        </div>
+        <div class="at-item-right">
+          <span class="at-badge at-badge-live">LIVE</span>
+          <span class="at-open-btn">Open →</span>
+        </div>
+      </div>
+
+      <!-- PG-SGA — LIVE -->
+      <div class="at-item" onclick="atOpenTool('pg-sga')" role="button" tabindex="0" aria-label="Open Patient-Generated SGA">
+        <div class="at-item-abbr-wrap" style="background:rgba(244,114,182,0.10);border:1px solid rgba(244,114,182,0.22);color:#f472b6">PG-SGA</div>
+        <div class="at-item-body">
+          <div class="at-item-name">Patient-Generated SGA</div>
+          <div class="at-item-desc">Oncology-specific scored nutrition assessment · Patient + clinician rated</div>
+        </div>
+        <div class="at-item-right">
+          <span class="at-badge at-badge-live">LIVE</span>
+          <span class="at-open-btn">Open →</span>
+        </div>
+      </div>
+
+    </div><!-- /at-form -->
+  </div><!-- /#at-list -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SGA FORM VIEW
+       Subjective Global Assessment — Canadian Malnutrition Task Force
+       Baker JP et al. NEJM 1982;306(16):969–972
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="at-view-sga" class="at-view" style="display:none">
+
+    <!-- Inner topbar -->
+    <div class="at-view-inner-topbar">
+      <button class="at-view-back" onclick="atCloseView()">← Tools</button>
+      <div class="at-view-title">SGA</div>
+      <button class="at-view-reset" onclick="atSGAReset()">↺ Reset</button>
+    </div>
+
+    <div class="at-form">
+
+      <!-- Patient Info -->
+      <div class="at-form-info-row">
+        <input id="sga-patient" class="at-form-input" type="text" placeholder="Patient name" autocomplete="off" spellcheck="false">
+        <input id="sga-date" class="at-form-input" type="date">
+      </div>
+
+      <!-- ── NUTRIENT INTAKE ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 015 5c0 5-5 11-5 11S7 12 7 7a5 5 0 015-5z"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="at-section-title">Nutrient Intake</div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Current status</div>
+          <div class="at-rg">
+            <label class="at-rl">
+              <input type="radio" name="sga-intake-status" value="A" class="at-ri">
+              <span class="at-rc at-rc-a">No change; adequate</span>
+            </label>
+            <label class="at-rl">
+              <input type="radio" name="sga-intake-status" value="B" class="at-ri">
+              <span class="at-rc at-rc-b">Inadequate — suboptimal solid diet or full fluids / ONS
+                <span style="display:block;margin-top:6px">
+                  Duration: <input id="sga-intake-duration" type="text" placeholder="e.g. 2 weeks" style="font-family:var(--mono);font-size:10px;background:var(--surface3,#1a1a1a);border:1px solid var(--border);border-radius:5px;padding:3px 8px;color:var(--text-bright);width:110px">
+                </span>
+              </span>
+            </label>
+            <label class="at-rl">
+              <input type="radio" name="sga-intake-status" value="C" class="at-ri">
+              <span class="at-rc at-rc-c">Minimal intake — clear fluids or starvation</span>
+            </label>
+          </div>
+
+          <div class="at-domain-lbl" style="margin-top:14px">Trend — past 2 weeks</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-intake-2w" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">Adequate /<br>Improved</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-intake-2w" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;font-size:9.5px">Improved but<br>not adequate</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-intake-2w" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">No change /<br>inadequate</span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── WEIGHT ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.22);color:#f0b429">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20h12M12 4a4 4 0 014 4v1H8V8a4 4 0 014-4z"/><rect x="4" y="9" width="16" height="11" rx="2"/></svg>
+          </div>
+          <div class="at-section-title">Weight</div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-wt-row">
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Usual weight (kg)</div>
+              <input id="sga-usual-wt" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 65.0" oninput="sgaCalcWeightLoss()">
+            </div>
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Current weight (kg)</div>
+              <input id="sga-current-wt" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 60.5" oninput="sgaCalcWeightLoss()">
+            </div>
+          </div>
+          <div id="sga-wl-pct-info" class="at-wl-pct-info"></div>
+
+          <div class="at-domain-lbl">Non-fluid weight change — past 6 months</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">Weight loss (kg):</span>
+            <input id="sga-wl-kg" class="at-wt-input" type="number" step="0.1" min="0" placeholder="kg" style="width:90px">
+          </div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="sga-wl-pct" value="A" class="at-ri"><span class="at-rc at-rc-a">&lt;5% loss or weight stability</span></label>
+            <label class="at-rl"><input type="radio" name="sga-wl-pct" value="B" class="at-ri"><span class="at-rc at-rc-b">5–10% loss without stabilization or increase</span></label>
+            <label class="at-rl"><input type="radio" name="sga-wl-pct" value="C" class="at-ri"><span class="at-rc at-rc-c">&gt;10% loss and ongoing</span></label>
+          </div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin:8px 0 6px">If objective weight unknown — subjective loss past 6 months:</div>
+          <div class="at-rg-row" style="margin-bottom:10px">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-subj" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">None<br>or mild</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-subj" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;font-size:9.5px">Moderate</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-subj" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">Severe</span></label>
+          </div>
+
+          <div class="at-domain-lbl">Weight change — past 2 weeks</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-2w" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">Increased</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-2w" value="B" class="at-ri"><span class="at-rc" style="text-align:center;font-size:9.5px">No change</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-wl-2w" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">Decreased</span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── SYMPTOMS ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(244,114,182,0.12);border:1px solid rgba(244,114,182,0.22);color:#f472b6">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <div class="at-section-title">Symptoms (affecting oral intake)</div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Present symptoms</div>
+          <div class="at-cb-grid">
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Pain on eating</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Anorexia</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Vomiting</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Nausea</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Dysphagia</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Diarrhoea</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Dental problems</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Feels full quickly</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi sga-symptom-cb"><span class="at-cbt">Constipation</span></label>
+          </div>
+
+          <div class="at-domain-lbl">Severity</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="sga-sym-sev" value="A" class="at-ri"><span class="at-rc at-rc-a">None</span></label>
+            <label class="at-rl"><input type="radio" name="sga-sym-sev" value="B" class="at-ri"><span class="at-rc at-rc-b">Intermittent · mild · few</span></label>
+            <label class="at-rl"><input type="radio" name="sga-sym-sev" value="C" class="at-ri"><span class="at-rc at-rc-c">Constant · severe · multiple</span></label>
+          </div>
+
+          <div class="at-domain-lbl" style="margin-top:12px">Trend — past 2 weeks</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-sym-2w" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">Resolution</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-sym-2w" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;font-size:9.5px">Improving</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-sym-2w" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">No change /<br>worsened</span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── FUNCTIONAL CAPACITY ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 10l4 4 4-4M9 19h6"/></svg>
+          </div>
+          <div class="at-section-title">Functional Capacity</div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Current status</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="sga-func-status" value="A" class="at-ri"><span class="at-rc at-rc-a">No dysfunction</span></label>
+            <label class="at-rl"><input type="radio" name="sga-func-status" value="B" class="at-ri">
+              <span class="at-rc at-rc-b">Reduced capacity — difficulty with ambulation / normal activities
+                <span style="display:block;margin-top:6px">
+                  Duration: <input id="sga-func-duration" type="text" placeholder="e.g. 3 weeks" style="font-family:var(--mono);font-size:10px;background:var(--surface3,#1a1a1a);border:1px solid var(--border);border-radius:5px;padding:3px 8px;color:var(--text-bright);width:110px">
+                </span>
+              </span>
+            </label>
+            <label class="at-rl"><input type="radio" name="sga-func-status" value="C" class="at-ri"><span class="at-rc at-rc-c">Bed / chair-ridden</span></label>
+          </div>
+
+          <div class="at-domain-lbl" style="margin-top:12px">Trend — past 2 weeks</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-func-2w" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">Improved</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-func-2w" value="B" class="at-ri"><span class="at-rc" style="text-align:center;font-size:9.5px">No change</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-func-2w" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">Decrease</span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── METABOLIC REQUIREMENT ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.22);color:#fb923c">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="at-section-title">Metabolic Requirement</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-domain-lbl">High metabolic stress / requirement?</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-metab" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">No</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="sga-metab" value="B" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">Yes</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PHYSICAL EXAMINATION ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.22);color:#a78bfa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+          </div>
+          <div class="at-section-title">Physical Examination</div>
+        </div>
+        <div class="at-section-body">
+
+          <!-- Column headers -->
+          <div style="display:flex;align-items:center;gap:10px;padding:0 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)">
+            <div style="flex:0 0 130px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase">Finding</div>
+            <div class="at-phys-opts" style="font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase">
+              <span style="flex:1;text-align:center">No</span>
+              <span style="flex:1;text-align:center">Mild / Mod</span>
+              <span style="flex:1;text-align:center">Severe</span>
+            </div>
+          </div>
+
+          <!-- Loss of body fat -->
+          <div class="at-phys-row">
+            <div class="at-phys-lbl">Loss of body fat</div>
+            <div class="at-phys-opts">
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-fat" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;padding:6px 4px;font-size:9px">No</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-fat" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;padding:6px 4px;font-size:9px">Mild/Mod</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-fat" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;padding:6px 4px;font-size:9px">Severe</span></label>
+            </div>
+          </div>
+
+          <!-- Loss of muscle mass -->
+          <div class="at-phys-row">
+            <div class="at-phys-lbl">Loss of muscle mass</div>
+            <div class="at-phys-opts">
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-muscle" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;padding:6px 4px;font-size:9px">No</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-muscle" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;padding:6px 4px;font-size:9px">Mild/Mod</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-muscle" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;padding:6px 4px;font-size:9px">Severe</span></label>
+            </div>
+          </div>
+
+          <!-- Edema / ascites -->
+          <div class="at-phys-row" style="border-bottom:none">
+            <div class="at-phys-lbl">Edema / ascites</div>
+            <div class="at-phys-opts">
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-edema" value="A" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center;padding:6px 4px;font-size:9px">No</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-edema" value="B" class="at-ri"><span class="at-rc at-rc-b" style="text-align:center;padding:6px 4px;font-size:9px">Mild/Mod</span></label>
+              <label class="at-rl" style="flex:1"><input type="radio" name="sga-edema" value="C" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center;padding:6px 4px;font-size:9px">Severe</span></label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── CONTRIBUTING FACTORS ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.22);color:#fb7185">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="at-section-title">Contributing Factors</div>
+        </div>
+        <div class="at-section-body">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="at-cbl" style="align-items:flex-start;gap:10px">
+              <input type="checkbox" id="sga-cachexia" class="at-cbi" style="margin-top:2px">
+              <span>
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright)">Cachexia</span>
+                <span style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);display:block;margin-top:2px">Fat + muscle wasting due to underlying disease and inflammation (e.g. malignancy)</span>
+              </span>
+            </label>
+            <label class="at-cbl" style="align-items:flex-start;gap:10px">
+              <input type="checkbox" id="sga-sarcopenia" class="at-cbi" style="margin-top:2px">
+              <span>
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright)">Sarcopenia</span>
+                <span style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);display:block;margin-top:2px">Reduced muscle mass and strength (e.g. aging, physical inactivity)</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculate button -->
+      <button class="at-calc-btn" onclick="atSGACalculate()">▶ Generate SGA Rating</button>
+
+      <!-- Result output -->
+      <div id="at-sga-result" style="display:none"></div>
+
+      <!-- Reference footer -->
+      <div class="at-ref-footer">
+        <strong>References &amp; Guidance:</strong><br>
+        · Baker JP, Detsky AS, Wesson DE, et al. Nutritional assessment — a comparison of clinical judgement and objective measurements. <em>NEJM.</em> 1982;306(16):969–972.<br>
+        · Detsky AS, McLaughlin JR, Baker JP, et al. What is subjective global assessment of nutritional status? <em>JPEN.</em> 1987;11(1):8–13.<br>
+        · Canadian Malnutrition Task Force. <em>Subjective Global Assessment Form.</em> April 2017. canadianmalnutrition.ca<br>
+        · Supplementary exam guidance: See SGA Body Composition Reference (Canadian Malnutrition Task Force 2017, Page 2) for subcutaneous fat, muscle wasting, and fluid retention descriptors.
+      </div>
+
+    </div><!-- /at-form -->
+  </div><!-- /#at-view-sga -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MNA FULL FORM VIEW
+       Mini Nutritional Assessment — Guigoz Y, Vellas B, Nestlé MNA®
+       © Nestlé 1994, Revision 2009 · www.mna-elderly.com
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="at-view-mna-full" class="at-view" style="display:none">
+
+    <!-- Inner topbar -->
+    <div class="at-view-inner-topbar">
+      <button class="at-view-back" onclick="atCloseView()">← Tools</button>
+      <div class="at-view-title">MNA</div>
+      <button class="at-view-reset" onclick="atMNAReset()">↺ Reset</button>
+    </div>
+
+    <div class="at-form">
+
+      <!-- Patient Info -->
+      <div class="at-form-info-row">
+        <input id="mna-patient" class="at-form-input" type="text" placeholder="Patient name" autocomplete="off" spellcheck="false">
+        <input id="mna-date" class="at-form-input" type="date">
+      </div>
+      <div class="at-form-info-row" style="margin-top:8px">
+        <input id="mna-age" class="at-form-input" type="number" placeholder="Age (yrs)" min="60" step="1" style="flex:1">
+        <input id="mna-weight" class="at-form-input" type="number" placeholder="Weight (kg)" min="20" step="0.1" style="flex:1" oninput="mnaBmiCalc()">
+        <input id="mna-height" class="at-form-input" type="number" placeholder="Height (cm)" min="100" step="0.5" style="flex:1" oninput="mnaBmiCalc()">
+      </div>
+      <div id="mna-bmi-info" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:4px 2px;min-height:18px"></div>
+
+      <!-- ── SCREENING HEADER ── -->
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:#60a5fa;text-transform:uppercase;padding:14px 0 4px;border-top:1px solid var(--border);margin-top:4px">Screening · Questions A–F · max 14 pts</div>
+
+      <!-- A: Food intake -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">A</div>
+          <div class="at-section-title">Food intake decline — past 3 months</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-a" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Severe decrease in food intake</span></label>
+            <label class="at-rl"><input type="radio" name="mna-a" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Moderate decrease in food intake</span></label>
+            <label class="at-rl"><input type="radio" name="mna-a" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — No decrease in food intake</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- B: Weight loss -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">B</div>
+          <div class="at-section-title">Weight loss — last 3 months</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-b" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Weight loss &gt;3 kg (6.6 lbs)</span></label>
+            <label class="at-rl"><input type="radio" name="mna-b" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Does not know</span></label>
+            <label class="at-rl"><input type="radio" name="mna-b" value="2" class="at-ri"><span class="at-rc at-rc-b">2 — Weight loss 1–3 kg (2.2–6.6 lbs)</span></label>
+            <label class="at-rl"><input type="radio" name="mna-b" value="3" class="at-ri"><span class="at-rc at-rc-a">3 — No weight loss</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- C: Mobility -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">C</div>
+          <div class="at-section-title">Mobility</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-c" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Bed or chair bound</span></label>
+            <label class="at-rl"><input type="radio" name="mna-c" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Able to get out of bed / chair but does not go out</span></label>
+            <label class="at-rl"><input type="radio" name="mna-c" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — Goes out</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- D: Psychological stress -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">D</div>
+          <div class="at-section-title">Psychological stress or acute disease — past 3 months</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-d" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — Yes</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-d" value="2" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">2 — No</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- E: Neuropsychological -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">E</div>
+          <div class="at-section-title">Neuropsychological problems</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-e" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Severe dementia or depression</span></label>
+            <label class="at-rl"><input type="radio" name="mna-e" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Mild dementia</span></label>
+            <label class="at-rl"><input type="radio" name="mna-e" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — No psychological problems</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- F: BMI -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700">F</div>
+          <div class="at-section-title">Body Mass Index (BMI = weight kg / height m²)</div>
+        </div>
+        <div class="at-section-body">
+          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:8px">Auto-selected from weight/height above. Override manually if needed.</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-f" value="0" id="mna-f-0" class="at-ri"><span class="at-rc at-rc-c">0 — BMI &lt; 19</span></label>
+            <label class="at-rl"><input type="radio" name="mna-f" value="1" id="mna-f-1" class="at-ri"><span class="at-rc at-rc-b">1 — BMI 19 to &lt; 21</span></label>
+            <label class="at-rl"><input type="radio" name="mna-f" value="2" id="mna-f-2" class="at-ri"><span class="at-rc at-rc-b">2 — BMI 21 to &lt; 23</span></label>
+            <label class="at-rl"><input type="radio" name="mna-f" value="3" id="mna-f-3" class="at-ri"><span class="at-rc at-rc-a">3 — BMI ≥ 23</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ASSESSMENT HEADER ── -->
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2.5px;color:#34d399;text-transform:uppercase;padding:14px 0 4px;border-top:1px solid var(--border);margin-top:4px">Assessment · Questions G–R · max 16 pts</div>
+      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);padding:0 2px 10px;line-height:1.6">Complete if screening score ≤11 to obtain a full Malnutrition Indicator Score.</div>
+
+      <!-- G: Independent living -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">G</div>
+          <div class="at-section-title">Lives independently (not in nursing home or hospital)</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-g" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — No</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-g" value="1" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">1 — Yes</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- H: Medications -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">H</div>
+          <div class="at-section-title">Takes more than 3 prescription drugs per day</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-h" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — Yes</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-h" value="1" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">1 — No</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- I: Pressure sores -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">I</div>
+          <div class="at-section-title">Pressure sores or skin ulcers</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-i" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — Yes</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-i" value="1" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">1 — No</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- J: Full meals -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">J</div>
+          <div class="at-section-title">Full meals per day</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-j" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — 1 meal</span></label>
+            <label class="at-rl"><input type="radio" name="mna-j" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — 2 meals</span></label>
+            <label class="at-rl"><input type="radio" name="mna-j" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — 3 meals</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- K: Protein markers -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">K</div>
+          <div class="at-section-title">Selected protein intake markers</div>
+        </div>
+        <div class="at-section-body">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:10px;letter-spacing:1px">0–1 yes = 0.0 · 2 yes = 0.5 · 3 yes = 1.0</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label class="at-cbl" style="align-items:center;gap:10px">
+              <input type="checkbox" id="mna-k1" class="at-cbi" onchange="mnaUpdateKDisplay()">
+              <span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">≥1 serving dairy (milk, cheese, yoghurt) per day</span>
+            </label>
+            <label class="at-cbl" style="align-items:center;gap:10px">
+              <input type="checkbox" id="mna-k2" class="at-cbi" onchange="mnaUpdateKDisplay()">
+              <span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">≥2 servings legumes or eggs per week</span>
+            </label>
+            <label class="at-cbl" style="align-items:center;gap:10px">
+              <input type="checkbox" id="mna-k3" class="at-cbi" onchange="mnaUpdateKDisplay()">
+              <span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">Meat, fish or poultry every day</span>
+            </label>
+          </div>
+          <div id="mna-k-score-display" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:10px;padding:6px 10px;background:rgba(52,211,153,0.04);border-radius:6px;border:1px solid rgba(52,211,153,0.1)">Score: —</div>
+        </div>
+      </div>
+
+      <!-- L: Fruits / vegetables -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">L</div>
+          <div class="at-section-title">Consumes ≥2 servings fruit or vegetables per day</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-l" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — No</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-l" value="1" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">1 — Yes</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- M: Fluid intake -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">M</div>
+          <div class="at-section-title">Fluid intake (water, juice, coffee, tea, milk…) per day</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-m" value="0" class="at-ri"><span class="at-rc at-rc-c">0.0 — Less than 3 cups</span></label>
+            <label class="at-rl"><input type="radio" name="mna-m" value="0.5" class="at-ri"><span class="at-rc at-rc-b">0.5 — 3 to 5 cups</span></label>
+            <label class="at-rl"><input type="radio" name="mna-m" value="1" class="at-ri"><span class="at-rc at-rc-a">1.0 — More than 5 cups</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- N: Mode of feeding -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">N</div>
+          <div class="at-section-title">Mode of feeding</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-n" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Unable to eat without assistance</span></label>
+            <label class="at-rl"><input type="radio" name="mna-n" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Self-fed with some difficulty</span></label>
+            <label class="at-rl"><input type="radio" name="mna-n" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — Self-fed without any problem</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- O: Self view -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">O</div>
+          <div class="at-section-title">Self view of nutritional status</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-o" value="0" class="at-ri"><span class="at-rc at-rc-c">0 — Views self as being malnourished</span></label>
+            <label class="at-rl"><input type="radio" name="mna-o" value="1" class="at-ri"><span class="at-rc at-rc-b">1 — Uncertain of nutritional state</span></label>
+            <label class="at-rl"><input type="radio" name="mna-o" value="2" class="at-ri"><span class="at-rc at-rc-a">2 — Views self as having no nutritional problem</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- P: Health comparison -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">P</div>
+          <div class="at-section-title">Health status compared with others of same age</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-p" value="0" class="at-ri"><span class="at-rc at-rc-c">0.0 — Not as good</span></label>
+            <label class="at-rl"><input type="radio" name="mna-p" value="0.5" class="at-ri"><span class="at-rc at-rc-b">0.5 — Does not know</span></label>
+            <label class="at-rl"><input type="radio" name="mna-p" value="1" class="at-ri"><span class="at-rc at-rc-a">1.0 — As good</span></label>
+            <label class="at-rl"><input type="radio" name="mna-p" value="2" class="at-ri"><span class="at-rc at-rc-a">2.0 — Better</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q: MAC -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">Q</div>
+          <div class="at-section-title">Mid-arm circumference (MAC) in cm</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="mna-q" value="0" class="at-ri"><span class="at-rc at-rc-c">0.0 — MAC &lt; 21 cm</span></label>
+            <label class="at-rl"><input type="radio" name="mna-q" value="0.5" class="at-ri"><span class="at-rc at-rc-b">0.5 — MAC 21–22 cm</span></label>
+            <label class="at-rl"><input type="radio" name="mna-q" value="1" class="at-ri"><span class="at-rc at-rc-a">1.0 — MAC &gt; 22 cm</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- R: Calf circumference -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399;font-family:var(--mono);font-size:11px;font-weight:700">R</div>
+          <div class="at-section-title">Calf circumference (CC) in cm</div>
+        </div>
+        <div class="at-section-body">
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-r" value="0" class="at-ri"><span class="at-rc at-rc-c" style="text-align:center">0 — CC &lt; 31 cm</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="mna-r" value="1" class="at-ri"><span class="at-rc at-rc-a" style="text-align:center">1 — CC ≥ 31 cm</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculate button -->
+      <button class="at-calc-btn" onclick="atMNACalculate()" style="background:linear-gradient(135deg,rgba(96,165,250,0.18),rgba(52,211,153,0.14));border-color:rgba(96,165,250,0.35)">▶ Generate MNA Score</button>
+
+      <!-- Result output -->
+      <div id="at-mna-result" style="display:none"></div>
+
+      <!-- Reference footer -->
+      <div class="at-ref-footer">
+        <strong>References &amp; Guidance:</strong><br>
+        · Vellas B, Villars H, Abellan G, et al. Overview of the MNA® — Its History and Challenges. <em>J Nutr Health Aging.</em> 2006;10:456–465.<br>
+        · Rubenstein LZ, Harker JO, Salva A, Guigoz Y, Vellas B. Screening for Undernutrition in Geriatric Practice: Developing the Short-Form MNA (MNA-SF). <em>J Geront.</em> 2001;56A:M366–377.<br>
+        · Guigoz Y. The Mini-Nutritional Assessment (MNA®) Review of the Literature — What does it tell us? <em>J Nutr Health Aging.</em> 2006;10:466–487.<br>
+        · MNA® © Société des Produits Nestlé SA, 1994, Revision 2009. Trademark Owners. www.mna-elderly.com
+      </div>
+
+    </div><!-- /at-form -->
+  </div><!-- /#at-view-mna-full -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PG-SGA FORM VIEW
+       Scored Patient-Generated Subjective Global Assessment
+       Ottery FD. Oncology 1996;10(Suppl):13–20 · v4.3.20
+       ©FD Ottery 2005, 2006, 2015, 2020 v4.3.20
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="at-view-pg-sga" class="at-view" style="display:none">
+
+    <!-- Inner topbar -->
+    <div class="at-view-inner-topbar">
+      <button class="at-view-back" onclick="atCloseView()">← Tools</button>
+      <div class="at-view-title">PG-SGA</div>
+      <button class="at-view-reset" onclick="atPGSGAReset()">↺ Reset</button>
+    </div>
+
+    <div class="at-form">
+
+      <!-- Patient Info -->
+      <div class="at-form-info-row">
+        <input id="pgsga-patient" class="at-form-input" type="text" placeholder="Patient name" autocomplete="off" spellcheck="false">
+        <input id="pgsga-date" class="at-form-input" type="date">
+      </div>
+
+      <!-- ── SECTION A HEADER ── -->
+      <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;color:#f472b6;padding:12px 0 6px;border-bottom:1px solid rgba(244,114,182,0.15);margin-bottom:14px">
+        Section A — Patient-Reported History <span style="color:var(--text-muted)">(Boxes 1–4)</span>
+      </div>
+
+      <!-- ── BOX 1: WEIGHT ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.22);color:#f0b429">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20h12M12 4a4 4 0 014 4v1H8V8a4 4 0 014-4z"/><rect x="4" y="9" width="16" height="11" rx="2"/></svg>
+          </div>
+          <div class="at-section-title">Box 1 — Weight</div>
+          <div id="pgsga-box1-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#f0b429;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-wt-row">
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Current weight (kg)</div>
+              <input id="pgsga-wt-current" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 60.0" oninput="pgsgaCalcWeight()">
+            </div>
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Height (cm)</div>
+              <input id="pgsga-ht" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 165">
+            </div>
+          </div>
+          <div class="at-wt-row" style="margin-top:10px">
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Weight 1 month ago (kg)</div>
+              <input id="pgsga-wt-1mo" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 63.0" oninput="pgsgaCalcWeight()">
+            </div>
+            <div class="at-wt-wrap">
+              <div class="at-wt-lbl">Weight 6 months ago (kg)</div>
+              <input id="pgsga-wt-6mo" class="at-wt-input" type="number" step="0.1" min="0" placeholder="e.g. 67.0" oninput="pgsgaCalcWeight()">
+            </div>
+          </div>
+
+          <div id="pgsga-wl-info" style="font-family:var(--mono);font-size:10px;padding:8px 10px;background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.12);border-radius:7px;margin:10px 0;display:none"></div>
+
+          <div class="at-domain-lbl">Weight change — past 2 weeks</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-wl-2w" value="decreased" class="at-ri" oninput="pgsgaCalcWeight()"><span class="at-rc at-rc-c" style="text-align:center;font-size:9.5px">Decreased<span style="display:block;font-size:8.5px;color:var(--text-muted)">(+1)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-wl-2w" value="unchanged" class="at-ri" oninput="pgsgaCalcWeight()"><span class="at-rc" style="text-align:center;font-size:9.5px">No change<span style="display:block;font-size:8.5px;color:var(--text-muted)">(+0)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-wl-2w" value="increased" class="at-ri" oninput="pgsgaCalcWeight()"><span class="at-rc at-rc-a" style="text-align:center;font-size:9.5px">Increased<span style="display:block;font-size:8.5px;color:var(--text-muted)">(+0)</span></span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BOX 2: FOOD INTAKE ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.22);color:#60a5fa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 015 5c0 5-5 11-5 11S7 12 7 7a5 5 0 015-5z"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="at-section-title">Box 2 — Food Intake</div>
+          <div id="pgsga-box2-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#60a5fa;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Compared to my normal intake, food intake during the past month was:</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="pgsga-food-compare" value="0" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-a">Unchanged <span style="color:var(--text-muted);font-size:9px">(0)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-compare" value="0" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-a">More than usual <span style="color:var(--text-muted);font-size:9px">(0)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-compare" value="1" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-b">Less than usual <span style="color:var(--text-muted);font-size:9px">(1)</span></span></label>
+          </div>
+
+          <div class="at-domain-lbl" style="margin-top:12px">I am now taking:</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="1" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-b">Normal food but less than normal amount <span style="color:var(--text-muted);font-size:9px">(1)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="2" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-b">Little solid food <span style="color:var(--text-muted);font-size:9px">(2)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="3" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-c">Only liquids <span style="color:var(--text-muted);font-size:9px">(3)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="3" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-c">Only nutritional supplements <span style="color:var(--text-muted);font-size:9px">(3)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="4" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc at-rc-c">Very little of anything <span style="color:var(--text-muted);font-size:9px">(4)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-food-type" value="0" class="at-ri" oninput="pgsgaBox2Update()"><span class="at-rc">Only tube feedings or nutrition by vein <span style="color:var(--text-muted);font-size:9px">(0)</span></span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BOX 3: SYMPTOMS ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(244,114,182,0.12);border:1px solid rgba(244,114,182,0.22);color:#f472b6">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+          </div>
+          <div class="at-section-title">Box 3 — Symptoms (past 2 weeks)</div>
+          <div id="pgsga-box3-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#f472b6;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Check all problems that kept you from eating enough:</div>
+          <div class="at-cb-grid" style="grid-template-columns:repeat(2,1fr);gap:8px">
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="0" oninput="pgsgaBox3Update()"><span class="at-cbt">No problems eating <span style="color:var(--text-muted);font-size:8.5px">(0)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="3" oninput="pgsgaBox3Update()"><span class="at-cbt">No appetite <span style="color:var(--text-muted);font-size:8.5px">(3)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Nausea <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="3" oninput="pgsgaBox3Update()"><span class="at-cbt">Vomiting <span style="color:var(--text-muted);font-size:8.5px">(3)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="3" oninput="pgsgaBox3Update()"><span class="at-cbt">Diarrhoea <span style="color:var(--text-muted);font-size:8.5px">(3)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Constipation <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Dry mouth <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="2" oninput="pgsgaBox3Update()"><span class="at-cbt">Mouth sores <span style="color:var(--text-muted);font-size:8.5px">(2)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Smells bother me <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Taste changes / no taste <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Feel full quickly <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="2" oninput="pgsgaBox3Update()"><span class="at-cbt">Problems swallowing <span style="color:var(--text-muted);font-size:8.5px">(2)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Fatigue <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="3" oninput="pgsgaBox3Update()"><span class="at-cbt">Pain <span style="color:var(--text-muted);font-size:8.5px">(3)</span></span></label>
+            <label class="at-cbl" style="grid-column:span 2"><input type="checkbox" class="at-cbi pgsga-sym" data-pts="1" oninput="pgsgaBox3Update()"><span class="at-cbt">Other (e.g. depression, dental, financial) <span style="color:var(--text-muted);font-size:8.5px">(1)</span></span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BOX 4: ACTIVITIES & FUNCTION ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.22);color:#34d399">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 10l4 4 4-4M9 19h6"/></svg>
+          </div>
+          <div class="at-section-title">Box 4 — Activities &amp; Function</div>
+          <div id="pgsga-box4-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#34d399;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Over the past month, my activity was generally:</div>
+          <div class="at-rg">
+            <label class="at-rl"><input type="radio" name="pgsga-activity" value="0" class="at-ri" oninput="pgsgaBox4Update()"><span class="at-rc at-rc-a">Normal with no limitations <span style="color:var(--text-muted);font-size:9px">(0)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-activity" value="1" class="at-ri" oninput="pgsgaBox4Update()"><span class="at-rc at-rc-b">Not my normal self, but up and about with fairly normal activities <span style="color:var(--text-muted);font-size:9px">(1)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-activity" value="2" class="at-ri" oninput="pgsgaBox4Update()"><span class="at-rc at-rc-b">Not up to most things, but in bed or chair less than half the day <span style="color:var(--text-muted);font-size:9px">(2)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-activity" value="3" class="at-ri" oninput="pgsgaBox4Update()"><span class="at-rc at-rc-c">Able to do little activity; most of the day in bed or chair <span style="color:var(--text-muted);font-size:9px">(3)</span></span></label>
+            <label class="at-rl"><input type="radio" name="pgsga-activity" value="3" class="at-ri" oninput="pgsgaBox4Update()"><span class="at-rc at-rc-c">Pretty much bed-ridden, rarely out of bed <span style="color:var(--text-muted);font-size:9px">(3)</span></span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── SECTION B HEADER ── -->
+      <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;color:#f472b6;padding:12px 0 6px;border-bottom:1px solid rgba(244,114,182,0.15);margin-bottom:14px">
+        Section B — Clinician Assessment
+      </div>
+
+      <!-- ── WORKSHEET 2: DISEASE ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.22);color:#fb923c">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="at-section-title">Worksheet 2 — Disease &amp; Nutritional Demand</div>
+          <div id="pgsga-ws2-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#fb923c;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div class="at-domain-lbl">Add 1 point for each condition present:</div>
+          <div class="at-cb-grid" style="grid-template-columns:repeat(2,1fr);gap:8px">
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Cancer</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Decubitus / open wound / fistula</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">AIDS</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Trauma</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Pulmonary or cardiac cachexia</span></label>
+            <label class="at-cbl"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Age &gt; 65 years</span></label>
+            <label class="at-cbl" style="grid-column:span 2"><input type="checkbox" class="at-cbi pgsga-dis" data-pts="1" oninput="pgsgaWS2Update()"><span class="at-cbt">Chronic renal insufficiency</span></label>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="at-domain-lbl">Primary disease staging (if applicable)</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label class="at-rl" style="min-width:60px"><input type="radio" name="pgsga-stage" value="I" class="at-ri"><span class="at-rc" style="text-align:center;font-size:10px">Stage I</span></label>
+              <label class="at-rl" style="min-width:60px"><input type="radio" name="pgsga-stage" value="II" class="at-ri"><span class="at-rc" style="text-align:center;font-size:10px">Stage II</span></label>
+              <label class="at-rl" style="min-width:60px"><input type="radio" name="pgsga-stage" value="III" class="at-ri"><span class="at-rc" style="text-align:center;font-size:10px">Stage III</span></label>
+              <label class="at-rl" style="min-width:60px"><input type="radio" name="pgsga-stage" value="IV" class="at-ri"><span class="at-rc" style="text-align:center;font-size:10px">Stage IV</span></label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── WORKSHEET 3: METABOLIC DEMAND ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.22);color:#fb7185">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div class="at-section-title">Worksheet 3 — Metabolic Demand</div>
+          <div id="pgsga-ws3-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#fb7185;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">Score is additive. For fever: score intensity or duration, whichever is greater.</div>
+
+          <!-- Fever intensity -->
+          <div class="at-domain-lbl">Fever (temperature)</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever" value="0" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-a" style="text-align:center;font-size:9px">No fever<br><span style="font-size:7.5px;color:var(--text-muted)">(0)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever" value="1" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">&gt;37.2–&lt;38.3°C<br><span style="font-size:7.5px;color:var(--text-muted)">(1)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever" value="2" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">≥38.3–&lt;38.8°C<br><span style="font-size:7.5px;color:var(--text-muted)">(2)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever" value="3" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-c" style="text-align:center;font-size:9px">≥38.8°C<br><span style="font-size:7.5px;color:var(--text-muted)">(3)</span></span></label>
+          </div>
+
+          <!-- Fever duration -->
+          <div class="at-domain-lbl" style="margin-top:12px">Fever duration</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever-dur" value="0" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-a" style="text-align:center;font-size:9px">No fever<br><span style="font-size:7.5px;color:var(--text-muted)">(0)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever-dur" value="1" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">&lt;72 hours<br><span style="font-size:7.5px;color:var(--text-muted)">(1)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever-dur" value="2" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">72 hours<br><span style="font-size:7.5px;color:var(--text-muted)">(2)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fever-dur" value="3" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-c" style="text-align:center;font-size:9px">&gt;72 hours<br><span style="font-size:7.5px;color:var(--text-muted)">(3)</span></span></label>
+          </div>
+
+          <!-- Corticosteroids -->
+          <div class="at-domain-lbl" style="margin-top:12px">Corticosteroids (prednisone equivalents/day)</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-steroid" value="0" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-a" style="text-align:center;font-size:9px">None<br><span style="font-size:7.5px;color:var(--text-muted)">(0)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-steroid" value="1" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">&lt;10 mg/day<br><span style="font-size:7.5px;color:var(--text-muted)">(1)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-steroid" value="2" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">10–29 mg/day<br><span style="font-size:7.5px;color:var(--text-muted)">(2)</span></span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-steroid" value="3" class="at-ri" oninput="pgsgaWS3Update()"><span class="at-rc at-rc-c" style="text-align:center;font-size:9px">≥30 mg/day<br><span style="font-size:7.5px;color:var(--text-muted)">(3)</span></span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── WORKSHEET 4: PHYSICAL EXAM ── -->
+      <div class="at-section">
+        <div class="at-section-head">
+          <div class="at-section-icon" style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.22);color:#a78bfa">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+          </div>
+          <div class="at-section-title">Worksheet 4 — Physical Exam</div>
+          <div id="pgsga-ws4-score" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:#a78bfa;font-weight:700"></div>
+        </div>
+        <div class="at-section-body">
+
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">Ratings are <strong style="color:var(--text-dim)">not additive</strong>. Use global ratings for each domain. Muscle deficit takes precedence over fat loss or fluid excess.</div>
+
+          <!-- Column headers -->
+          <div style="display:flex;align-items:center;gap:10px;padding:0 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border)">
+            <div style="flex:0 0 130px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase">Domain</div>
+            <div class="at-phys-opts" style="font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase">
+              <span style="flex:1;text-align:center">0 — None</span>
+              <span style="flex:1;text-align:center">1+ — Mild</span>
+              <span style="flex:1;text-align:center">2+ — Mod</span>
+              <span style="flex:1;text-align:center">3+ — Sev</span>
+            </div>
+          </div>
+
+          <!-- Muscle sites -->
+          <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin:8px 0 4px">Muscle Status</div>
+          <div class="at-phys-row" style="border-bottom:none">
+            <div class="at-phys-lbl">Temples · Clavicles · Shoulders · Interosseous · Scapula · Thigh · Calf</div>
+          </div>
+          <div class="at-phys-opts" style="margin-bottom:8px">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-muscle" value="0" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-a" style="text-align:center;padding:5px 2px;font-size:9px">0</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-muscle" value="1" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">1+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-muscle" value="2" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">2+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-muscle" value="3" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-c" style="text-align:center;padding:5px 2px;font-size:9px">3+</span></label>
+          </div>
+
+          <!-- Fat stores -->
+          <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin:4px 0 4px">Fat Stores</div>
+          <div class="at-phys-row" style="border-bottom:none">
+            <div class="at-phys-lbl">Orbital pads · Triceps · Lower ribs</div>
+          </div>
+          <div class="at-phys-opts" style="margin-bottom:8px">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fat" value="0" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-a" style="text-align:center;padding:5px 2px;font-size:9px">0</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fat" value="1" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">1+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fat" value="2" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">2+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fat" value="3" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-c" style="text-align:center;padding:5px 2px;font-size:9px">3+</span></label>
+          </div>
+
+          <!-- Fluid status -->
+          <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin:4px 0 4px">Fluid Status</div>
+          <div class="at-phys-row" style="border-bottom:none">
+            <div class="at-phys-lbl">Ankle oedema · Sacral oedema · Ascites</div>
+          </div>
+          <div class="at-phys-opts" style="margin-bottom:8px">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fluid" value="0" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-a" style="text-align:center;padding:5px 2px;font-size:9px">0</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fluid" value="1" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">1+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fluid" value="2" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;padding:5px 2px;font-size:9px">2+</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-fluid" value="3" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-c" style="text-align:center;padding:5px 2px;font-size:9px">3+</span></label>
+          </div>
+
+          <!-- WS4 global rating -->
+          <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin:10px 0 6px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">Overall Physical Exam Score (D)</div>
+          <div class="at-rg-row">
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-phys-global" value="0" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-a" style="text-align:center;font-size:9px">0 — No deficit</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-phys-global" value="1" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">1 — Mild</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-phys-global" value="2" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-b" style="text-align:center;font-size:9px">2 — Moderate</span></label>
+            <label class="at-rl" style="flex:1"><input type="radio" name="pgsga-phys-global" value="3" class="at-ri" oninput="pgsgaWS4Update()"><span class="at-rc at-rc-c" style="text-align:center;font-size:9px">3 — Severe</span></label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Calculate button -->
+      <button class="at-calc-btn" onclick="atPGSGACalculate()" style="background:linear-gradient(135deg,rgba(244,114,182,0.18),rgba(167,139,250,0.14));border-color:rgba(244,114,182,0.35)">▶ Generate PG-SGA Score</button>
+
+      <!-- Result output -->
+      <div id="at-pgsga-result" style="display:none"></div>
+
+      <!-- Reference footer -->
+      <div class="at-ref-footer">
+        <strong>References &amp; Guidance:</strong><br>
+        · Ottery FD. Definition of standardized nutritional assessment and interventional pathways in oncology. <em>Oncology.</em> 1996;10(Suppl):13–20.<br>
+        · Ottery FD. <em>PG-SGA v4.3.20.</em> ©FD Ottery 2005, 2006, 2015, 2020. faithotterymdphd@gmail.com · pt-global.org<br>
+        · Bauer J, Capra S, Ferguson M. Use of the scored PG-SGA as a nutrition assessment tool in patients with cancer. <em>Eur J Clin Nutr.</em> 2002;56(8):779–785.<br>
+        · Academy of Nutrition and Dietetics. Oncology Evidence-Based Nutrition Practice Guideline. 2013.
+      </div>
+
+    </div><!-- /at-form -->
+  </div><!-- /#at-view-pg-sga -->
+
+</div><!-- /tab-assessments -->
 
 <div class="main" id="tab-calculator">
 <div style="width:100%;overflow-x:hidden;box-sizing:border-box">
@@ -9984,6 +11032,7 @@ function ntClear(scopeId, resultIds) {
 
 <script src="pes.js"></script>
 <script src="library.js"></script>
+<script src="assessment.js"></script>
 
 <!-- ════════════ UCT EXCHANGE LIST TOOLTIP ════════════ -->
 <div id="uct-exchange-tooltip" role="tooltip" aria-live="polite" style="
