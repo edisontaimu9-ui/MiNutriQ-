@@ -30,7 +30,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -2446,6 +2446,22 @@ var photoCropper = (function () {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       OASIS AI ASSISTANT — Chat Widget
+       Powered by Groq LLaMA 3.3 · eNCPT · ASPEN · ESPEN
+       ══════════════════════════════════════════════════════════ -->
+  <div class="hp-section-title" style="margin-top:24px">
+    <span style="display:inline-flex;align-items:center;gap:7px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/></svg>
+      Oasis AI Assistant
+      <span style="font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:100px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.3);color:var(--teal,#1de9d4);letter-spacing:0.5px;vertical-align:middle">BETA</span>
+    </span>
+  </div>
+  <div style="padding:0 16px 8px">
+    <div id="oasis-ai-mount"></div>
   </div>
 
   <!-- ── QUICK ACCESS ── -->
@@ -11442,6 +11458,15 @@ function ntClear(scopeId, resultIds) {
 })();
 </script>
 <!-- ════════════ END LEGAL MODAL ════════════ -->
+
+
+<!-- ════════════ OASIS AI MODULE ════════════ -->
+<script>
+  // Groq API key — replace with env variable in production
+  window.GROQ_API_KEY = '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';
+</script>
+<script src="oasisAI.js" defer></script>
+<!-- ════════════ END OASIS AI ════════════ -->
 
 </body>
 </html>
