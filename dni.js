@@ -2842,6 +2842,12 @@ function _init() {
   window.dniQuickSearch = window.dniQuickSearch;
   window.dniClear       = window.dniClear;
   window.dniInputKeyup  = window.dniInputKeyup;
+
+  // ── Expose database and search for OasisAI direct access ────────────
+  // oasisAI.js reads these lazily, so order of script loading doesn't matter.
+  window.DNI_DB         = DNI_DB;
+  window._dniSearchFn   = _search;         // (_search) internal query engine
+  window.DNI_SEVERITY   = SEVERITY_CONFIG; // severity metadata
 }
 
 _init();

@@ -205,6 +205,9 @@
   var _bgELPage      = 1;
   var _bgELTotal     = 0;
   var _bgHasMoreEL   = false;
+  /* ── AI Overview state ── */
+  var _aiOvQuery    = '';     // last query for which overview was generated/loading
+  var _aiOvLoading  = false;  // Groq fetch in progress
   /* Legacy RS vars kept for internal reuse */
   var _rsYearFrom        = '';
   var _rsYearTo          = '';
@@ -258,6 +261,37 @@
         'font-family:var(--mono);font-size:10px;font-weight:700;color:#020617;cursor:pointer;',
         'transition:opacity .15s;white-space:nowrap}',
       '.lib-search-btn:hover{opacity:.85}',
+
+      /* ── AI Overview ── */
+      '#lib-ai-overview{margin:10px 0 4px}',
+      '.lib-aio-card{background:linear-gradient(135deg,rgba(29,233,212,0.06) 0%,rgba(96,165,250,0.04) 100%);border:1px solid rgba(29,233,212,0.22);border-radius:14px;overflow:hidden;animation:libAioFadeIn .35s ease}',
+      '@keyframes libAioFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}',
+      '.lib-aio-header{display:flex;align-items:center;gap:9px;padding:11px 14px 0}',
+      '.lib-aio-icon{width:22px;height:22px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,rgba(29,233,212,0.25),rgba(96,165,250,0.18));border:1px solid rgba(29,233,212,0.35);display:flex;align-items:center;justify-content:center}',
+      '.lib-aio-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(29,233,212,0.8);text-transform:uppercase}',
+      '.lib-aio-body{padding:8px 14px 6px;font-family:var(--sans);font-size:12.5px;line-height:1.75;color:var(--text,#c9d1d9)}',
+      '.lib-aio-body strong{color:var(--text-bright,#f0f6fc)}',
+      '.lib-aio-body em{color:rgba(29,233,212,0.85);font-style:normal}',
+      '.lib-aio-loading{display:flex;align-items:center;gap:8px;padding:10px 14px 12px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:.5px}',
+      '.lib-aio-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(29,233,212,0.5);margin:0 2px;animation:libAioPulse 1.4s ease infinite}',
+      '.lib-aio-dots span:nth-child(2){animation-delay:.2s}',
+      '.lib-aio-dots span:nth-child(3){animation-delay:.4s}',
+      '@keyframes libAioPulse{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}',
+      '.lib-aio-sources-toggle{display:flex;align-items:center;gap:6px;padding:5px 14px 10px;cursor:pointer;font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;transition:color .15s;width:100%;background:none;border:none;text-align:left}',
+      '.lib-aio-sources-toggle:hover{color:rgba(29,233,212,0.7)}',
+      '.lib-aio-sources-toggle svg{transition:transform .2s}',
+      '.lib-aio-sources-toggle.open svg{transform:rotate(180deg)}',
+      '.lib-aio-sources{display:none;padding:0 14px 12px;border-top:1px solid rgba(255,255,255,0.05);margin-top:2px}',
+      '.lib-aio-sources.open{display:block}',
+      '.lib-aio-src-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)}',
+      '.lib-aio-src-item:last-child{border-bottom:none}',
+      '.lib-aio-src-badge{flex-shrink:0;font-family:var(--mono);font-size:7.5px;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.5px;white-space:nowrap}',
+      '.lib-aio-src-badge.local{background:rgba(29,233,212,0.12);color:rgba(29,233,212,0.8);border:1px solid rgba(29,233,212,0.25)}',
+      '.lib-aio-src-badge.guideline{background:rgba(96,165,250,0.12);color:rgba(96,165,250,0.85);border:1px solid rgba(96,165,250,0.25)}',
+      '.lib-aio-src-badge.research{background:rgba(52,211,153,0.1);color:rgba(52,211,153,0.8);border:1px solid rgba(52,211,153,0.2)}',
+      '.lib-aio-src-badge.database{background:rgba(251,146,60,0.1);color:rgba(251,146,60,0.75);border:1px solid rgba(251,146,60,0.2)}',
+      '.lib-aio-src-title{font-family:var(--sans);font-size:11px;color:rgba(255,255,255,0.6);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}',
+      '.lib-aio-err{padding:8px 14px 12px;font-family:var(--mono);font-size:9px;color:rgba(248,113,113,0.6);letter-spacing:.5px}',
 
       /* ── Filter chip row ── */
       '.lib-chips{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:1px}',
@@ -928,6 +962,193 @@
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
+     AI OVERVIEW — generates an AI summary at the top of library search results
+  ───────────────────────────────────────────────────────────────────────── */
+
+  /* Build compact context string from all matched results for the AI prompt */
+  function _aioContext(localResults, glResults, frResults, elResults, extResults) {
+    var items = [];
+    localResults.slice(0, 5).forEach(function(r) {
+      items.push('[Oasis Library] ' + r.title + (r.description ? ' — ' + r.description.substring(0, 120) : ''));
+    });
+    glResults.slice(0, 5).forEach(function(r) {
+      var desc = (r.abstract || r.journal || '').substring(0, 120);
+      items.push('[Clinical Guideline] ' + r.title + (desc ? ' — ' + desc : ''));
+    });
+    frResults.slice(0, 3).forEach(function(r) {
+      items.push('[Frontiers] ' + r.title + (r.abstract ? ' — ' + r.abstract.substring(0, 120) : ''));
+    });
+    elResults.slice(0, 3).forEach(function(r) {
+      items.push('[Elsevier] ' + r.title + (r.abstract ? ' — ' + r.abstract.substring(0, 120) : ''));
+    });
+    extResults.slice(0, 4).forEach(function(r) {
+      var src = r._src === 'pubmed' ? 'PubMed' : 'OpenAlex';
+      items.push('[' + src + '] ' + r.title + (r.abstract ? ' — ' + r.abstract.substring(0, 120) : ''));
+    });
+    return items.map(function(it, i){ return (i+1) + '. ' + it; }).join('\n');
+  }
+
+  /* Format AI markdown-lite response into safe HTML */
+  function _aioFormat(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:10.5px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:rgba(29,233,212,0.9)">$1</code>')
+      .replace(/^[-•]\s(.+)$/gm, '<div style="padding-left:13px;position:relative;margin:2px 0"><span style="position:absolute;left:2px;color:rgba(29,233,212,0.6)">▸</span>$1</div>')
+      .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+  }
+
+  /* Build expandable sources list HTML */
+  function _aioBuildSources(localResults, glResults, frResults, elResults, extResults) {
+    var html = '';
+    function row(src, cls, title, url) {
+      var safeTitle = String(title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var titleEl = url
+        ? '<a href="' + url + '" target="_blank" rel="noopener" class="lib-aio-src-title" style="color:rgba(29,233,212,0.7);text-decoration:none">' + safeTitle + '</a>'
+        : '<span class="lib-aio-src-title">' + safeTitle + '</span>';
+      return '<div class="lib-aio-src-item"><span class="lib-aio-src-badge ' + cls + '">' + src + '</span>' + titleEl + '</div>';
+    }
+    localResults.slice(0, 5).forEach(function(r) {
+      html += row('Oasis Library', 'local', r.title, r.externalLink || r.fileURL || '');
+    });
+    glResults.slice(0, 5).forEach(function(r) {
+      var url = r.url || (r.pmid ? 'https://pubmed.ncbi.nlm.nih.gov/' + r.pmid : '');
+      html += row('Guideline', 'guideline', r.title, url);
+    });
+    frResults.slice(0, 3).forEach(function(r) { html += row('Frontiers', 'research', r.title, r.url || ''); });
+    elResults.slice(0, 3).forEach(function(r) { html += row('Elsevier', 'database', r.title, r.url || ''); });
+    extResults.slice(0, 4).forEach(function(r) {
+      var src = r._src === 'pubmed' ? 'PubMed' : 'OpenAlex';
+      var url = r.url || (r.pmid ? 'https://pubmed.ncbi.nlm.nih.gov/' + r.pmid : '');
+      html += row(src, 'research', r.title, url);
+    });
+    return html;
+  }
+
+  /* Toggle sources panel */
+  function _aioToggleSources() {
+    var toggle  = document.getElementById('lib-aio-src-toggle');
+    var sources = document.getElementById('lib-aio-src-list');
+    if (!toggle || !sources) return;
+    var isOpen = sources.classList.contains('open');
+    sources.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+    var countEl = toggle.querySelector('[data-aio-count]');
+    if (countEl) countEl.textContent = isOpen ? 'Show sources' : 'Hide sources';
+  }
+  window._aioToggleSources = _aioToggleSources;
+
+  /* Show loading skeleton */
+  function _aioShowLoading() {
+    var el = document.getElementById('lib-ai-overview');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="lib-aio-card">' +
+        '<div class="lib-aio-header">' +
+          '<div class="lib-aio-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' +
+          '<span class="lib-aio-label">AI Overview</span>' +
+          '<span style="font-family:var(--mono);font-size:8px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
+        '</div>' +
+        '<div class="lib-aio-loading"><div class="lib-aio-dots"><span></span><span></span><span></span></div><span>Generating clinical summary…</span></div>' +
+      '</div>';
+  }
+
+  /* Render final overview card */
+  function _aioShowResult(summaryHtml, sourcesHtml, sourceCount) {
+    var el = document.getElementById('lib-ai-overview');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="lib-aio-card">' +
+        '<div class="lib-aio-header">' +
+          '<div class="lib-aio-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' +
+          '<span class="lib-aio-label">AI Overview</span>' +
+          '<span style="font-family:var(--mono);font-size:8px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
+        '</div>' +
+        '<div class="lib-aio-body">' + summaryHtml + '</div>' +
+        (sourcesHtml
+          ? '<button id="lib-aio-src-toggle" class="lib-aio-sources-toggle" onclick="_aioToggleSources()">' +
+              '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
+              '<span data-aio-count>Show sources</span>' +
+              '<span style="font-family:var(--mono);font-size:8px;margin-left:2px;opacity:.5">(' + sourceCount + ')</span>' +
+            '</button>' +
+            '<div id="lib-aio-src-list" class="lib-aio-sources">' + sourcesHtml + '</div>'
+          : '') +
+      '</div>';
+  }
+
+  /* Clear overview when query resets */
+  function _aioClear() {
+    var el = document.getElementById('lib-ai-overview');
+    if (el) el.innerHTML = '';
+    _aiOvQuery   = '';
+    _aiOvLoading = false;
+  }
+
+  /* Main trigger — called from _renderUnified after results land */
+  function _triggerAIOverview(q, localResults, glResults, frResults, elResults, extResults) {
+    var total = localResults.length + glResults.length + frResults.length + elResults.length + extResults.length;
+    if (!total || !q || q.trim().length < 3) { _aioClear(); return; }
+    if (_aiOvQuery === q.trim()) return; // already done for this query
+    _aiOvQuery   = q.trim();
+    _aiOvLoading = true;
+
+    var context = _aioContext(localResults, glResults, frResults, elResults, extResults);
+    if (!context) { _aioClear(); return; }
+
+    _aioShowLoading();
+
+    var apiKey = (typeof window !== 'undefined' && window.GROQ_API_KEY)
+      ? window.GROQ_API_KEY
+      : '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';
+
+    var capturedQ = q.trim();
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 400,
+        temperature: 0.25,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Oasis AI, a clinical nutrition knowledge assistant embedded in the Oasis Library search. ' +
+              'Provide concise, evidence-informed overviews of nutrition topics based on matched resources. ' +
+              'Use **bold** for key clinical terms. 2–4 short paragraphs or focused bullet points. ' +
+              'Lead with the most clinically relevant insight. Keep under 160 words. No disclaimers, no preamble.'
+          },
+          {
+            role: 'user',
+            content: 'Search query: "' + capturedQ + '"\n\nMatched resources:\n' + context + '\n\n' +
+              'Summarise the key clinical nutrition insights from these resources for a dietitian searching "' + capturedQ + '". ' +
+              'Cover: main findings, guideline recommendations or evidence level, practical nutrition implications, and any important clinical caveats. ' +
+              'Do not list the sources — they appear in a separate section below.'
+          }
+        ]
+      })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (_aiOvQuery !== capturedQ) return; // stale response
+      var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      if (!raw) { _aioClear(); return; }
+      var summaryHtml = _aioFormat(raw.trim());
+      var sourcesHtml = _aioBuildSources(localResults, glResults, frResults, elResults, extResults);
+      var sourceCount = Math.min(localResults.length, 5) + Math.min(glResults.length, 5) +
+                        Math.min(frResults.length, 3) + Math.min(elResults.length, 3) + Math.min(extResults.length, 4);
+      _aioShowResult(summaryHtml, sourcesHtml, sourceCount);
+      _aiOvLoading = false;
+    })
+    .catch(function() {
+      if (_aiOvQuery !== capturedQ) return;
+      _aiOvLoading = false;
+      var el = document.getElementById('lib-ai-overview');
+      if (el && el.innerHTML) el.innerHTML = ''; // silently clear on error
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
      _renderBrowse — called when no query is active (shows local library only)
      _renderUnified — called when a query is active (shows merged results)
   ───────────────────────────────────────────────────────────────────────── */
@@ -1076,6 +1297,11 @@
       _addSentinel();
     } else {
       _removeSentinel();
+    }
+
+    // ── AI Overview: fire after results land (not while still loading)
+    if (!_bgLoading && _searchQ && _searchQ.trim().length >= 3) {
+      _triggerAIOverview(_searchQ, localResults, glResults, frResults, elResults, extResults);
     }
   }
 
@@ -3462,6 +3688,8 @@
             '<div class="lib-badge" id="lib-res-count">0</div>'+
           '</div>'+
           '<div class="rs-sort-info" id="rs-sort-info" style="display:none"></div>'+
+          /* AI Overview container — injected above results when a query is active */
+          '<div id="lib-ai-overview"></div>'+
           /* Unified results container */
           '<div id="lib-browse-cards" class="lib-cards"><div class="lib-spin"></div></div>'+
           '<div id="rs-pagination"></div>'+
@@ -3805,6 +4033,7 @@
         _bgHasMoreEL       = false;
         _sqClearCache();   // reset scored search cache
         _removeSentinel();
+        _aioClear();       // clear AI overview when query is cleared
         _renderBrowse();
       }
     },

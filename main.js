@@ -5699,12 +5699,68 @@ function calculate() {
       const dxDisplay = (dx === 'other_specify' && customDx) ? customDx : dxLabel;
       actionEl.innerHTML = `Initiate or optimise <strong>${routeLabel}</strong> to meet estimated energy and protein requirements for <em>${dxDisplay}</em>. Target ${Math.round(energy)} kcal/day and ${protein.toFixed(1)} g protein/day. Reassess within 48–72 hours or with significant clinical change.`;
     }
-    const domainEl = document.getElementById('r-domain-statement');
-    if (domainEl) {
-      const ncpDomain = (route === 'enteral') ? 'Food and Nutrient Delivery — Enteral Nutrition (ND-2.1)' :
-                        'Food and Nutrient Delivery — Oral Diet and Nutrient Intake (ND-1)';
-      domainEl.innerHTML = `<strong>NCP Domain:</strong> ${ncpDomain} &nbsp;·&nbsp; <strong>Guideline basis:</strong> ${pGuideline}`;
-    }
+    // ── OasisAI — 4-domain NCP Intervention Generator ───────────────────────
+    (function _generateNCPInterventions() {
+      const ndEl = document.getElementById('r-nd-statement');
+      const eEl  = document.getElementById('r-e-statement');
+      const cEl  = document.getElementById('r-c-statement');
+      const rcEl = document.getElementById('r-rc-statement');
+      if (!ndEl || !eEl || !cEl || !rcEl) return;
+
+      // Loading state
+      const _loadingHTML = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,0.3);letter-spacing:0.5px">Generating<span class="_oai-dots"></span></span>`;
+      [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = _loadingHTML; });
+
+      // Inject dot animation once
+      if (!document.getElementById('_oai-dot-style')) {
+        const s = document.createElement('style');
+        s.id = '_oai-dot-style';
+        s.textContent = `@keyframes _oaiDotPulse{0%,100%{opacity:.2}50%{opacity:1}} ._oai-dots::after{content:'...';animation:_oaiDotPulse 1.2s ease infinite;display:inline-block;width:18px;text-align:left}`;
+        document.head.appendChild(s);
+      }
+
+      if (typeof window.OasisAI === 'undefined' || typeof window.OasisAI.generateInterventions !== 'function') {
+        const fallback = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(248,113,113,0.6)">Oasis AI unavailable — check connection.</span>`;
+        [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = fallback; });
+        return;
+      }
+
+      const customDx  = (document.getElementById('other-specify-input')?.value || '').trim();
+      const dxDisplay = (dx === 'other_specify' && customDx) ? customDx : dxLabel;
+
+      window.OasisAI.generateInterventions({
+        dx, dxLabel: dxDisplay, route,
+        energy, protein, protPerKg, pGuideline,
+        bmi, bmiCat, weight, ibw,
+        age:     parseFloat(document.getElementById('age')?.value)    || '',
+        sex:     document.getElementById('sex')?.value                || '',
+        isCritical, isRenal, isHepatic, isSurgical, isCancer, isObesity,
+        isRefeeding, rfRiskLevel, isUnderweight,
+        tbsa, icuPhase,
+        giFunction:     document.getElementById('gi-function')?.value || 'normal',
+        pctIntakeVsReq,
+        labs,
+        pesStatement:   `${P_label} (${P_code}) related to ${E}, as evidenced by ${sArr.join('; ')}.`,
+        P_label, P_code, E_etiology: E,
+      }).then(function(result) {
+        function _renderBullets(text, accentColor) {
+          return text.split('\n').filter(l => l.trim()).map(line => {
+            const clean = line.replace(/^[•\-\*]\s*/, '');
+            return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;line-height:1.6">
+              <span style="flex-shrink:0;color:${accentColor};font-size:10px;margin-top:2px">▸</span>
+              <span>${clean}</span>
+            </div>`;
+          }).join('');
+        }
+        ndEl.innerHTML = _renderBullets(result.nd, '#1de9d4');
+        eEl.innerHTML  = _renderBullets(result.e,  '#60a5fa');
+        cEl.innerHTML  = _renderBullets(result.c,  '#a78bfa');
+        rcEl.innerHTML = _renderBullets(result.rc, '#fb923c');
+      }).catch(function(err) {
+        const errHTML = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(248,113,113,0.6)">Error: ${err.message || 'Failed to generate interventions.'}</span>`;
+        [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = errHTML; });
+      });
+    })();
 
     // Store for copy function
     window._pesGenerated = {

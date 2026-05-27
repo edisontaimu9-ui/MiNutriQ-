@@ -2449,19 +2449,25 @@ var photoCropper = (function () {
   </div>
 
 
-  <!-- ══════════════════════════════════════════════════════════
-       OASIS AI ASSISTANT — Chat Widget
-       Powered by Groq LLaMA 3.3 · eNCPT · ASPEN · ESPEN
-       ══════════════════════════════════════════════════════════ -->
-  <div class="hp-section-title" style="margin-top:24px">
-    <span style="display:inline-flex;align-items:center;gap:7px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/></svg>
-      Oasis AI Assistant
-      <span style="font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:100px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.3);color:var(--teal,#1de9d4);letter-spacing:0.5px;vertical-align:middle">BETA</span>
-    </span>
-  </div>
-  <div style="padding:0 16px 8px">
-    <div id="oasis-ai-mount"></div>
+  <!-- ── OASIS AI CARD ── -->
+  <div style="padding:0 16px;margin-bottom:4px">
+    <div class="hp-assess-entry" onclick="openOasisAIPanel()" role="button" tabindex="0" aria-label="Open Oasis AI Assistant" onkeydown="if(event.key==='Enter'||event.key===' ')openOasisAIPanel()">
+      <div class="hp-assess-icon-wrap" style="background:rgba(29,233,212,0.08);border-color:rgba(29,233,212,0.25)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <div class="hp-assess-body">
+        <div class="hp-assess-title" style="color:var(--teal,#1de9d4)">Oasis AI</div>
+        <div class="hp-assess-desc">PES · ADIME · Assessment · Chat</div>
+      </div>
+      <div class="hp-assess-meta">
+        <span class="hp-assess-live-badge" style="background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.3);color:var(--teal,#1de9d4);letter-spacing:0.8px">BETA</span>
+      </div>
+      <div class="hp-assess-arrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
   </div>
 
   <!-- ── QUICK ACCESS ── -->
@@ -4531,9 +4537,29 @@ var photoCropper = (function () {
   <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2.5px;color:#34d399;text-transform:uppercase;margin-bottom:6px;padding-left:2px">Action</div>
   <div id="r-action-statement" style="font-family:var(--mono);font-size:11px;color:var(--text-bright);background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.18);border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.7"></div>
 
-  <!-- Domain -->
-  <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2.5px;color:#60a5fa;text-transform:uppercase;margin-bottom:6px;padding-left:2px">Domain</div>
-  <div id="r-domain-statement" style="font-family:var(--mono);font-size:11px;color:var(--text-bright);background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.7"></div>
+  <!-- NCP Intervention Domains -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <!-- ND -->
+    <div style="background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.22);border-left:3px solid #1de9d4;border-radius:8px;padding:11px 13px">
+      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#1de9d4;text-transform:uppercase;margin-bottom:6px">ND – Food/Nutrient Delivery</div>
+      <div id="r-nd-statement" style="font-family:var(--mono);font-size:10.5px;color:var(--text-bright);line-height:1.7"></div>
+    </div>
+    <!-- E -->
+    <div style="background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.22);border-left:3px solid #60a5fa;border-radius:8px;padding:11px 13px">
+      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#60a5fa;text-transform:uppercase;margin-bottom:6px">E – Nutrition Education</div>
+      <div id="r-e-statement" style="font-family:var(--mono);font-size:10.5px;color:var(--text-bright);line-height:1.7"></div>
+    </div>
+    <!-- C -->
+    <div style="background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.22);border-left:3px solid #a78bfa;border-radius:8px;padding:11px 13px">
+      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#a78bfa;text-transform:uppercase;margin-bottom:6px">C – Nutrition Counseling</div>
+      <div id="r-c-statement" style="font-family:var(--mono);font-size:10.5px;color:var(--text-bright);line-height:1.7"></div>
+    </div>
+    <!-- RC -->
+    <div style="background:rgba(251,146,60,0.04);border:1px solid rgba(251,146,60,0.22);border-left:3px solid #fb923c;border-radius:8px;padding:11px 13px">
+      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#fb923c;text-transform:uppercase;margin-bottom:6px">RC – Coordination of Care</div>
+      <div id="r-rc-statement" style="font-family:var(--mono);font-size:10.5px;color:var(--text-bright);line-height:1.7"></div>
+    </div>
+  </div>
 
   <!-- Intervention Plan -->
   <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2.5px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px;padding-left:2px">Intervention Plan</div>
@@ -9826,6 +9852,9 @@ function ntClear(scopeId, resultIds) {
         ${_badge(food.sourceUsed, cat)}
       </div>
 
+      <!-- ── Food Overview slot — populated async by _hpLoadOverview ── -->
+      <div id="fp-ov-${i}" style="display:none"></div>
+
       <div class="lfs-macros">
         <div class="lfs-mc">
           <span class="lfs-mv" id="hpv_${i}_kcal" style="color:var(--teal)">${fmt(base.kcal,0)}</span>
@@ -9874,6 +9903,119 @@ function ntClear(scopeId, resultIds) {
                         border-bottom:1px solid var(--border);margin-bottom:2px">
       ${label} <span style="font-weight:400;opacity:.6">(${count})</span>
     </div>`;
+  }
+
+  /* ── Food Overview: build rendered HTML from overview result ── */
+  function _hpBuildOverview(ov, i) {
+    if (!ov || !ov.summary) return '';
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const hasSubs = ov.therapeutic || ov.dietCompatibility || ov.cautions || ov.malawiRelevance;
+    const uid = 'fp-ovd-' + i;
+
+    const subRow = (icon, label, text) => text ? `
+      <div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04)">
+        <div style="flex-shrink:0;width:16px;height:16px;border-radius:4px;
+                    background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.15);
+                    display:flex;align-items:center;justify-content:center;margin-top:1px">
+          <span style="font-size:9px;line-height:1">${icon}</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.8px;
+                      text-transform:uppercase;color:rgba(29,233,212,0.55);margin-bottom:2px">${label}</div>
+          <div style="font-family:var(--sans);font-size:10.5px;color:var(--text);
+                      line-height:1.5;opacity:0.85">${esc(text)}</div>
+        </div>
+      </div>` : '';
+
+    return `
+    <div style="border-top:1px solid rgba(29,233,212,0.1);
+                background:linear-gradient(to bottom,rgba(29,233,212,0.025),transparent);
+                padding:9px 12px 7px">
+
+      <!-- Header row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  margin-bottom:6px;gap:8px">
+        <div style="display:flex;align-items:center;gap:5px">
+          <div style="width:3px;height:12px;background:var(--teal,#1de9d4);
+                      border-radius:2px;opacity:0.7;flex-shrink:0"></div>
+          <span style="font-family:var(--mono);font-size:8px;font-weight:700;
+                       letter-spacing:1.2px;text-transform:uppercase;
+                       color:rgba(29,233,212,0.6)">Clinical Overview</span>
+        </div>
+        ${hasSubs && !ov._parseError ? `
+        <button onclick="(function(){
+          var d=document.getElementById('${uid}');
+          var b=document.getElementById('${uid}-btn');
+          if(!d)return;
+          var open=d.style.display!=='none';
+          d.style.display=open?'none':'block';
+          b.textContent=open?'Details ▾':'Collapse ▴';
+        })()"
+          id="${uid}-btn"
+          style="font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:4px;
+                 background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.18);
+                 color:rgba(29,233,212,0.6);cursor:pointer;letter-spacing:0.5px;
+                 transition:background 0.15s;flex-shrink:0"
+          onmouseover="this.style.background='rgba(29,233,212,0.12)'"
+          onmouseout="this.style.background='rgba(29,233,212,0.06)'">Details ▾</button>
+        ` : ''}
+      </div>
+
+      <!-- Summary — always visible -->
+      <p style="font-family:var(--sans);font-size:11px;color:var(--text);
+                line-height:1.6;margin:0 0 2px;opacity:0.9">${esc(ov.summary)}</p>
+
+      <!-- Expanded subsections (hidden by default) -->
+      ${hasSubs && !ov._parseError ? `
+      <div id="${uid}" style="display:none;margin-top:6px">
+        ${subRow('⚕', 'Therapeutic Uses',     ov.therapeutic)}
+        ${subRow('◈', 'Diet Compatibility',   ov.dietCompatibility)}
+        ${subRow('⚠', 'Cautions',             ov.cautions)}
+        ${subRow('🌍', 'Malawi Relevance',     ov.malawiRelevance)}
+      </div>` : ''}
+    </div>`;
+  }
+
+  /* ── Food Overview: async loader for a single card slot ──── */
+  async function _hpLoadOverview(food, i) {
+    const slot = document.getElementById('fp-ov-' + i);
+    if (!slot || typeof window.OasisAI?.generateFoodOverview !== 'function') return;
+
+    // Show skeleton while loading
+    slot.style.display = 'block';
+    slot.innerHTML = `
+      <div style="border-top:1px solid rgba(29,233,212,0.08);
+                  padding:9px 12px 8px;background:rgba(29,233,212,0.015)">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px">
+          <div style="width:3px;height:10px;background:rgba(29,233,212,0.25);border-radius:2px"></div>
+          <div style="width:80px;height:7px;background:rgba(255,255,255,0.07);border-radius:3px;
+                      animation:fp-ov-pulse 1.4s ease-in-out infinite"></div>
+        </div>
+        <div style="width:95%;height:6px;background:rgba(255,255,255,0.055);border-radius:3px;
+                    margin-bottom:5px;animation:fp-ov-pulse 1.4s ease-in-out infinite"></div>
+        <div style="width:80%;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;
+                    animation:fp-ov-pulse 1.4s ease-in-out infinite 0.2s"></div>
+      </div>
+      <style>
+        @keyframes fp-ov-pulse{0%,100%{opacity:.5}50%{opacity:1}}
+      </style>`;
+
+    try {
+      const ov = await window.OasisAI.generateFoodOverview({
+        name:     food.name,
+        kcal:     food.kcal     ?? null,
+        pro:      food.pro      ?? null,
+        cho:      food.cho      ?? null,
+        fat:      food.fat      ?? null,
+        fiber:    food.fiber    ?? null,
+        sodium:   food.sodium   ?? null,
+        category: food.cat      || '',
+      });
+      if (!ov || !ov.summary) { slot.style.display = 'none'; return; }
+      slot.innerHTML = _hpBuildOverview(ov, i);
+    } catch (_) {
+      slot.style.display = 'none'; // silent fail — don't disrupt card UX
+    }
   }
 
   /* ── main search ─────────────────────────────────────────── */
@@ -9948,6 +10090,13 @@ function ntClear(scopeId, resultIds) {
       _hpSt(`${combined.length} result${combined.length>1?'s':''} — ${statusParts.join(' · ')} · per 100 g`);
       _showResults(html);
 
+      // ── Trigger Food Overview for each result card (async, staggered) ──
+      if (typeof window.OasisAI?.generateFoodOverview === 'function') {
+        combined.forEach((food, i) => {
+          setTimeout(() => _hpLoadOverview(food, i), i * 180);
+        });
+      }
+
     } catch(err) {
       _hpSt('Search failed: ' + (err.message || err));
     }
@@ -9968,6 +10117,10 @@ function ntClear(scopeId, resultIds) {
     const q = document.getElementById('hp-search-q');
     if (q) q.addEventListener('keydown', e => { if (e.key === 'Enter') hpSearch(); });
   });
+
+  // Expose overview helpers on window for access from barcode IIFE
+  window._hpLoadOverview  = _hpLoadOverview;
+  window._hpBuildOverview = _hpBuildOverview;
 
 })();
 </script>
@@ -10718,6 +10871,8 @@ function ntClear(scopeId, resultIds) {
               <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">${cat}${isOFF && food._barcode ? ' · <span style="color:#4ade80;opacity:.75;font-size:8px">'+food._barcode+'</span>' : ''}</div>
             </div>${badge}
           </div>
+          <!-- Food Overview slot — populated async by _hpLoadOverview -->
+          <div id="fp-ov-${i}" style="display:none"></div>
           <div class="lfs-macros">
             <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_kcal" style="color:var(--teal)">${b}</span><span class="lfs-ml">kcal</span></div>
             <div class="lfs-mc"><span class="lfs-mv" id="hpv_${i}_pro" style="color:#60a5fa">${pro}</span><span class="lfs-ml">protein</span></div>
@@ -10781,6 +10936,14 @@ function ntClear(scopeId, resultIds) {
       if (spEl)  spEl.style.display = 'none';
       if (txtEl) txtEl.textContent = combined.length + ' result' + (combined.length > 1 ? 's' : '') + ' — barcode + local + online · per 100 g';
       if (stEl)  stEl.style.maxHeight = '30px';
+
+      // ── Trigger Food Overview for barcode result cards (async, staggered) ──
+      if (typeof window.OasisAI?.generateFoodOverview === 'function' &&
+          typeof window._hpLoadOverview === 'function') {
+        combined.forEach((food, i) => {
+          setTimeout(() => window._hpLoadOverview(food, i), i * 180);
+        });
+      }
       return;
     }
 
@@ -11460,11 +11623,81 @@ function ntClear(scopeId, resultIds) {
 <!-- ════════════ END LEGAL MODAL ════════════ -->
 
 
+<!-- ════════════ OASIS AI PANEL MODAL ════════════ -->
+<div id="oasis-ai-overlay" role="dialog" aria-modal="true" aria-label="Oasis AI Assistant" style="
+  display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(2,6,23,0.75);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+  overflow-y:auto;overscroll-behavior:contain;
+">
+  <div style="min-height:100%;display:flex;align-items:flex-end;justify-content:center">
+    <div id="oasis-ai-panel" style="
+      width:100%;max-width:640px;
+      background:var(--surface2,#0b1526);
+      border-radius:20px 20px 0 0;
+      border-top:1px solid rgba(29,233,212,0.14);
+      padding-bottom:env(safe-area-inset-bottom,0px);
+      position:relative;
+      animation:oaiPanelUp .28s cubic-bezier(.22,.68,0,1.2);
+    ">
+      <!-- Drag handle -->
+      <div style="padding:10px 0 2px;display:flex;justify-content:center">
+        <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12)"></div>
+      </div>
+      <!-- Close -->
+      <button onclick="closeOasisAIPanel()" aria-label="Close Oasis AI" style="
+        position:absolute;top:8px;right:12px;
+        background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;
+        color:rgba(255,255,255,0.35);font-size:16px;line-height:1;transition:color .15s;
+      " onmouseover="this.style.color='rgba(248,113,113,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">✕</button>
+      <!-- AI widget mounts here -->
+      <div id="oasis-ai-mount" style="padding:4px 14px 16px"></div>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes oaiPanelUp {
+    from { transform:translateY(48px); opacity:0; }
+    to   { transform:translateY(0);    opacity:1; }
+  }
+</style>
+<script>
+  (function() {
+    var overlay = document.getElementById('oasis-ai-overlay');
+
+    window.openOasisAIPanel = function() {
+      overlay.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      // Mount on first open if not already rendered
+      if (window.OasisAIUI && !document.getElementById('oai-root')) {
+        window.OasisAIUI.mount();
+      }
+    };
+
+    window.closeOasisAIPanel = function() {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    // Tap backdrop to close
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeOasisAIPanel();
+    });
+
+    // Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && overlay.style.display !== 'none') closeOasisAIPanel();
+    });
+  })();
+</script>
+<!-- ════════════ END OASIS AI PANEL MODAL ════════════ -->
+
+
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
   // Groq API key — replace with env variable in production
   window.GROQ_API_KEY = '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';
 </script>
+<script src="references.js" defer></script>
 <script src="oasisAI.js" defer></script>
 <!-- ════════════ END OASIS AI ════════════ -->
 

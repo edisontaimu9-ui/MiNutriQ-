@@ -19,6 +19,10 @@
 (function (global) {
   'use strict';
 
+  // ─── AI Refinement State ────────────────────────────────────────────────────
+  var _lastResult    = null;   // most recent generate() result — used by triggerRefine()
+  var _refineCounter = 0;      // unique ID for each refine zone
+
   // ─── NCP Code Reference ────────────────────────────────────────────────────
 
   var SMART_PES_CODES = {
@@ -894,6 +898,151 @@
     };
   }
 
+  // ─── AI Refinement Zone Builders ───────────────────────────────────────────
+
+  function _injectPESStyles() {
+    if (document.getElementById('spes-ai-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'spes-ai-styles';
+    s.textContent = [
+      '@keyframes pesSpinFade{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}',
+      '@keyframes pesDotPulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}',
+      '.spes-refine-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(96,165,250,.7);animation:pesDotPulse 1.3s ease infinite;}',
+      '.spes-refine-dot:nth-child(2){animation-delay:.2s}',
+      '.spes-refine-dot:nth-child(3){animation-delay:.4s}',
+    ].join('');
+    (document.head || document.body || document.documentElement).appendChild(s);
+  }
+
+  function _buildRefineZone(refineId) {
+    return (
+      '<div id="' + refineId + '" style="' +
+        'margin-top:12px;border:1px solid rgba(96,165,250,0.18);' +
+        'border-left:3px solid rgba(96,165,250,0.45);border-radius:8px;' +
+        'overflow:hidden;background:rgba(10,22,40,0.55);">' +
+      '<div style="padding:7px 13px;border-bottom:1px solid rgba(96,165,250,0.1);' +
+        'display:flex;align-items:center;justify-content:space-between;">' +
+        '<span style="font-family:var(--mono,monospace);font-size:8.5px;font-weight:700;' +
+          'letter-spacing:1.2px;color:var(--blue,#60a5fa);text-transform:uppercase;">' +
+          '🤖 AI-Refined PES</span>' +
+        '<button onclick="window.SmartPES&&window.SmartPES.triggerRefine()" style="' +
+          'font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+          'letter-spacing:0.4px;padding:3px 9px;border-radius:5px;cursor:pointer;' +
+          'border:1px solid rgba(96,165,250,0.28);background:rgba(96,165,250,0.06);' +
+          'color:rgba(96,165,250,0.8);transition:opacity .15s;"' +
+          ' onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'">↺ Re-refine</button>' +
+      '</div>' +
+      '<div id="' + refineId + '-body" style="padding:12px 14px;">' +
+        _buildRefineLoading() +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function _buildRefineLoading() {
+    return (
+      '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;">' +
+        '<span class="spes-refine-dot"></span>' +
+        '<span class="spes-refine-dot"></span>' +
+        '<span class="spes-refine-dot"></span>' +
+        '<span style="font-family:var(--mono,monospace);font-size:9.5px;' +
+          'color:rgba(96,165,250,0.5);letter-spacing:0.4px;margin-left:4px;">' +
+          'Oasis AI is refining PES statements…</span>' +
+      '</div>'
+    );
+  }
+
+  function _buildRefineError(msg) {
+    return (
+      '<div style="font-family:var(--mono,monospace);font-size:10px;' +
+        'color:rgba(248,113,113,0.75);padding:4px 0;line-height:1.6;">' +
+        '⚠ ' + _esc(msg) + '</div>'
+    );
+  }
+
+  function _buildRefineResult(rawText) {
+    // Render the AI raw text with light semantic formatting
+    var html = rawText
+      // Section headers
+      .replace(/REFINED (PRIMARY|SECONDARY) PES:/g,
+        '<div style="font-family:var(--mono,monospace);font-size:8.5px;font-weight:700;' +
+        'letter-spacing:1px;color:var(--blue,#60a5fa);text-transform:uppercase;' +
+        'margin:10px 0 5px 0;border-top:1px solid rgba(96,165,250,0.1);padding-top:8px;">✦ Refined $1 PES</div>')
+      .replace(/CLINICAL PES SENTENCE:/g,
+        '<div style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+        'letter-spacing:0.8px;color:rgba(96,165,250,0.65);margin:7px 0 3px;">📌 Clinical PES Sentence</div>')
+      .replace(/IMPROVEMENT NOTES?:/g,
+        '<div style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+        'letter-spacing:0.8px;color:rgba(148,163,184,0.55);margin:10px 0 3px;' +
+        'border-top:1px solid rgba(148,163,184,0.08);padding-top:8px;">📝 Improvement Notes</div>')
+      // P / E / S labels
+      .replace(/^(P|E|S): (.+)$/gm, function(_, lbl, rest) {
+        return (
+          '<div style="margin:3px 0;font-size:12px;line-height:1.55;">' +
+            '<span style="font-family:var(--mono,monospace);font-weight:700;' +
+              'color:var(--blue,#60a5fa);">' + lbl + ': </span>' +
+            '<span style="color:var(--text-dim,#94a3b8);">' + _esc(rest) + '</span>' +
+          '</div>'
+        );
+      })
+      // Newlines
+      .replace(/\n\n/g, '<br>')
+      .replace(/\n/g, '<br>');
+
+    return (
+      '<div style="font-family:var(--sans,sans-serif);font-size:12px;line-height:1.6;">' +
+        html +
+      '</div>'
+    );
+  }
+
+  // ─── AI Refinement Scheduler ────────────────────────────────────────────────
+
+  function _scheduleRefinement(result) {
+    setTimeout(function () {
+      var bodyEl = document.getElementById(result.refineId + '-body');
+      if (!bodyEl) return; // element not yet in DOM — skip silently
+
+      if (!global.OasisAI || typeof global.OasisAI.refinePES !== 'function') {
+        bodyEl.innerHTML = _buildRefineError(
+          'OasisAI module unavailable. Ensure oasisAI.js is loaded and API key is set.'
+        );
+        return;
+      }
+
+      _performAIRefinement(result, bodyEl);
+    }, 700); // 700 ms — enough for the caller to inject html into DOM
+  }
+
+  function _performAIRefinement(result, bodyEl) {
+    var primary   = result.primary;
+    var secondary = result.secondary;
+    var phase     = result.phase;
+    var ctx       = result.ctx || {};
+
+    // Build concise patient context string for the AI prompt
+    var patCtx = 'Phase: ' + (phase ? phase.label : 'General');
+    if (ctx.dx)             patCtx += '; Dx: ' + ctx.dx;
+    if (ctx.bmi)            patCtx += '; BMI ' + ctx.bmi;
+    if (ctx.weightLossPct)  patCtx += '; WL ' + ctx.weightLossPct + '%';
+    if (ctx.isPedi)         patCtx += '; Paediatric patient';
+
+    bodyEl.innerHTML = _buildRefineLoading();
+
+    global.OasisAI.refinePES({
+      primaryPES:    primary,
+      secondaryPES:  secondary,
+      phaseLabel:    phase ? phase.label : 'General',
+      patientContext: patCtx,
+    }).then(function (aiResult) {
+      bodyEl.innerHTML = _buildRefineResult(aiResult.raw);
+    }).catch(function (err) {
+      bodyEl.innerHTML = _buildRefineError(
+        (err && err.message) ? err.message : 'AI refinement failed. Check network / API key.'
+      );
+    });
+  }
+
   // ─── Plain Text Formatter ───────────────────────────────────────────────────
 
   function _toPlainText(stmt) {
@@ -908,8 +1057,9 @@
 
   // ─── HTML Renderer ─────────────────────────────────────────────────────────
 
-  function renderHTML(statements, options) {
+  function renderHTML(statements, options, refineId) {
     options = options || {};
+    _injectPESStyles();
     var html = '<div class="smart-pes-wrapper" style="margin-top:12px;">';
 
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
@@ -959,7 +1109,16 @@
       html += '</div>';
     }
 
-    html += '</div>';
+    html += '</div>';  // close .smart-pes-wrapper
+
+    // AI Refinement zone — injected when a refineId is provided (auto-generate always provides one)
+    if (refineId) {
+      // Strip the premature closing tag and rebuild with the zone inside the wrapper
+      html = html.slice(0, html.lastIndexOf('</div>')) +
+        _buildRefineZone(refineId) +
+        '</div>';
+    }
+
     return html;
   }
 
@@ -1042,16 +1201,25 @@
       statements.push(tb);
     }
 
-    var html = renderHTML(statements);
+    var refineId = 'spes-refine-' + (++_refineCounter);
+    var html = renderHTML(statements, {}, refineId);
 
-    return {
+    var result = {
       statements: statements,
-      primary: statements[0],
-      secondary: statements[1] || null,
-      tertiary: statements[2] || null,
-      html: html,
-      phase: phase,
+      primary:    statements[0],
+      secondary:  statements[1] || null,
+      tertiary:   statements[2] || null,
+      html:       html,
+      phase:      phase,
+      refineId:   refineId,
+      ctx:        ctx,       // preserve context for re-refine
     };
+
+    // Store for public triggerRefine() and schedule automatic AI refinement
+    _lastResult = result;
+    _scheduleRefinement(result);
+
+    return result;
   }
 
   // ─── NFPE-Only Mode (Quick PES) ─────────────────────────────────────────────
@@ -1071,9 +1239,13 @@
     for (var i = 0; i < result.statements.length; i++) {
       result.statements[i].role = 'NFPE-ONLY';
     }
-    result.html = renderHTML(result.statements);
+    result.html = renderHTML(result.statements, {}, result.refineId);
 
     if (outputEl) outputEl.innerHTML = result.html;
+
+    // Schedule AI refinement (DOM is now ready)
+    _scheduleRefinement(result);
+
     return result;
   }
 
@@ -1122,6 +1294,15 @@
     generateFromNFPE: generateFromNFPE,
     renderHTML: renderHTML,
     copy: copy,
+    /**
+     * Manually re-trigger AI refinement for the last generated PES.
+     * Wired to the "↺ Re-refine" button inside the AI zone.
+     */
+    triggerRefine: function () {
+      if (!_lastResult) return;
+      var bodyEl = document.getElementById(_lastResult.refineId + '-body');
+      if (bodyEl) _performAIRefinement(_lastResult, bodyEl);
+    },
     _getPhase:      _getPhase,
     _selectProblem: _selectProblem,
     _buildEtiology: _buildEtiology,
