@@ -29,7 +29,7 @@
   function _getKey() {
     return (typeof window !== 'undefined' && window.GROQ_API_KEY)
       ? window.GROQ_API_KEY
-      : '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';
+      : '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';
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
