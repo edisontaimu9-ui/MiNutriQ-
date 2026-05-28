@@ -9398,58 +9398,48 @@ async function obForgotPassword() {
 // EMAIL VERIFICATION & IN-APP PASSWORD RESET
 // ═══════════════════════════════════════════════════════════════
 
-// ── Verification banner ───────────────────────────────────────
+// ── Verification notice (profile drawer) ─────────────────────
 
-/** Show the "please verify your email" banner at the top of the app. */
-function _ntShowVerifyBanner() {
-  const banner = document.getElementById('email-verify-banner');
-  if (!banner) return;
-  banner.style.display = 'flex';
-}
+/** No-op — banner removed; verification status shown inside profile drawer only. */
+function _ntShowVerifyBanner() {}
 
-/**
- * Dismiss the verification banner immediately.
- * No session storage — banner can reappear the next time
- * Profile or Settings is opened if email is still unverified.
- */
+/** No-op — banner removed; hides the in-profile notice instead. */
 function ntDismissVerifyBanner() {
-  const banner = document.getElementById('email-verify-banner');
-  if (banner) banner.style.display = 'none';
+  const notice = document.getElementById('pdr-verify-notice');
+  if (notice) notice.style.display = 'none';
 }
 
 /**
  * Check whether the currently signed-in user's email is verified.
- * Shows the banner (display:flex) if unverified, hides it (display:none) if verified.
- * Call this only when the user opens the Profile or Settings panel — NOT on app load.
+ * Updates the in-profile notice card and the email badge — NOT a top banner.
+ * Call this when the user opens the Profile or Settings panel.
  */
 function checkEmailVerification() {
-  const banner = document.getElementById('email-verify-banner');
-  if (!banner) return;
   try {
     const user = firebase.auth().currentUser;
-    if (user && !user.emailVerified) {
-      banner.style.display = 'flex';
-    } else {
-      banner.style.display = 'none';
-    }
+    _ntUpdateVerifyStatusUI(user ? user.emailVerified : true);
   } catch (e) {
-    // Firebase auth unavailable — leave banner hidden
-    banner.style.display = 'none';
+    // Firebase auth unavailable — hide notice
+    _ntUpdateVerifyStatusUI(true);
   }
 }
 
 /**
- * Update the verified / unverified badge inside the profile drawer.
+ * Update the verified / unverified badge inside the profile drawer,
+ * and show or hide the inline verification notice card.
  * @param {boolean} verified
  */
 function _ntUpdateVerifyStatusUI(verified) {
+  // Small inline badge next to the email address
   const badge = document.getElementById('pdr-email-verify-badge');
-  if (!badge) return;
-  if (verified) {
-    badge.innerHTML = `<span style="color:var(--green,#34d399);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">✓ Verified</span>`;
-  } else {
-    badge.innerHTML = `<span style="color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">⚠ Unverified · <button type="button" onclick="ntResendVerification()" style="background:none;border:none;color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline">Resend</button></span>`;
+  if (badge) {
+    badge.innerHTML = verified
+      ? `<span style="color:var(--green,#34d399);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">✓ Verified</span>`
+      : `<span style="color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">⚠ Unverified</span>`;
   }
+  // Inline notice card — visible only when unverified
+  const notice = document.getElementById('pdr-verify-notice');
+  if (notice) notice.style.display = verified ? 'none' : 'block';
 }
 
 // ── Resend verification email ─────────────────────────────────
