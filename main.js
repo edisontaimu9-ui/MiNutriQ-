@@ -8099,7 +8099,10 @@ function enCalc() {
   // Step 11: Total fluid
   const totalFluid = fluidFromFormula + fwfActual;
 
-  // DISPLAY
+  // DISPLAY — guard against en-results being wiped by ntClear before a fresh calculation
+  const _enResultsEl = document.getElementById('en-results');
+  if (!_enResultsEl || !document.getElementById('en-vol-day')) return;
+
   document.getElementById('en-vol-day').textContent = volDay;
   document.getElementById('en-rate').textContent = mode === 'volume' ? '—' : rate;
   document.getElementById('en-rate-start').textContent = mode === 'volume' ? '—' : rateStart;

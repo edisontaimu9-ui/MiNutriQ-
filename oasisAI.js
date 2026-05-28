@@ -1061,23 +1061,36 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
   ">
     <div style="display:flex;align-items:center;gap:10px">
       <div style="
-        width:32px;height:32px;border-radius:9px;flex-shrink:0;
-        background:linear-gradient(135deg,rgba(29,233,212,0.2),rgba(96,165,250,0.15));
-        border:1px solid rgba(29,233,212,0.3);
+        width:36px;height:36px;border-radius:10px;flex-shrink:0;
+        background:#08111f;
+        border:1px solid rgba(29,233,212,0.22);
         display:flex;align-items:center;justify-content:center;
+        overflow:hidden;
       ">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
+        <svg width="26" height="26" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="11" r="6" fill="#4ade80"/>
+          <path d="M22 39 C23 32 21 25 20 18" stroke="#78350f" stroke-width="3" stroke-linecap="round"/>
+          <path d="M20 18 C13 14 7 11 3 7" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M20 18 C16 12 15 7 17 3" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M20 18 C20 12 22 7 24 3" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M20 18 C26 14 31 11 36 8" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M20 18 C27 17 33 15 38 13" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+          <path d="M33 39 C34 34 33 29 32 24" stroke="#78350f" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M32 24 C27 20 22 19 19 17" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+          <path d="M32 24 C29 19 29 15 30 12" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M32 24 C36 20 40 18 44 16" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+          <path d="M1 40 Q13 33 26 36 Q39 39 51 36 L51 52 L1 52 Z" fill="#f59e0b"/>
+          <path d="M1 44 Q13 37 26 40 Q39 43 51 40" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
         </svg>
       </div>
       <div>
         <div style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--teal,#1de9d4);text-transform:uppercase">Oasis AI Assistant</div>
-        <div style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:0.5px;margin-top:1px">eNCPT · ASPEN · ESPEN · LLaMA 3.3 · Ref DB</div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:0.5px;margin-top:1px">LLaMA 3.3</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-      <div id="oai-status-dot" style="width:7px;height:7px;border-radius:50%;background:rgba(29,233,212,0.4);transition:all .3s"></div>
-      <span id="oai-status-lbl" style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">READY</span>
+      <div id="oai-status-dot" style="width:7px;height:7px;border-radius:50%;background:#22c55e;transition:all .3s;animation:oaiDotBlink 1.8s ease-in-out infinite;box-shadow:0 0 6px rgba(34,197,94,0.6)"></div>
+      <span id="oai-status-lbl" style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">online</span>
     </div>
   </div>
 
@@ -1127,14 +1140,21 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
 
   <!-- ── Footer ── -->
   <div style="
-    padding:7px 14px;border-top:1px solid rgba(255,255,255,0.05);
+    padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,0.07);
     display:flex;align-items:center;justify-content:flex-end;
   ">
     <button onclick="OasisAIUI.clearChat()" style="
-      background:none;border:none;cursor:pointer;font-family:var(--mono);
-      font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:0.5px;
-      transition:color .15s;padding:2px 6px;
-    " onmouseover="this.style.color='rgba(248,113,113,0.6)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.15);
+      cursor:pointer;font-family:var(--mono);
+      font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.5);
+      letter-spacing:0.8px;padding:7px 16px;border-radius:8px;
+      transition:all .18s;min-height:32px;min-width:64px;
+    "
+    onmouseover="this.style.background='rgba(248,113,113,0.1)';this.style.borderColor='rgba(248,113,113,0.4)';this.style.color='rgba(248,113,113,0.9)'"
+    onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.5)'"
+    ontouchstart="this.style.background='rgba(248,113,113,0.15)';this.style.transform='scale(0.96)'"
+    ontouchend="this.style.background='rgba(255,255,255,0.05)';this.style.transform='scale(1)'">
       CLEAR
     </button>
   </div>
@@ -1152,7 +1172,7 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
 
   // ── Render helpers ────────────────────────────────────────────
   function _renderWelcome() {
-    _addMsg('assistant', `**Oasis AI Assistant** — ready.\n\nAsk anything clinical: PES statements, ADIME notes, nutrition assessments, food values, **drug-nutrient interactions**, **clinical guideline references**, calculations, or condition-specific recommendations.\n\n*Food, DNI, and Reference databases are injected automatically based on your query — no setup needed.*`);
+    _addMsg('assistant', `**Oasis AI Assistant** — ready.`);
   }
 
   function _addMsg(role, content) {
@@ -1226,9 +1246,10 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     const dot = document.getElementById('oai-status-dot');
     const lbl = document.getElementById('oai-status-lbl');
     const btn = document.getElementById('oai-send-btn');
-    if (dot) dot.style.background = loading ? 'rgba(240,180,41,0.8)' : 'rgba(29,233,212,0.6)';
-    if (dot) dot.style.boxShadow  = loading ? '0 0 8px rgba(240,180,41,0.5)' : '0 0 6px rgba(29,233,212,0.3)';
-    if (lbl) lbl.textContent = loading ? 'THINKING' : 'READY';
+    if (dot) dot.style.background = loading ? 'rgba(240,180,41,0.8)' : '#22c55e';
+    if (dot) dot.style.boxShadow  = loading ? '0 0 8px rgba(240,180,41,0.5)' : '0 0 6px rgba(34,197,94,0.6)';
+    if (dot) dot.style.animation  = loading ? 'none' : 'oaiDotBlink 1.8s ease-in-out infinite';
+    if (lbl) lbl.textContent = loading ? 'THINKING' : 'online';
     if (btn) btn.disabled = loading;
     if (btn) btn.style.opacity = loading ? '0.5' : '1';
   }
@@ -1241,6 +1262,7 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
       style.textContent = `
         @keyframes oaiFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes oaiPulse  { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
+        @keyframes oaiDotBlink { 0%,100%{opacity:1;box-shadow:0 0 6px rgba(34,197,94,0.6)} 50%{opacity:0.4;box-shadow:0 0 2px rgba(34,197,94,0.2)} }
         #oai-messages::-webkit-scrollbar{width:4px}
         #oai-messages::-webkit-scrollbar-thumb{background:rgba(29,233,212,0.2);border-radius:2px}
       `;

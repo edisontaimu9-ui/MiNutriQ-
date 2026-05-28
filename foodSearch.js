@@ -319,6 +319,101 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // BARCODE LAYER — GS1 DIGITAL LINK
+  // Called only when OFF/local data is absent or missing product identity
+  // (name, brand, category). NOT a nutrition source — metadata only.
+  //
+  // Normalised output shape:
+  //   { barcode, gtin, name, brand, category, image, source:'GS1',
+  //     gs1Verified: true }
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Query the GS1 Digital Link resolver for product identity metadata.
+   * Returns null on any failure — never throws.
+   * @param  {string} barcode  Raw barcode string (EAN-13, UPC-A, GTIN-14, …)
+   * @returns {Promise<object|null>}
+   */
+  async function _searchGS1(barcode) {
+    if (!barcode) return null;
+
+    // Normalise to GTIN-14 (zero-pad to 14 digits)
+    const digits = barcode.replace(/\D/g, '');
+    if (!digits.length) return null;
+    const gtin14 = digits.padStart(14, '0');
+
+    // GS1 Digital Link — application identifier 01 = GTIN
+    const url = `https://id.gs1.org/01/${gtin14}`;
+
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 8000);
+
+      const res = await fetch(url, {
+        signal:  ctrl.signal,
+        headers: {
+          'Accept': 'application/ld+json, application/json;q=0.9, */*;q=0.8',
+        },
+        redirect: 'follow',
+      }).finally(() => clearTimeout(tid));
+
+      if (!res.ok) return null;
+
+      // GS1 resolver may return JSON-LD, plain JSON, or redirect to brand page
+      const ct   = res.headers.get('content-type') || '';
+      const isJson = ct.includes('json') || ct.includes('ld+json');
+      if (!isJson) return null;
+
+      let d;
+      try { d = await res.json(); } catch (_) { return null; }
+
+      // ── Extract fields from JSON-LD / schema.org Product shape ───────────
+      // GS1 resolvers typically return schema.org Product in @graph or root.
+      const graph  = d['@graph'] ?? (Array.isArray(d) ? d : null);
+      const node   = graph
+        ? graph.find(n => (n['@type'] === 'Product' || (Array.isArray(n['@type']) && n['@type'].includes('Product'))))
+        : d;
+
+      if (!node) return null;
+
+      // Name
+      const name = (node.name || node['schema:name'] || '').toString().trim();
+      if (!name) return null;  // no product identity → useless
+
+      // Brand
+      const brandRaw = node.brand ?? node['schema:brand'];
+      const brand    = typeof brandRaw === 'string'
+        ? brandRaw.trim()
+        : (brandRaw?.name ?? brandRaw?.['schema:name'] ?? '').toString().trim();
+
+      // Category
+      const catRaw  = node.category ?? node['schema:category'];
+      const category = typeof catRaw === 'string'
+        ? catRaw.replace(/^[a-z]{2}:/i, '').trim()
+        : '';
+
+      // Image
+      const imgRaw  = node.image ?? node['schema:image'];
+      const image   = typeof imgRaw === 'string'
+        ? imgRaw
+        : (imgRaw?.url ?? imgRaw?.['@id'] ?? '').toString();
+
+      return {
+        barcode,
+        gtin:       gtin14,
+        name,
+        brand,
+        category,
+        image:      image || null,
+        source:     'GS1',
+        gs1Verified: true,
+      };
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // MERGE HELPER
   // Priority: local > FDC > Ninja — only fills null/missing fields
   // ══════════════════════════════════════════════════════════════════════════
@@ -438,6 +533,7 @@
     clearCache:  clearCache,
     _synonymMap: SYNONYM_MAP,  // exposed for debugging only
     _fdcSearch:  _searchFDC,   // public FDC-only search for explicit import UI
+    _gs1Search:  _searchGS1,   // GS1 Digital Link barcode identity lookup
   };
 
 })(typeof window !== 'undefined' ? window : this);

@@ -1,0 +1,1799 @@
+/*
+ * responsive.css — Oasis Responsive Layout Enhancements
+ * ──────────────────────────────────────────────────────────────────────
+ * Adds adaptive layouts for tablet, laptop, desktop, and ultra-wide screens.
+ * Mobile layout (< 640px) is completely untouched — all rules here are
+ * wrapped in min-width media queries.
+ *
+ * Breakpoints:
+ *   Tablet     : 640px – 1024px
+ *   Desktop    : > 1024px
+ *   Wide       : > 1280px
+ *   Ultra-wide : > 1600px
+ *
+ * Load order: styles.css → responsive.css → app scripts
+ *
+ * Author : Responsive enhancement pass — Edison Taimu / Oasis v1.2.9+
+ * ──────────────────────────────────────────────────────────────────────
+ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 0 — CSS VARIABLES FOR LAYOUT CONTROL
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  :root {
+    --sidebar-w: 220px;         /* desktop sidebar width          */
+    --content-max: 1380px;      /* max-width for centred content  */
+    --page-gutter: 24px;        /* horizontal page padding        */
+    --card-gap: 16px;           /* gap between cards              */
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: 32px;
+    --card-gap: 20px;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --page-gutter: 48px;
+    --card-gap: 24px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 1 — BODY / GLOBAL LAYOUT WRAPPER
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* On larger screens, remove the bottom-nav fixed height from body padding
+     since we'll use a sidebar instead. But preserve it for tablet since
+     bottom-nav is still shown there. */
+  body {
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    /* Side nav takes over; no bottom-nav padding needed */
+    padding-bottom: 0;
+    padding-left: var(--sidebar-w);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 2 — HEADER ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  header {
+    padding: 0 var(--page-gutter, 24px);
+  }
+
+  .logo-sub {
+    display: flex; /* ensure subtitle always visible on tablet+ */
+  }
+}
+
+@media (min-width: 1024px) {
+  header {
+    /* Header spans full width, sidebar sits under it */
+    padding-left: calc(var(--sidebar-w) + var(--page-gutter, 32px));
+    min-height: 60px;
+  }
+
+  /* Larger wordmark on desktop */
+  .logo-name {
+    font-size: 20px;
+    letter-spacing: 3.5px;
+  }
+
+  .logo-name-pro {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 1600px) {
+  header {
+    padding-left: calc(var(--sidebar-w) + var(--page-gutter, 48px));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 3 — TAGLINE BAR (Optimize Patient Outcomes)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  #optimize-bar {
+    padding-left: calc(var(--sidebar-w) + var(--page-gutter, 32px));
+    justify-content: flex-start;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 4 — TOP NAVIGATION TABS
+   Tablet: keep horizontal strip but wider, better spacing
+   Desktop: hide top tabs (sidebar replaces them)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .tabs {
+    top: 60px; /* match larger header */
+  }
+
+  .tab {
+    font-size: 11px;
+    padding: 12px 16px 13px;
+    gap: 7px;
+    letter-spacing: 1px;
+  }
+
+  .tab .tab-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Hide horizontal top tabs — sidebar handles navigation */
+  .tabs {
+    display: none;
+  }
+
+  /* Also hide the tagline bar top spacing fix */
+  #optimize-bar {
+    top: 60px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 5 — BOTTOM NAVIGATION
+   Tablet: keep bottom nav but improve sizing
+   Desktop: hide bottom nav, sidebar takes over
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bottom-nav-wrap {
+    height: 68px;
+  }
+
+  .bottom-nav .tab {
+    font-size: 10px;
+    padding: 10px 8px 8px;
+    gap: 5px;
+  }
+
+  .bottom-nav .tab .tab-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bottom-nav .tab .tab-label {
+    font-size: 9.5px;
+    letter-spacing: 0.6px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Hide mobile bottom nav completely */
+  .bottom-nav-wrap {
+    display: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 6 — DESKTOP SIDEBAR NAVIGATION
+   Injected as a fixed left panel on desktop (1024px+).
+   The sidebar mirrors all the tabs from both .tabs and .bottom-nav.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar container — hidden on mobile/tablet, shown on desktop */
+#oasis-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  #oasis-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: #060b18;
+    border-right: 1px solid var(--border, #1e293b);
+    z-index: 210;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #1e293b #060b18;
+    padding-bottom: 20px;
+  }
+
+  /* Oasis logo lockup at top of sidebar */
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 14px 12px;
+    border-bottom: 1px solid var(--border, #1e293b);
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+
+  .sidebar-logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(29,233,212,0.08);
+    border: 1px solid rgba(29,233,212,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .sidebar-logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(29,233,212,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .sidebar-wordmark {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .sidebar-brand-name {
+    font-family: var(--cond, 'Syne', sans-serif);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--text-bright, #fff);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .sidebar-brand-name span {
+    color: var(--teal, #1de9d4);
+    text-shadow: 0 0 16px rgba(29,233,212,0.4);
+  }
+
+  .sidebar-brand-sub {
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 7.5px;
+    color: var(--text-dim, #c8d6e5);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-top: 3px;
+    opacity: 0.75;
+  }
+
+  /* Section group labels in sidebar */
+  .sidebar-group-label {
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+    padding: 14px 16px 6px;
+    flex-shrink: 0;
+  }
+
+  /* Individual sidebar nav items */
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    color: var(--text-dim, #c8d6e5);
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-left: 2px solid transparent;
+    transition: color .15s, background .15s, border-color .15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 0 8px 8px 0;
+    margin-right: 8px;
+  }
+
+  .sidebar-nav-item:hover:not(.active) {
+    color: var(--text-bright, #fff);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .sidebar-nav-item .sidebar-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav-item .sidebar-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Active states by type */
+  .sidebar-nav-item.active-clinical {
+    color: var(--teal, #1de9d4);
+    border-left-color: var(--teal, #1de9d4);
+    background: rgba(29,233,212,0.06);
+  }
+
+  .sidebar-nav-item.active-assess {
+    color: var(--blue, #60a5fa);
+    border-left-color: var(--blue, #60a5fa);
+    background: rgba(96,165,250,0.06);
+  }
+
+  .sidebar-nav-item.active-support {
+    color: var(--purple, #a78bfa);
+    border-left-color: var(--purple, #a78bfa);
+    background: rgba(167,139,250,0.06);
+  }
+
+  /* Icon glow on active */
+  .sidebar-nav-item.active-clinical .sidebar-icon svg,
+  .sidebar-nav-item.active-assess .sidebar-icon svg,
+  .sidebar-nav-item.active-support .sidebar-icon svg {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+
+  /* Sidebar separator */
+  .sidebar-sep {
+    height: 1px;
+    background: var(--border, #1e293b);
+    margin: 8px 14px;
+    flex-shrink: 0;
+  }
+
+  /* AI assistant button at bottom of sidebar */
+  .sidebar-ai-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 10px 0;
+    padding: 10px 12px;
+    background: rgba(29,233,212,0.05);
+    border: 1px solid rgba(29,233,212,0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--teal, #1de9d4);
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .sidebar-ai-btn:hover {
+    background: rgba(29,233,212,0.10);
+    border-color: rgba(29,233,212,0.4);
+    box-shadow: 0 0 14px rgba(29,233,212,0.08);
+  }
+
+  .sidebar-ai-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-version {
+    margin-top: auto;
+    padding: 12px 16px 8px;
+    font-family: var(--mono, 'JetBrains Mono', monospace);
+    font-size: 8px;
+    color: var(--text-muted, #94a3b8);
+    letter-spacing: 0.8px;
+    flex-shrink: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 7 — MAIN CONTENT AREA
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .main {
+    padding: 20px var(--page-gutter, 24px);
+    max-width: var(--content-max, 1380px);
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main {
+    /* Sidebar is fixed-positioned; main scrolls independently */
+    padding: 24px var(--page-gutter, 32px);
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+@media (min-width: 1600px) {
+  .main {
+    padding: 28px var(--page-gutter, 48px);
+    /* Cap content width on ultra-wide to keep it readable */
+    max-width: calc(var(--content-max, 1380px) + var(--page-gutter, 48px) * 2);
+    margin: 0 auto;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 8 — HOMEPAGE LAYOUT
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Hero gets more breathing room */
+  .hp-hero {
+    padding: 52px 32px 40px;
+  }
+
+  .hp-tagline {
+    font-size: clamp(28px, 4vw, 44px);
+  }
+
+  /* Stats in a row — bigger values */
+  .hp-stats {
+    margin: 0 0 32px;
+  }
+
+  .hp-stat-val {
+    font-size: 26px;
+  }
+
+  .hp-stat-lbl {
+    font-size: 9px;
+  }
+
+  /* Wider section padding */
+  .hp-section-title {
+    padding: 0 24px;
+    font-size: 10px;
+  }
+
+  /* Tool cards in a wider grid */
+  .hp-tools-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 24px;
+    gap: 12px;
+  }
+
+  .hp-tool-icon-wrap {
+    width: 48px;
+    height: 48px;
+  }
+
+  .hp-tool-label {
+    font-size: 10.5px;
+  }
+
+  .hp-tool-desc {
+    font-size: 8.5px;
+  }
+
+  /* Ref cards — 3 columns on tablet */
+  .hp-refs {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0 24px;
+    gap: 10px;
+  }
+
+  .hp-recent {
+    padding: 0 24px 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Two-column home layout: content + sidebar panel */
+  #tab-home {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: auto;
+    gap: 0 24px;
+    align-items: start;
+  }
+
+  /* Left column: hero + tools + recent */
+  .hp-hero {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 40px 0 32px;
+    text-align: left;
+  }
+
+  .hp-tagline {
+    font-size: clamp(30px, 3vw, 42px);
+    text-align: left;
+  }
+
+  .hp-sub {
+    text-align: left;
+  }
+
+  .hp-cta {
+    align-self: flex-start;
+  }
+
+  /* Search bar spans full width in left column */
+  #hp-search-wrap {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    margin: 0 0 20px;
+    padding: 0;
+  }
+
+  /* Stats bar spans both cols */
+  .hp-stats {
+    grid-column: 1 / -1;
+  }
+
+  /* Tool grid in left col — 4 cols */
+  .hp-tools-grid {
+    grid-column: 1;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0;
+  }
+
+  /* Section titles, recent, refs padding reset */
+  .hp-section-title {
+    padding: 0;
+  }
+
+  .hp-recent {
+    grid-column: 1;
+    padding: 0 0 28px;
+  }
+
+  .hp-refs {
+    grid-column: 1;
+    padding: 0;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Profile card and PWA banner in right sidebar panel */
+  .hp-profile-card {
+    grid-column: 2;
+    grid-row: 2 / 8;
+    margin: 0;
+    border-radius: 14px;
+    align-self: start;
+    position: sticky;
+    top: 100px;
+  }
+
+  #pwa-install-banner {
+    grid-column: 2;
+  }
+
+  /* Footer spans both cols */
+  .hp-footer {
+    grid-column: 1 / -1;
+    padding: 24px 0 40px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hp-tools-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  #tab-home {
+    grid-template-columns: 1fr 360px;
+    gap: 0 32px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .hp-tools-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  #tab-home {
+    grid-template-columns: 1fr 380px;
+    gap: 0 40px;
+  }
+
+  .hp-tagline {
+    font-size: 48px;
+  }
+
+  .hp-stat-val {
+    font-size: 32px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 9 — CALCULATOR / ADULT NUTRITION TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Cards get more generous padding */
+  .card-body {
+    padding: 16px 18px;
+  }
+
+  .card-header {
+    padding: 12px 18px;
+  }
+
+  /* Form rows become wider */
+  .form-row {
+    grid-template-columns: repeat(auto-fill, minmax(max(140px, 28%), 1fr));
+    gap: 14px;
+  }
+
+  /* Metric output grid: 4 cols on tablet */
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .m-val {
+    font-size: 26px;
+  }
+
+  /* Calc button wider */
+  .calc-btn {
+    max-width: 720px;
+    font-size: 14px;
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Two-pane layout: form left, results right */
+  #tab-calculator {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  /* Form stacks in left pane */
+  #tab-calculator > .card {
+    grid-column: 1;
+  }
+
+  /* Results appear in right pane */
+  #results-section {
+    grid-column: 2;
+    grid-row: 1 / 10;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* Tab topbar spans full width */
+  #tab-calculator > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  /* Metrics in results: 2 cols (tight in the right pane) */
+  #results-section .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-row {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .form-row.c3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  #tab-calculator {
+    grid-template-columns: 460px 1fr;
+    gap: 24px;
+  }
+
+  #results-section .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1600px) {
+  #tab-calculator {
+    grid-template-columns: 520px 1fr;
+    gap: 32px;
+  }
+
+  #results-section .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 10 — PEDIATRIC TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Pedi metric grid: 3 cols on tablet */
+  .pedi-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px;
+  }
+
+  .pedi-grid-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .pedi-mc-value {
+    font-size: 24px;
+  }
+
+  .pedi-row {
+    grid-template-columns: minmax(140px, 40%) 1fr;
+    gap: 12px;
+    padding: 9px 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Two-pane layout matching adult tab */
+  #tab-pedi {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-pedi > .card {
+    grid-column: 1;
+  }
+
+  #tab-pedi > #pn-results,
+  #tab-pedi > #pt-results,
+  #tab-pedi > #nn-results,
+  #tab-pedi > [id$="-results"] {
+    grid-column: 2;
+    grid-row: 1 / 10;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  #tab-pedi > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  /* Pedi grid: 4 cols in results pane */
+  .pedi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .pedi-mc-value {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1280px) {
+  #tab-pedi {
+    grid-template-columns: 440px 1fr;
+  }
+
+  .pedi-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .pedi-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .pedi-mc-value {
+    font-size: 26px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 11 — ENTERAL TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  #tab-enteral .hscroll-item.highlight-card {
+    width: 300px;
+    min-width: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #tab-enteral {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-enteral > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  #tab-enteral > .card:not([id$="-results-section"]):not([id$="-section"]) {
+    grid-column: 1;
+  }
+
+  #tab-enteral > #en-results,
+  #tab-enteral > #lr-results-section,
+  #tab-enteral > #blend-results-section {
+    grid-column: 2;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  /* Highlight cards in hscroll: grid on larger screens */
+  #tab-enteral .hscroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    overflow-x: visible;
+    flex-wrap: unset;
+    padding-bottom: 0;
+  }
+
+  #tab-enteral .hscroll-item.highlight-card {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  #tab-enteral {
+    grid-template-columns: 460px 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 12 — PARENTERAL (PN) TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  #tab-parenteral {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-parenteral > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  #tab-parenteral > .card {
+    grid-column: 1;
+  }
+
+  #tab-parenteral > [id$="-results"],
+  #tab-parenteral > #pn-results {
+    grid-column: 2;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 13 — ANTHROPOMETRY TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Anthro inputs larger on tablet */
+  .anthro-inp {
+    font-size: 22px !important;
+    padding: 18px 64px 18px 18px !important;
+    height: 62px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  #tab-anthro {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-anthro > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  #tab-anthro > .card {
+    grid-column: 1;
+  }
+
+  #tab-anthro > [id$="-results"],
+  #tab-anthro > #ad-results,
+  #tab-anthro > #uc-results {
+    grid-column: 2;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 14 — SCREENING TAB (MUST / MNA-SF)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* SDR chips / radio groups spread out nicely */
+  .sdr-chip {
+    padding: 7px 16px;
+    font-size: 10.5px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #tab-screening {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-screening > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  #tab-screening > .card {
+    grid-column: 1;
+  }
+
+  #tab-screening > [id$="-results"],
+  #tab-screening > #must-result,
+  #tab-screening > #mna-result {
+    grid-column: 2;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 15 — DRUG-NUTRIENT INTERACTIONS (DNI) TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* DNI search results in a 2-col grid */
+  #dni-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #tab-dni {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-dni > .tab-topbar {
+    grid-column: 1 / -1;
+  }
+
+  #tab-dni > .card:first-of-type {
+    grid-column: 1;
+  }
+
+  #tab-dni > #dni-results-wrap,
+  #tab-dni > [id$="-results"] {
+    grid-column: 2;
+  }
+
+  #dni-results {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 16 — FOOD SEARCH RESULTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Food search results: 2 cols on tablet */
+  #food-results,
+  .food-results-list,
+  #hp-search-results {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #food-results,
+  .food-results-list,
+  #hp-search-results {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (min-width: 1600px) {
+  #food-results,
+  .food-results-list,
+  #hp-search-results {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 17 — AI CHAT PANEL (Oasis AI)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Center the AI panel better on tablet */
+  #oasis-ai-overlay > div {
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #oasis-ai-panel {
+    border-radius: 16px !important;
+    max-width: 600px !important;
+    max-height: 80vh;
+    width: 92vw !important;
+    margin: auto;
+    border: 1px solid rgba(29,233,212,0.18) !important;
+    border-top: 1px solid rgba(29,233,212,0.18) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  #oasis-ai-panel {
+    max-width: 720px !important;
+    width: 72vw !important;
+    max-height: 82vh;
+    border-radius: 20px !important;
+  }
+
+  /* Drag handle hidden on desktop */
+  #oasis-ai-panel > div:first-child {
+    display: none;
+  }
+
+  /* AI message max width for readability */
+  .oai-msg-ai,
+  [class*="oai-msg"],
+  #oasis-ai-mount [class*="bubble"],
+  #oasis-ai-mount [class*="message"] {
+    max-width: min(600px, 88%);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+}
+
+@media (min-width: 1280px) {
+  #oasis-ai-panel {
+    max-width: 760px !important;
+    width: 58vw !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  #oasis-ai-panel {
+    max-width: 820px !important;
+    width: 50vw !important;
+    max-height: 84vh;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 18 — DATA TABLES (hscroll-table)
+   On larger screens these can unfold naturally
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  /* Allow tables to expand fully */
+  .hscroll-table {
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  /* Data table improvements */
+  .dtbl {
+    font-size: 12px;
+  }
+
+  .dtbl th {
+    font-size: 9.5px;
+    padding: 10px 14px;
+    letter-spacing: 1px;
+  }
+
+  .dtbl td {
+    padding: 9px 14px;
+    font-size: 11.5px;
+  }
+}
+
+@media (min-width: 640px) {
+  /* Tables get better padding on tablet */
+  .dtbl th,
+  .dtbl td {
+    padding: 9px 12px;
+    white-space: nowrap;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 19 — CARDS & METRIC OUTPUTS (tablet/desktop improvements)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .card {
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  /* Metric cards bigger */
+  .mc {
+    padding: 12px 16px 11px;
+    border-radius: 12px;
+  }
+
+  .m-lbl {
+    font-size: 9px;
+    margin-bottom: 9px;
+  }
+
+  .m-val {
+    font-size: 26px;
+  }
+
+  /* Plan grid: 2 cols on tablet */
+  .plan-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card {
+    margin-bottom: 18px;
+  }
+
+  .m-val {
+    font-size: 28px;
+  }
+
+  /* Plan grid: 3 cols on desktop */
+  .plan-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* Metrics: 4 cols in main content (outside of split-pane results) */
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .mc {
+    padding: 14px 18px 13px;
+  }
+
+  .m-val {
+    font-size: 30px;
+  }
+
+  .plan-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 20 — ABOUT / MODULE CARDS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .mod-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .mod-card {
+    padding: 18px 14px 15px;
+  }
+
+  .mod-icon-wrap {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mod-title {
+    font-size: 13px;
+  }
+
+  .mod-desc {
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mod-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .mod-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (min-width: 1600px) {
+  .mod-grid {
+    grid-template-columns: repeat(7, 1fr);
+    padding: 20px 24px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 21 — SDR DRAWERS (Settings, Profile, About)
+   On desktop these can slide in from the side at a proper width
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Wider drawers on tablet */
+  .sdr-drawer,
+  #profile-drawer,
+  #settings-drawer,
+  #about-drawer,
+  #profile-edit-drawer {
+    max-width: 480px;
+    border-radius: 20px 0 0 20px;
+  }
+
+  .sdr-body {
+    padding: 16px 22px;
+  }
+
+  .sdr-group-label {
+    font-size: 10px;
+  }
+
+  .sdr-item-lbl {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Drawers even wider and positioned properly accounting for sidebar */
+  .sdr-drawer,
+  #profile-drawer,
+  #settings-drawer,
+  #about-drawer,
+  #profile-edit-drawer {
+    max-width: 520px;
+  }
+
+  /* Settings / About section items */
+  .sdr-group {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 22 — ASSESSMENT TAB (SGA/NFPE)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Assessment radio chips wrap nicely */
+  .at-rg-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .at-rc {
+    padding: 9px 14px;
+    font-size: 11px;
+  }
+
+  .at-cb-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .at-form-info-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #tab-assessment {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--card-gap, 20px);
+    align-items: start;
+  }
+
+  #tab-assessment > .tab-topbar,
+  #tab-assessment > .at-view-inner-topbar {
+    grid-column: 1 / -1;
+  }
+
+  .at-form {
+    padding: 16px 20px 0;
+  }
+
+  .at-cb-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .at-wt-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 23 — GROWTH CHARTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Chart containers expand */
+  canvas[id^="chart-"],
+  canvas[id$="-chart"],
+  #growth-chart-canvas,
+  .chart-wrap canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Charts can use more horizontal space */
+  .chart-wrap {
+    min-height: 380px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 24 — TOAST NOTIFICATIONS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Toast appears at bottom-center, not bottom-left-anchored */
+  #toast-container,
+  .toast-container {
+    bottom: 24px;
+    right: 50%;
+    transform: translateX(50%);
+    left: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* On desktop with sidebar, shift toast to account for sidebar width */
+  #toast-container,
+  .toast-container {
+    bottom: 28px;
+    right: 32px;
+    transform: none;
+    left: auto;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 25 — MODALS (Legal, Feedback, Photo Crop)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Legal modal wider on tablet */
+  #legal-modal {
+    width: min(640px, 90vw);
+    max-height: 85vh;
+    border-radius: 20px;
+  }
+
+  .legal-modal-body {
+    font-size: 14px;
+    padding: 22px 26px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #legal-modal {
+    width: 680px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 26 — LIGHT THEME RESPONSIVE OVERRIDES
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  body.theme-light #oasis-sidebar {
+    background: #f8fafc;
+    border-right-color: #e2e8f0;
+  }
+
+  body.theme-light .sidebar-nav-item {
+    color: #475569;
+  }
+
+  body.theme-light .sidebar-nav-item:hover:not(.active) {
+    background: rgba(0,0,0,0.04);
+    color: #1e293b;
+  }
+
+  body.theme-light .sidebar-logo {
+    border-bottom-color: #e2e8f0;
+  }
+
+  body.theme-light .sidebar-sep {
+    background: #e2e8f0;
+  }
+
+  body.theme-light .sidebar-ai-btn {
+    background: rgba(29,233,212,0.06);
+    border-color: rgba(29,233,212,0.25);
+  }
+
+  body.theme-light .sidebar-brand-name {
+    color: #0f172a;
+  }
+
+  body.theme-light .sidebar-brand-sub {
+    color: #475569;
+  }
+
+  body.theme-light .sidebar-group-label {
+    color: #94a3b8;
+  }
+
+  body.theme-light .sidebar-version {
+    color: #94a3b8;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 27 — TAB TOPBAR RESPONSIVE
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .tab-topbar {
+    padding: 12px 20px;
+    min-height: 52px;
+  }
+
+  .tab-topbar-label {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .tab-topbar-back {
+    font-size: 11.5px;
+    padding: 7px 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tab-topbar {
+    padding: 14px 24px;
+    min-height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 15;
+  }
+
+  .tab-topbar-label {
+    font-size: 15px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 28 — ULTRA-WIDE CONTENT CAPPING
+   Prevents excessive empty space and stretched cards on 1600px+ screens
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1600px) {
+  /* Wrap all tab content to a max width */
+  .main {
+    max-width: 1520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Calc/form buttons don't stretch to full 1500px */
+  .calc-btn {
+    max-width: 640px;
+  }
+
+  /* Search bar max width */
+  #hp-search-wrap {
+    max-width: 680px;
+  }
+
+  /* Cards cap at a readable width in single-column contexts */
+  .card {
+    max-width: 100%;
+  }
+
+  /* Results section more readable on ultra-wide */
+  #results-section .m-val {
+    font-size: 30px;
+  }
+
+  /* AI panel comfortable width */
+  #oasis-ai-panel {
+    max-width: 860px !important;
+  }
+
+  /* Pedi Z-scores */
+  .pedi-z-score {
+    font-size: 28px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 29 — GRID OVERRIDES: UNDO MOBILE COLLAPSES ON LARGER SCREENS
+   Mobile CSS forces everything to 1-2 col — restore on tablet+
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Undo the aggressive mobile grid collapse */
+  [style*="grid-template-columns"],
+  .form-row,
+  .metrics-grid,
+  .grid-2,
+  .grid-3,
+  .plan-grid,
+  .totals-grid {
+    /* Allow the natural template to express itself */
+    grid-template-columns: revert !important;
+  }
+
+  /* But still enforce sensible defaults */
+  .form-row {
+    grid-template-columns: repeat(auto-fill, minmax(max(140px, 28%), 1fr)) !important;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(max(100px, 22%), 1fr)) !important;
+  }
+
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .plan-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .totals-grid {
+    grid-template-columns: repeat(auto-fill, minmax(max(100px, 22%), 1fr)) !important;
+  }
+
+  /* Pedi grids */
+  .pedi-grid  { grid-template-columns: repeat(3, 1fr) !important; }
+  .pedi-grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (min-width: 1024px) {
+  .plan-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .form-row {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  }
+
+  .form-row.c3 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .form-row.c1 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Inline grids in results can also be wider */
+  [style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  [style*="grid-template-columns: 1fr 1fr 1fr 1fr"] {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 30 — PROFILE CARD TABLET IMPROVEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .hp-profile-card {
+    margin: 20px 24px 0;
+    padding: 18px 22px;
+    border-radius: 18px;
+  }
+
+  .hp-profile-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .hp-profile-name {
+    font-size: 18px;
+  }
+
+  .hp-profile-inst {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hp-profile-card {
+    margin: 0;
+    border-radius: 14px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 31 — ONBOARDING CARD TABLET IMPROVEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .ob-card {
+    padding: 36px 36px 32px;
+    max-width: 480px;
+    border-radius: 24px;
+  }
+
+  .ob-heading {
+    font-size: 17px;
+  }
+
+  .ob-role-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 32 — SW UPDATE BAR / PWA BANNER TABLET
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  /* Offset sw update bar by sidebar width */
+  #sw-update-bar {
+    left: var(--sidebar-w);
+  }
+
+  #pwa-install-banner {
+    margin: 0 0 20px;
+    border-radius: 14px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 33 — ORIENTATION OVERLAY (disable on desktop)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  /* No orientation restriction on desktop */
+  #orient-overlay.show {
+    display: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 34 — TYPOGRAPHY SCALE UP ON LARGER SCREENS
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* Slightly larger base typography on tablet */
+  .card-title {
+    font-size: 11px;
+    letter-spacing: 1.8px;
+  }
+
+  .lbl {
+    font-size: 10px;
+    letter-spacing: 1.3px;
+  }
+
+  .inp, .sel {
+    font-size: 14px;
+    padding: 9px 12px;
+  }
+
+  input[type=number].inp {
+    font-size: 16px;
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-title {
+    font-size: 11.5px;
+  }
+
+  .lbl {
+    font-size: 10.5px;
+  }
+
+  .inp, .sel {
+    font-size: 14px;
+  }
+
+  /* Pedi labels bigger */
+  .pedi-mc-label {
+    font-size: 9.5px;
+  }
+
+  .pedi-row-label,
+  .pedi-row-value {
+    font-size: 12px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION 35 — ABOUT TAB HOME PAGE QUICK ACCESS MODULES
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  /* HP assess entries in 2-col */
+  .hp-assess-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hp-assess-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   END OF RESPONSIVE ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
