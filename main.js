@@ -5569,6 +5569,136 @@ function calculate() {
     const stmtEl = document.getElementById('pes-statement');
     if (stmtEl) stmtEl.innerHTML = pesBlocks.join('');
 
+    // ── Oasis AI Silent PES Refinement ─────────────────────────────────────
+    // Sends the generated PES to OasisAI.refinePES for clinical improvement.
+    // Replaces content silently when refinement succeeds; original persists on
+    // any error.  No loading indicator — the process is invisible to the user.
+    if (window.OasisAI && typeof window.OasisAI.refinePES === 'function') {
+      (function _oasisRefinePES() {
+        const _pesEl = document.getElementById('pes-statement');
+        if (!_pesEl) return;
+
+        // Capture originals for fall-back
+        const _origBlocks = pesBlocks.slice();
+
+        // Structured PES objects consumed by OasisAI.refinePES
+        const _p1 = {
+          pCode:    P_code,
+          pLabel:   P_label,
+          etiology: [E],
+          evidence: sArr.slice()
+        };
+        const _p2 = (P2_code && P2_label) ? {
+          pCode:    P2_code,
+          pLabel:   P2_label,
+          etiology: [E2],
+          evidence: S2arr.slice()
+        } : null;
+
+        // Compact patient context for the AI prompt
+        let _pCtx = 'Diagnosis: ' + (dxLabel || dx || 'unspecified');
+        if (bmi)            _pCtx += '; BMI '                + bmi.toFixed(1)            + ' kg/m\u00b2';
+        if (weight)         _pCtx += '; Weight '             + weight                    + ' kg';
+        if (energy)         _pCtx += '; Energy requirement ' + Math.round(energy)        + ' kcal/day';
+        if (protein)        _pCtx += '; Protein requirement '+ protein.toFixed(1)        + ' g/day';
+        if (pctIntakeVsReq) _pCtx += '; Oral intake \u2248'  + pctIntakeVsReq            + '% of estimated needs';
+        if (labs.albumin)   _pCtx += '; Albumin '            + labs.albumin              + ' g/L';
+        if (labs.crp)       _pCtx += '; CRP '                + labs.crp                  + ' mg/L';
+
+        window.OasisAI.refinePES({
+          primaryPES:    _p1,
+          secondaryPES:  _p2,
+          phaseLabel:    dxLabel || dx || 'General',
+          patientContext: _pCtx
+        }).then(function(res) {
+          if (!res || !res.raw || !res.raw.trim()) return;
+
+          // ── Internal helpers — parse AI text into {code,label,etiology,signs} ──
+
+          // Extract the text block that belongs to one section header, stopping
+          // before the next recognised header.
+          function _getSection(txt, hdr) {
+            var idx = txt.indexOf(hdr);
+            if (idx === -1) return null;
+            var start = idx + hdr.length;
+            var end   = txt.length;
+            var stops = [
+              'REFINED PRIMARY PES:',
+              'REFINED SECONDARY PES:',
+              'IMPROVEMENT NOTES:',
+              'CLINICAL PES SENTENCE:'
+            ];
+            for (var si = 0; si < stops.length; si++) {
+              if (stops[si] === hdr) continue;
+              var ni = txt.indexOf(stops[si], start);
+              if (ni !== -1 && ni < end) end = ni;
+            }
+            return txt.substring(start, end).trim();
+          }
+
+          // Parse a single PES section block into component parts.
+          // Handles both "[code] Label" and "Label [code]" orderings.
+          function _parseSec(sec) {
+            if (!sec) return null;
+            var pm = sec.match(/^P:\s*(?:\[([^\]]+)\]\s*)?(.+)$/m);
+            var em = sec.match(/^E:\s*(?:related to\s+)?(.+)$/m);
+            var sm = sec.match(/^S:\s*(?:as evidenced by\s+)?(.+)$/m);
+            if (!pm || !em || !sm) return null;
+            var code  = (pm[1] || '').trim();
+            var label = (pm[2] || '').trim();
+            // Fallback: code may be embedded inside the label string
+            if (!code) {
+              var inLbl = label.match(/\[([A-Z]{2}-[\d.]+)\]/);
+              if (inLbl) { code = inLbl[1]; label = label.replace(inLbl[0], '').trim(); }
+            }
+            return {
+              code:     code,
+              label:    label,
+              etiology: em[1].trim(),
+              signs:    sm[1].trim()
+            };
+          }
+
+          // ── Rebuild HTML blocks using the same visual style as originals ──
+          var _refined = [];
+
+          // Primary PES
+          var _r1 = _parseSec(_getSection(res.raw, 'REFINED PRIMARY PES:'));
+          if (_r1 && _r1.label && _r1.etiology && _r1.signs) {
+            _refined.push(makePESBlock(1, _r1.code || P_code, _r1.label, _r1.etiology, _r1.signs, false));
+          } else {
+            _refined.push(_origBlocks[0]); // fall back to original primary
+          }
+
+          // Secondary PES (only when the original had one)
+          if (_origBlocks.length > 1) {
+            var _r2 = _parseSec(_getSection(res.raw, 'REFINED SECONDARY PES:'));
+            if (_r2 && _r2.label && _r2.etiology && _r2.signs) {
+              _refined.push(makePESBlock(2, _r2.code || P2_code, _r2.label, _r2.etiology, _r2.signs, true));
+            } else {
+              _refined.push(_origBlocks[1]); // fall back to original secondary
+            }
+          }
+
+          // Tertiary PES — high-acuity clinical data; preserved verbatim
+          if (_origBlocks.length > 2) _refined.push(_origBlocks[2]);
+
+          // Apply refined HTML only when we produced at least one valid block
+          if (_refined.length > 0 && _pesEl) {
+            _pesEl.innerHTML = _refined.join('');
+            // Keep _pesGenerated in sync for the Copy button
+            window._pesGenerated = {
+              statement: _pesEl.innerHTML.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
+              count:     _refined.length
+            };
+          }
+        }).catch(function() {
+          // Silent failure — original PES display is preserved unchanged
+        });
+      }());
+    }
+    // ── End Oasis AI Silent PES Refinement ─────────────────────────────────
+
     // ── Smart PES — supplemental disease-phase-aware PES ────────────────────
     if (window.SmartPES) {
       try {
@@ -8166,6 +8296,150 @@ function enCalc() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+
+// ── ENTERAL CALCULATOR STATE ACCESSOR (for Oasis AI) ────────────
+/**
+ * getEnteralCalcState()
+ * Collects all live inputs, formula details, computed outputs,
+ * safety checklist status, and clinical metadata from the Enteral
+ * Nutrition Calculator. Called by OasisAI to build rich context.
+ *
+ * Returns a structured state object, or null on error.
+ * Exposed on window so oasisAI.js (loaded separately) can access it.
+ */
+function getEnteralCalcState() {
+  try {
+    const resultsEl  = document.getElementById('en-results');
+    const hasResults = resultsEl && resultsEl.style.display !== 'none';
+
+    // ── Inputs ──────────────────────────────────────────────────
+    const fk         = document.getElementById('en-formula')?.value   || '';
+    const kcalTarget = parseFloat(document.getElementById('en-src-kcal')?.value)   || 0;
+    const proTarget  = parseFloat(document.getElementById('en-src-pro')?.value)    || 0;
+    const fluidTarget= parseFloat(document.getElementById('en-src-fluid')?.value)  || 0;
+    const medKcal    = parseFloat(document.getElementById('en-med-kcal')?.value)   || 0;
+    const hours      = parseFloat(document.getElementById('en-hours')?.value)       || 24;
+    const mode       = document.getElementById('en-mode')?.value                   || 'rate';
+    const isRefeeding= document.querySelector('input[name="en-rf"]:checked')?.value === 'yes';
+    const netKcal    = Math.max(0, kcalTarget - medKcal);
+
+    // ── Safety checklist ────────────────────────────────────────
+    const safe1 = document.getElementById('en-safe1')?.checked || false;
+    const safe2 = document.getElementById('en-safe2')?.checked || false;
+    const safe3 = document.getElementById('en-safe3')?.checked || false;
+    const safe4 = document.getElementById('en-safe4')?.checked || false;
+    const safetyScore = [safe1, safe2, safe3, safe4].filter(Boolean).length;
+
+    // ── Formula details ─────────────────────────────────────────
+    let formulaName = fk, conc = 0, proPerL = 0, waterPerL = 0;
+    let formulaCho = null, formulaFat = null, formulaOsm = null;
+    let formulaFibre = null, formulaNote = null;
+    if (fk === 'custom') {
+      conc         = parseFloat(document.getElementById('en-custom-conc')?.value)  || 1.0;
+      proPerL      = parseFloat(document.getElementById('en-custom-pro')?.value)   || 40;
+      waterPerL    = parseFloat(document.getElementById('en-custom-water')?.value) || 850;
+      formulaName  = 'Custom Formula';
+    } else if (typeof EN_FORMULAS !== 'undefined' && EN_FORMULAS[fk]) {
+      const f      = EN_FORMULAS[fk];
+      conc         = f.conc;
+      proPerL      = f.pro;
+      waterPerL    = f.water;
+      formulaName  = f.name;
+      formulaCho   = f.cho   || null;
+      formulaFat   = f.fat   || null;
+      formulaOsm   = f.osm   || null;
+      formulaFibre = f.fibre !== undefined ? f.fibre : null;
+      formulaNote  = f.note  || null;
+    }
+
+    // ── Computed outputs ─────────────────────────────────────────
+    // Read from DOM when available (most accurate); re-derive when not.
+    const domVolDay    = hasResults ? parseInt(document.getElementById('en-vol-day')?.textContent)    || 0 : 0;
+    const domRate      = hasResults ? parseInt(document.getElementById('en-rate')?.textContent)       || 0 : 0;
+    const domRateStart = hasResults ? parseInt(document.getElementById('en-rate-start')?.textContent) || 0 : 0;
+    const domActualKcal= hasResults ? parseInt(document.getElementById('en-kcal-actual')?.textContent)|| 0 : 0;
+
+    const calcVolDay    = (conc > 0 && netKcal > 0) ? Math.round(netKcal / conc) : domVolDay;
+    const calcActualKcal= Math.round(calcVolDay * conc) || domActualKcal;
+    const calcRate      = hours > 0 ? Math.round(calcVolDay / hours) : domRate;
+    const calcRateStart = Math.round(calcRate * 0.5)  || domRateStart;
+
+    const proProvided   = proPerL && calcVolDay  ? parseFloat(((calcVolDay / 1000) * proPerL).toFixed(1)) : 0;
+    const proGap        = parseFloat((proTarget - proProvided).toFixed(1));
+    const fluidFromFmla = waterPerL && calcVolDay ? Math.round((calcVolDay / 1000) * waterPerL)           : 0;
+    const fluidNeeded   = Math.max(0, fluidTarget - fluidFromFmla);
+    const fwfQ4         = Math.max(30, Math.round(fluidNeeded / 6 / 5) * 5);
+
+    // ── Formula recommendation badge (from auto-select engine) ──
+    const recContent = document.getElementById('en-formula-rec-content')?.textContent?.trim() || null;
+
+    // ── ENTERAL_DB entry for selected formula ───────────────────
+    let dbEntry = null;
+    if (typeof ENTERAL_DB !== 'undefined') {
+      dbEntry = ENTERAL_DB.find(f => f.name === formulaName) || null;
+    }
+
+    return {
+      inputs: {
+        kcalTarget,
+        proTarget,
+        fluidTarget,
+        medKcal,
+        netKcal,
+        hours,
+        mode,            // 'rate' | 'volume'
+        isRefeeding,
+        formulaKey: fk,
+      },
+      formula: {
+        key:      fk,
+        name:     formulaName,
+        conc,            // kcal/mL
+        proPerL,         // g/L
+        waterPerL,       // mL/L
+        cho:      formulaCho,
+        fat:      formulaFat,
+        osm:      formulaOsm,
+        fibre:    formulaFibre,
+        note:     formulaNote,
+        // Extended ENTERAL_DB metadata when available
+        category:   dbEntry?.cat  || null,
+        route:      dbEntry?.route || null,
+      },
+      outputs: {
+        volDay:           calcVolDay,
+        rate:             domRate      || calcRate,
+        rateStart:        domRateStart || calcRateStart,
+        actualKcal:       calcActualKcal,
+        proProvided,
+        proGap,
+        proMet:           proGap <= 0,
+        fluidFromFormula: fluidFromFmla,
+        fluidNeeded,
+        fwfQ4,
+      },
+      clinical: {
+        safetyChecklist: {
+          functionalGut:              safe1,
+          hemodynamicStability:       safe2,
+          tubePositionConfirmed:      safe3,
+          noAbsoluteContraindication: safe4,
+          score: `${safetyScore}/4 criteria met`,
+        },
+        refeedingProtocol:             isRefeeding,
+        formulaRecommendationContext:  recContent,
+      },
+      hasResults,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (e) {
+    console.warn('[Oasis] getEnteralCalcState error:', e.message);
+    return null;
+  }
+}
+
+// Expose globally for oasisAI.js cross-module access
+window.getEnteralCalcState = getEnteralCalcState;
 
 // ═══════════════════════════════════════════════════════════════
 

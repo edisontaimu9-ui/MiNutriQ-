@@ -368,6 +368,356 @@ window.calcPretab = function() {
   try { if (typeof logCalcToFirebase==='function') logCalcToFirebase({calcType:'pedi-preterm',module:'pedi'}); } catch(e) {}
 };
 
+// ── 2a. buildNeonateInterventionCard — AI-powered NCP Intervention ────────
+/**
+ * buildNeonateInterventionCard(P)
+ *
+ * Renders a clinically styled "Nutrition Intervention" card with four NCP
+ * domains (ND / E / C / RC) for TERM NEONATES (0–28 days).
+ *
+ * Calculated requirements are embedded as highlighted badges inside the ND
+ * domain — never rendered as a separate disconnected card. The feeding plan
+ * is absorbed into the domain narrative. Oasis AI writes every domain;
+ * a skeleton with fallback text is shown while calls are in-flight.
+ *
+ * @param {Object} P  All computed values from calcNeonatab
+ */
+function buildNeonateInterventionCard(P) {
+  var cardId = 'nic-' + Date.now();
+  var ndId   = cardId + '-nd';
+  var eId    = cardId + '-e';
+  var cId    = cardId + '-c';
+  var rcId   = cardId + '-rc';
+
+  /* ── Derived flags ── */
+  var energyKgStr  = (P.energyKcal / P.wtKg).toFixed(0);
+  var isNEC        = P.diag === 'nec';
+  var isHIE        = P.diag === 'hie';
+  var isMeta       = P.diag === 'galactosaemia' || P.diag === 'pku';
+  var isNGT        = P.feed === 'ngt';
+  var isEBF        = P.feed === 'ebf' || P.feed === 'mixed';
+  var isCritical   = ['nec','gastroschisis','tof','intestinal_atresia','hie'].includes(P.diag);
+  var routeTag     = isCritical ? 'Enteral feeds contraindicated (NPO)' :
+                     isMeta     ? 'Specialised formula required'         : P.feedLabel;
+
+  /* ══════════════════════════════════════════════════════════════
+     CALCULATED REQUIREMENTS BADGE ROW
+     Always-visible static highlight — rendered above the AI text
+     in the ND domain so values are accessible even while loading.
+  ══════════════════════════════════════════════════════════════ */
+  function reqBadge(label, val, sub, color, rgb) {
+    return '<div style="flex:1;min-width:118px;padding:10px 13px;border-radius:9px;' +
+      'background:rgba(' + rgb + ',0.08);border:1px solid rgba(' + rgb + ',0.28)">' +
+      '<div style="font-family:var(--mono);font-size:7.5px;letter-spacing:1.5px;font-weight:800;' +
+        'color:' + color + ';margin-bottom:4px;text-transform:uppercase;opacity:0.85">' + label + '</div>' +
+      '<div style="font-family:var(--mono);font-size:18px;font-weight:900;color:' + color + ';line-height:1">' + val + '</div>' +
+      (sub ? '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px;line-height:1.4">' + sub + '</div>' : '') +
+    '</div>';
+  }
+
+  var reqRow =
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:14px;' +
+      'background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.14);border-radius:10px">' +
+      '<div style="font-family:var(--mono);font-size:7.5px;letter-spacing:2px;font-weight:800;' +
+        'color:var(--text-dim);width:100%;margin-bottom:7px">▸ CALCULATED REQUIREMENTS — IOM 2005 · AAP 2004 · DoL ' + P.ageDays + '</div>' +
+      reqBadge('Energy', P.energyKcal + ' kcal', energyKgStr + ' kcal/kg/day', '#f59e0b', '245,158,11') +
+      reqBadge('Protein', P.protG + ' g', P.baseProtFact.toFixed(1) + ' g/kg/day', '#34d399', '52,211,153') +
+      reqBadge('Fluid', P.fluidML + ' mL', P.fluidBase + ' mL/kg/day', '#60a5fa', '96,165,250') +
+      (P.volPerFeed ? reqBadge('Per Feed', P.volPerFeed + ' mL', P.feedFreq + '\xd7/day \xb7 q3h', '#a78bfa', '167,139,250') : '') +
+      (P.efMult > 1.0 ? reqBadge('Stress ×', P.efMult.toFixed(2), 'applied to base energy', '#f87171', '248,113,113') : '') +
+    '</div>';
+
+  /* ══════════════════════════════════════════════════════════════
+     DOMAIN SHELL — skeleton card + shimmer while AI loads
+  ══════════════════════════════════════════════════════════════ */
+  function domainShell(id, code, title, subtitle, icon, accent, rgb, fallback, extraHeader) {
+    var shimmer =
+      '<div style="display:flex;align-items:center;gap:8px;padding:6px 0 10px;opacity:0.7">' +
+        '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out infinite"></div>' +
+        '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out 0.4s infinite"></div>' +
+        '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out 0.8s infinite"></div>' +
+        '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.5px">Composing clinical narrative\u2026</span>' +
+      '</div>';
+    return (
+      '<div style="margin-bottom:22px">' +
+        /* domain header bar */
+        '<div style="display:flex;align-items:center;gap:12px;padding:10px 15px;' +
+          'background:linear-gradient(90deg,rgba(' + rgb + ',0.11),rgba(' + rgb + ',0.02));' +
+          'border-left:4px solid ' + accent + ';border-radius:0 10px 10px 0;margin-bottom:11px">' +
+          '<div style="width:36px;height:36px;border-radius:9px;background:rgba(' + rgb + ',0.14);' +
+            'border:1.5px solid rgba(' + rgb + ',0.32);display:flex;align-items:center;' +
+            'justify-content:center;font-size:17px;flex-shrink:0">' + icon + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">' +
+              '<span style="font-family:var(--mono);font-size:8.5px;font-weight:800;letter-spacing:2px;' +
+                'color:' + accent + ';background:rgba(' + rgb + ',0.13);' +
+                'border:1px solid rgba(' + rgb + ',0.28);padding:2px 7px;border-radius:4px">' + code + '</span>' +
+              '<span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:' + accent + '">' + title + '</span>' +
+            '</div>' +
+            '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">' + subtitle + '</div>' +
+          '</div>' +
+        '</div>' +
+        (extraHeader || '') +
+        /* AI text target — shimmer + muted fallback while loading */
+        '<div id="' + id + '" style="padding:0 2px;font-family:var(--sans);font-size:12.5px;' +
+          'color:var(--text);line-height:1.88;transition:opacity 0.4s">' +
+          shimmer +
+          '<p style="margin:0 0 8px;opacity:0.4">' + fallback + '</p>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     FALLBACK TEXT — displayed (dimmed) while AI is loading;
+     remains visible on error; replaced by AI on success.
+  ══════════════════════════════════════════════════════════════ */
+  function fallbackND() {
+    if (isNEC)  return 'All enteral feeds are withheld pending clinical and radiological resolution of necrotising enterocolitis. IV dextrose maintains glucose homeostasis. Energy requirement ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day), protein ' + P.protG + ' g/day, and fluid ' + P.fluidML + ' mL/day are targets to restore once enteral access is re-established after a minimum 7\u201314 days of bowel rest and clinical resolution per Bell staging criteria.';
+    if (isHIE)  return 'During active therapeutic hypothermia (Day 1\u20133) enteral feeds are withheld and fluid is restricted to 40\u201360 mL/kg/day to limit cerebral oedema. IV dextrose provides primary energy and glucose substrate. Calculated energy requirement is ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day); protein target is ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day). EN is introduced cautiously post-rewarming when GI function is confirmed. Blood glucose monitoring q1\u20132h is mandatory.';
+    if (isMeta) return 'Standard breastmilk and formula are contraindicated in this infant\u2019s metabolic condition. Specialised formula is required immediately; metabolic and dietetic team review is urgent. Calculated energy requirement ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day) and protein ' + P.protG + ' g/day must be met via the appropriate substrate.';
+    return 'Feeding plan for this Day-' + P.ageDays + ' term neonate is ' + P.feedLabel.toLowerCase() + ', providing ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day) across ' + P.feedFreq + ' feeds/day' + (P.volPerFeed ? ' (' + P.volPerFeed + ' mL/feed)' : '') + '. Calculated energy ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg \xd7 ' + P.efMult.toFixed(2) + ' stress factor; IOM 2005), protein ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day). ' + P.feedPrimary + (P.clinAdj ? ' ' + P.clinAdj : '');
+  }
+  function fallbackE() {
+    return 'Staff and caregiver education covers ' + (isNGT ? 'NGT position verification, residual volume assessment (hold if >50% of volume or bilious), and feed administration technique' : 'breastfeeding latch and effective milk transfer assessment, feed frequency guidance (\u22658 feeds/day), and supplemental feeding methods when intake is insufficient') + '. Recognition of adequate feeding indicators (\u22656 wet nappies/day after Day 3, appropriate stool transition) and escalation thresholds for weight loss >10% or blood glucose <2.6 mmol/L are addressed' + (isEBF ? ', alongside breast milk expression frequency and correct cold-chain storage' : '') + '.';
+  }
+  function fallbackC() {
+    return 'Families are counselled that physiological weight loss up to 10% of birth weight is expected in the first 3\u20135 days; birth weight recovery by Day 10\u201314 is the target (AAP 2012). ' + (P.excessLoss ? 'This infant has exceeded the 10% threshold \u2014 supplementation and close monitoring are required. ' : '') + 'Feeding goals \u2014 ' + P.feedFreq + ' feeds/day totalling ' + P.fluidML + ' mL/day \u2014 and the rationale for the prescribed plan are explained in age-appropriate language. ' + (isEBF ? 'Breastfeeding families are reassured that milk supply responds to suckling stimulus; frequent feeding and Kangaroo Mother Care promote lactogenesis II.' : 'Formula preparation accuracy and responsive feeding technique are reviewed to ensure consistent caloric delivery.');
+  }
+  function fallbackRC() {
+    return 'Paediatrics/Neonatology: feeding route decisions, clinical complication management, and IV supplementation prescription. Nursing: bedside feed implementation, daily weight, blood glucose monitoring, feed tolerance documentation, and handover. Lactation: breastfeeding support, milk expression guidance, and supply optimisation' + (isMeta ? '. Metabolic Dietetics: URGENT \u2014 specialised formula and dietary restriction education' : '. Dietetics: nutrition assessment review, feed advancement monitoring, and discharge nutrition planning') + '. Biochemical surveillance: daily weight; urine and stool output; blood glucose monitoring (q1\u20132h if hypoglycaemia risk); escalate to paediatrics for weight loss >10%, glucose instability, or clinical deterioration.';
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CARD HTML
+  ══════════════════════════════════════════════════════════════ */
+  var cardHtml =
+    '<style id="nic-anim">' +
+      '@keyframes nic-pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}' +
+      '@keyframes nic-fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}' +
+      '.nic-domain-text p{animation:nic-fadein 0.5s ease forwards}' +
+    '</style>' +
+
+    '<div class="card" id="' + cardId + '" style="margin-bottom:18px;border-color:rgba(29,233,212,0.32);' +
+      'box-shadow:0 0 28px rgba(29,233,212,0.05),0 2px 14px rgba(0,0,0,0.17)">' +
+
+      /* ── Card header ── */
+      '<div class="card-header" style="background:linear-gradient(135deg,rgba(29,233,212,0.09),rgba(29,233,212,0.02));' +
+        'border-bottom-color:rgba(29,233,212,0.18);padding:14px 18px">' +
+        '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">' +
+          '<div style="flex:1;min-width:190px">' +
+            '<div class="card-title" style="color:var(--teal);font-size:13px;letter-spacing:1.8px;margin-bottom:4px">' +
+              '\ud83e\ude7a NUTRITION INTERVENTION PLAN' +
+            '</div>' +
+            '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">' +
+              'Neonatal Nutrition Care Process \xb7 Domains ND / E / C / RC \xb7 ' +
+              'Feeding Plan \xb7 Requirements \xb7 Clinical Adjustments \xb7 ' +
+              'IOM 2005 \xb7 AAP 2004 \xb7 WHO 2006' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
+            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+              'background:rgba(29,233,212,0.11);border:1px solid rgba(29,233,212,0.28);color:var(--teal);font-weight:700">Term Neonate</span>' +
+            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+              'background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);color:var(--teal)">DoL ' + P.ageDays + '</span>' +
+            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+              'background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);color:#34d399">' + routeTag + '</span>' +
+            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+              'background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:#a78bfa">' + P.statusLabel + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── Card body ── */
+      '<div class="card-body" style="padding:18px 18px 14px">' +
+
+        domainShell(ndId, 'ND', 'Food and/or Nutrient Delivery',
+          'Feeding route &amp; rationale \xb7 Volume &amp; frequency \xb7 Fluid management \xb7 Clinical adjustments \xb7 Monitoring plan',
+          '\ud83e\udecb', '#29e9d4', '41,233,212', fallbackND(), reqRow) +
+
+        domainShell(eId, 'E', 'Nutrition Education',
+          'Feed preparation \xb7 Tolerance monitoring \xb7 Breast milk expression \xb7 BGL awareness \xb7 Caregiver guidance',
+          '\ud83d\udcda', '#34d399', '52,211,153', fallbackE()) +
+
+        domainShell(cId, 'C', 'Nutrition Counseling',
+          'Feeding progression expectations \xb7 Growth targets \xb7 Family support \xb7 Discharge planning',
+          '\ud83d\udcac', '#f59e0b', '245,158,11', fallbackC()) +
+
+        domainShell(rcId, 'RC', 'Coordination of Nutrition Care',
+          'MDT roles \xb7 Paediatrics \xb7 Nursing \xb7 Lactation \xb7 Dietetics \xb7 Biochemical monitoring',
+          '\ud83d\udd17', '#a78bfa', '167,139,250', fallbackRC()) +
+
+        /* ── References ── */
+        '<div style="padding:8px 12px;background:rgba(29,233,212,0.04);' +
+          'border:1px solid rgba(29,233,212,0.11);border-radius:7px;' +
+          'font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.85">' +
+          '<strong style="color:var(--text)">References:</strong> ' +
+          'IOM Dietary Reference Intakes 2005 \xb7 ' +
+          'AAP Breastfeeding and the Use of Human Milk 2012 \xb7 ' +
+          'WHO Child Growth Standards 2006 \xb7 ' +
+          'AAP Committee on Fetus and Newborn — Neonatal Nutrition 2020 \xb7 ' +
+          'Anderson DM. Krause &amp; Mahan\u2019s Food &amp; the Nutrition Care Process, 16th Ed.' +
+        '</div>' +
+
+      '</div>' +
+    '</div>';
+
+  /* ══════════════════════════════════════════════════════════════
+     CLINICAL CONTEXT BUILDER — dense fact sheet for AI prompts
+  ══════════════════════════════════════════════════════════════ */
+  function buildContext() {
+    return [
+      '=== TERM NEONATE \u2014 CALCULATED NUTRITION DATA ===',
+      'Age: Day of Life ' + P.ageDays,
+      'Birth Weight: ' + P.bwtG + ' g',
+      'Current Weight: ' + P.wtG + ' g (' + P.wtKg.toFixed(3) + ' kg)',
+      'Weight Change: ' + (P.wtDelta >= 0 ? '+' : '') + P.wtDelta + ' g (' + Math.abs(P.wtPctLoss).toFixed(1) + '% ' + (P.wtDelta < 0 ? 'LOSS' : 'gain') + ')',
+      P.excessLoss ? '\u26a0 Weight loss EXCEEDS 10% physiological threshold \u2014 active intervention required (AAP 2012)' : 'Weight change within or approaching physiological range (<10%)',
+      'Sex: ' + P.sex,
+      'Clinical Status: ' + P.statusLabel,
+      'Diagnosis: ' + (P.diag === 'none' ? 'None / Well neonate' : P.diagLabel),
+      'Feeding Mode: ' + P.feedLabel,
+      '',
+      '--- CALCULATED REQUIREMENTS (IOM 2005 / AAP 2004) ---',
+      'Energy: ' + P.energyKcal + ' kcal/day = ' + energyKgStr + ' kcal/kg/day (base ' + P.baseEnergyFact + ' kcal/kg \xd7 stress factor ' + P.efMult.toFixed(2) + ')',
+      'Protein: ' + P.protG + ' g/day = ' + P.baseProtFact.toFixed(1) + ' g/kg/day',
+      'Fluid: ' + P.fluidML + ' mL/day = ' + P.fluidBase + ' mL/kg/day (AAP 2004 Day-' + P.ageDays + ' target)',
+      P.volPerFeed ? 'Feed volume: ' + P.volPerFeed + ' mL/feed \xd7 ' + P.feedFreq + ' feeds/day (q3h)' : '',
+      '',
+      '--- FEEDING PLAN ---',
+      'Primary: ' + P.feedPrimary,
+      P.feedSecondary ? 'If intake inadequate: ' + P.feedSecondary : '',
+      P.clinAdj ? 'Clinical adjustment (' + P.diagLabel + '): ' + P.clinAdj : '',
+      P.diagNotes ? 'Condition-specific note: ' + P.diagNotes : '',
+      '',
+      '--- CLINICAL FLAGS ---',
+      P.excessLoss ? 'EXCESS WEIGHT LOSS: ' + Math.abs(P.wtPctLoss).toFixed(1) + '% \u2014 exceeds 10% AAP threshold. Supplementation required.' : '',
+      isCritical ? 'CRITICAL CONDITION: ' + P.diagLabel + ' \u2014 enteral nutrition contraindicated or severely restricted' : '',
+      isMeta ? 'METABOLIC DISORDER: ' + P.diagLabel + ' \u2014 standard feeds contraindicated; specialised formula required immediately' : '',
+      P.diag === 'jaundice_neo' ? 'JAUNDICE: Feeding frequency \u226588\u201312/day essential for bilirubin excretion \u2014 feeds must NOT be restricted during phototherapy.' : '',
+      P.diag === 'hypoglycaemia' ? 'HYPOGLYCAEMIA: IV D10W at GIR 6\u20138 mg/kg/min; target BGL \u22652.6 mmol/L; early EN once stable.' : '',
+      P.diag === 'hie' ? 'HIE: Restrict fluids to 40\u201360 mL/kg/day during therapeutic hypothermia; BG monitoring q1\u20132h mandatory.' : '',
+      P.diag === 'chd_cyanotic' ? 'CYANOTIC CHD: Fluid restriction 100\u2013130 mL/kg/day; high-calorie feeds (24 kcal/oz) required.' : '',
+    ].filter(Boolean).join('\n');
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ASYNC AI ENRICHMENT — fires after card lands in the DOM
+  ══════════════════════════════════════════════════════════════ */
+  function _enrichWithAI() {
+    if (typeof window.OasisAI === 'undefined' || typeof window.OasisAI.chatWithOasisAI !== 'function') return;
+
+    var ctx = buildContext();
+
+    function _applyDomain(domId, text) {
+      var el = document.getElementById(domId);
+      if (!el) return;
+      var paras = text.split(/\n\n+/).map(function(p){ return p.trim(); }).filter(Boolean);
+      el.innerHTML = '<div class="nic-domain-text">' +
+        paras.map(function(p){ return '<p style="margin:0 0 10px;line-height:1.88">' + p + '</p>'; }).join('') +
+      '</div>';
+    }
+
+    function _applyError(domId) {
+      var el = document.getElementById(domId);
+      if (!el) return;
+      var dots = el.querySelector('div');
+      if (dots) dots.remove();
+      var p = el.querySelector('p');
+      if (p) p.style.opacity = '1';
+    }
+
+    /* ── ND prompt ── */
+    var ndPrompt =
+      'You are a senior neonatal dietitian writing the "Food and/or Nutrient Delivery (ND)" section of a Nutrition Care Process intervention plan for a TERM NEONATE (0\u201328 days old). ' +
+      'This section must be comprehensive \u2014 it encompasses feeding route rationale, volume and advancement strategy, fluid management, clinical adjustments, and monitoring guidance.\n\n' +
+      'CALCULATED DATA:\n' + ctx + '\n\n' +
+      'Write 4\u20135 substantial clinical paragraphs (no headings, no bullet points, no numbering) covering ALL of the following seamlessly:\n\n' +
+      'PARAGRAPH 1 \u2014 FEEDING ROUTE SELECTION & RATIONALE: Explain precisely WHY the selected feeding mode (' + P.feedLabel + ') is appropriate for this Day-' + P.ageDays + ' term neonate. Integrate the clinical justification based on age, current weight (' + P.wtG + ' g; ' + Math.abs(P.wtPctLoss).toFixed(1) + '% ' + (P.wtDelta < 0 ? 'loss' : 'gain') + ' from birth weight), clinical status (' + P.statusLabel + '), and diagnosis (' + (P.diag !== 'none' ? P.diagLabel : 'none') + '). ' +
+      (isCritical ? 'Clearly address why enteral feeds are contraindicated and what IV substrate is sustaining the infant metabolically.' :
+       isMeta ? 'Address the immediate requirement for specialised formula and why standard feeds are contraindicated.' :
+       isNGT ? 'Explain when NGT is indicated, how position is verified, and what tolerance markers should trigger feed advancement.' :
+       'Explain how ' + P.feedLabel.toLowerCase() + ' meets the nutritional and developmental needs of this neonate and why this route is appropriate now.') + '\n\n' +
+      'PARAGRAPH 2 \u2014 VOLUME, FREQUENCY & PROGRESSION: Describe how the total fluid target of ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day; AAP 2004 Day-' + P.ageDays + ' standard) should be achieved. ' +
+      (P.volPerFeed ? 'Address the ' + P.feedFreq + ' feeds/day structure delivering ' + P.volPerFeed + ' mL per feed. ' : '') +
+      'Contextualise the fluid progression across the neonatal period (Day 1: 60 mL/kg \u2192 Day 14: 150 mL/kg). ' +
+      'Explain how energy delivery (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg \xd7 ' + P.efMult.toFixed(2) + ' stress factor) and protein delivery (' + P.baseProtFact.toFixed(1) + ' g/kg/day) are met via ' + P.feedLabel.toLowerCase() + '. ' +
+      (P.excessLoss ? 'Specifically address the >10% weight loss scenario \u2014 describe supplemental feeding options (EBM via cup or NGT before formula) and escalation criteria.' :
+       isCritical ? 'Describe the minimum bowel rest duration, clinical/radiological criteria for enteral re-introduction, and the initial trophic volume approach.' : '') + '\n\n' +
+      'PARAGRAPH 3 \u2014 FLUID & GLUCOSE MANAGEMENT: Address the total fluid requirement (' + P.fluidML + ' mL/day = ' + P.fluidBase + ' mL/kg/day). ' +
+      (P.diag === 'hie' ? 'Explicitly address fluid restriction to 40\u201360 mL/kg/day during therapeutic hypothermia and the physiological rationale for limiting volume in the context of cerebral oedema risk. Address the post-rewarming fluid liberalisation protocol.' :
+       P.diag === 'chd_cyanotic' ? 'Address the fluid restriction to 100\u2013130 mL/kg/day in cyanotic CHD and the requirement for calorie-dense feeds (24 kcal/oz) to deliver adequate energy within this volume constraint.' :
+       'Explain how fluid targets advance day by day in the neonatal period (Day 1\u201314) and how oral feeding volumes track this progression as lactation is established.') +
+      ' Address blood glucose monitoring \u2014 target 2.6\u20135.5 mmol/L, monitoring frequency (q1\u20132h in high-risk scenarios), and intervention threshold (IV D10W 2 mL/kg for BGL <2.6 mmol/L). ' +
+      (P.diag === 'hypoglycaemia' ? 'Address the active hypoglycaemia management protocol: GIR 6\u20138 mg/kg/min, recheck 30 min post-adjustment, and transition timeline to enteral nutrition once glucose is stable.' : '') + '\n\n' +
+      'PARAGRAPH 4 \u2014 CLINICAL ADJUSTMENTS & CONDITION-SPECIFIC GUIDANCE: ' +
+      (P.diag !== 'none' ? 'Integrate the clinical adjustments required by ' + P.diagLabel + ' into the nutrition prescription. Address specifically how this diagnosis modifies energy (stress factor \xd7' + P.efMult.toFixed(2) + '), protein, fluid, or feeding route targets. Address what clinical markers should trigger reassessment of the nutrition plan.' :
+       'This is a well neonate \u2014 address physiological weight loss (normal up to 10%), the expected trajectory to birth weight recovery by Day 10\u201314, and the feeding practices that support this outcome.') +
+      ' Address micronutrient considerations: vitamin K given at birth, vitamin D supplementation (400 IU/day from birth in breastfed infants), and iron status in the neonatal period.\n\n' +
+      'PARAGRAPH 5 \u2014 MONITORING & ESCALATION: Detail the feeding and nutritional monitoring schedule. Daily weight targeting birth weight recovery by Day 10\u201314 (flag if loss >10% or trajectory is not reversing). Feed frequency and intake documentation. Urine output (\u22656 wet nappies/day after Day 3). Stool output (meconium by Day 1\u20132; transitional stools by Day 4\u20135). Blood glucose monitoring schedule. Growth tracking on WHO 2006 standards. Escalation criteria to paediatrics \u2014 weight loss >10%, persistent hypoglycaemia, clinical signs of dehydration, or clinical deterioration.\n\n' +
+      'Write as a clinician \u2014 precise, authoritative, evidence-based. Do NOT use bullet points. Do NOT use headings. Do NOT say "in conclusion". Do NOT mention AI.';
+
+    /* ── E prompt ── */
+    var ePrompt =
+      'You are a senior neonatal dietitian writing the "Nutrition Education (E)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
+      'CALCULATED DATA:\n' + ctx + '\n\n' +
+      'Write 2\u20133 concise, practical clinical paragraphs (no headings, no bullet points) covering education for nursing staff and caregivers:\n' +
+      '- ' + (isNGT ? 'NGT position verification (aspirate + pH confirmation before each feed), residual volume assessment (withhold if residual >50% of feed volume or bilious), feed administration technique at 30\u201345\xb0 elevation, and post-feed position' : 'Breastfeeding latch and effective milk transfer assessment, feeding frequency guidance (target \u22658 feeds/day for breastfed neonates), and signs of adequate feeding (audible swallowing, contentment, satiation cues)') + '\n' +
+      '- ' + (isEBF ? 'Breast milk expression frequency (every 2\u20133 hours including at night), correct storage (\u22644\xb0C for 24\u201348h; freeze \u226490 days), labelling, and handling hygiene for expressed breast milk' : 'Formula preparation \u2014 correct powder-to-water ratio, sterilisation of equipment, and safe feed temperature') + '\n' +
+      (P.excessLoss ? '- Supplementary feeding options when weight loss exceeds 10%: EBM via cup or syringe before formula supplementation is considered \u2014 technique, volume per supplementary feed, and documentation requirements\n' : '') +
+      '- Recognition of physiological weight loss (normal up to 10%) versus pathological loss requiring intervention; adequate feeding indicators (\u22656 wet nappies/day after Day 3, transitional stools by Day 4\u20135)\n' +
+      '- Blood glucose monitoring: target 2.6\u20135.5 mmol/L; when to alert the paediatric team; management of hypoglycaemic episode at the bedside\n' +
+      '- Kangaroo Mother Care: thermoregulation benefits, promotion of milk supply, bonding, and neurodevelopmental outcomes\n' +
+      (P.diag !== 'none' ? '- Condition-specific education for ' + P.diagLabel + ': key family awareness points, feeding adjustments required, and warning signs to escalate\n' : '') +
+      'Write as a clinician. No AI mention. No bullet points. No headings.';
+
+    /* ── C prompt ── */
+    var cPrompt =
+      'You are a senior neonatal dietitian writing the "Nutrition Counseling (C)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
+      'CALCULATED DATA:\n' + ctx + '\n\n' +
+      'Write 2\u20133 paragraphs of supportive, professional counseling-style narrative (no headings, no bullet points) addressing:\n' +
+      '- Phase-appropriate expectations: physiological weight loss up to 10% of birth weight is normal in the first 3\u20135 days of life; birth weight recovery by Day 10\u201314 is the target (AAP 2012). ' +
+      (P.excessLoss ? 'This infant has exceeded the 10% threshold \u2014 communicate clearly and compassionately what supplementation is required and why; frame this as a supported clinical plan rather than a failing.' : 'Current weight trajectory is within or approaching normal range \u2014 reinforce positive feeding behaviour and parental confidence.') + '\n' +
+      '- Feeding volume and frequency expectations as the infant grows through the neonatal period and how breastmilk or formula volume will increase in line with the fluid target (current target ' + P.fluidML + ' mL/day)\n' +
+      '- ' + (isEBF ? 'Breastfeeding support: normalising the early feeding establishment process; colostrum availability and importance in the first 1\u20133 days; the role of feeding frequency in stimulating and sustaining milk supply; reassurance that small volumes in Days 1\u20132 are physiologically appropriate; importance of Kangaroo Mother Care and skin-to-skin for supply and bonding' : 'Formula feeding: preparation accuracy, responsive feeding recognising hunger and satiety cues, and how to adjust volumes as the infant grows') + '\n' +
+      '- ' + (P.diag !== 'none' ? 'Family communication regarding ' + P.diagLabel + ': setting realistic expectations for the feeding journey, what changes families will observe during the clinical course, and distinguishing expected variation from concerning changes requiring escalation' : 'Discharge preparation: growth monitoring plan, vitamin D supplementation schedule (400 IU/day if breastfed), and community dietetic or GP follow-up referral') + '\n' +
+      'Write in a reassuring but clinically rigorous tone. Do NOT mention AI. Do NOT use bullet points.';
+
+    /* ── RC prompt ── */
+    var rcPrompt =
+      'You are a senior neonatal dietitian writing the "Coordination of Nutrition Care (RC)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
+      'CALCULATED DATA:\n' + ctx + '\n\n' +
+      'Write 2\u20133 paragraphs (no headings, no bullet points) covering multidisciplinary coordination:\n' +
+      '- Paediatrics/Neonatology: feeding route decisions, management of ' + (P.diag !== 'none' ? P.diagLabel : 'any emerging clinical complications') + ', prescription of IV dextrose supplementation if required, and escalation of nutrition concerns\n' +
+      '- Nursing: bedside feed implementation (' + P.feedLabel + '), intake and weight documentation, blood glucose monitoring, feeding tolerance observations, and handover communication protocol\n' +
+      '- Lactation: breastfeeding support' + (isEBF ? ' (milk expression guidance, supply optimisation, cup-feeding technique, direct breastfeeding transition planning)' : ' (transition to direct breastfeeding at discharge if formula-fed for clinical reasons)') + '\n' +
+      (isMeta ? '- Metabolic team and Dietetics: URGENT referral \u2014 specialised formula prescription and dietary restriction education cannot be delayed; metabolic crisis risk if not acted on immediately\n' : '- Dietetics: nutrition care plan review at each clinical encounter, feed volume advancement monitoring, growth trajectory on WHO 2006 standards, discharge nutrition plan preparation\n') +
+      '- Biochemical and clinical monitoring schedule: daily weight (target birth weight recovery by Day 10\u201314); urine output (\u22656 wet nappies/day after Day 3); stool output (meconium by Day 1\u20132; transitional stools by Day 4\u20135); blood glucose as indicated; escalation triggers to paediatrics: weight loss >10%, persistent glucose instability, or clinical deterioration\n' +
+      'Write with clinical authority. Do NOT mention AI. Do NOT use bullet points.';
+
+    /* ── Fire all 4 domain AI calls ── */
+    var domains = [
+      { id: ndId, prompt: ndPrompt },
+      { id: eId,  prompt: ePrompt  },
+      { id: cId,  prompt: cPrompt  },
+      { id: rcId, prompt: rcPrompt },
+    ];
+
+    domains.forEach(function(d) {
+      window.OasisAI.chatWithOasisAI(d.prompt, [])
+        .then(function(res) {
+          if (res && res.raw) _applyDomain(d.id, res.raw);
+          else _applyError(d.id);
+        })
+        .catch(function() { _applyError(d.id); });
+    });
+  }
+
+  /* Schedule AI enrichment after card lands in the DOM */
+  setTimeout(_enrichWithAI, 120);
+  return cardHtml;
+}
+
 // ── 2. calcNeonatab — Term Neonate (0–28 days) ─────────────────────────
 window.calcNeonatab = function() {
   var el = document.getElementById('nn-results');
@@ -819,72 +1169,42 @@ window.calcNeonatab = function() {
     '</div>' +
   '</div>';
 
-  // ══ I — INTERVENTION ════════════════════════════════════════════════════════
-  out += nnAdimeHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan · Calculated requirements · Clinical adjustments');
-
-  out += '<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">' +
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">' +
-      '<div class="card-title" style="color:var(--green)">🍼 FEEDING PLAN</div>' +
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+feedLabel+'</div>' +
-    '</div>' +
-    '<div class="card-body">' +
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">PRIMARY FEEDING RECOMMENDATION</div>' +
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9;margin-bottom:12px">'+feedPrimary+'</div>' +
-      (feedSecondary?'<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">IF INTAKE INADEQUATE</div>'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);line-height:1.8;margin-bottom:12px">'+feedSecondary+'</div>':'')+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">STRUCTURED FEEDING GUIDE (SCHEDULED)</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--text);padding:8px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:7px">' +
-        '<span>Volume/feed: <strong style="color:var(--teal)">'+(volPerFeed?volPerFeed:'~'+(feedFreq?Math.round(fluidML/feedFreq):'?'))+' mL</strong></span>' +
-        '<span>Frequency: <strong style="color:var(--teal)">'+feedFreq+'×/day (q3h)</strong></span>' +
-        '<span>Total daily volume: <strong style="color:var(--teal)">'+fluidML+' mL</strong></span>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
-
-  // Requirements card
-  out += '<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">' +
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">' +
-      '<div class="card-title" style="color:var(--blue)">⚡ CALCULATED REQUIREMENTS</div>' +
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">IOM 2005 · AAP 2004 · DoL '+ageDays+'</div>' +
-    '</div>' +
-    '<div class="card-body">' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">' +
-        nnMc('Energy', energyKcal+' kcal/day', (energyKcal/wtKg).toFixed(0)+' kcal/kg/day', 'var(--amber)') +
-        nnMc('Protein', protG+' g/day', baseProtFact.toFixed(1)+' g/kg/day', 'var(--green)') +
-        nnMc('Fluids', fluidML+' mL/day', fluidBase+' mL/kg/day', 'var(--blue)') +
-        (volPerFeed?nnMc('Per Feed', volPerFeed+' mL', 'q3h × '+feedFreq+' feeds', 'var(--teal)'):'') +
-      '</div>' +
-      '<div class="hscroll-table">' +
-      '<table style="width:100%;border-collapse:collapse;min-width:400px">' +
-        '<thead><tr style="border-bottom:1px solid var(--border)">' +
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PER KG</th>' +
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">REFERENCE</th>' +
-        '</tr></thead>' +
-        '<tbody>' +
-          nnRow('Energy', energyKcal+' kcal/day', (energyKcal/wtKg).toFixed(0)+' kcal/kg/day · '+baseEnergyFact+' kcal/kg base × '+efMult.toFixed(2)+' factor') +
-          nnRow('Protein', protG+' g/day', baseProtFact.toFixed(1)+' g/kg/day', false) +
-          nnRow('Fluid', fluidML+' mL/day', fluidBase+' mL/kg/day · AAP Day '+ageDays+' target') +
-          (volPerFeed?nnRow('Feed volume', volPerFeed+' mL/feed', feedFreq+'×/day (q3h) · total '+fluidML+' mL/day'):'') +
-        '</tbody>' +
-      '</table>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
-
-  // Clinical adjustment card (conditional)
-  if (clinAdj) {
-    out += '<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">' +
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">' +
-        '<div class="card-title" style="color:var(--amber)">⚕️ CLINICAL ADJUSTMENT — '+diagLabel.toUpperCase()+'</div>' +
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific</div>' +
-      '</div>' +
-      '<div class="card-body">' +
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdj+'</div>' +
-      '</div>' +
-    '</div>';
-  }
+  // ══ I — INTERVENTION (AI-powered NCP domains: ND / E / C / RC) ═════════════
+  out += nnAdimeHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
+  out += buildNeonateInterventionCard({
+    ageDays:       ageDays,
+    wtKg:          wtKg,
+    bwtKg:         bwtKg,
+    bwtG:          bwtG,
+    wtG:           wtG,
+    sex:           sex,
+    energyKcal:    energyKcal,
+    baseEnergyFact:baseEnergyFact,
+    efMult:        efMult,
+    protG:         protG,
+    baseProtFact:  baseProtFact,
+    fluidML:       fluidML,
+    fluidBase:     fluidBase,
+    feedVolML:     feedVolML,
+    volPerFeed:    volPerFeed,
+    feedFreq:      feedFreq,
+    feed:          feed,
+    feedLabel:     feedLabel,
+    feedNote:      feedNote,
+    feedPrimary:   feedPrimary,
+    feedSecondary: feedSecondary,
+    status:        status,
+    statusLabel:   statusLabel,
+    diag:          diag,
+    diagLabel:     diagLabel,
+    clinAdj:       clinAdj,
+    diagNotes:     diagNotes,
+    excessLoss:    excessLoss,
+    wtDelta:       wtDelta,
+    wtPctLoss:     wtPctLoss,
+    wazR:          wazR,
+    hazR:          hazR
+  });
 
   // ══ M — MONITORING ══════════════════════════════════════════════════════════
   out += nnAdimeHdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Daily parameters · Feeding tolerance · Clinical vigilance');
@@ -1375,74 +1695,169 @@ window.calcInfantEarlyTab = function() {
     '</div>'+
   '</div>';
 
-  // I
-  out2+=ieHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan -- Calculated requirements -- Clinical adjustments');
-  out2+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">'+
-      '<div class="card-title" style="color:var(--green)">FEEDING PLAN</div>'+
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+feedLabel2+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">PRIMARY FEEDING RECOMMENDATION</div>'+
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9;margin-bottom:12px">'+feedPrimary2+'</div>'+
-      (feedSupp2?'<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">IF INTAKE INADEQUATE</div>'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);line-height:1.8;margin-bottom:12px">'+feedSupp2+'</div>':'')+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">STRUCTURED FEEDING SCHEDULE</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--text);padding:8px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:7px">'+
-        '<span>Volume/feed: <strong style="color:var(--teal)">'+volPerFeed+' mL</strong></span>'+
-        '<span>Frequency: <strong style="color:var(--teal)">'+feedFreq+'x/day (q'+(feedFreq===8?'3':'4')+'h)</strong></span>'+
-        '<span>Daily volume: <strong style="color:var(--teal)">'+fluidML+' mL</strong></span>'+
-        '<span>Rate: <strong style="color:var(--teal)">'+fluidFact+' mL/kg/day</strong></span>'+
-      '</div>'+
-      '<div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.8;padding:6px 10px;background:rgba(240,180,41,0.04);border:1px solid rgba(240,180,41,0.12);border-radius:6px">'+
-        'No complementary foods or water before 6 months. Breastmilk/formula is the complete nutritional source. Supplement vitamin D 400 IU/day in EBF infants.'+
-      '</div>'+
-    '</div>'+
-  '</div>';
+  // I — NCP 4-Domain Intervention (Oasis AI-refined)
+  out2+=ieHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
 
-  out2+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">'+
-      '<div class="card-title" style="color:var(--blue)">CALCULATED REQUIREMENTS</div>'+
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">FAO/WHO 2004 -- IOM DRI 2005 -- '+ageStr+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">'+
-        ieMc('Energy',energyKcal+' kcal/day',(energyKcal/wtKg).toFixed(0)+' kcal/kg/day','var(--amber)')+
-        ieMc('Protein',protG+' g/day',protFact.toFixed(2)+' g/kg/day','var(--green)')+
-        ieMc('Fluid',fluidML+' mL/day',fluidFact+' mL/kg/day','var(--blue)')+
-        ieMc('Per Feed',volPerFeed+' mL',feedFreq+'x/day','var(--teal)')+
-      '</div>'+
-      '<div class="hscroll-table">'+
-      '<table style="width:100%;border-collapse:collapse;min-width:400px">'+
-        '<thead><tr style="border-bottom:1px solid var(--border)">'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">BASIS / NOTES</th>'+
-        '</tr></thead>'+
-        '<tbody>'+
-          ieRow('Energy',energyKcal+' kcal/day',baseEFact+' kcal/kg base x '+stressFact.toFixed(2)+' stress factor -- FAO/WHO 2004')+
-          ieRow('Protein',protG+' g/day',protFact.toFixed(2)+' g/kg/day -- IOM DRI EAR 2005'+(stressFact>1?' -- elevated for diagnosis':''))+
-          ieRow('Fluid',fluidML+' mL/day',fluidFact+' mL/kg/day -- '+(feed==='formula'?'formula volume target':'breastmilk estimate'))+
-          ieRow('Volume/feed',volPerFeed+' mL',''+feedFreq+'x/day -- adjust to appetite')+
-          ieRow('Vitamin D','400 IU/day','EBF infants -- WHO/AAP -- from birth')+
-          (ageMo>=4?ieRow('Iron','2 mg/kg/day elemental','EBF infants from 4-6 months -- IOM DRI 2005'):'') +
-        '</tbody>'+
-      '</table>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
+  // ── Requirement summary badges (static, always visible) ───────────────────
+  function ieReqBadge(label, val, sub, col, bg, border) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
+      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
+      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+    '</div>';
+  }
 
-  if (clinAdj2) {
-    out2+='<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">'+
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">'+
-        '<div class="card-title" style="color:var(--amber)">CLINICAL ADJUSTMENT -- '+diagLabel2.toUpperCase()+'</div>'+
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific protocol</div>'+
+  var ieReqSummary =
+    '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
+      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 IOM DRI 2005 \xb7 '+ageStr+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        ieReqBadge('Energy',energyKcal+' kcal',(energyKcal/wtKg).toFixed(0)+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
+        ieReqBadge('Protein',protG+' g',protFact.toFixed(2)+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
+        ieReqBadge('Fluid',fluidML+' mL',fluidFact+' mL/kg\xb7day','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
+        ieReqBadge('Per Feed',volPerFeed+' mL',feedFreq+'x/day','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.3)')+
+      '</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">'+baseEFact+' kcal/kg base \xd7 '+stressFact.toFixed(2)+' stress factor</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+protFact.toFixed(2)+' g/kg/day IOM DRI EAR 2005'+(stressFact>1?' \u2191 stress-elevated':'')+' </span>'+
+        (ageMo>=4?'<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Iron: 2 mg/kg/day elemental from 4 months</span>':'')+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">Vit D: 400 IU/day (WHO/AAP)</span>'+
+      '</div>'+
+    '</div>';
+
+  // ── NCP domain skeleton (rendered immediately; AI fills bullets) ───────────
+  function ieDomainCard(domainId, domainCode, domainTitle, accentCol, accentBg, accentBorder, reqSummaryHtml, staticFallback) {
+    var bodyId = 'ie-ncp-body-'+domainId;
+    return '<div class="card" style="margin-bottom:12px;border-color:'+accentBorder+';border-width:1.5px">'+
+      '<div class="card-header" style="background:linear-gradient(90deg,'+accentBg+',rgba(0,0,0,0));border-bottom-color:'+accentBorder+'">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
+          '<div>'+
+            '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
+            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="card-body">'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdj2+'</div>'+
+        (reqSummaryHtml||'')+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
+
+  function ieBulletLine(txt, col) {
+    col = col || 'var(--blue)';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(96,165,250,0.07);line-height:1.7">'+
+      '<span style="flex-shrink:0;color:'+col+';font-weight:700;margin-top:1px">&#9658;</span><span>'+txt+'</span></div>';
+  }
+
+  // Static fallbacks (shown while AI loads or on failure)
+  var ie_nd_fallback =
+    ieBulletLine(feedPrimary2, 'var(--blue)')+
+    (feedSupp2?ieBulletLine(feedSupp2,'var(--blue)'):'')+
+    ieBulletLine('Structured schedule: '+volPerFeed+' mL/feed \xd7 '+feedFreq+' feeds/day (q'+(feedFreq===8?'3':'4')+'h); total '+fluidML+' mL/day','var(--blue)')+
+    (clinAdj2?ieBulletLine(clinAdj2,'var(--amber)'):'')+
+    ieBulletLine('No complementary foods or water before 6 months. Breastmilk/formula is the sole nutritional source.','var(--blue)')+
+    ieBulletLine('Vitamin D 400 IU/day for all EBF infants (WHO/AAP). Iron 2 mg/kg/day from 4 months if EBF.','var(--blue)');
+
+  var ie_e_fallback =
+    ieBulletLine('Counsel caregiver on exclusive breastfeeding as the WHO/UNICEF gold standard for all infants to 6 months.','var(--teal)')+
+    ieBulletLine('Explain feeding cues, demand feeding, and signs of adequate intake (6+ wet nappies/day, contentment after feeds).','var(--teal)')+
+    ieBulletLine('Educate on vitamin D supplementation and iron requirements specific to feeding mode and age.','var(--teal)')+
+    (diag!=='none'?ieBulletLine('Provide condition-specific feeding guidance for '+diagLabel2+' in early infancy.','var(--teal)'):'');
+
+  var ie_c_fallback =
+    ieBulletLine('Address caregiver concerns about milk supply, latch, or formula preparation; provide reassurance and practical technique support.','#a78bfa')+
+    ieBulletLine('Set shared growth goals: target weight gain '+(ageMo<3?'150\u2013200 g/week':'100\u2013150 g/week')+' plotted on WHO 2006 chart.','#a78bfa')+
+    ieBulletLine('Explore barriers to optimal feeding (cultural practices, caregiver fatigue, return to work); develop tailored solutions.','#a78bfa');
+
+  var ie_rc_fallback =
+    ieBulletLine('Schedule follow-up in 1\u20132 weeks for weight check and feeding assessment.','var(--green)')+
+    ieBulletLine(malnutr==='SAM'?'Immediate paediatrician referral — inpatient NRU if any danger sign present.':
+      malnutr==='MAM'?'Enrol in supplementary feeding programme (SFP); coordinate with community health worker for home visits.':
+      'Coordinate with paediatric team and community health worker for home follow-up if growth concern identified.','var(--green)')+
+    ieBulletLine('Document growth, feeding, and supplement compliance in health passport at each visit.','var(--green)')+
+    (diag!=='none'?ieBulletLine('Liaise with prescribing clinician for '+diagLabel2+' management; reassess nutrition prescription at each medical review.','var(--green)'):'');
+
+  out2 +=
+    ieDomainCard('nd','ND','Food / Nutrient Delivery','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.3)',
+      ieReqSummary, ie_nd_fallback) +
+    ieDomainCard('e','E','Nutrition Education','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.28)',
+      '', ie_e_fallback) +
+    ieDomainCard('c','C','Nutrition Counseling','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.28)',
+      '', ie_c_fallback) +
+    ieDomainCard('rc','RC','Coordination of Care','var(--green)','rgba(52,211,153,0.08)','rgba(52,211,153,0.28)',
+      '', ie_rc_fallback);
+
+  // ── Oasis AI refinement (async — replaces bullet text when ready) ──────────
+  (function _ieAIRefine() {
+    if (typeof window.OasisAI !== 'object' || typeof window.OasisAI.generateInterventions !== 'function') return;
+    var ctx = {
+      dx: diag || 'none',
+      dxLabel: diagLabel2,
+      route: feed==='ebf'?'exclusive breastfeeding':feed==='formula'?'infant formula (oral)':'mixed breastfeeding and formula',
+      energy: energyKcal, protein: protG,
+      protPerKg: protFact.toFixed(2),
+      pGuideline: 'IOM DRI EAR 2005; FAO/WHO 2004',
+      weight: wtKg, ibw: wtKg, age: ageStr, sex: sex,
+      bmi: bmi, bmiCat: ageMo<3?'Early infancy 0\u20133m':'Older infancy 3\u20136m',
+      giFunction: 'intact',
+      isUnderweight: !!(malnutr),
+      isCritical: ['sam','sepsis','meningitis','pneumonia'].includes(diag),
+      pesStatement: ie1Problem + ' related to ' + ie1Etiology,
+      P_label: ie1Problem, P_code: ieDx.code, E_etiology: ie1Etiology,
+      _infantContext: {
+        ageGroup: 'infant_early',
+        ageMonths: ageMo.toFixed(1),
+        feedType: feedLabel2,
+        feedPrimary: feedPrimary2,
+        feedSupp: feedSupp2,
+        clinicalAdj: clinAdj2,
+        fluidML: fluidML, fluidFact: fluidFact,
+        volPerFeed: volPerFeed, feedFreq: feedFreq,
+        malnutrStatus: malnutrLabel,
+        vitaminD: '400 IU/day',
+        iron: ageMo>=4?'2 mg/kg/day elemental from 4 months':'Not yet indicated',
+        noSolids: true,
+        stressFactor: stressFact.toFixed(2),
+        waz: wazR&&!wazR.error?(wazR.z>=0?'+':'')+wazR.z.toFixed(2)+' SD':'N/A',
+        wlz: wlzR&&!wlzR.error?(wlzR.z>=0?'+':'')+wlzR.z.toFixed(2)+' SD':'N/A',
+      }
+    };
+
+    // Build an infant-specific override prompt appended to context
+    var _infantPromptExtra = '\n\nIMPORTANT — INFANT-SPECIFIC CONTEXT:\n'+
+      'This is an infant aged '+ageMo.toFixed(1)+' months ('+ageGroup2+'). Feeding mode: '+feedLabel2+'.\n'+
+      'Feed schedule: '+volPerFeed+' mL/feed, '+feedFreq+'x/day, daily volume '+fluidML+' mL ('+fluidFact+' mL/kg/day).\n'+
+      (clinAdj2?'Condition-specific adjustment: '+clinAdj2+'\n':'')+
+      'Nutrition targets already calculated: Energy '+energyKcal+' kcal/day ('+(energyKcal/wtKg).toFixed(0)+' kcal/kg), Protein '+protG+' g/day ('+protFact.toFixed(2)+' g/kg), Fluid '+fluidML+' mL/day.\n'+
+      'DO NOT re-state "Calculated Requirements" as a heading. Instead, embed these values naturally in ND bullet points.\n'+
+      'Use infant clinical language: demand feeding, feed on cue, wet nappies, MUAC, WHO 2006, latch assessment, milk supply.\n'+
+      'ND bullets must include: the primary feeding plan ('+feedLabel2+'), the specific schedule, supplement orders, and any clinical adjustment for '+diagLabel2+'.\n'+
+      'E bullets: caregiver education on feeding, supplement administration, growth monitoring, and recognition of poor intake.\n'+
+      'C bullets: address feeding barriers, caregiver confidence, shared goals for weight gain trajectory.\n'+
+      'RC bullets: team coordination, referral pathway, follow-up schedule, community health worker involvement.\n'+
+      'Each domain: 3\u20135 short, actionable, infant-specific bullets. Professional clinical shorthand. No AI/system references.';
+
+    ctx._promptExtra = _infantPromptExtra;
+
+    window.OasisAI.generateInterventions(ctx).then(function(domains) {
+      function _renderDomainBullets(text, col) {
+        if (!text) return '';
+        return text.split(/\n|\\n/).filter(function(l){return l.trim();}).map(function(line){
+          var clean = line.replace(/^[\u2022\-\*\u25b8\u25cf]+\s*/, '').trim();
+          return ieBulletLine(clean, col);
+        }).join('');
+      }
+      var ndEl = document.getElementById('ie-ncp-body-nd');
+      var eEl  = document.getElementById('ie-ncp-body-e');
+      var cEl  = document.getElementById('ie-ncp-body-c');
+      var rcEl = document.getElementById('ie-ncp-body-rc');
+      if (ndEl && domains.nd) ndEl.innerHTML = _renderDomainBullets(domains.nd,'var(--blue)');
+      if (eEl  && domains.e)  eEl.innerHTML  = _renderDomainBullets(domains.e,'var(--teal)');
+      if (cEl  && domains.c)  cEl.innerHTML  = _renderDomainBullets(domains.c,'#a78bfa');
+      if (rcEl && domains.rc) rcEl.innerHTML = _renderDomainBullets(domains.rc,'var(--green)');
+    }).catch(function(err){ console.warn('[Oasis] IE intervention AI error:',err); });
+  })();
 
   // M
   out2+=ieHdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Growth -- Feeding adequacy -- Clinical vigilance');
@@ -2001,82 +2416,167 @@ window.calcInfantLateTab = function() {
     '</div>'+
   '</div>';
 
-  // I — Intervention
-  outIl+=ilHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan -- Requirements -- SAM protocol -- Clinical adjustments');
+  // I — NCP 4-Domain Intervention (Oasis AI-refined)
+  outIl+=ilHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
 
   // Burn result card if applicable
   if (B) outIl += (typeof _burnResultCard==='function' ? _burnResultCard(B,'INFANT 6-24m') : '');
 
-  // Complementary feeding plan
-  outIl+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">'+
-      '<div class="card-title" style="color:var(--green)">FEEDING PLAN</div>'+
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+ageGroup3+' -- WHO IYCF 2021</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">COMPLEMENTARY FEEDING GUIDANCE</div>'+
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9;margin-bottom:12px">'+cfPlan+'</div>'+
-      samProtocol+
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--text);padding:8px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:7px;margin-top:10px">'+
-        '<span>Meals: <strong style="color:var(--teal)">'+meals+'x/day</strong></span>'+
-        '<span>Food groups: <strong style="color:'+ddScore.col+'">'+fgroups+'/day</strong></span>'+
-        '<span>Breastfeeding: <strong style="color:var(--teal)">'+(bf==='yes'?'Continued':'Not breastfeeding')+'</strong></span>'+
-        '<span>Fluid: <strong style="color:var(--blue)">'+finalFluid+' mL/day</strong></span>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
+  // ── Requirement summary badges ─────────────────────────────────────────────
+  function ilReqBadge(label, val, sub, col, bg, border) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
+      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
+      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+    '</div>';
+  }
 
-  // Requirements card
-  outIl+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">'+
-      '<div class="card-title" style="color:var(--blue)">CALCULATED REQUIREMENTS'+(isBurn?' -- BURN-ADJUSTED':'')+'</div>'+
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">FAO/WHO 2004'+(isBurn?' -- Galveston -- ESPEN Burns 2013':' -- Holliday-Segar')+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">'+
-        ilMc('Energy',finalEnergy+' kcal/day',energyKg+' kcal/kg/day','var(--amber)')+
-        ilMc('Protein',finalProt+' g/day',protKg+' g/kg/day','var(--green)')+
-        ilMc('Fluid',finalFluid+' mL/day','Holliday-Segar','var(--blue)')+
+  var ilReqSummary =
+    '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(52,211,153,0.05);border:1.5px solid rgba(52,211,153,0.22);border-radius:12px">'+
+      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 Holliday-Segar \xb7 '+ageStr3+(isBurn?' \xb7 Galveston Burns':'')+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        ilReqBadge('Energy',finalEnergy+' kcal',energyKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
+        ilReqBadge('Protein',finalProt+' g',protKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
+        ilReqBadge('Fluid',finalFluid+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
       '</div>'+
-      '<div class="hscroll-table">'+
-      '<table style="width:100%;border-collapse:collapse;min-width:400px">'+
-        '<thead><tr style="border-bottom:1px solid var(--border)">'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">BASIS / NOTES</th>'+
-        '</tr></thead>'+
-        '<tbody>'+
-          ilRow('Energy',finalEnergy+' kcal/day',baseFact+' kcal/kg base x '+stressMult.toFixed(2)+' stress factor -- FAO/WHO 2004')+
-          ilRow('Protein',finalProt+' g/day',protKg+' g/kg/day'+(isSAM?' -- SAM rehabilitation target':isMAM?' -- MAM target':stressMult>1?' -- stress-adjusted':''))+
-          ilRow('Fluid',finalFluid+' mL/day','Holliday-Segar maintenance')+
-          (isSAM&&samPhase==='phase1'?ilRow('F-75 volume',Math.round(130*wt)+' mL/day','130 mL/kg/day -- Phase 1 stabilisation',true):'') +
-          (isSAM&&samPhase==='phase2'&&rutfIl&&rutfIl.rutfIndicated?(
-            ilRow('① RUTF Energy Target',rutfIl.kcalTarget+' kcal/kg/day',rutfIl.phaseLabel+' · Malawi CMAM 2016 · WHO SAM 2023')+
-            ilRow('② Total kcal Required',rutfIl.totalKcal+' kcal/day',rutfIl.kcalTarget+' kcal/kg × '+wt.toFixed(2)+' kg — ENERGY IS THE PRIMARY DRIVER')+
-            ilRow('③ Plumpy\'Nut Sachets',rutfIl.sachets+' sachets/day',rutfIl.totalKcal+' ÷ '+rutfIl.sachetKcal+' kcal/sachet = '+(rutfIl.totalKcal/rutfIl.sachetKcal).toFixed(2)+' → '+rutfIl.sachets+' (ceiling) · '+rutfIl.sachetWt+'g/sachet · give with water')+
-            ilRow('④ Protein from RUTF',rutfIl.totalProt+' g/day',rutfIl.sachets+' sachets × '+rutfIl.sachetPro+' g/sachet → '+rutfIl.protKg+' g/kg/day · '+rutfIl.adequacyNote,!rutfIl.energyOk||!rutfIl.protOk)
-          ):(isSAM&&samPhase==='phase2'?ilRow('RUTF sachets',Math.ceil(finalEnergy/500)+' sachets/day','~500 kcal/sachet -- Phase 2 rehabilitation'):'')) +
-          ilRow('Vitamin A',(ageMo<12?'100,000':'200,000')+' IU','Single dose -- document in health passport; repeat in 6 months')+
-          ilRow('Zinc',isSAM?'2 mg/kg/day x 2 weeks':'10-20 mg/day x 10-14 days','For diarrhoea or deficiency; included in RUTF if Phase 2')+
-          ilRow('Iron',isSAM?'3 mg/kg/day (start Phase 2 only)':'2-3 mg/kg/day elemental','Do NOT give iron in Phase 1 SAM -- risk of oxidative stress')+
-        '</tbody>'+
-      '</table>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">'+baseFact+' kcal/kg base \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein '+(isSAM?'3.5 g/kg (SAM)':isMAM?'2.5 g/kg (MAM)':(ageMo<12?'1.8':'1.6')+' g/kg baseline')+(stressMult>1?' \u2191 stress-adjusted':'')+' </span>'+
+        (isSAM&&samPhase==='phase2'&&rutfIl&&rutfIl.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#f87171">RUTF: '+rutfIl.sachets+' sachets/day (Plumpy\'Nut '+rutfIl.sachetWt+'g)</span>':'')+
+        (isSAM&&samPhase==='phase1'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#f87171">F-75: '+Math.round(130*wt)+' mL/day (Phase 1)</span>':'')+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Vit A: '+(ageMo<12?'100,000':'200,000')+' IU (single dose)</span>'+
       '</div>'+
-    '</div>'+
-  '</div>';
+    '</div>';
 
-  // Clinical adjustment
-  if (clinAdjIl) {
-    outIl+='<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">'+
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">'+
-        '<div class="card-title" style="color:var(--amber)">CLINICAL ADJUSTMENT -- '+diagLabel3.toUpperCase()+'</div>'+
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific protocol</div>'+
+  // ── Domain card builder ────────────────────────────────────────────────────
+  function ilDomainCard(domainId, domainCode, domainTitle, accentCol, accentBg, accentBorder, reqSummaryHtml, staticFallback) {
+    var bodyId = 'il-ncp-body-'+domainId;
+    return '<div class="card" style="margin-bottom:12px;border-color:'+accentBorder+';border-width:1.5px">'+
+      '<div class="card-header" style="background:linear-gradient(90deg,'+accentBg+',rgba(0,0,0,0));border-bottom-color:'+accentBorder+'">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
+          '<div>'+
+            '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
+            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="card-body">'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdjIl+'</div>'+
+        (reqSummaryHtml||'')+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
+
+  function ilBulletLine(txt, col) {
+    col = col || 'var(--green)';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(52,211,153,0.07);line-height:1.7">'+
+      '<span style="flex-shrink:0;color:'+col+';font-weight:700;margin-top:1px">&#9658;</span><span>'+txt+'</span></div>';
+  }
+
+  // SAM protocol note for ND fallback
+  var _ilSamNote = '';
+  if (isSAM) {
+    _ilSamNote = ilBulletLine(samPhase==='phase1'
+      ? 'Phase 1 Stabilisation \u2014 F-75 '+Math.round(130*wt)+' mL/day in '+ Math.ceil(finalFluid*wt/200)+' feeds; treat hypoglycaemia, hypothermia, dehydration first. No RUTF in Phase 1.'
+      : samPhase==='transition'
+      ? 'Transition Phase \u2014 replace F-75 with F-100 gradually over 2\u20133 days; same volume; monitor refeeding syndrome.'
+      : samPhase==='phase2'&&rutfIl&&rutfIl.rutfIndicated
+      ? 'Phase 2 Rehabilitation \u2014 RUTF '+rutfIl.sachets+' sachets/day (Plumpy\u2019Nut '+rutfIl.sachetWt+'g); target weight gain 10\u201315 g/kg/day; advance to community OTP when WHZ \u003e\u22122 SD.'
+      : 'SAM management per WHO inpatient protocol; phase to be confirmed by prescribing clinician.', '#f87171');
+  }
+
+  // Static fallbacks
+  var il_nd_fallback =
+    ilBulletLine(cfPlan, 'var(--green)')+
+    (clinAdjIl?ilBulletLine(clinAdjIl,'var(--amber)'):'')+
+    _ilSamNote+
+    ilBulletLine('Meals: <strong>'+meals+'x/day</strong> \xb7 Food groups: <strong style="color:'+ddScore.col+'">'+fgroups+'/7</strong> \xb7 Breastfeeding: <strong>'+(bf==='yes'?'Continued (on demand)':'Not breastfeeding')+'</strong>','var(--green)')+
+    ilBulletLine('Fluid target: <strong>'+finalFluid+' mL/day</strong> (Holliday-Segar). Avoid water, sweet drinks, and tea.','var(--blue)')+
+    ilBulletLine('Vitamin A: '+(ageMo<12?'100,000':'200,000')+' IU once. Zinc: 10\u201320 mg/day \xd7 10\u201314 days (diarrhoea/deficiency). Iron: 2\u20133 mg/kg/day elemental (start Phase 2 only in SAM).','var(--green)');
+
+  var il_e_fallback =
+    ilBulletLine('Educate caregiver on age-appropriate complementary feeding: minimum 4 food groups/day and '+(ageMo<12?'3\u20134 meals':'3 meals + 1\u20132 snacks')+'/day (WHO IYCF 2021).','var(--teal)')+
+    ilBulletLine('Demonstrate food preparation, portion sizes, and textures appropriate for '+(ageMo<12?'6\u201312 months (smooth puree \u2192 mashed/lumpy)':'12\u201324 months (family foods, chopped finely)')+'.'  ,'var(--teal)')+
+    ilBulletLine('Advise on breastfeeding continuation alongside complementary foods until 24 months (WHO recommendation).','var(--teal)')+
+    ilBulletLine(ddScore.col==='var(--green)'?'Reinforce dietary diversity achievements; discuss local nutrient-dense foods (liver, legumes, orange vegetables, eggs).':'Counsel on low-cost diverse foods available locally: eggs, groundnuts, orange-fleshed sweet potato, dark green leaves, small fish.','var(--teal)')+
+    (diagVal!=='none'?ilBulletLine('Provide condition-specific nutrition education for '+diagLabel3+' management during infancy.','var(--teal)'):'');
+
+  var il_c_fallback =
+    ilBulletLine('Set shared weight gain goal: '+(isSAM?'10\u201315 g/kg/day (rehabilitation phase)':ageMo<12?'\u2265100 g/week':'\u2265300 g/month')+' \u2014 plot on WHO 2006 growth chart.','#a78bfa')+
+    ilBulletLine('Address barriers to adequate feeding: food insecurity, caregiver workload, cultural food beliefs, and infant feeding aversion.','#a78bfa')+
+    ilBulletLine('Motivational support for breastfeeding continuation; validate caregiver efforts and provide positive reinforcement.','#a78bfa')+
+    (isSAM||isMAM?ilBulletLine('Discuss the critical importance of completing the full '+samPhaseLabel+' phase before transitioning; address concerns about therapeutic food acceptance.','#a78bfa'):'');
+
+  var il_rc_fallback =
+    ilBulletLine('Schedule follow-up: '+(isSAM?'weekly weight check in NRU/OTP until WHZ \u003e\u22122 SD':isMAM?'MUAC every 2 weeks in SFP':'monthly growth monitoring in clinic')+'.','var(--green)')+
+    (isSAM?ilBulletLine('Coordinate discharge from inpatient NRU to outpatient OTP when appetite returns, oedema resolved, and no medical complications.','var(--green)'):'')+
+    ilBulletLine('Liaise with community health worker for home visit and MUAC check between clinic appointments.','var(--green)')+
+    (diagVal!=='none'?ilBulletLine('Coordinate with prescribing clinician for '+diagLabel3+' management; reassess nutrition prescription at each medical review.','var(--green)'):'')+
+    ilBulletLine('Document anthropometry, dietary assessment, supplement administration, and clinical status in health passport.','var(--green)');
+
+  outIl +=
+    ilDomainCard('nd','ND','Food / Nutrient Delivery','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.30)',
+      ilReqSummary, il_nd_fallback) +
+    ilDomainCard('e','E','Nutrition Education','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.28)',
+      '', il_e_fallback) +
+    ilDomainCard('c','C','Nutrition Counseling','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.28)',
+      '', il_c_fallback) +
+    ilDomainCard('rc','RC','Coordination of Care','var(--blue)','rgba(96,165,250,0.08)','rgba(96,165,250,0.28)',
+      '', il_rc_fallback);
+
+  // ── Oasis AI refinement (async — replaces bullet text when ready) ──────────
+  (function _ilAIRefine() {
+    if (typeof window.OasisAI !== 'object' || typeof window.OasisAI.generateInterventions !== 'function') return;
+    var ctx = {
+      dx: diagVal,
+      dxLabel: diagLabel3,
+      route: bf==='yes'?'breastfeeding + complementary foods (oral)':'complementary foods only (oral)',
+      energy: finalEnergy, protein: finalProt,
+      protPerKg: protKg,
+      pGuideline: isSAM?'WHO SAM Protocol 2023 / Malawi CMAM 2016':isMAM?'WHO CMAM 2016 / Malawi SFP':'FAO/WHO 2004',
+      weight: wt, ibw: wt, age: ageStr3, sex: sex,
+      bmi: bmi, bmiCat: ageGroup3,
+      giFunction: 'intact',
+      isUnderweight: isSAM||isMAM,
+      isCritical: ['sam_kwashiorkor','sam_marasmus','sam_complications','sepsis','meningitis'].includes(diagVal),
+      pesStatement: (pes1il||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(),
+      _promptExtra: '\n\nIMPORTANT — INFANT 6\u201324m CONTEXT:\n'+
+        'Age: '+ageStr3+' ('+ageGroup3+'). '+
+        'Nutrition status: '+(isSAM?'SAM ('+samPhaseLabel+')':isMAM?'MAM':'Not malnourished')+'. '+
+        'Oedema: '+oedStr+'. Breastfeeding: '+(bf==='yes'?'Yes':'No')+'.\n'+
+        'Dietary diversity: '+fgroups+'/7 food groups ('+ddScore.label+'). Meals: '+meals+'x/day ('+mealAdequacy.label+').\n'+
+        'Calculated targets: Energy '+finalEnergy+' kcal/day ('+energyKg+' kcal/kg), Protein '+finalProt+' g/day ('+protKg+' g/kg), Fluid '+finalFluid+' mL/day.\n'+
+        (isSAM?'SAM phase: '+samPhaseLabel+'. '+(samProtocol?'Protocol in place.':''):'')+
+        (clinAdjIl?'Clinical adjustment: '+clinAdjIl+'\n':'')+
+        'Complementary feeding plan: '+cfPlan+'\n'+
+        'DO NOT re-state "Calculated Requirements" as a heading. Embed values naturally in ND bullets.\n'+
+        'Use infant-specific clinical language: MUAC, SAM/MAM, RUTF, F-75/F-100, WHO IYCF, complementary feeding, food groups, Plumpy\'Nut, OTP/NRU.\n'+
+        'ND bullets: Include feeding route, specific foods/formula, schedule, therapeutic protocol ('+samPhaseLabel+'), supplement orders, condition adjustments.\n'+
+        'E bullets: Caregiver education on complementary feeding, food preparation, dietary diversity, supplement administration.\n'+
+        'C bullets: Barriers to feeding, caregiver motivation, shared growth goals, therapeutic food acceptance.\n'+
+        'RC bullets: Follow-up schedule, OTP/SFP enrolment, CHW coordination, MDT communication, health passport documentation.\n'+
+        'Each domain: 3\u20135 short, actionable, infant-specific bullets. No AI/system references.'
+    };
+
+    window.OasisAI.generateInterventions(ctx).then(function(domains) {
+      function _renderDomainBullets(text, col) {
+        if (!text) return '';
+        return text.split(/\n|\\n/).filter(function(l){return l.trim();}).map(function(line){
+          var clean = line.replace(/^[\u2022\-\*\u25b8\u25cf]+\s*/,'').trim();
+          return ilBulletLine(clean, col);
+        }).join('');
+      }
+      var ndEl = document.getElementById('il-ncp-body-nd');
+      var eEl  = document.getElementById('il-ncp-body-e');
+      var cEl  = document.getElementById('il-ncp-body-c');
+      var rcEl = document.getElementById('il-ncp-body-rc');
+      if (ndEl && domains.nd) ndEl.innerHTML = _renderDomainBullets(domains.nd,'var(--green)');
+      if (eEl  && domains.e)  eEl.innerHTML  = _renderDomainBullets(domains.e,'var(--teal)');
+      if (cEl  && domains.c)  cEl.innerHTML  = _renderDomainBullets(domains.c,'#a78bfa');
+      if (rcEl && domains.rc) rcEl.innerHTML = _renderDomainBullets(domains.rc,'var(--blue)');
+    }).catch(function(err){ console.warn('[Oasis] IL intervention AI error:',err); });
+  })();
 
   // M — Monitoring
   outIl+=ilHdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Growth velocity -- MUAC -- Dietary assessment -- Clinical vigilance');
@@ -2680,70 +3180,144 @@ window.calcChild2to5Tab = function() {
     '</div>'+
   '</div>';
 
-  // I
-  out5+=c5Hdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan · SAM protocol · Calculated requirements · Clinical adjustments');
+  // I — NCP 4-Domain Intervention (Oasis AI-refined)
+  out5+=c5Hdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
 
-  if(B) out5+=(typeof _burnResultCard==='function'?_burnResultCard(B,'CHILD 2–5yr'):'');
+  if(B) out5+=(typeof _burnResultCard==='function'?_burnResultCard(B,'CHILD 2\u20135yr'):'');
 
-  out5+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">'+
-      '<div class="card-title" style="color:var(--green)">FEEDING PLAN</div>'+
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+ageGrp5+' · WHO IYCF 2021</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9;margin-bottom:10px">'+feedPlan5+'</div>'+
-      samProt5+
-    '</div>'+
-  '</div>';
+  // \u2500\u2500 Requirement summary badges (static, always visible) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function c5ReqBadge(label, val, sub, col, bg, border) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
+      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
+      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+    '</div>';
+  }
 
-  out5+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">'+
-      '<div class="card-title" style="color:var(--blue)">CALCULATED REQUIREMENTS'+(isBurn?' — BURN-ADJUSTED':'')+'</div>'+
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">Schofield 1985'+(isBurn?' · Galveston · ESPEN Burns 2013':' · IOM DRI 2005 · Holliday-Segar')+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">'+
-        c5Mc('Energy',finalE+' kcal/day',energyKg+' kcal/kg/day','var(--amber)')+
-        c5Mc('Protein',finalP+' g/day',protKg+' g/kg/day','var(--green)')+
-        c5Mc('Fluid',finalF+' mL/day','Holliday-Segar','var(--blue)')+
-        c5Mc('BMR',Math.round(bmr)+' kcal/day','Schofield 2–5yr','var(--purple)')+
+  var c5ReqSummary =
+    '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
+      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr5+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        c5ReqBadge('Energy',finalE+' kcal',energyKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
+        c5ReqBadge('Protein',finalP+' g',protKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
+        c5ReqBadge('Fluid',finalF+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
+        c5ReqBadge('BMR',Math.round(bmr)+' kcal','Schofield 2\u20135yr','var(--purple)','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')+
       '</div>'+
-      '<div class="hscroll-table"><table style="width:100%;border-collapse:collapse;min-width:420px">'+
-        '<thead><tr style="border-bottom:1px solid var(--border)">'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">BASIS / NOTES</th>'+
-        '</tr></thead><tbody>'+
-          c5Row('BMR (Schofield)',Math.round(bmr)+' kcal/day','22.7 × '+wt+' + 495 (male 2–5yr); ±5% for female')+
-          c5Row('Energy (total)',finalE+' kcal/day','BMR × 1.4 PAL × '+stressMult.toFixed(2)+' stress'+(isBurn?' — Galveston adjusted':''))+
-          c5Row('Protein',finalP+' g/day',pFact.toFixed(1)+' g/kg/day — '+( isSAM?'SAM rehabilitation':isMAM?'MAM target':diagVal!=='none'?'stress-adjusted':'IOM DRI 2005'))+
-          c5Row('Fluid',finalF+' mL/day','Holliday-Segar: '+( wt<=10?wt+'×100':wt<=20?'1000+'+(wt-10)+'×50':'1500+'+(wt-20)+'×20'))+
-          (isSAM&&samPhase==='phase1'?c5Row('F-75 volume',Math.round(130*wt)+' mL/day','130 mL/kg/day — Phase 1; '+Math.ceil(130*wt/200)+' feeds q2–3h',true):'') +
-          (isSAM&&samPhase==='phase2'&&rutf5&&rutf5.rutfIndicated?(
-            c5Row('① RUTF Energy Target',rutf5.kcalTarget+' kcal/kg/day',rutf5.phaseLabel+' · Malawi CMAM 2016 · WHO SAM 2023')+
-            c5Row('② Total kcal Required',rutf5.totalKcal+' kcal/day',rutf5.kcalTarget+' kcal/kg × '+wt.toFixed(1)+' kg — ENERGY IS THE PRIMARY DRIVER')+
-            c5Row('③ Plumpy\'Nut Sachets',rutf5.sachets+' sachets/day',rutf5.totalKcal+' ÷ '+rutf5.sachetKcal+' kcal/sachet = '+(rutf5.totalKcal/rutf5.sachetKcal).toFixed(2)+' → '+rutf5.sachets+' (ceiling) · '+rutf5.sachetWt+'g/sachet · give with water')+
-            c5Row('④ Protein from RUTF',rutf5.totalProt+' g/day',rutf5.sachets+' sachets × '+rutf5.sachetPro+' g/sachet → '+rutf5.protKg+' g/kg/day · '+rutf5.adequacyNote,!rutf5.energyOk||!rutf5.protOk)
-          ):(isSAM&&samPhase==='phase2'?c5Row('RUTF sachets',Math.ceil(finalE/500)+'/day','~500 kcal/sachet — ad libitum Phase 2'):'')) +
-          c5Row('Vitamin A',(ageYr<3?'200,000':'200,000')+' IU','Single dose stat; 6-monthly thereafter; document in health card')+
-          c5Row('Iron',isSAM?'3 mg/kg/day (Phase 2 only)':'3–6 mg/kg/day','With vitamin C; NO iron in SAM Phase 1',isSAM&&samPhase==='phase1')+
-          c5Row('Zinc',isSAM?'2 mg/kg/day ×2 wks':'10–20 mg/day ×10–14 days','Diarrhoea, deficiency, or SAM; included in RUTF')+
-        '</tbody></table></div>'+
-    '</div>'+
-  '</div>';
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 1.4 PAL \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+pFact.toFixed(1)+' g/kg/day'+(isSAM?' \u2014 SAM rehab':isMAM?' \u2014 MAM target':stressMult>1?' \u2191 stress-adjusted':' \u2014 IOM DRI 2005')+'</span>'+
+        (isSAM&&samPhase==='phase2'&&rutf5&&rutf5.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutf5.sachets+' sachets/day (Plumpy\'Nut '+rutf5.sachetWt+'g)</span>':'')+
+        (isSAM&&samPhase==='phase1'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">F-75: '+Math.round(130*wt)+' mL/day</span>':'')+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Vit A: 200,000 IU (single dose)</span>'+
+      '</div>'+
+    '</div>';
 
-  if(clinAdj5){
-    out5+='<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">'+
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">'+
-        '<div class="card-title" style="color:var(--amber)">CLINICAL ADJUSTMENT — '+dxLabel5.toUpperCase()+'</div>'+
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific protocol</div>'+
+  // \u2500\u2500 NCP domain card builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function c5DomainCard(domainId, domainCode, domainTitle, accentCol, accentBg, accentBorder, reqSummaryHtml, staticFallback) {
+    var bodyId = 'c5-ncp-body-'+domainId;
+    return '<div class="card" style="margin-bottom:12px;border-color:'+accentBorder+';border-width:1.5px">'+
+      '<div class="card-header" style="background:linear-gradient(90deg,'+accentBg+',rgba(0,0,0,0));border-bottom-color:'+accentBorder+'">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
+          '<div>'+
+            '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
+            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="card-body">'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdj5+'</div>'+
+        (reqSummaryHtml||'')+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
 
+  // Static fallback bullets (rendered immediately; AI replaces when ready)
+  var c5_nd_fallback =
+    c5Bul(feedPlan5)+
+    (isSAM?c5Bul(
+      samPhase==='phase1'?'SAM Phase 1 \u2014 Stabilisation: F-75 '+Math.round(130*wt)+' mL/day in '+Math.ceil(130*wt/200)+' feeds q2\u20133h. No RUTF, no iron. Treat hypoglycaemia (D10W 5 mL/kg IV stat) and hypothermia. ReSoMal for rehydration only.':
+      samPhase==='transition'?'SAM Transition \u2014 F-100 Introduction: replace F-75 at same volume over 2\u20133 days. Advance only when oedema resolves and appetite returns. Monitor electrolytes (K, Mg, PO\u2084) for refeeding.':
+      samPhase==='phase2'?(rutf5&&rutf5.rutfIndicated?'SAM Phase 2 \u2014 Rehabilitation: RUTF '+rutf5.sachets+' sachets/day ad libitum (energy-first: '+rutf5.kcalTarget+' kcal/kg \xd7 '+wt.toFixed(1)+' kg = '+rutf5.totalKcal+' kcal \xf7 500; protein derived '+rutf5.totalProt+' g/day, '+rutf5.protKg+' g/kg). Target weight gain 10\u201315 g/kg/day. Transition to OTP when WHZ >\u22122 SD.':'SAM Phase 2 \u2014 RUTF '+Math.ceil(finalE/500)+' sachets/day ad libitum. OR F-100 '+Math.round(150*wt)+' mL/day. Target weight gain 10\u201315 g/kg/day.'):
+      'SAM management per WHO SAM Protocol 2023 and Malawi CMAM Guidelines 2016.'
+    ):'') +
+    (clinAdj5?c5Bul(clinAdj5,'var(--amber)'):'')+
+    c5Bul('Micronutrients: Vitamin A 200,000 IU stat once (document in health card). Zinc 10\u201320 mg/day \xd710\u201314 days.'+(isSAM&&samPhase!=='phase1'?' Iron 3 mg/kg/day \u2014 Phase 2 only (withhold in Phase 1).':' Iron 3\u20136 mg/kg/day with vitamin C.'))+
+    c5Bul('Fluid: '+finalF+' mL/day (Holliday-Segar). ORS for rehydration if diarrhoea \u2014 use ReSoMal for SAM, standard ORS otherwise.');
+
+  var c5_e_fallback =
+    c5Bul('Age-appropriate dietary education: balanced family meals \u2014 nsima/ugali + legumes + orange vegetables + dark leafy greens + animal-source foods. Target 3 meals + 2 snacks/day, 4+ food groups daily.')+
+    c5Bul('Educate caregiver on portion sizes for '+ageGrp5+'; promote self-feeding development and appropriate food texture progression for age.')+
+    c5Bul('Emphasise iron-rich foods (liver, red meat, beans, dark leafy greens), vitamin A sources (orange-fleshed sweet potato, liver, dark green leaves), and zinc-rich foods (legumes, meat, groundnuts) for growth and immunity.')+
+    (isSAM||isMAM?c5Bul('Educate caregiver on '+(isSAM?'RUTF/F-75/F-100':'RUTF/RUSF')+' preparation and storage, recognition of improving appetite (appetite test), and danger signs requiring immediate return to clinic.'):'');
+
+  var c5_c_fallback =
+    c5Bul('Shared growth goal: '+(isSAM?'target weight gain 10\u201315 g/kg/day in Phase 2; MUAC \u2265125 mm \xd72 consecutive visits for OTP discharge':isMAM?'MUAC \u2265125 mm within 8 weeks (SFP graduation criterion)':'weight gain along WHO 2006 centile trajectory for '+ageGrp5)+'.')+
+    c5Bul('Explore barriers: household food insecurity, caregiver knowledge gaps, picky eating, cultural food beliefs, caregiver fatigue, WASH access.')+
+    c5Bul('Motivational counselling: acknowledge caregiver effort, praise weight gain progress, identify caregiver strengths, address frustration or helplessness.')+
+    (isSAM||isMAM?c5Bul('Counsel on completing the full CMAM course; address RUTF palatability concerns; involve child in feeding decisions as developmentally appropriate.'):'');
+
+  var c5_rc_fallback =
+    c5Bul('Follow-up schedule: '+(isSAM?'weekly in OTP until MUAC \u2265125 mm \xd72 consecutive visits':isMAM?'MUAC every 2 weeks in supplementary feeding programme (SFP)':'monthly growth monitoring at health facility or community clinic')+'.')+
+    (isSAM?c5Bul('Coordinate NRU \u2192 OTP \u2192 community discharge transition; request CHW home visit within 1 week of OTP enrolment for household assessment and RUTF adherence check.'):'');+
+    c5Bul('Liaise with prescribing clinician for '+(diagVal!=='none'?dxLabel5+' management':'any comorbidities identified')+'; reassess nutrition prescription at each medical review.')+
+    c5Bul('Document anthropometry (weight, height, MUAC), oedema status, dietary diversity, and supplement compliance in health card at every visit.');
+
+  out5 +=
+    c5DomainCard('nd','ND','Food / Nutrient Delivery','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.3)',
+      c5ReqSummary, c5_nd_fallback) +
+    c5DomainCard('e','E','Nutrition Education','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.28)',
+      '', c5_e_fallback) +
+    c5DomainCard('c','C','Nutrition Counseling','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.28)',
+      '', c5_c_fallback) +
+    c5DomainCard('rc','RC','Coordination of Care','var(--green)','rgba(52,211,153,0.08)','rgba(52,211,153,0.28)',
+      '', c5_rc_fallback);
+
+  // \u2500\u2500 Oasis AI refinement (async \u2014 replaces bullet text when ready) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  (function _c5AIRefine() {
+    if (typeof window.OasisAI !== 'object' || typeof window.OasisAI.generateInterventions !== 'function') return;
+    var ctx = {
+      dx: diagVal, dxLabel: dxLabel5,
+      route: isSAM && samPhase === 'phase1' ? 'therapeutic F-75 (oral/NGT)' : 'oral \u2014 family foods',
+      energy: finalE, protein: finalP, protPerKg: protKg,
+      pGuideline: isSAM ? 'WHO SAM Protocol 2023 / Malawi CMAM 2016' : isMAM ? 'WHO CMAM 2016' : 'Schofield 1985 / IOM DRI 2005',
+      weight: wt, ibw: wt, age: ageStr5, sex: sex,
+      bmi: bmi, bmiCat: ageGrp5, giFunction: 'intact',
+      isUnderweight: isSAM || isMAM, isCritical: ['sam_kwashiorkor','sam_marasmus'].includes(diagVal),
+      pesStatement: p1.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().substring(0,300),
+      _promptExtra: '\n\nIMPORTANT \u2014 CHILD 2\u20135yr CONTEXT:\n'+
+        'Age: '+ageStr5+' ('+ageGrp5+'). Status: '+(isSAM?'SAM ('+samPhLbl+')':isMAM?'MAM':'Not malnourished')+'.\n'+
+        'Oedema: '+oedStr5+'. MUAC: '+(muac?muac+' mm':'not recorded')+'.\n'+
+        'Calculated targets: Energy '+finalE+' kcal/day ('+energyKg+' kcal/kg), Protein '+finalP+' g/day ('+protKg+' g/kg), Fluid '+finalF+' mL/day.\n'+
+        (isSAM?'SAM phase: '+samPhLbl+'. '+(rutf5&&rutf5.rutfIndicated?'RUTF: '+rutf5.sachets+' sachets/day.':''):'')+ 
+        (clinAdj5?'Clinical adjustment: '+clinAdj5+'\n':'')+
+        'Feeding plan: '+feedPlan5+'\n'+
+        'DO NOT re-state "Calculated Requirements" as a heading. Embed values naturally in ND bullets.\n'+
+        'Use child nutrition language: SAM/MAM, RUTF, MUAC, OTP/NRU, Plumpy\'Nut, food groups, WHO 2006, complementary foods, Schofield BMR.\n'+
+        'ND: feeding route + diet plan + therapeutic foods + supplement orders + condition adjustments.\n'+
+        'E: caregiver education on diet quality, food prep, RUTF use, danger signs.\n'+
+        'C: feeding barriers, caregiver motivation, shared weight/MUAC goals.\n'+
+        'RC: OTP/SFP enrolment, CHW coordination, MDT liaison, follow-up schedule.\n'+
+        'Each domain: 3\u20135 short actionable bullets. No AI/system references.'
+    };
+    window.OasisAI.generateInterventions(ctx).then(function(domains) {
+      function _renderDomainBullets(text, col) {
+        if (!text) return '';
+        return text.split(/\n|\\n/).filter(function(l){return l.trim();}).map(function(line){
+          var clean = line.replace(/^[\u2022\-\*\u25b8\u25cf]+\s*/, '').trim();
+          return c5Bul(clean, col);
+        }).join('');
+      }
+      var ndEl = document.getElementById('c5-ncp-body-nd');
+      var eEl  = document.getElementById('c5-ncp-body-e');
+      var cEl  = document.getElementById('c5-ncp-body-c');
+      var rcEl = document.getElementById('c5-ncp-body-rc');
+      if (ndEl && domains.nd) ndEl.innerHTML = _renderDomainBullets(domains.nd,'var(--blue)');
+      if (eEl  && domains.e)  eEl.innerHTML  = _renderDomainBullets(domains.e,'var(--teal)');
+      if (cEl  && domains.c)  cEl.innerHTML  = _renderDomainBullets(domains.c,'#a78bfa');
+      if (rcEl && domains.rc) rcEl.innerHTML = _renderDomainBullets(domains.rc,'var(--green)');
+    }).catch(function(err){ console.warn('[Oasis] c5 intervention AI error:',err); });
+  })();
   // M
   out5+=c5Hdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Growth velocity · MUAC · Biochemical · Dietary · Clinical');
   out5+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.25)">'+
@@ -3248,68 +3822,143 @@ window.calcChild5to10Tab = function() {
     '</div>'+
   '</div>';
 
-  // I
-  out10+=c10Hdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan · Calculated requirements · Clinical adjustments');
+  // I — NCP 4-Domain Intervention (Oasis AI-refined)
+  out10+=c10Hdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
 
-  if(B) out10+=(typeof _burnResultCard==='function'?_burnResultCard(B,'CHILD 5–10yr'):'');
+  if(B) out10+=(typeof _burnResultCard==='function'?_burnResultCard(B,'CHILD 5\u201310yr'):'');
 
-  out10+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">'+
-      '<div class="card-title" style="color:var(--green)">FEEDING PLAN</div>'+
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+ageGrp10+' · WHO 2020 PA guidelines</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+feedPlan10+'</div>'+
-    '</div>'+
-  '</div>';
+  // \u2500\u2500 Requirement summary badges (static, always visible) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function c10ReqBadge(label, val, sub, col, bg, border) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
+      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
+      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+    '</div>';
+  }
 
-  out10+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">'+
-      '<div class="card-title" style="color:var(--blue)">CALCULATED REQUIREMENTS'+(isBurn?' — BURN-ADJUSTED':'')+'</div>'+
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">Schofield 1985'+(isBurn?' · Galveston · ESPEN Burns 2013':' · IOM DRI 2005 · Holliday-Segar')+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">'+
-        c10Mc('Energy',finalE+' kcal/day',eKg+' kcal/kg/day','var(--amber)')+
-        c10Mc('Protein',finalP+' g/day',pKg+' g/kg/day','var(--green)')+
-        c10Mc('Fluid',finalF+' mL/day','Holliday-Segar','var(--blue)')+
-        c10Mc('BMR',Math.round(bmrVal)+' kcal/day','Schofield 5–10yr','var(--teal)')+
+  var c10ReqSummary =
+    '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
+      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr10+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        c10ReqBadge('Energy',finalE+' kcal',eKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
+        c10ReqBadge('Protein',finalP+' g',pKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
+        c10ReqBadge('Fluid',finalF+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
+        c10ReqBadge('BMR',Math.round(bmrVal)+' kcal','Schofield 5\u201310yr','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.3)')+
       '</div>'+
-      '<div class="hscroll-table"><table style="width:100%;border-collapse:collapse;min-width:420px">'+
-        '<thead><tr style="border-bottom:1px solid var(--border)">'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">BASIS / NOTES</th>'+
-        '</tr></thead><tbody>'+
-          c10Row('BMR (Schofield)',Math.round(bmrVal)+' kcal/day',(sex==='male'?'22.7':'17.5')+'×'+wt+' + '+(sex==='male'?'495':'651')+' ('+sex+', 5–10yr)')+
-          c10Row('Energy',finalE+' kcal/day','BMR × PAL '+palFact+' × stress '+stressMult.toFixed(2)+(isBurn?' — Galveston adjusted':''))+
-          c10Row('Protein',finalP+' g/day',pKg+' g/kg/day — '+(samActive?'SAM extended CMAM':mamActive?'MAM target':diagVal==='ckd_pedi'?'KDOQI restricted':diagVal!=='none'?'stress/disease-adjusted':'IOM DRI 2005'))+
-          c10Row('Fluid',finalF+' mL/day','Holliday-Segar: '+(wt<=10?wt+'×100':wt<=20?'1000+'+(wt-10)+'×50':'1500+'+(wt-20)+'×20'))+
-          (samActive&&rutf10&&rutf10.rutfIndicated?(
-            c10Row('① RUTF Energy Target',rutf10.kcalTarget+' kcal/kg/day',rutf10.phaseLabel+' — Extended CMAM 5–10yr · Malawi CMAM 2016')+
-            c10Row('② Total kcal Required',rutf10.totalKcal+' kcal/day',rutf10.kcalTarget+' kcal/kg × '+wt.toFixed(1)+' kg — ENERGY IS THE PRIMARY DRIVER')+
-            c10Row('③ Plumpy\'Nut Sachets',rutf10.sachets+' sachets/day',rutf10.totalKcal+' ÷ '+rutf10.sachetKcal+' kcal/sachet = '+(rutf10.totalKcal/rutf10.sachetKcal).toFixed(2)+' → '+rutf10.sachets+' (ceiling) · '+rutf10.sachetWt+'g/sachet · ad libitum · give with water')+
-            c10Row('④ Protein from RUTF',rutf10.totalProt+' g/day',rutf10.sachets+' sachets × '+rutf10.sachetPro+' g/sachet → '+rutf10.protKg+' g/kg/day · '+rutf10.adequacyNote,!rutf10.energyOk||!rutf10.protOk)
-          ):(samActive?c10Row('RUTF',Math.ceil(finalE/500)+' sachets/day','~500 kcal/sachet — extended CMAM ad libitum'):'')) +
-          c10Row('Vitamin A','200,000 IU','6-monthly; document in health card; promote dietary sources')+
-          c10Row('Iron',diagVal==='thalassaemia'?'AVOID — iron overload risk':diagVal==='ckd_pedi'?'Only if IDA confirmed':'2–3 mg/kg/day elemental','With vitamin C; check Hb, serum ferritin before supplementing',diagVal==='thalassaemia')+
-          c10Row('Zinc','10–20 mg/day ×2 wks','For deficiency, SAM/MAM, diarrhoea; promotes linear growth')+
-        '</tbody></table></div>'+
-    '</div>'+
-  '</div>';
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 PAL '+palFact+' \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+pKg+' g/kg/day'+(samActive?' \u2014 Extended CMAM':mamActive?' \u2014 MAM':stressMult>1?' \u2191 stress-adjusted':' \u2014 IOM DRI 2005')+'</span>'+
+        (samActive&&rutf10&&rutf10.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutf10.sachets+' sachets/day (Plumpy\'Nut)</span>':'')+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Vit A: 200,000 IU 6-monthly</span>'+
+        (diagVal==='ckd_pedi'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 Protein restricted \u2014 KDOQI</span>':'')+
+        (diagVal==='thalassaemia'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 AVOID iron supplementation</span>':'')+
+      '</div>'+
+    '</div>';
 
-  if(clinAdj10){
-    out10+='<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">'+
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">'+
-        '<div class="card-title" style="color:var(--amber)">CLINICAL ADJUSTMENT — '+dxLabel10.toUpperCase()+'</div>'+
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific protocol</div>'+
+  // \u2500\u2500 NCP domain card builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function c10DomainCard(domainId, domainCode, domainTitle, accentCol, accentBg, accentBorder, reqSummaryHtml, staticFallback) {
+    var bodyId = 'c10-ncp-body-'+domainId;
+    return '<div class="card" style="margin-bottom:12px;border-color:'+accentBorder+';border-width:1.5px">'+
+      '<div class="card-header" style="background:linear-gradient(90deg,'+accentBg+',rgba(0,0,0,0));border-bottom-color:'+accentBorder+'">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
+          '<div>'+
+            '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
+            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="card-body">'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdj10+'</div>'+
+        (reqSummaryHtml||'')+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
 
+  // Static fallback bullets (rendered immediately; AI replaces when ready)
+  var c10_nd_fallback =
+    c10Bul(feedPlan10)+
+    (samActive&&rutf10&&rutf10.rutfIndicated?c10Bul('RUTF: '+rutf10.sachets+' sachets/day ad libitum (Plumpy\'Nut, extended CMAM 5\u201310yr). Energy-first: '+rutf10.kcalTarget+' kcal/kg \xd7 '+wt.toFixed(1)+' kg = '+rutf10.totalKcal+' kcal \xf7 500 kcal/sachet. Protein derived: '+rutf10.totalProt+' g/day ('+rutf10.protKg+' g/kg). Target weight gain 5\u201310 g/kg/day until BMI-Z >\u22122 SD \xd72 visits.'):'')+
+    (clinAdj10?c10Bul(clinAdj10,'var(--amber)'):'')+
+    c10Bul('Micronutrients: Vitamin A 200,000 IU 6-monthly (document in health card). Zinc 10\u201320 mg/day \xd72 weeks.'+(diagVal==='thalassaemia'?' \u26a0 Iron supplementation CONTRAINDICATED \u2014 iron overload risk.':diagVal==='ckd_pedi'?' Iron only if IDA confirmed; check Hb and ferritin first.':' Iron 2\u20133 mg/kg/day elemental \u2014 check Hb/ferritin before supplementing.'))+
+    c10Bul('Fluid: '+finalF+' mL/day (Holliday-Segar). Encourage adequate hydration \u2014 especially in sickle cell disease and active children.');
+
+  var c10_e_fallback =
+    c10Bul('School-age dietary education: balanced plate model \u2014 \xbd vegetables/fruit, \xbc wholegrain starch (nsima, rice, maize), \xbc protein (beans, eggs, fish, meat). 3 meals + 1\u20132 snacks daily.')+
+    c10Bul('Teach child (age-appropriately) and caregiver: appropriate portion sizes, reducing ultra-processed foods and sugar-sweetened beverages, and recognising hunger and fullness cues.')+
+    c10Bul('Iron-rich foods (red meat, liver, legumes, dark green vegetables), vitamin A sources (orange-fleshed sweet potato, eggs), and zinc-rich foods (meat, legumes, groundnuts) for growth and immune function.')+
+    c10Bul('Physical activity: WHO 2020 guidelines \u2014 \u226560 min moderate-to-vigorous PA/day; limit recreational screen time. Support school sports participation.')+
+    (diagVal!=='none'?c10Bul('Condition-specific dietary guidance for '+dxLabel10+' \u2014 integrate into family meal planning and child nutrition education.'):'');
+
+  var c10_c_fallback =
+    c10Bul('Shared growth goal: '+(samActive?'target MUAC \u2265125 mm and BMI-for-age Z >\u22122 SD \u2014 CMAM extended programme discharge criteria':mamActive?'MUAC \u2265125 mm and BMI-Z >\u22122 SD within 8 weeks':'maintain healthy weight-for-height trajectory on WHO 2007 growth reference for '+ageGrp10)+'.')+
+    c10Bul('Explore school-related feeding barriers: school tuck shop access, peer influence, meal skipping, household food insecurity, distance from SFP/OTP site.')+
+    c10Bul('Motivational interviewing with child and caregiver: child\'s self-reported appetite, food preferences, and activity level; engage child directly in age-appropriate goal-setting.')+
+    (samActive||mamActive?c10Bul('Address stigma around therapeutic food in school-age children; involve child in RUTF/supplement acceptance; celebrate non-scale victories (energy, school attendance).'):'');
+
+  var c10_rc_fallback =
+    c10Bul('Follow-up: '+(samActive?'weekly MUAC and weight in extended OTP until BMI-Z >\u22122 SD \xd72 consecutive visits \u2014 then step down to monthly community follow-up':mamActive?'MUAC every 2 weeks in SFP until graduation criteria met':'monthly school health or clinic review; plot BMI-for-age Z on WHO 2007')+'.')+
+    c10Bul('Coordinate with school health services; share growth monitoring data with school nurse where appropriate; confirm school feeding programme enrolment if available.')+
+    c10Bul('Liaise with prescribing team for '+(diagVal!=='none'?dxLabel10:'any comorbidities')+'; reassess nutrition prescription at each medical review and when clinical status changes.')+
+    c10Bul('Refer to community health worker for home visit and MUAC/dietary assessment between clinic appointments; reinforce RUTF adherence and household food security.')+
+    c10Bul('Document BMI-for-age Z-score, MUAC, dietary diversity, physical activity, and supplement compliance in health card at every visit.');
+
+  out10 +=
+    c10DomainCard('nd','ND','Food / Nutrient Delivery','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.3)',
+      c10ReqSummary, c10_nd_fallback) +
+    c10DomainCard('e','E','Nutrition Education','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.28)',
+      '', c10_e_fallback) +
+    c10DomainCard('c','C','Nutrition Counseling','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.28)',
+      '', c10_c_fallback) +
+    c10DomainCard('rc','RC','Coordination of Care','var(--green)','rgba(52,211,153,0.08)','rgba(52,211,153,0.28)',
+      '', c10_rc_fallback);
+
+  // \u2500\u2500 Oasis AI refinement (async \u2014 replaces bullet text when ready) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  (function _c10AIRefine() {
+    if (typeof window.OasisAI !== 'object' || typeof window.OasisAI.generateInterventions !== 'function') return;
+    var ctx = {
+      dx: diagVal, dxLabel: dxLabel10,
+      route: samActive ? 'RUTF (therapeutic food) \u2014 oral' : 'oral \u2014 school meals + family diet',
+      energy: finalE, protein: finalP, protPerKg: pKg,
+      pGuideline: samActive ? 'Extended CMAM / Malawi CMAM 2016' : mamActive ? 'WHO CMAM 2016' : 'Schofield 1985 / IOM DRI 2005',
+      weight: wt, ibw: wt, age: ageStr10, sex: sex,
+      bmi: bmi, bmiCat: ageGrp10, giFunction: 'intact',
+      isUnderweight: samActive || mamActive,
+      isCritical: ['picu','burns_pedi','trauma_pedi','cancer_pedi'].includes(diagVal),
+      pesStatement: p1c10.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().substring(0,300),
+      _promptExtra: '\n\nIMPORTANT \u2014 CHILD 5\u201310yr CONTEXT:\n'+
+        'Age: '+ageStr10+' ('+ageGrp10+'). Sex: '+sex+'. Status: '+(samActive?'SAM (Extended CMAM)':mamActive?'MAM':'Not malnourished')+'.\n'+
+        'MUAC: '+(muac?muac+' mm':'not recorded')+'. PAL: '+palFact+' ('+paVal+'). Stress: \xd7'+stressMult.toFixed(2)+'.\n'+
+        'Calculated targets: Energy '+finalE+' kcal/day ('+eKg+' kcal/kg), Protein '+finalP+' g/day ('+pKg+' g/kg), Fluid '+finalF+' mL/day. BMR (Schofield): '+Math.round(bmrVal)+' kcal/day.\n'+
+        (samActive&&rutf10&&rutf10.rutfIndicated?'RUTF: '+rutf10.sachets+' sachets/day Plumpy\'Nut. ':'')+
+        (clinAdj10?'Clinical adjustment: '+clinAdj10+'\n':'')+
+        'Feeding plan: '+feedPlan10+'\n'+
+        'DO NOT re-state "Calculated Requirements" as a heading. Embed values naturally in ND bullets.\n'+
+        'Use school-age child nutrition language: SAM/MAM, RUTF, extended CMAM, MUAC, OTP/SFP, BMI-for-age Z-score, WHO 2007, school meals, Schofield BMR, PAL.\n'+
+        'ND: feeding plan + therapeutic foods + supplement orders + condition-specific adjustments.\n'+
+        'E: school-age dietary education for child AND caregiver; food groups, portion sizes, physical activity.\n'+
+        'C: child-centred goal-setting, school feeding barriers, therapeutic food acceptance, peer influence.\n'+
+        'RC: OTP/SFP enrolment, school health coordination, MDT liaison, CHW follow-up.\n'+
+        'Each domain: 3\u20135 short actionable bullets. No AI/system references.'
+    };
+    window.OasisAI.generateInterventions(ctx).then(function(domains) {
+      function _renderDomainBullets(text, col) {
+        if (!text) return '';
+        return text.split(/\n|\\n/).filter(function(l){return l.trim();}).map(function(line){
+          var clean = line.replace(/^[\u2022\-\*\u25b8\u25cf]+\s*/, '').trim();
+          return c10Bul(clean, col);
+        }).join('');
+      }
+      var ndEl = document.getElementById('c10-ncp-body-nd');
+      var eEl  = document.getElementById('c10-ncp-body-e');
+      var cEl  = document.getElementById('c10-ncp-body-c');
+      var rcEl = document.getElementById('c10-ncp-body-rc');
+      if (ndEl && domains.nd) ndEl.innerHTML = _renderDomainBullets(domains.nd,'var(--blue)');
+      if (eEl  && domains.e)  eEl.innerHTML  = _renderDomainBullets(domains.e,'var(--teal)');
+      if (cEl  && domains.c)  cEl.innerHTML  = _renderDomainBullets(domains.c,'#a78bfa');
+      if (rcEl && domains.rc) rcEl.innerHTML = _renderDomainBullets(domains.rc,'var(--green)');
+    }).catch(function(err){ console.warn('[Oasis] c10 intervention AI error:',err); });
+  })();
   // M
   out10+=c10Hdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Growth · BMI · MUAC · Dietary · Biochemical · Clinical');
   out10+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.25)">'+
@@ -4034,79 +4683,168 @@ window.calcAdolescent10to17Tab = function() {
     '</div>'+
   '</div>';
 
-  // I
-  outAd+=adHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','Feeding plan · Macronutrients · Micronutrients · Clinical adjustments');
+  // I — NCP 4-Domain Intervention (Oasis AI-refined)
+  outAd+=adHdr('I','Nutrition Intervention','#60a5fa','rgba(96,165,250,0.06)','ND \xb7 E \xb7 C \xb7 RC \u2014 NCP Domains');
 
   if(B) outAd+=(typeof _burnResultCard==='function'?_burnResultCard(B,'ADOLESCENT 10-17yr'):'');
 
-  // Feeding plan
-  outAd+='<div class="card" style="margin-bottom:14px;border-color:rgba(52,211,153,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(0,0,0,0));border-bottom-color:rgba(52,211,153,0.15)">'+
-      '<div class="card-title" style="color:var(--green)">FEEDING PLAN</div>'+
-      '<div class="card-badge" style="color:var(--green);border-color:rgba(52,211,153,0.3)">'+ageGrp+(preg!=='none'?' · '+pregLbl:'')+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+feedPlanAd+'</div>'+
-    '</div>'+
-  '</div>';
+  // \u2500\u2500 Nutrient Targets Summary badges \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function adReqBadge(label, val, sub, col, bg, border) {
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
+      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
+      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+    '</div>';
+  }
 
-  // Requirements
-  outAd+='<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.3)">'+
-    '<div class="card-header" style="background:linear-gradient(90deg,rgba(96,165,250,.1),rgba(0,0,0,0));border-bottom-color:rgba(96,165,250,0.15)">'+
-      '<div class="card-title" style="color:var(--blue)">CALCULATED REQUIREMENTS'+(isBurn?' — BURN-ADJUSTED':'')+'</div>'+
-      '<div class="card-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3)">Schofield 1985'+(isBurn?' · Galveston · ESPEN Burns 2013':' · IOM DRI 2023 · Holliday-Segar')+'</div>'+
-    '</div>'+
-    '<div class="card-body">'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:14px">'+
-        adMc('BMR',Math.round(bmr)+' kcal/day','Schofield 1985 ('+sexStr+')','var(--purple)')+
-        adMc('Energy',fE+' kcal/day',(fE/wt).toFixed(0)+' kcal/kg/day','var(--amber)')+
-        adMc('Protein',fP+' g/day',(fP/wt).toFixed(2)+' g/kg/day','var(--green)')+
-        adMc('Fluid',fF+' mL/day',isLate?(isFemale?'min 2.3 L/day':'min 3.3 L/day'):'min 2.0 L/day','var(--blue)')+
+  var adReqSummary =
+    '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
+      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2023 \xb7 '+ageStr+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
+        adReqBadge('Energy',fE+' kcal',Math.round(fE/wt)+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
+        adReqBadge('Protein',fP+' g',(fP/wt).toFixed(2)+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
+        adReqBadge('Fluid',fF+' mL',isLate?(isFemale?'min 2.3 L/day':'min 3.3 L/day'):'min 2.0 L/day','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
+        adReqBadge('BMR',Math.round(bmr)+' kcal','Schofield 1985 ('+sexStr+')','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')+
       '</div>'+
-      '<div class="hscroll-table"><table style="width:100%;border-collapse:collapse;min-width:440px">'+
-        '<thead><tr style="border-bottom:1px solid var(--border)">'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">PARAMETER</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">DAILY TOTAL</th>'+
-          '<th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">BASIS / NOTES</th>'+
-        '</tr></thead><tbody>'+
-          adRow('BMR (Schofield)',Math.round(bmr)+' kcal/day',(isFemale?'12.2':'17.5')+'x'+wt+' + '+(isFemale?'746':'651')+' — '+sexStr+', 10-17yr')+
-          adRow('Energy (TEE)',fE+' kcal/day','BMR x PAL '+paFactor.toFixed(2)+' x stress '+sf.toFixed(2)+(pregKcal>0?' + '+pregKcal+' kcal preg/lact':'')+(isBurn?' — Galveston adjusted':''))+
-          adRow('Energy range',rangeLo+'-'+rangeHi+' kcal/day','TEE +/-10% — adjust to growth and clinical response')+
-          adRow('Protein',fP+' g/day',(fP/wt).toFixed(2)+' g/kg/day — '+( samActive?'SAM rehabilitation':stressLv!=='none'?'stress-adjusted':isLate?'IOM DRI 2023 late adolescent':'IOM DRI 2023 early adolescent')+(preg==='pregnant'?'; +25 g/day for pregnancy':''))+
-          adRow('Carbohydrate',carbG+' g/day',carbPct+'% of TEE — IOM AMDR 45-65%; whole grains, legumes preferred')+
-          adRow('Fat',fatG+' g/day',fatPct+'% of TEE — IOM AMDR 20-35%; limit saturated fat; omega-3 encouraged')+
-          adRow('Fluid',fF+' mL/day',fluidNote)+
-          adRow('Calcium','1300 mg/day','Peak bone mass — most critical adolescent micronutrient — IOM DRI 2023')+
-          adRow('Vitamin D','600 IU/day (supplement 1000-2000 IU if deficient)','IOM 2011 — bone health, immunity')+
-          adRow('Iron',ironMg,ironNote+(preg==='pregnant'?' — increase to 27 mg/day during pregnancy':''))+
-          adRow('Zinc',(isLate?(isFemale?'9':'11'):(isFemale?'8':'9'))+' mg/day','IOM DRI 2023 — growth, immunity, wound healing')+
-          adRow('Folate',(isLate&&preg==='pregnant'?'600':'400')+' ug/day','IOM DRI 2023'+(isFemale?' — critical in females of reproductive age':''))+
-          (isLate?adRow('Magnesium',(isFemale?'360':'410')+' mg/day','IOM DRI 2023 — muscle, bone, energy metabolism'):'') +
-          (samActive&&rutfAd&&rutfAd.rutfIndicated?(
-            adRow('① RUTF Energy Target',rutfAd.kcalTarget+' kcal/kg/day',rutfAd.phaseLabel+' · Malawi CMAM 2016 · WHO SAM 2023')+
-            adRow('② Total kcal Required',rutfAd.totalKcal+' kcal/day',rutfAd.kcalTarget+' kcal/kg × '+wt.toFixed(1)+' kg — ENERGY IS THE PRIMARY DRIVER')+
-            adRow('③ Plumpy\'Nut Sachets',rutfAd.sachets+' sachets/day',rutfAd.totalKcal+' ÷ '+rutfAd.sachetKcal+' kcal/sachet = '+(rutfAd.totalKcal/rutfAd.sachetKcal).toFixed(2)+' → '+rutfAd.sachets+' (ceiling) · '+rutfAd.sachetWt+'g/sachet · ad libitum · give with water')+
-            adRow('④ Protein from RUTF',rutfAd.totalProt+' g/day',rutfAd.sachets+' sachets × '+rutfAd.sachetPro+' g/sachet → '+rutfAd.protKg+' g/kg/day · '+rutfAd.adequacyNote)
-          ):(samActive?adRow('RUTF',((Math.round(200*wt))/500).toFixed(1)+' sachets/day','~500 kcal/sachet — Phase 2 rehabilitation; ad libitum'):''))+
-        '</tbody></table></div>'+
-      '<div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);padding:8px 10px;background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.1);border-radius:6px;line-height:1.8">'+
-        'Multi-micronutrient supplement recommended if dietary diversity limited (WHO 2022 · MNT guidelines). All micronutrient targets per IOM DRI 2023.'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 PAL '+paFactor.toFixed(2)+' \xd7 '+sf.toFixed(2)+' stress'+(pregKcal>0?' + '+pregKcal+' kcal preg/lact':'')+'</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+(fP/wt).toFixed(2)+' g/kg/day'+(samActive?' \u2014 SAM rehabilitation':stressLv!=='none'?' \u2191 stress-adjusted':' \u2014 IOM DRI 2023')+'</span>'+
+        (samActive&&rutfAd&&rutfAd.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutfAd.sachets+' sachets/day (Plumpy\'Nut)</span>':'')+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Calcium: 1300 mg/day \u2014 peak bone mass</span>'+
+        '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.15);color:var(--amber)">Iron: '+ironMg+' ('+ironNote+')</span>'+
+        (diagVal==='thalassaemia'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 AVOID iron supplementation</span>':'')+
+        (diagVal==='ckd_pedi'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 Protein restricted \u2014 KDOQI</span>':'')+
+        (diagVal==='eating_disorder'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 Supervised refeeding \u2014 MDT required</span>':'')+
+        (preg==='pregnant'?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#f87171">\u26a0 Adolescent pregnancy \u2014 dual nutritional burden</span>':'')+
       '</div>'+
-    '</div>'+
-  '</div>';
+    '</div>';
 
-  // Clinical adjustment
-  if(clinAdjAd){
-    outAd+='<div class="card" style="margin-bottom:14px;border-color:rgba(240,180,41,0.4)">'+
-      '<div class="card-header" style="background:linear-gradient(90deg,rgba(240,180,41,.1),rgba(0,0,0,0));border-bottom-color:rgba(240,180,41,0.2)">'+
-        '<div class="card-title" style="color:var(--amber)">CLINICAL ADJUSTMENT — '+dxLabel.toUpperCase()+'</div>'+
-        '<div class="card-badge" style="color:var(--amber);border-color:rgba(240,180,41,0.3)">Condition-specific protocol</div>'+
+  // \u2500\u2500 NCP domain card builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  function adDomainCard(domainId, domainCode, domainTitle, accentCol, accentBg, accentBorder, reqSummaryHtml, staticFallback) {
+    var bodyId = 'ad-ncp-body-'+domainId;
+    return '<div class="card" style="margin-bottom:12px;border-color:'+accentBorder+';border-width:1.5px">'+
+      '<div class="card-header" style="background:linear-gradient(90deg,'+accentBg+',rgba(0,0,0,0));border-bottom-color:'+accentBorder+'">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
+          '<div>'+
+            '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
+            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<div class="card-body">'+
-        '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px">'+clinAdjAd+'</div>'+
+        (reqSummaryHtml||'')+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
+
+  // Static fallback bullets (render immediately; AI replaces when ready)
+  var ad_nd_fallback =
+    adBul(feedPlanAd)+
+    (samActive&&rutfAd&&rutfAd.rutfIndicated
+      ? adBul('RUTF: '+rutfAd.sachets+' sachets/day ad libitum (Plumpy\'Nut, appetite test passed). Energy-first: '+rutfAd.kcalTarget+' kcal/kg \xd7 '+wt.toFixed(1)+' kg = '+rutfAd.totalKcal+' kcal \xf7 500 kcal/sachet; protein derived '+rutfAd.totalProt+' g/day. If appetite failed or oedema: inpatient Phase 1 F-75 '+Math.round(100*wt)+' mL/day q2\u20133h.')
+      : (samActive ? adBul('Inpatient Phase 1 F-75: '+Math.round(100*wt)+' mL/day q2\u20133h (oedema or appetite test failed). Progress to RUTF once stabilised \u2014 Phase 2 CMAM outpatient.') : ''))+
+    (clinAdjAd?adBul(clinAdjAd,'var(--amber)'):'')+
+    adBul('Micronutrients: Calcium 1300 mg/day (dairy, fortified foods, dark greens). Vitamin D 600 IU/day (supplement 1000\u20132000 IU if deficient). Iron '+ironMg+' ('+ironNote+'). Zinc '+(isLate?(isFemale?'9':'11'):(isFemale?'8':'9'))+' mg/day. Folate '+(isLate&&preg==='pregnant'?'600':'400')+' \u03bcg/day'+(isFemale?' \u2014 essential for females of reproductive age':'')+'.'+
+      (diagVal==='thalassaemia'?' \u26a0 AVOID iron supplementation \u2014 iron overload risk.':
+       diagVal==='ckd_pedi'?' \u26a0 Protein restricted \u2014 KDOQI; monitor phosphate, potassium.':
+       diagVal==='eating_disorder'?' \u26a0 Supervised refeeding \u2014 MDT essential; avoid aggressive early nutrition.':''))+
+    adBul('Fluid: '+fF+' mL/day. '+(isLate?(isFemale?'IOM target 2.3\u20133.3 L/day':'IOM target 3.3\u20134.0 L/day'):'Holliday-Segar min 2.0 L/day')+'. Increase in hot climate, physical activity, or fever.')+
+    (preg==='pregnant'?adBul('Adolescent pregnancy: highest nutritional risk group. Energy +'+pregKcal+' kcal/day above baseline. Prenatal supplementation (folate 600 \u03bcg/day, iron 27 mg/day, calcium 1300 mg/day). Weekly dietitian review recommended \u2014 WHO ANC 2016.','var(--amber)'):'')+
+    (preg==='lactating'?adBul('Lactation: energy +'+pregKcal+' kcal/day. Calcium 1300 mg/day, iodine 290 \u03bcg/day, choline 550 mg/day. Breastfeed on demand. Continue prenatal supplements.','var(--amber)'):'')+
+    (diagVal==='eating_disorder'?adBul('Eating disorder: non-diet approach; supported meals; gradual normalisation of eating patterns. Avoid rigid rules or weight-focused goals. FBT first-line under 18. MDT essential.','var(--amber)'):'');
+
+  var ad_e_fallback =
+    adBul('Balanced adolescent plate: 50% complex carbohydrate (whole grains, nsima, rice), protein '+fP+' g/day (beans, eggs, fish, meat), 30% healthy fats. 3 meals + 1\u20132 snacks/day. 4+ food groups daily.')+
+    adBul('Peak bone mass education: calcium 1300 mg/day from dairy or fortified alternatives; vitamin D 600 IU/day; weight-bearing physical activity; avoid prolonged amenorrhoea or severe energy restriction.')+
+    adBul('Iron education: iron-rich foods (red meat, liver, beans, dark leafy greens) + vitamin C enhancers at every iron meal. Recognition of IDA symptoms: fatigue, pallor, poor concentration.'+(isFemale?' Importance of iron replenishment during menstruation.':''))+
+    adBul('Physical activity: WHO 2020 \u226560 min MVPA/day; limit recreational screen time. If athletic: sports nutrition principles \u2014 adequate energy to prevent LEA/RED-S syndrome.')+
+    (diagVal!=='none'?adBul('Condition-specific dietary education for '+dxLabel+': integrate into adolescent-friendly counselling; engage the adolescent directly, not only the caregiver.'):'');
+
+  var ad_c_fallback =
+    adBul('Shared growth goal: '+(samActive?'MUAC \u2265125 mm \xd7 2 consecutive visits + BMI-Z > \u22122 SD \u2014 CMAM discharge':mamActive?'MUAC \u2265125 mm \xd7 2 consecutive visits \u2014 SFP graduation':owActive?'BMI-Z stabilising without compromising linear growth or pubertal development':'maintain healthy BMI-for-age trajectory through puberty on WHO 2007 reference')+'.')+
+    adBul('Adolescent-centred counselling: explore peer influences on eating, social media and body image, school/home food environment, meal-skipping habits. Engage the adolescent directly \u2014 not only the caregiver.')+
+    adBul('Motivational interviewing: assess adolescent\'s own goals, food preferences, and readiness to change. Build autonomy in food choices. Praise progress. Address fatigue or hopelessness.')+
+    (isFemale&&menses==='absent'?adBul('Address LEA/RED-S: balance energy intake with exercise load. Use non-stigmatising language. Involve adolescent in energy target decisions. Refer to gynaecology if amenorrhoea >3 months.','var(--amber)'):'')+
+    (diagVal==='eating_disorder'?adBul('Eating disorder counselling: non-diet approach; family-based therapy (FBT) first-line under 18; avoid weight-focused language; supported meals; MDT essential \u2014 dietitian, psychologist, physician.','var(--amber)'):'');
+
+  var ad_rc_fallback =
+    adBul('Follow-up schedule: '+(samActive?'weekly in OTP until MUAC \u2265125 mm \xd7 2 consecutive visits; appetite test at each visit':mamActive?'MUAC every 2 weeks in supplementary feeding programme (SFP)':'monthly clinic review during active management; 3-monthly for stable well adolescents')+'.')+
+    adBul('Transition to adult services: document transition plan for all adolescents approaching age 18. Introduce adult dietitian/physician. Ensure continuity of nutrition care for chronic conditions.')+
+    adBul('Coordinate with school health services, youth-friendly clinic, and community health worker. Share growth data with relevant school staff if consented.')+
+    (preg==='pregnant'||preg==='lactating'?adBul('Coordinate with antenatal/postnatal care team. Weekly dietitian review during pregnancy (WHO ANC 2016 recommendation). Share nutrition plan with obstetric team.','var(--amber)'):'')+
+    adBul('Document at every visit: BMI-for-age Z-score, MUAC, menstrual status (females), dietary diversity, supplement compliance, psychosocial wellbeing, and physical activity level in health record.');
+
+  outAd +=
+    adDomainCard('nd','ND','Food / Nutrient Delivery','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.3)',
+      adReqSummary, ad_nd_fallback)+
+    adDomainCard('e','E','Nutrition Education','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.28)',
+      '', ad_e_fallback)+
+    adDomainCard('c','C','Nutrition Counseling','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.28)',
+      '', ad_c_fallback)+
+    adDomainCard('rc','RC','Coordination of Care','var(--green)','rgba(52,211,153,0.08)','rgba(52,211,153,0.28)',
+      '', ad_rc_fallback);
+
+  // \u2500\u2500 Oasis AI refinement (async \u2014 replaces bullet text when ready) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  (function _adAIRefine() {
+    if (typeof window.OasisAI !== 'object' || typeof window.OasisAI.generateInterventions !== 'function') return;
+    var ctx = {
+      dx: diagVal, dxLabel: dxLabel,
+      route: samActive
+        ? (oedema ? 'inpatient \u2014 Phase 1 F-75 then RUTF' : 'RUTF ad libitum (outpatient CMAM \u2014 appetite test passed)')
+        : preg !== 'none' ? 'oral \u2014 adolescent ' + (preg === 'pregnant' ? 'pregnancy' : 'lactation') + ' meal plan'
+        : 'oral \u2014 balanced adolescent diet',
+      energy: fE, protein: fP, protPerKg: (fP/wt).toFixed(2),
+      pGuideline: samActive ? 'WHO SAM Protocol 2023 / Malawi CMAM 2016'
+        : mamActive ? 'WHO CMAM 2016'
+        : 'Schofield 1985 / IOM DRI 2023',
+      weight: wt, ibw: wt, age: ageStr, sex: sexStr,
+      bmi: bmi, bmiCat: ageGrp, giFunction: 'intact',
+      isUnderweight: samActive || mamActive,
+      isCritical: ['picu','burns_pedi','trauma_pedi','cancer_pedi','sepsis'].includes(diagVal),
+      pesStatement: pa1.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().substring(0,300),
+      _promptExtra: '\n\nIMPORTANT \u2014 ADOLESCENT 10\u201317yr CONTEXT:\n'+
+        'Age: '+ageStr+' ('+ageGrp+'). Sex: '+sexStr+'. Status: '+
+          (samActive?'SAM':mamActive?'MAM':owActive?'Overweight/Obese':'Well/Normal')+'.\n'+
+        'Reproductive status: '+pregLbl+'. Menses: '+mensLbl+'.\n'+
+        'PAL: '+paFactor.toFixed(2)+' ('+pa+'). Stress: \xd7'+sf.toFixed(2)+' ('+stressLabel+').\n'+
+        'MUAC: '+(muacMm?muacMm+' mm':'not recorded')+'. BMI-Z: '+
+          (bmiazZ!==null?(bmiazZ>=0?'+':'')+bmiazZ.toFixed(2)+' SD':'not calculated')+'.\n'+
+        'Calculated targets: Energy '+fE+' kcal/day ('+Math.round(fE/wt)+' kcal/kg), range '+
+          rangeLo+'\u2013'+rangeHi+' kcal/day. Protein '+fP+' g/day ('+(fP/wt).toFixed(2)+' g/kg). '+
+          'Fluid '+fF+' mL/day. BMR: '+Math.round(bmr)+' kcal/day (Schofield '+sexStr+').\n'+
+        (pregKcal>0?'Pregnancy/lactation add-on: +'+pregKcal+' kcal/day.\n':'')+
+        (samActive&&rutfAd&&rutfAd.rutfIndicated
+          ?'RUTF: '+rutfAd.sachets+' sachets/day Plumpy\'Nut. ':'')+
+        (clinAdjAd?'Clinical adjustment: '+clinAdjAd+'\n':'')+
+        'Feeding plan: '+feedPlanAd+'\n'+
+        'DO NOT re-state "Calculated Requirements" as a heading. Embed values naturally in ND bullets.\n'+
+        'Use adolescent nutrition language: BMI-for-age Z, pubertal growth, peak bone mass, RED-S/LEA, SAM/MAM, RUTF, MUAC, OTP/SFP, IOM DRI 2023, WHO 2007, Schofield BMR, PAL, eating disorder MDT, adolescent pregnancy, amenorrhoea.\n'+
+        'ND: feeding plan + therapeutic foods + micronutrient orders + condition-specific adjustments + reproductive/pregnancy considerations.\n'+
+        'E: adolescent-centred dietary education \u2014 balanced plate, calcium, iron, physical activity, body image, condition-specific; engage adolescent directly not only caregiver.\n'+
+        'C: adolescent autonomy, peer/social media influences, body image, shared goals, motivational interviewing with adolescent AND caregiver.\n'+
+        'RC: OTP/SFP schedule, school health / youth-friendly clinic coordination, MDT liaison, transition to adult services at 18, CHW follow-up, antenatal team if pregnant.\n'+
+        'Each domain: 3\u20135 short actionable bullets. No AI/system references.'
+    };
+    window.OasisAI.generateInterventions(ctx).then(function(domains) {
+      function _renderAdBullets(text, col) {
+        if (!text) return '';
+        return text.split(/\n|\\n/).filter(function(l){return l.trim();}).map(function(line){
+          var clean = line.replace(/^[\u2022\-\*\u25b8\u25cf]+\s*/, '').trim();
+          return adBul(clean, col);
+        }).join('');
+      }
+      var ndEl = document.getElementById('ad-ncp-body-nd');
+      var eEl  = document.getElementById('ad-ncp-body-e');
+      var cEl  = document.getElementById('ad-ncp-body-c');
+      var rcEl = document.getElementById('ad-ncp-body-rc');
+      if (ndEl && domains.nd) ndEl.innerHTML = _renderAdBullets(domains.nd,'var(--blue)');
+      if (eEl  && domains.e)  eEl.innerHTML  = _renderAdBullets(domains.e,'var(--teal)');
+      if (cEl  && domains.c)  cEl.innerHTML  = _renderAdBullets(domains.c,'#a78bfa');
+      if (rcEl && domains.rc) rcEl.innerHTML = _renderAdBullets(domains.rc,'var(--green)');
+    }).catch(function(err){ console.warn('[Oasis] ad intervention AI error:',err); });
+  })();
 
   // M
   outAd+=adHdr('M','Monitoring','#34d399','rgba(52,211,153,0.06)','Growth · Biochemical · Dietary · Menstrual · Psychosocial');
