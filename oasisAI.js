@@ -29,7 +29,7 @@
   function _getKey() {
     return (typeof window !== 'undefined' && window.GROQ_API_KEY)
       ? window.GROQ_API_KEY
-      : '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';
+      : '';
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
@@ -1848,7 +1848,7 @@ Rules:
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : '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'}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : ''}` },
         body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 120, temperature: 0.1, messages: [{ role: 'user', content: prompt }] })
       });
       if (!res.ok) return;

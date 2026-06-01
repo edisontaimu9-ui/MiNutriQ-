@@ -8046,6 +8046,7 @@ var photoCropper = (function () {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-remote-config-compat.js"></script>
 <script src="foodData.js"></script>
 <script src="pediNutrition.js"></script>
 <script>
@@ -11827,8 +11828,30 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq API key — replace with env variable in production
-  window.GROQ_API_KEY = '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';
+  // Groq API key — loaded securely from Firebase Remote Config
+  window.GROQ_API_KEY = '';
+
+  (function loadGroqKey() {
+    try {
+      const rc = firebase.remoteConfig();
+      rc.settings.minimumFetchIntervalMillis = 3600000; // 1 hour cache
+      rc.defaultConfig = { GROQ_API_KEY: '' };
+
+      rc.fetchAndActivate().then(function () {
+        var key = rc.getValue('GROQ_API_KEY').asString();
+        if (key) {
+          window.GROQ_API_KEY = key;
+          console.log('[Oasis] Remote config loaded ✓');
+        } else {
+          console.warn('[Oasis] Remote config returned empty key');
+        }
+      }).catch(function (err) {
+        console.error('[Oasis] Remote config failed:', err);
+      });
+    } catch (e) {
+      console.error('[Oasis] Remote config init error:', e);
+    }
+  })();
 </script>
 <script src="references.js" defer></script>
 <script src="oasisAI.js" defer></script>
