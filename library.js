@@ -1100,7 +1100,8 @@
 
     var apiKey = (typeof window !== 'undefined' && window.GROQ_API_KEY)
       ? window.GROQ_API_KEY
-      : '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';
+      : '';
+    if (!apiKey) { _aioClear(); return; }
 
     var capturedQ = q.trim();
     fetch('https://api.groq.com/openai/v1/chat/completions', {
