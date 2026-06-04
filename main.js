@@ -1706,6 +1706,7 @@ function switchTab(tab) {
   if (tab === 'database') dbInit();
   if (tab === 'enteral')  { try { syncEnteralFromCalc(); } catch(e){} }
   if (tab === 'home')     renderHomePage();
+  if (tab === 'recipe')   { try { RC.init(); } catch(e){} }
   // Render back button topbar for this tab
   try { _updateTabTopbar(tab); } catch(e) {}
 }

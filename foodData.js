@@ -77,6 +77,22 @@ const MALAWI_FCT = [
   { id:'groundnuts', cat:'Legumes', name:'Groundnuts (nzama, roasted)', measures:[{lbl:'1 tablespoon (15g)',kcal:86,pro:3.5,cho:2.8,fat:7.3,kj:360},{lbl:'2 tablespoons (30g)',kcal:172,pro:7.0,cho:5.6,fat:14.6,kj:720},{lbl:'1 handful (35g)',kcal:201,pro:8.2,cho:6.5,fat:17,kj:842},{lbl:'¼ cup (35g)',kcal:201,pro:8.2,cho:6.5,fat:17,kj:842}] },
   { id:'peanut_butter', cat:'Legumes', name:'Peanut butter (groundnut paste)', measures:[{lbl:'1 tablespoon (16g)',kcal:94,pro:4.0,cho:3,fat:8,kj:394},{lbl:'2 tablespoons (32g)',kcal:188,pro:8.0,cho:6,fat:16,kj:788},{lbl:'1 teaspoon (5g)',kcal:29,pro:1.25,cho:1,fat:2.5,kj:123}] },
   { id:'soya', cat:'Legumes', name:'Soya bean (cooked)', measures:[{lbl:'½ cup (86g)',kcal:149,pro:14.3,cho:8.5,fat:7.7,kj:624},{lbl:'1 cup (172g)',kcal:298,pro:28.6,cho:17,fat:15.4,kj:1248}] },
+  // Topsoy — Textured Soya Protein (TSP) pieces; per-100g values read from pack label
+  // Barcode: 6009681152934 (EAN-13, GS1 prefix 600 — South Africa / distributed regionally)
+  // Source: pack label scan (Topsoy brand); values are "per 100 g dry product"
+  { id:'soya_pieces_topsoy', cat:'Legumes', name:'Soya pieces / TSP, dry (Topsoy)',
+    altNames:['textured soya protein','TSP','soya mince','soya chunks','topsoy'],
+    barcode:'6009681152934',
+    brand:'Topsoy',
+    sourceLabel:'Pack label (Topsoy, per 100 g dry)',
+    kcal:358, kj:1500, pro:42, cho:28, fat:5, fiber:16, sodium:null,
+    measures:[
+      {lbl:'1 cup dry (100 g)',    kcal:358, pro:42,   cho:28,   fat:5,    kj:1500},
+      {lbl:'½ cup dry (50 g)',     kcal:179, pro:21,   cho:14,   fat:2.5,  kj:750 },
+      {lbl:'¼ cup dry (25 g)',     kcal:90,  pro:10.5, cho:7,    fat:1.25, kj:375 },
+      {lbl:'1 tablespoon dry (15 g)', kcal:54, pro:6.3, cho:4.2, fat:0.75, kj:225 },
+    ],
+  },
   { id:'lentils', cat:'Legumes', name:'Lentils (cooked)', measures:[{lbl:'½ cup (99g)',kcal:115,pro:9.0,cho:20,fat:0.4,kj:481},{lbl:'1 cup (198g)',kcal:230,pro:18,cho:40,fat:0.8,kj:962}] },
   { id:'pigeon_peas', cat:'Legumes', name:'Pigeon peas (nandolo, cooked)', measures:[{lbl:'½ cup (85g)',kcal:102,pro:5.7,cho:18,fat:0.6,kj:427},{lbl:'1 cup (170g)',kcal:204,pro:11.4,cho:36,fat:1.2,kj:854},{lbl:'1 plate relish (~120g)',kcal:144,pro:8.0,cho:25,fat:0.8,kj:603}] },
   // VEGETABLES (MW04 — 36 items, Malawi FCT, portions from MW04 database)
@@ -402,6 +418,23 @@ const MALAWI_FCT = [
   { id:'sugar_white_fort', cat:'Condiments', name:'Sugar, white (fortified)', measures:[{lbl:'1 tsp (4g)',kcal:16,pro:0,cho:4.0,fat:0,kj:67},{lbl:'1 tbsp (12g)',kcal:48,pro:0,cho:12.0,fat:0,kj:201},{lbl:'1 cup (200g)',kcal:796,pro:0,cho:200.0,fat:0,kj:3335}] },
   { id:'sugar_brown_fort', cat:'Condiments', name:'Sugar, brown (fortified)', measures:[{lbl:'1 tsp (4g)',kcal:15,pro:0,cho:3.9,fat:0,kj:63},{lbl:'1 tbsp (12g)',kcal:46,pro:0,cho:11.6,fat:0,kj:193},{lbl:'1 cup (200g)',kcal:770,pro:0,cho:193.0,fat:0,kj:3224}] },
   { id:'sugarcane_raw', cat:'Condiments', name:'Sugarcane (raw)', measures:[{lbl:'1 cup chopped (150g)',kcal:84,pro:0.6,cho:20.3,fat:0.3,kj:352},{lbl:'1 piece (50g)',kcal:28,pro:0.2,cho:6.8,fat:0.1,kj:117}] },
+
+  // ONGA Mchuzi Mix — Spiced Tomato Flavour Seasoning Powder, 200g (Unilever East Africa, Kenya)
+  // Barcode: 6008155016918 (EAN-13, GS1 company prefix 6008155 — 600 range, SA/EA distribution)
+  // Source: pack label scan (per 100 g powder); Vitamin A 4800 µg/100g (not stored in nutrient fields)
+  { id:'onga_mchuzi_mix', cat:'Condiments', name:'ONGA Mchuzi Mix (spiced tomato seasoning powder)',
+    altNames:['onga','mchuzi mix','mchuzi powder','onga mchuzi','spiced tomato seasoning'],
+    barcode:'6008155016918',
+    brand:'ONGA',
+    sourceLabel:'Pack label (ONGA Mchuzi Mix 200g, per 100 g powder, Kenya)',
+    kcal:281, kj:1175, pro:2.5, cho:64.4, fat:0.6, fiber:null, sodium:7747,
+    measures:[
+      {lbl:'1 tbsp (~9 g)',        kcal:25, pro:0.23, cho:5.8, fat:0.05, kj:106},
+      {lbl:'1 tsp (~3 g)',         kcal:8,  pro:0.08, cho:1.9, fat:0.02, kj:35 },
+      {lbl:'½ tsp (~1.5 g)',       kcal:4,  pro:0.04, cho:1.0, fat:0.01, kj:18 },
+      {lbl:'1 serving (2.5 g)',    kcal:7,  pro:0.06, cho:1.6, fat:0.02, kj:29 },
+    ],
+  },
 
   // THERAPEUTIC FOODS (MW08 — Malawi-specific clinical nutrition products)
   // ── RUTF (Ready-to-Use Therapeutic Food) ──────────────────────────────────
