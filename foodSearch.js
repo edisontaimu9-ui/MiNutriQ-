@@ -1,7 +1,7 @@
 /**
  * foodSearch.js — Oasis Layered Food Retrieval System
  * ─────────────────────────────────────────────────────────────────────────────
- * Implements a 4-layer offline-first food search strategy:
+ * Implements a 3-layer offline-first food search strategy:
  *
  *   Layer 1   — Local DB (MALAWI_FCT + UCT Exchange + Enteral formulae)
  *               ▶ Instant, offline, always tried first.
@@ -16,10 +16,6 @@
  *               ▶ Only reached when local data is absent/incomplete.
  *               ▶ Fills missing nutritional fields; never overwrites local data.
  *
- *   Layer 3   — CalorieNinjas API
- *               ▶ Final fallback if FDC also has no result.
- *               ▶ Same merge-only rule.
- *
  * Synonym / fuzzy matching:
  *   Regional food name synonyms (nsima→ugali→sadza, etc.) are resolved before
  *   any search so queries always hit the local DB when a match exists.
@@ -30,7 +26,7 @@
  *     kcal, kj, pro, cho, fat,       // per 100 g
  *     measures[],                     // from local DB if available
  *     fiber, sodium, sugar,           // extras from APIs if not in local
- *     sourceUsed,                     // 'local' | 'FDC' | 'CaloriesNinja' | 'combined'
+ *     sourceUsed,                     // 'local' | 'FDC' | 'combined'
  *     confidenceScore,               // 0.0–1.0
  *     lastUpdated,                   // ISO string if available
  *   }
@@ -47,7 +43,6 @@
   // ── PRIVATE API KEYS (not logged) ─────────────────────────────────────────
   const _KEYS = Object.freeze({
     fdc:    'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
-    ninja:  'UMgCDSESSZTusrCoZpXAyA==OzInYQI4RQ4pqYoS',
   });
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
@@ -361,46 +356,6 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 3 — CALORIENINJAS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  async function _searchNinja(query) {
-    try {
-      const res = await fetch(
-        `https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`,
-        {
-          headers: { 'X-Api-Key': _KEYS.ninja },
-          signal: AbortSignal.timeout(6000),
-        }
-      );
-      if (!res.ok) return null;
-      const data = await res.json();
-      const item = data?.items?.[0];
-      if (!item) return null;
-
-      return {
-        id:              'ninja_' + _norm(item.name).replace(/\s/g, '_'),
-        name:            item.name,
-        cat:             'Global',
-        kcal:            item.calories       ?? null,
-        kj:              item.calories != null ? +(item.calories * 4.184).toFixed(0) : null,
-        pro:             item.protein_g      ?? null,
-        cho:             item.carbohydrates_total_g ?? null,
-        fat:             item.fat_total_g    ?? null,
-        fiber:           item.fiber_g        ?? null,
-        sugar:           item.sugar_g        ?? null,
-        sodium:          item.sodium_mg != null ? +(item.sodium_mg / 1000).toFixed(3) : null,
-        measures:        null,
-        sourceUsed:      'CaloriesNinja',
-        confidenceScore: 0.45,
-        lastUpdated:     null,
-      };
-    } catch (_e) {
-      return null;
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
   // LOCAL BARCODE REGISTRY
   // Hand-curated map of EAN-13 barcodes → MALAWI_FCT food IDs.
   // Covers Malawi-market packaged products whose barcodes are unlikely to be
@@ -505,101 +460,6 @@
     }
 
     return null;
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // BARCODE LAYER — GS1 DIGITAL LINK
-  // Called only when OFF/local data is absent or missing product identity
-  // (name, brand, category). NOT a nutrition source — metadata only.
-  //
-  // Normalised output shape:
-  //   { barcode, gtin, name, brand, category, image, source:'GS1',
-  //     gs1Verified: true }
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Query the GS1 Digital Link resolver for product identity metadata.
-   * Returns null on any failure — never throws.
-   * @param  {string} barcode  Raw barcode string (EAN-13, UPC-A, GTIN-14, …)
-   * @returns {Promise<object|null>}
-   */
-  async function _searchGS1(barcode) {
-    if (!barcode) return null;
-
-    // Normalise to GTIN-14 (zero-pad to 14 digits)
-    const digits = barcode.replace(/\D/g, '');
-    if (!digits.length) return null;
-    const gtin14 = digits.padStart(14, '0');
-
-    // GS1 Digital Link — application identifier 01 = GTIN
-    const url = `https://id.gs1.org/01/${gtin14}`;
-
-    try {
-      const ctrl = new AbortController();
-      const tid  = setTimeout(() => ctrl.abort(), 8000);
-
-      const res = await fetch(url, {
-        signal:  ctrl.signal,
-        headers: {
-          'Accept': 'application/ld+json, application/json;q=0.9, */*;q=0.8',
-        },
-        redirect: 'follow',
-      }).finally(() => clearTimeout(tid));
-
-      if (!res.ok) return null;
-
-      // GS1 resolver may return JSON-LD, plain JSON, or redirect to brand page
-      const ct   = res.headers.get('content-type') || '';
-      const isJson = ct.includes('json') || ct.includes('ld+json');
-      if (!isJson) return null;
-
-      let d;
-      try { d = await res.json(); } catch (_) { return null; }
-
-      // ── Extract fields from JSON-LD / schema.org Product shape ───────────
-      // GS1 resolvers typically return schema.org Product in @graph or root.
-      const graph  = d['@graph'] ?? (Array.isArray(d) ? d : null);
-      const node   = graph
-        ? graph.find(n => (n['@type'] === 'Product' || (Array.isArray(n['@type']) && n['@type'].includes('Product'))))
-        : d;
-
-      if (!node) return null;
-
-      // Name
-      const name = (node.name || node['schema:name'] || '').toString().trim();
-      if (!name) return null;  // no product identity → useless
-
-      // Brand
-      const brandRaw = node.brand ?? node['schema:brand'];
-      const brand    = typeof brandRaw === 'string'
-        ? brandRaw.trim()
-        : (brandRaw?.name ?? brandRaw?.['schema:name'] ?? '').toString().trim();
-
-      // Category
-      const catRaw  = node.category ?? node['schema:category'];
-      const category = typeof catRaw === 'string'
-        ? catRaw.replace(/^[a-z]{2}:/i, '').trim()
-        : '';
-
-      // Image
-      const imgRaw  = node.image ?? node['schema:image'];
-      const image   = typeof imgRaw === 'string'
-        ? imgRaw
-        : (imgRaw?.url ?? imgRaw?.['@id'] ?? '').toString();
-
-      return {
-        barcode,
-        gtin:       gtin14,
-        name,
-        brand,
-        category,
-        image:      image || null,
-        source:     'GS1',
-        gs1Verified: true,
-      };
-    } catch (_e) {
-      return null;
-    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -708,17 +568,6 @@
       best = _merge(best, fdcResult);
     }
 
-    // If still missing macros → Layer 3 — CalorieNinjas
-    const stillMissing = REQUIRED_FIELDS.some(f => best?.[f] == null);
-    if (stillMissing || (!best && !fdcResult)) {
-      const ninjaResult = await _searchNinja(query);
-      if (!best) {
-        best = ninjaResult;
-      } else if (ninjaResult) {
-        best = _merge(best, ninjaResult);
-      }
-    }
-
     if (best) delete best._raw;
     _cache.set(cacheKey, best);
     return best;
@@ -784,24 +633,20 @@
 
   // ══════════════════════════════════════════════════════════════════════════
   // PUBLIC BARCODE SEARCH
-  // Offline-first: _LOCAL_BARCODE_DB → full nutrition; GS1 Digital Link →
-  // metadata only (name/brand/category). Call this from the scanner UI.
+  // Offline-only: _LOCAL_BARCODE_DB → full nutrition. Call this from the
+  // scanner UI. Returns null if the local registry has no match.
   // ══════════════════════════════════════════════════════════════════════════
 
   /**
    * Resolve a scanned barcode to a food object.
    *   Layer A — local registry → MALAWI_FCT: instant, offline, full nutrition.
-   *   Layer B — GS1 Digital Link: metadata only (no nutrition values).
-   * Returns null if both layers fail.
+   * Returns null if the local layer has no match.
    * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
    * @returns {Promise<object|null>}
    */
   async function searchBarcode(barcode) {
     if (!barcode) return null;
-    const local = _searchLocalBarcode(barcode);
-    if (local) return local;
-    const gs1 = await _searchGS1(barcode);
-    return gs1 ?? null;
+    return _searchLocalBarcode(barcode) ?? null;
   }
 
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
@@ -814,7 +659,6 @@
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
     _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
     _fdcSearch:         _searchFDC,         // public FDC-only search for explicit import UI
-    _gs1Search:         _searchGS1,         // GS1 Digital Link barcode identity lookup
     _regionalSearch:    _searchRegional,    // direct regional FCT search
     filterByCountry:    filterByCountry,    // filter results by country code(s)
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary

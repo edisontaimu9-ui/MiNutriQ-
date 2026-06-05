@@ -7488,3 +7488,847 @@ const BLEND_FOODS = [
   // Margarine: 35/5g=7.0/g; fat 4/5=0.8/g
   { id:'margarine',    name:'Margarine / butter',               unit:'g',    kcal:7.000, pro:0.0008, fat:0.8000, cho:0.0008 },
 ];
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PACKAGED FOODS — Firestore-backed, offline-first local DB
+// ══════════════════════════════════════════════════════════════════════════════
+/**
+ * PackagedFoodsDB
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Manages a `packaged_foods` Firestore collection synced into IndexedDB for
+ * offline-first access.  Integrates cleanly with the existing NTFoodSearch
+ * layered pipeline as "Layer 0" (highest priority for packaged/branded foods).
+ *
+ * Architecture
+ * ┌──────────────────────┐
+ * │  Firestore           │  packaged_foods collection (source of truth)
+ * │  packaged_foods      │
+ * └──────────┬───────────┘
+ *            │  incremental sync (updatedAt-based)
+ * ┌──────────▼───────────┐
+ * │  IndexedDB           │  oasis_packaged_foods_v1 store  (offline cache)
+ * │  OasisPackagedFoods  │  keyed by document id
+ * └──────────┬───────────┘
+ *            │  instant <100 ms
+ * ┌──────────▼───────────┐
+ * │  In-Memory Index     │  tokenIndex + barcodeMap built at load/sync
+ * └──────────┬───────────┘
+ *            │
+ * ┌──────────▼───────────┐
+ * │  PackagedFoodsDB API │  search(), searchBarcode(), add(), sync()
+ * └──────────────────────┘
+ *
+ * Firestore document shape
+ * {
+ *   id              : string        // auto or barcode-based doc ID
+ *   productName     : string
+ *   brand           : string
+ *   barcode         : string        // EAN-13 / UPC-A (unique)
+ *   nutrition: {
+ *     energy_kcal   : number,
+ *     protein_g     : number,
+ *     fat_g         : number,
+ *     carbs_g       : number,
+ *     sugar_g       : number,
+ *     fiber_g       : number,
+ *     sodium_mg     : number,
+ *   },
+ *   servingSize     : number        // grams or ml
+ *   createdAt       : Timestamp | string
+ *   updatedAt       : Timestamp | string
+ * }
+ *
+ * Author : Edison Taimu / Oasis
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+;(function (global) {
+  'use strict';
+
+  // ── CONSTANTS ────────────────────────────────────────────────────────────────
+  const COLLECTION      = 'packaged_foods';
+  const IDB_DB_NAME     = 'OasisPackagedFoods';
+  const IDB_STORE       = 'foods';
+  const IDB_META_STORE  = 'meta';
+  const IDB_VERSION     = 2;
+  const SYNC_DEBOUNCE   = 3000;          // ms to wait after coming online
+  const MAX_RESULTS     = 20;
+  const FUZZY_THRESHOLD = 0.35;
+
+  // ── INTERNAL STATE ───────────────────────────────────────────────────────────
+  let _idb          = null;              // IDBDatabase handle
+  let _tokenIndex   = new Map();         // token → Set<docId>
+  let _barcodeMap   = new Map();         // barcode → docId
+  let _docMap       = new Map();         // docId  → document
+  let _ready        = false;
+  let _syncTimer    = null;
+  let _unsubscribe  = null;              // Firestore onSnapshot detach fn
+  let _onSyncCallback = null;            // called after every live sync batch
+
+  // Resolve/reject queue for callers that arrive before init completes
+  let _readyPromise = null;
+  let _readyResolve = null;
+
+  _readyPromise = new Promise(res => { _readyResolve = res; });
+
+  // ── UTILITY ──────────────────────────────────────────────────────────────────
+
+  function _norm(str) {
+    return (str || '').toLowerCase().trim()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function _tokenize(str) {
+    return _norm(str).split(' ').filter(t => t.length >= 2);
+  }
+
+  /** Levenshtein distance (capped early for performance) */
+  function _lev(a, b) {
+    if (Math.abs(a.length - b.length) > 3) return 99;
+    const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+      Array.from({ length: b.length + 1 }, (__, j) => (i === 0 ? j : j === 0 ? i : 0))
+    );
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1]
+          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      }
+    }
+    return dp[a.length][b.length];
+  }
+
+  /** Token-based fuzzy score (0–1) with Levenshtein for short tokens */
+  function _fuzzyScore(query, target) {
+    const qTokens = [...new Set(_tokenize(query))];
+    const tNorm   = _norm(target);
+    if (!qTokens.length) return 0;
+
+    let score = 0;
+    let hits  = 0;
+    const totalLen = qTokens.reduce((s, t) => s + t.length, 0) || 1;
+
+    for (const tok of qTokens) {
+      if (tNorm.includes(tok)) {
+        score += tok.length / totalLen;
+        hits++;
+      } else {
+        const tToks  = tNorm.split(' ');
+        const minDist = Math.min(...tToks.map(tt => _lev(tok, tt)));
+        if (minDist <= 2) {
+          score += (1 - minDist / (tok.length + 1)) * (tok.length / totalLen) * 0.6;
+        }
+      }
+    }
+
+    // Boost for exact phrase match
+    if (tNorm.includes(_norm(query))) score = Math.min(score + 0.3, 1);
+
+    return Math.min(score, 1);
+  }
+
+  /** Convert Firestore Timestamp / ISO string → JS Date */
+  function _toDate(v) {
+    if (!v) return null;
+    if (typeof v === 'string') return new Date(v);
+    if (v && typeof v.toDate === 'function') return v.toDate();          // Firestore Timestamp
+    if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+    return null;
+  }
+
+  /** Serialise a Firestore doc for IDB storage (plain JSON) */
+  function _serialise(doc) {
+    const out = { ...doc };
+    if (out.createdAt) out.createdAt = _toDate(out.createdAt)?.toISOString() ?? null;
+    if (out.updatedAt) out.updatedAt = _toDate(out.updatedAt)?.toISOString() ?? null;
+    return out;
+  }
+
+  /** Normalise a stored doc into the unified food output shape.
+   *  Supports both admin schema  (name / per100g: { kcal, kj, pro, cho, fat, fiber, sugar, sodium })
+   *  and legacy schema           (productName / nutrition: { energy_kcal, protein_g, … }).
+   */
+  function _toFoodShape(doc) {
+    // ── field-name bridge ──────────────────────────────────────────────────────
+    const n    = doc.per100g || doc.nutrition || {};
+    const kcal = n.kcal   ?? n.energy_kcal ?? null;
+    const kj   = n.kj     ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null);
+    return {
+      id:              doc.id,
+      name:            doc.name        || doc.productName || null,
+      brand:           doc.brand       || null,
+      barcode:         doc.barcode     || null,
+      cat:             doc.category    || 'Packaged',
+      country:         doc.country     || null,
+      verified:        doc.verified    ?? false,
+      image:           doc.image       || null,
+      kcal,
+      kj,
+      pro:             n.pro     ?? n.protein_g  ?? null,
+      cho:             n.cho     ?? n.carbs_g    ?? null,
+      fat:             n.fat     ?? n.fat_g      ?? null,
+      sugar:           n.sugar   ?? n.sugar_g    ?? null,
+      fiber:           n.fiber   ?? n.fiber_g    ?? null,
+      sodium:          n.sodium  ?? n.sodium_mg  ?? null,
+      servingSize:     doc.servingSize  ?? null,
+      servingLabel:    doc.servingLabel || null,
+      sourceUsed:      'packaged',
+      dbSource:        'Oasis Packaged Foods',
+      confidenceScore: 1.0,
+      lastUpdated:     doc.updatedAt   ?? null,
+      _raw:            doc,
+    };
+  }
+
+  // ── INDEXEDDB HELPERS ────────────────────────────────────────────────────────
+
+  function _openIDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_DB_NAME, IDB_VERSION);
+
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+
+        // Main food store — keyed by document id
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          const store = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+          store.createIndex('barcode',   'barcode', { unique: false });
+          store.createIndex('name',      'name',    { unique: false });
+          store.createIndex('updatedAt', 'updatedAt', { unique: false });
+        }
+
+        // Meta store — holds sync cursors
+        if (!db.objectStoreNames.contains(IDB_META_STORE)) {
+          db.createObjectStore(IDB_META_STORE, { keyPath: 'key' });
+        }
+      };
+
+      req.onsuccess  = (e) => resolve(e.target.result);
+      req.onerror    = (e) => reject(e.target.error);
+    });
+  }
+
+  function _idbGetAll() {
+    return new Promise((resolve, reject) => {
+      const tx  = _idb.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror   = () => reject(req.error);
+    });
+  }
+
+  function _idbPutBatch(docs) {
+    return new Promise((resolve, reject) => {
+      const tx    = _idb.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      docs.forEach(d => store.put(d));
+      tx.oncomplete = () => resolve(docs.length);
+      tx.onerror    = (e) => reject(e.target.error);
+    });
+  }
+
+  function _idbDelete(id) {
+    return new Promise((resolve, reject) => {
+      const tx  = _idb.transaction(IDB_STORE, 'readwrite');
+      const req = tx.objectStore(IDB_STORE).delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  }
+
+  function _idbGetMeta(key) {
+    return new Promise((resolve, reject) => {
+      const tx  = _idb.transaction(IDB_META_STORE, 'readonly');
+      const req = tx.objectStore(IDB_META_STORE).get(key);
+      req.onsuccess = () => resolve(req.result?.value ?? null);
+      req.onerror   = () => reject(req.error);
+    });
+  }
+
+  function _idbSetMeta(key, value) {
+    return new Promise((resolve, reject) => {
+      const tx  = _idb.transaction(IDB_META_STORE, 'readwrite');
+      const req = tx.objectStore(IDB_META_STORE).put({ key, value });
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  }
+
+  // ── IN-MEMORY INDEX BUILDER ──────────────────────────────────────────────────
+
+  function _buildIndex(docs) {
+    _tokenIndex.clear();
+    _barcodeMap.clear();
+    _docMap.clear();
+
+    for (const doc of docs) {
+      _docMap.set(doc.id, doc);
+
+      // Barcode index (exact)
+      if (doc.barcode) _barcodeMap.set(String(doc.barcode).trim(), doc.id);
+
+      // Token inverted index for name (admin schema) or productName (legacy)
+      const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
+      for (const field of fields) {
+        for (const token of _tokenize(field)) {
+          if (!_tokenIndex.has(token)) _tokenIndex.set(token, new Set());
+          _tokenIndex.get(token).add(doc.id);
+        }
+      }
+    }
+  }
+
+  /** Incremental index update for a single doc (add/update) */
+  function _indexDoc(doc) {
+    _docMap.set(doc.id, doc);
+    if (doc.barcode) _barcodeMap.set(String(doc.barcode).trim(), doc.id);
+    const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
+    for (const field of fields) {
+      for (const token of _tokenize(field)) {
+        if (!_tokenIndex.has(token)) _tokenIndex.set(token, new Set());
+        _tokenIndex.get(token).add(doc.id);
+      }
+    }
+  }
+
+  /** Remove a doc from the in-memory index */
+  function _unindexDoc(id) {
+    const doc = _docMap.get(id);
+    if (!doc) return;
+    _docMap.delete(id);
+    if (doc.barcode) _barcodeMap.delete(String(doc.barcode).trim());
+    const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
+    for (const field of fields) {
+      for (const token of _tokenize(field)) {
+        const set = _tokenIndex.get(token);
+        if (set) { set.delete(id); if (!set.size) _tokenIndex.delete(token); }
+      }
+    }
+  }
+
+  // ── FIRESTORE SYNC ───────────────────────────────────────────────────────────
+
+  function _getFirestore() {
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+      return firebase.firestore();
+    }
+    return null;
+  }
+
+  // ── FIRESTORE REAL-TIME LISTENER ─────────────────────────────────────────────
+
+  /**
+   * Attach an onSnapshot listener to `packaged_foods`.
+   * - First snapshot = full initial load (all docs arrive as 'added').
+   * - Subsequent snapshots = only changed docs (add / modify / remove).
+   * - Updates IDB + in-memory index and fires _onSyncCallback so the UI re-renders.
+   * Returns true if the listener was successfully attached.
+   */
+  function _listenFirestore() {
+    const db = _getFirestore();
+    if (!db) return false;
+
+    // Detach any stale listener before creating a new one
+    if (_unsubscribe) { try { _unsubscribe(); } catch (_) {} _unsubscribe = null; }
+
+    try {
+      _unsubscribe = db.collection(COLLECTION)
+        .orderBy('updatedAt', 'asc')
+        .onSnapshot(
+          { includeMetadataChanges: false },
+          snap => {
+            if (!snap) return;
+            const toStore = [];
+
+            snap.docChanges().forEach(change => {
+              if (change.type === 'removed') {
+                _unindexDoc(change.doc.id);
+                _idbDelete(change.doc.id).catch(() => {});
+              } else {
+                const doc = _serialise({ ...change.doc.data(), id: change.doc.id });
+                toStore.push(doc);
+                _docMap.set(doc.id, doc);
+                _indexDoc(doc);
+              }
+            });
+
+            if (toStore.length) _idbPutBatch(toStore).catch(() => {});
+            _idbSetMeta('lastSync', new Date().toISOString()).catch(() => {});
+
+            if (typeof _onSyncCallback === 'function') {
+              try { _onSyncCallback(_docMap.size); } catch (_) {}
+            }
+
+            console.info(
+              `[PackagedFoodsDB] onSnapshot — ${snap.docChanges().length} change(s), ` +
+              `total in memory: ${_docMap.size}`
+            );
+          },
+          err => {
+            console.error('[PackagedFoodsDB] onSnapshot error:', err);
+            _unsubscribe = null;
+            // Reconnect after 5 s
+            clearTimeout(_syncTimer);
+            _syncTimer = setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 5000);
+          }
+        );
+
+      console.info('[PackagedFoodsDB] Real-time listener attached to packaged_foods');
+      return true;
+
+    } catch (err) {
+      console.error('[PackagedFoodsDB] Failed to attach listener:', err);
+      return false;
+    }
+  }
+
+  /** One-shot incremental fetch — kept for the public sync() API / forced refresh */
+  async function _syncFromFirestore() {
+    const db = _getFirestore();
+    if (!db) {
+      console.warn('[PackagedFoodsDB] Firestore not available — skipping sync');
+      return 0;
+    }
+    try {
+      const lastSync = await _idbGetMeta('lastSync');
+      let   colRef   = db.collection(COLLECTION);
+      if (lastSync) colRef = colRef.where('updatedAt', '>', new Date(lastSync));
+      const snap = await colRef.orderBy('updatedAt', 'asc').get();
+      if (snap.empty && lastSync) return 0;
+      const now   = new Date().toISOString();
+      const batch = [];
+      snap.forEach(docSnap => {
+        const doc = _serialise({ ...docSnap.data(), id: docSnap.id });
+        batch.push(doc); _indexDoc(doc);
+      });
+      if (batch.length) {
+        await _idbPutBatch(batch);
+        for (const doc of batch) _docMap.set(doc.id, doc);
+      }
+      await _idbSetMeta('lastSync', now);
+      if (typeof _onSyncCallback === 'function') {
+        try { _onSyncCallback(_docMap.size); } catch (_) {}
+      }
+      console.info(`[PackagedFoodsDB] One-shot sync — ${batch.length} doc(s)`);
+      return batch.length;
+    } catch (err) {
+      console.error('[PackagedFoodsDB] Firestore sync error:', err);
+      return 0;
+    }
+  }
+
+  /** Reattach listener when device comes back online */
+  function _scheduleSyncIfOnline() {
+    if (!navigator.onLine) return;
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, SYNC_DEBOUNCE);
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+
+  async function _init() {
+    try {
+      _idb = await _openIDB();
+
+      // Serve cached data immediately so the UI isn't blank
+      const stored = await _idbGetAll();
+      _buildIndex(stored);
+      _ready = true;
+      _readyResolve(true);
+
+      console.info(`[PackagedFoodsDB] Loaded ${stored.length} doc(s) from IndexedDB`);
+
+      // Try to attach real-time listener now.
+      // Usually fails here because firebase.initializeApp() in main.js hasn't run yet —
+      // main.js MUST call PackagedFoodsDB.listen() after Firebase init.
+      // The retry timers below are a safety net for any other timing edge-cases.
+      if (!_listenFirestore()) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded',
+            () => { if (!_unsubscribe) _listenFirestore(); }, { once: true });
+        }
+        setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 3000);
+        setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 8000);
+      }
+
+      window.addEventListener('online',  _scheduleSyncIfOnline);
+      window.addEventListener('offline', () => clearTimeout(_syncTimer));
+
+    } catch (err) {
+      console.error('[PackagedFoodsDB] Init error:', err);
+      _readyResolve(false);
+    }
+  }
+
+
+
+  // ── SEARCH ENGINE ────────────────────────────────────────────────────────────
+
+  /**
+   * Instant local search across product name and brand.
+   * Uses the inverted token index for a candidate set, then scores with fuzzy matching.
+   *
+   * @param {string} query          - Free-text query (name or brand)
+   * @param {object} [opts]
+   * @param {number} [opts.limit]   - Max results (default 10)
+   * @param {number} [opts.threshold] - Min score (default FUZZY_THRESHOLD)
+   * @returns {Array}               - Sorted array of food objects (best first)
+   */
+  function _searchByText(query, { limit = 10, threshold = FUZZY_THRESHOLD } = {}) {
+    if (!query || !query.trim()) return [];
+
+    const qNorm   = _norm(query);
+    const qTokens = _tokenize(query);
+
+    // Candidate set: union of IDs matching any query token in the inverted index
+    const candidates = new Set();
+
+    // (a) token-index lookup — O(tokens × bucket_size)
+    for (const tok of qTokens) {
+      // Exact token hit
+      const exact = _tokenIndex.get(tok);
+      if (exact) exact.forEach(id => candidates.add(id));
+
+      // Partial token prefix match (handles truncated queries like "maggi" → "maggis")
+      for (const [idxTok, idSet] of _tokenIndex) {
+        if (idxTok.startsWith(tok) || tok.startsWith(idxTok)) {
+          idSet.forEach(id => candidates.add(id));
+        }
+      }
+    }
+
+    // (b) If candidate set is tiny, broaden to all docs (handles heavy misspellings)
+    const pool = candidates.size >= 1 ? candidates : new Set(_docMap.keys());
+
+    // Score and filter
+    const scored = [];
+    for (const id of pool) {
+      const doc   = _docMap.get(id);
+      if (!doc) continue;
+
+      const nameScore  = _fuzzyScore(query, doc.name || doc.productName || '');
+      const brandScore = _fuzzyScore(query, doc.brand || '') * 0.7; // brand weighted lower
+      const score      = Math.max(nameScore, brandScore);
+
+      if (score >= threshold) scored.push({ doc, score });
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, limit).map(({ doc, score }) => {
+      const out = _toFoodShape(doc);
+      out.confidenceScore = +score.toFixed(2);
+      return out;
+    });
+  }
+
+  /**
+   * Barcode lookup — exact match first, then partial (prefix/suffix).
+   * @param {string} barcode
+   * @returns {object|null}
+   */
+  function _searchByBarcode(barcode) {
+    if (!barcode) return null;
+    const bc = String(barcode).trim();
+
+    // Exact
+    const exactId = _barcodeMap.get(bc);
+    if (exactId) return _toFoodShape(_docMap.get(exactId));
+
+    // Partial fallback (handles leading zeros or check digit mismatches)
+    for (const [storedBc, id] of _barcodeMap) {
+      if (storedBc.includes(bc) || bc.includes(storedBc)) {
+        const doc = _docMap.get(id);
+        if (doc) {
+          const out = _toFoodShape(doc);
+          out.confidenceScore = 0.85;   // slightly lower confidence for partial match
+          return out;
+        }
+      }
+    }
+    return null;
+  }
+
+  // ── CRUD — WRITE OPERATIONS ──────────────────────────────────────────────────
+
+  /**
+   * Add or update a packaged food document.
+   * Writes to Firestore (if online) and immediately updates local IDB + index.
+   *
+   * @param {object} data   - Packaged food data. Accepts admin schema:
+   *                          { name, brand, barcode, category, country, per100g:{kcal,kj,pro,cho,fat,fiber,sugar,sodium},
+   *                            servingSize, servingLabel, image, verified }
+   *                          OR legacy schema: { productName, nutrition:{energy_kcal,protein_g,…}, … }
+   * @param {string} [id]   - Optional document ID; auto-generated if omitted.
+   * @returns {Promise<string>} The document ID
+   */
+  async function addFood(data, id) {
+    // Accept both `name` (admin schema) and `productName` (legacy)
+    const productName = data.name || data.productName;
+    if (!productName) throw new Error('[PackagedFoodsDB] name/productName is required');
+
+    const db      = _getFirestore();
+    const now     = new Date().toISOString();
+
+    // Read macros — accept both per100g flat fields and legacy nutrition object
+    const src = data.per100g || data.nutrition || {};
+    const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? null;
+    const kjVal   = data.kj   ?? src.kj   ?? (kcalVal != null ? +(kcalVal * 4.184).toFixed(0) : null);
+
+    // Write using admin schema (source of truth for the shared collection)
+    const payload = {
+      name:         productName,
+      nameLower:    productName.toLowerCase(),
+      brand:        data.brand        || '',
+      barcode:      (data.barcode || '').replace(/\D/g, '') || '',
+      category:     data.category     || 'Packaged',
+      country:      data.country      || '',
+      per100g: {
+        kcal:   kcalVal,
+        kj:     kjVal,
+        pro:    data.pro   ?? src.pro   ?? src.protein_g  ?? null,
+        cho:    data.cho   ?? src.cho   ?? src.carbs_g    ?? null,
+        fat:    data.fat   ?? src.fat   ?? src.fat_g      ?? null,
+        fiber:  data.fiber ?? src.fiber ?? src.fiber_g    ?? null,
+        sugar:  data.sugar ?? src.sugar ?? src.sugar_g    ?? null,
+        sodium: data.sodium?? src.sodium?? src.sodium_mg  ?? null,
+      },
+      servingSize:  data.servingSize  ?? 100,
+      servingLabel: data.servingLabel || '',
+      image:        data.image        || '',
+      verified:     data.verified     ?? false,
+      createdAt:    data.createdAt    || now,
+      updatedAt:    now,
+    };
+
+    let docId = id;
+
+    if (db && navigator.onLine) {
+      try {
+        const colRef = db.collection(COLLECTION);
+        if (docId) {
+          // Upsert with explicit ID
+          const docRef = colRef.doc(docId);
+          const snap   = await docRef.get();
+          if (!snap.exists) payload.createdAt = now;
+          await docRef.set(payload, { merge: true });
+        } else {
+          const ref = await colRef.add(payload);
+          docId     = ref.id;
+        }
+      } catch (err) {
+        console.warn('[PackagedFoodsDB] Firestore write failed (will save locally):', err);
+        if (!docId) docId = `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      }
+    } else {
+      // Offline — generate a temporary local ID; will be reconciled on next sync
+      if (!docId) docId = `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    }
+
+    const doc = { ...payload, id: docId };
+    await _idbPutBatch([doc]);
+    _indexDoc(doc);
+
+    return docId;
+  }
+
+  /**
+   * Delete a packaged food document from Firestore + local IDB + index.
+   * @param {string} id  Document ID
+   */
+  async function deleteFood(id) {
+    const db = _getFirestore();
+    if (db && navigator.onLine) {
+      try { await db.collection(COLLECTION).doc(id).delete(); }
+      catch (err) { console.warn('[PackagedFoodsDB] Firestore delete failed:', err); }
+    }
+    await _idbDelete(id);
+    _unindexDoc(id);
+  }
+
+  // ── PAGINATED LISTING ────────────────────────────────────────────────────────
+
+  /**
+   * Return a page of all packaged foods (for browsing/admin).
+   * @param {object} [opts]
+   * @param {number} [opts.page=0]   - Zero-based page number
+   * @param {number} [opts.size=20]  - Items per page
+   * @returns {{ items: Array, total: number, page: number, pages: number }}
+   */
+  function listFoods({ page = 0, size = MAX_RESULTS } = {}) {
+    const all   = [..._docMap.values()];
+    const total = all.length;
+    const start = page * size;
+    const items = all.slice(start, start + size).map(_toFoodShape);
+    return {
+      items,
+      total,
+      page,
+      pages: Math.ceil(total / size),
+    };
+  }
+
+  // ── PUBLIC API ───────────────────────────────────────────────────────────────
+
+  const PackagedFoodsDB = {
+    /**
+     * Ensure the DB is ready before calling other methods.
+     * Resolves true on success, false if init encountered a fatal error.
+     * @returns {Promise<boolean>}
+     */
+    ready() {
+      return _readyPromise;
+    },
+
+    /**
+     * Search packaged foods by product name or brand (fuzzy, case-insensitive).
+     * Search is instant — purely in-memory, no Firestore queries at search time.
+     *
+     * @param {string} query
+     * @param {object} [opts]
+     * @param {number} [opts.limit=10]
+     * @param {number} [opts.threshold]  - Minimum fuzzy score (0–1, default 0.35)
+     * @returns {Array}  Sorted by relevance, shape compatible with NTFoodSearch results
+     */
+    search(query, opts = {}) {
+      return _searchByText(query, opts);
+    },
+
+    /**
+     * Look up a packaged food by barcode (EAN-13 / UPC-A).
+     * Exact match preferred; falls back to partial string match.
+     *
+     * @param {string} barcode
+     * @returns {object|null}  Food object or null
+     */
+    searchBarcode(barcode) {
+      return _searchByBarcode(barcode);
+    },
+
+    /**
+     * Add or update a packaged food.  Handles Firestore + IDB + index atomically.
+     * Writes using the admin schema so both apps share the same document shape.
+     *
+     * @param {object} data    - Admin schema: { name, brand, barcode, category, country,
+     *                           per100g:{kcal,kj,pro,cho,fat,fiber,sugar,sodium},
+     *                           servingSize, servingLabel, image, verified }
+     *                           Also accepts legacy: { productName, nutrition:{…} }
+     * @param {string} [id]    - Optional doc ID
+     * @returns {Promise<string>} Assigned document ID
+     */
+    add(data, id) {
+      return addFood(data, id);
+    },
+
+    /**
+     * Delete a packaged food by document ID.
+     * @param {string} id
+     * @returns {Promise<void>}
+     */
+    delete(id) {
+      return deleteFood(id);
+    },
+
+    /**
+     * Attach (or reattach) the real-time Firestore listener.
+     * Call this from main.js immediately after firebase.initializeApp().
+     * @returns {boolean} true if listener attached successfully
+     */
+    listen() {
+      return _listenFirestore();
+    },
+
+    /**
+     * Register a callback that fires after every live sync batch.
+     * Use this to trigger UI re-renders without polling.
+     * @param {function(count: number): void} cb
+     */
+    onSync(cb) {
+      _onSyncCallback = typeof cb === 'function' ? cb : null;
+    },
+
+    /**
+     * Force an immediate incremental one-shot fetch from Firestore.
+     * Under normal operation the real-time listener handles all updates.
+     * Only needed if the listener is unavailable (e.g. blocked by network policy).
+     * @returns {Promise<number>} Number of documents synced
+     */
+    sync() {
+      return _syncFromFirestore();
+    },
+
+    /**
+     * Browse all packaged foods with pagination.
+     * @param {{ page?: number, size?: number }} [opts]
+     * @returns {{ items, total, page, pages }}
+     */
+    list(opts = {}) {
+      return listFoods(opts);
+    },
+
+    /**
+     * Total count of locally cached packaged foods.
+     * @returns {number}
+     */
+    get count() {
+      return _docMap.size;
+    },
+
+    /**
+     * True once IndexedDB has loaded and the in-memory index is built.
+     * @returns {boolean}
+     */
+    get isReady() {
+      return _ready;
+    },
+
+    // ── Dev / debug helpers ────────────────────────────────────────────────
+    _tokenIndex,
+    _barcodeMap,
+    _docMap,
+  };
+
+  // ── INTEGRATE WITH NTFoodSearch PIPELINE ────────────────────────────────────
+  // When NTFoodSearch.searchBarcode is called, check PackagedFoodsDB first.
+  // This hook runs after NTFoodSearch loads (either already loaded or deferred).
+  function _patchFoodSearch() {
+    if (typeof global.NTFoodSearch === 'undefined') return false;
+
+    const orig = global.NTFoodSearch.searchBarcode;
+    global.NTFoodSearch.searchBarcode = async function (barcode) {
+      // Layer 0 — Packaged Foods DB (highest priority)
+      if (_ready) {
+        const local = PackagedFoodsDB.searchBarcode(barcode);
+        if (local) return local;
+      }
+      // Fall through to original layers (local barcode registry → GS1)
+      return orig ? orig(barcode) : null;
+    };
+
+    // Also expose the packaged search alongside searchLocal
+    const origLocal = global.NTFoodSearch.searchLocal;
+    global.NTFoodSearch.searchLocal = function (query, limit = 10) {
+      const packaged = _ready ? PackagedFoodsDB.search(query, { limit: 5 }) : [];
+      const rest     = origLocal ? origLocal(query, limit) : [];
+      // Merge: packaged foods first, then deduplicate by id
+      const seen  = new Set(packaged.map(f => f.id));
+      const merged = [...packaged, ...rest.filter(f => !seen.has(f.id))];
+      return merged.slice(0, limit);
+    };
+
+    return true;
+  }
+
+  // Attempt to patch immediately; if NTFoodSearch isn't loaded yet, retry once DOM fires
+  if (!_patchFoodSearch()) {
+    document.addEventListener('DOMContentLoaded', _patchFoodSearch);
+  }
+
+  // ── BOOT ─────────────────────────────────────────────────────────────────────
+  _init().catch(err => console.error('[PackagedFoodsDB] Fatal init error:', err));
+
+  // Expose globally
+  global.PackagedFoodsDB = PackagedFoodsDB;
+
+})(typeof window !== 'undefined' ? window : this);

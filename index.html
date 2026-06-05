@@ -2238,19 +2238,36 @@ var photoCropper = (function () {
 
         <!-- Not-found bar -->
         <div id="bc-notfound-bar" style="display:none;padding:0 16px 14px">
-          <div style="font-family:var(--mono);font-size:9.5px;margin-bottom:7px;padding:8px 10px;
+          <div style="font-family:var(--mono);font-size:9.5px;margin-bottom:8px;padding:8px 10px;
                       border-radius:8px;background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.2);
                       color:rgba(251,146,60,.85)">
-            &#9888; Product not found in Open Food Facts or GS1 registry.
+            &#9888; Product not found in local DB, Open Food Facts or GS1 registry.
           </div>
+          <!-- Search by name -->
           <button onclick="hpBarcodeManualFallback()"
-            style="width:100%;font-family:var(--mono);font-size:10px;padding:8px;
+            style="width:100%;font-family:var(--mono);font-size:10px;padding:8px;margin-bottom:7px;
                    border-radius:8px;background:rgba(29,233,212,.08);
                    border:1px solid rgba(29,233,212,.25);color:var(--teal);
                    cursor:pointer;transition:all .15s"
             onmouseover="this.style.background='rgba(29,233,212,.15)'"
             onmouseout="this.style.background='rgba(29,233,212,.08)'">
-            Search manually instead &#x2192;
+            Search by name instead &#x2192;
+          </button>
+          <!-- Add to Packaged Foods DB -->
+          <button onclick="hpBarcodeAddToDb()"
+            style="width:100%;font-family:var(--mono);font-size:10px;padding:8px;
+                   border-radius:8px;background:rgba(96,165,250,.08);
+                   border:1px solid rgba(96,165,250,.3);color:#60a5fa;
+                   cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px"
+            onmouseover="this.style.background='rgba(96,165,250,.15)'"
+            onmouseout="this.style.background='rgba(96,165,250,.08)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="12 22.08 12 12"/><line x1="12" y1="12" x2="3.27" y2="6.96"/>
+              <polyline points="21 6.96 12 12"/>
+            </svg>
+            Add to Packaged Foods DB
           </button>
         </div>
       </div>
@@ -6715,6 +6732,7 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('food')"     id="dbtab-food"     class="dbtab-btn dbtab-active">Malawi FCT</button>
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
+    <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
   </div>
 
   <!-- ════════════════════ PANEL 1: FOOD DB ════════════════════ -->
@@ -7071,6 +7089,130 @@ var photoCropper = (function () {
 
   <div class="dev-footer">Formula data: ASPEN Pedi &amp; Adult Handbooks · ESPEN Guidelines · Abbott Nutrition · Fresenius Kabi · Nestlé Health Science · Nutricia/Danone · Clinically reviewed values. Always verify with current product SPC/label.</div>
   </div><!-- end dbpanel-enteral -->
+
+  <!-- ════════════════════ PANEL 4: PACKAGED FOODS ════════════════════ -->
+  <div id="dbpanel-packaged" style="display:none">
+
+  <!-- Search & Filter bar -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:12px;align-items:end">
+      <div class="field-group">
+        <label class="lbl">Search Product</label>
+        <input type="text" class="inp" id="pkg-search" placeholder="Product name or brand…"
+               oninput="pkgRender()" style="font-size:14px">
+      </div>
+      <div class="field-group">
+        <label class="lbl">Sort by</label>
+        <select class="sel" id="pkg-sort" onchange="pkgRender()">
+          <option value="name">Name A–Z</option>
+          <option value="brand">Brand A–Z</option>
+          <option value="kcal_desc">Highest kcal</option>
+          <option value="kcal_asc">Lowest kcal</option>
+          <option value="recent">Most Recent</option>
+        </select>
+      </div>
+      <div class="field-group" style="padding-top:18px">
+        <button onclick="pkgOpenAddModal()"
+                style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:9px 16px;cursor:pointer;letter-spacing:1px;white-space:nowrap">
+          + ADD FOOD
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--teal)" id="pkg-stat-total">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">TOTAL PRODUCTS</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--amber)" id="pkg-stat-brands">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">BRANDS</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--blue)" id="pkg-stat-synced">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">LAST SYNCED</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--green)" id="pkg-stat-status">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">SYNC STATUS</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-title">Packaged Foods</div>
+      <div class="card-badge" id="pkg-table-badge">Firestore · Offline cache</div>
+    </div>
+    <div class="hscroll-table">
+      <table class="dtbl" id="pkg-table">
+        <thead>
+          <tr>
+            <th style="min-width:180px">Product Name</th>
+            <th>Brand</th>
+            <th>Barcode</th>
+            <th>Serving (g)</th>
+            <th style="color:var(--amber)">kcal/100g</th>
+            <th style="color:var(--blue)">Protein (g)</th>
+            <th style="color:var(--teal)">Carbs (g)</th>
+            <th style="color:var(--green)">Fat (g)</th>
+            <th style="color:var(--text-dim)">Fiber (g)</th>
+            <th style="color:var(--text-dim)">Sodium (mg)</th>
+            <th style="min-width:80px"></th>
+          </tr>
+        </thead>
+        <tbody id="pkg-tbody"></tbody>
+      </table>
+    </div>
+    <div id="pkg-no-results" style="display:none;text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">
+      No packaged foods found. Add one using the + ADD FOOD button above.
+    </div>
+    <div id="pkg-pagination" style="display:flex;justify-content:center;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border)"></div>
+  </div>
+
+  <div class="dev-footer">Packaged Foods · Firestore sync · Offline-first IndexedDB cache</div>
+  </div><!-- end dbpanel-packaged -->
+
+  <!-- Packaged Foods Add/Edit Modal -->
+  <div id="pkg-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9100;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(540px,95vw);max-height:90vh;overflow-y:auto">
+      <div style="font-family:var(--cond);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:18px" id="pkg-modal-title">ADD PACKAGED FOOD</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field-group" style="grid-column:1/-1">
+          <label class="lbl">Product Name *</label>
+          <input class="inp" id="pkg-f-name" placeholder="e.g. Milo, Lacto, Colcom Sausages">
+        </div>
+        <div class="field-group">
+          <label class="lbl">Brand</label>
+          <input class="inp" id="pkg-f-brand" placeholder="e.g. Nestlé, Clover">
+        </div>
+        <div class="field-group">
+          <label class="lbl">Barcode (EAN-13 / UPC)</label>
+          <input class="inp" id="pkg-f-barcode" placeholder="e.g. 6001068090166">
+        </div>
+        <div class="field-group" style="grid-column:1/-1">
+          <label class="lbl">Serving Size (g or ml)</label>
+          <input class="inp" type="number" id="pkg-f-serving" placeholder="100">
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
+        <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
+        <div class="field-group"><label class="lbl">Carbohydrates (g)</label><input class="inp" type="number" id="pkg-f-cho" placeholder="0" min="0"></div>
+        <div class="field-group"><label class="lbl">Fat (g)</label><input class="inp" type="number" id="pkg-f-fat" placeholder="0" min="0"></div>
+        <div class="field-group"><label class="lbl">Sugar (g)</label><input class="inp" type="number" id="pkg-f-sugar" placeholder="0" min="0"></div>
+        <div class="field-group"><label class="lbl">Fiber (g)</label><input class="inp" type="number" id="pkg-f-fiber" placeholder="0" min="0"></div>
+        <div class="field-group" style="grid-column:1/-1"><label class="lbl">Sodium (mg)</label><input class="inp" type="number" id="pkg-f-sodium" placeholder="0" min="0"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+        <button onclick="pkgCloseModal()" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);background:transparent;border:1px solid var(--border);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">CANCEL</button>
+        <button onclick="pkgSaveModal()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">SAVE FOOD</button>
+      </div>
+    </div>
+  </div>
 
 </div>
 </div>
@@ -10379,24 +10521,48 @@ function ntClear(scopeId, resultIds) {
     _hpResults = [];
 
     try {
-      // ── Layer 1: local (Malawi FCT + UCT Exchange) ──────────
-      let localHits = [];
-      if (typeof NTFoodSearch !== 'undefined') {
-        localHits = NTFoodSearch.searchLocal(q, 6);
+      // ── Layer 0: Packaged Foods DB (direct call with ready-wait) ──
+      // Bypasses the _patchFoodSearch hook entirely to avoid the _ready timing issue.
+      let packagedHits = [];
+      if (typeof PackagedFoodsDB !== 'undefined') {
+        try {
+          if (!PackagedFoodsDB.isReady) {
+            // Wait up to 1.5 s for IndexedDB init, then proceed regardless
+            await Promise.race([
+              PackagedFoodsDB.ready(),
+              new Promise(res => setTimeout(res, 1500))
+            ]);
+          }
+          packagedHits = PackagedFoodsDB.search(q, { limit: 5 });
+        } catch(_e) { /* PackagedFoodsDB unavailable — skip */ }
       }
 
-      // ── Layer 2: FDC online (only if < 3 local hits) ────────
+      // ── Layer 1: local (Malawi FCT + UCT Exchange) ──────────
+      // _patchFoodSearch may have already prepended packaged hits inside searchLocal;
+      // strip them by id so we never render the same product twice.
+      let localHits = [];
+      if (typeof NTFoodSearch !== 'undefined') {
+        const pkgIds = new Set(packagedHits.map(f => f.id).filter(Boolean));
+        const rawLocal = NTFoodSearch.searchLocal(q, 6);
+        localHits = rawLocal.filter(f => !pkgIds.has(f.id));
+      }
+
+      // ── Layer 2: FDC online (only if total local hits < 3) ──
       let fdcHits = [];
-      if (localHits.length < 3) {
-        _hpSt(`Found ${localHits.length} local · checking USDA FDC…`, true);
+      if (packagedHits.length + localHits.length < 3) {
+        _hpSt(`Found ${packagedHits.length + localHits.length} local · checking USDA FDC…`, true);
         try {
           fdcHits = await _lfsFDC(q);   // returns array of up to 6 FDC foods
         } catch(_e) { /* FDC offline — that's fine */ }
       }
 
-      // ── Merge: local first, then FDC (deduplicate by name) ──
+      // ── Merge: packaged → local → FDC (deduplicate by name) ──
       const seen = new Set();
       const combined = [];
+      for (const f of packagedHits) {
+        const key = (f.name||'').toLowerCase().trim();
+        if (!seen.has(key)) { seen.add(key); combined.push({...f, _section:'packaged'}); }
+      }
       for (const f of localHits) {
         const key = (f.name||'').toLowerCase().trim();
         if (!seen.has(key)) { seen.add(key); combined.push({...f, _section:'local'}); }
@@ -10417,24 +10583,32 @@ function ntClear(scopeId, resultIds) {
 
       // ── Build HTML with section headers ─────────────────────
       let html = '';
-      const localCards = combined.filter(f => f._section === 'local');
-      const fdcCards   = combined.filter(f => f._section === 'fdc');
+      const packagedCards = combined.filter(f => f._section === 'packaged');
+      const localCards    = combined.filter(f => f._section === 'local');
+      const fdcCards      = combined.filter(f => f._section === 'fdc');
 
+      if (packagedCards.length) {
+        html += _divider('Packaged Foods — Malawi Market', packagedCards.length);
+        html += packagedCards.map((f, i) => _hpCard(f, i)).join('');
+      }
       if (localCards.length) {
+        const offset = packagedCards.length;
         html += _divider('Malawi FCT / UCT Exchange', localCards.length);
-        html += localCards.map((f, i) => _hpCard(f, i)).join('');
+        html += localCards.map((f, i) => _hpCard(f, offset + i)).join('');
       }
       if (fdcCards.length) {
-        const offset = localCards.length;
+        const offset = packagedCards.length + localCards.length;
         html += _divider('USDA FoodData Central', fdcCards.length);
         html += fdcCards.map((f, i) => _hpCard(f, offset + i)).join('');
       }
 
-      const localCount = localCards.length;
-      const fdcCount   = fdcCards.length;
+      const packagedCount = packagedCards.length;
+      const localCount    = localCards.length;
+      const fdcCount      = fdcCards.length;
       const statusParts = [];
-      if (localCount) statusParts.push(`${localCount} local`);
-      if (fdcCount)   statusParts.push(`${fdcCount} online`);
+      if (packagedCount) statusParts.push(`${packagedCount} packaged`);
+      if (localCount)    statusParts.push(`${localCount} local`);
+      if (fdcCount)      statusParts.push(`${fdcCount} online`);
       _hpSt(`${combined.length} result${combined.length>1?'s':''} — ${statusParts.join(' · ')} · per 100 g`);
       _showResults(html);
 
@@ -11241,6 +11415,24 @@ function ntClear(scopeId, resultIds) {
     }
   };
 
+  /**
+   * Add-to-DB fallback: close scanner and open the Packaged Foods add modal
+   * pre-filled with the scanned barcode so the user can fill in the details.
+   */
+  window.hpBarcodeAddToDb = function() {
+    hpBarcodeClose();
+    if (typeof pkgOpenAddModalWithData === 'function') {
+      pkgOpenAddModalWithData({ barcode: _lastBarcode });
+    } else if (typeof pkgOpenAddModal === 'function') {
+      pkgOpenAddModal();
+      // Best-effort: fill barcode field after modal opens
+      setTimeout(() => {
+        const el = document.getElementById('pkg-f-barcode');
+        if (el && _lastBarcode) el.value = _lastBarcode;
+      }, 250);
+    }
+  };
+
   /* ── ESC key closes modal ── */
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
@@ -11327,8 +11519,9 @@ function ntClear(scopeId, resultIds) {
         const cat   = String(food.cat||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const isOFF = food._section === 'off';
         const isGs1 = isOFF && food._gs1Verified;
+        const isLocalDb = food._section === 'local' && food.sourceUsed === 'LocalDB';
 
-        // Source badge: prefer "Open Food Facts" for OFF, GS1 verified layered as secondary badge
+        // Source badge
         const sourceBadge = isOFF ? offBadge
           : food._section === 'local'
             ? `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#1de9d4;background:rgba(29,233,212,.10);border:1px solid rgba(29,233,212,.30);white-space:nowrap;flex-shrink:0">Malawi FCT</span>`
@@ -11338,7 +11531,6 @@ function ntClear(scopeId, resultIds) {
           : sourceBadge;
 
         const barBg = isOFF ? '#4ade80' : (food._section==='local' ? 'var(--teal)' : 'rgba(96,165,250,.7)');
-        // Sub-line: category · barcode · GTIN if GS1 verified
         const gtinSuffix = isGs1 && food._gtin
           ? ' · <span style="color:#a78bfa;opacity:.75;font-size:8px">GTIN: '+food._gtin+'</span>'
           : '';
@@ -11347,6 +11539,34 @@ function ntClear(scopeId, resultIds) {
           : (food._section === 'local' && food._barcode)
             ? ' · <span style="color:rgba(29,233,212,.75);font-size:8px">'+food._barcode+'</span>'
             : '';
+
+        // "Save to Packaged DB" — shown for OFF, GS1, FDC results (external sources)
+        // not for Malawi FCT local entries (already in a DB)
+        const canSave = isOFF || food._section === 'fdc';
+        const rawName  = String(food.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const rawBrand = String(food.brand||food._brand||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const rawBarcode = String(food._barcode||'').replace(/\D/g,'');
+        const savePayload = canSave
+          ? `{name:'${rawName}',brand:'${rawBrand}',barcode:'${rawBarcode}',kcal:${food.kcal??'null'},pro:${food.pro??'null'},cho:${food.cho??'null'},fat:${food.fat??'null'},fiber:${food.fiber??'null'},sugar:${food.sugar??'null'},sodium:${food.sodium??'null'}}`
+          : '';
+
+        const saveBtn = canSave ? `
+          <button onclick="if(typeof pkgOpenAddModalWithData==='function'){pkgOpenAddModalWithData(${savePayload})}else{pkgOpenAddModal&&pkgOpenAddModal()}"
+            title="Save this product to your Packaged Foods database"
+            style="font-family:var(--mono);font-size:8.5px;font-weight:700;padding:2px 8px;border-radius:4px;
+                   background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);color:#60a5fa;
+                   cursor:pointer;letter-spacing:.3px;white-space:nowrap;display:flex;align-items:center;gap:4px;
+                   transition:background .15s"
+            onmouseover="this.style.background='rgba(96,165,250,.18)'"
+            onmouseout="this.style.background='rgba(96,165,250,.08)'">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save to DB
+          </button>` : '';
+
         return `<div class="lfs-card" style="animation-delay:${i*.04}s">
           <div style="height:2px;background:var(--border);position:relative;overflow:hidden">
             <div style="position:absolute;inset:0 auto 0 0;width:${Math.round((food.confidenceScore||.7)*100)}%;background:${barBg}"></div>
@@ -11374,6 +11594,8 @@ function ntClear(scopeId, resultIds) {
             <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">g</span>
             <button onclick="document.getElementById('hpg_${i}').value=100;hpRecalc(${i})"
               style="font-family:var(--mono);font-size:8.5px;padding:2px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer">Reset</button>
+            <div style="flex:1"></div>
+            ${saveBtn}
           </div>
         </div>`;
       }
