@@ -969,18 +969,6 @@ async function initFirebase() {
     }
     db = firebase.firestore();
 
-    // ── Attach PackagedFoodsDB real-time listener ─────────────────
-    // foodData.js loads before this point so Firebase wasn't ready at its boot.
-    // Now that firebase.firestore() is live we kick off the listener here.
-    if (typeof PackagedFoodsDB !== 'undefined') {
-      PackagedFoodsDB.listen();
-      PackagedFoodsDB.onSync(() => {
-        // Re-render the packaged foods tab and stats every time Firestore pushes data
-        if (typeof pkgRender      === 'function') pkgRender();
-        if (typeof pkgUpdateStats === 'function') pkgUpdateStats();
-      });
-    }
-
     // ── Realtime Database init ────────────────────────────────────
     rtdb = firebase.database();
     appState.rtdbConnected = false;
@@ -1718,7 +1706,6 @@ function switchTab(tab) {
   if (tab === 'database') dbInit();
   if (tab === 'enteral')  { try { syncEnteralFromCalc(); } catch(e){} }
   if (tab === 'home')     renderHomePage();
-  if (tab === 'recipe')   { try { RC.init(); } catch(e){} }
   // Render back button topbar for this tab
   try { _updateTabTopbar(tab); } catch(e) {}
 }
@@ -9357,6 +9344,322 @@ function dbExportCSV() {
 }
 
 
+// ══════════════════════════════════════════════════════════════════
+// PKG — PACKAGED FOODS MODULE
+// Firestore `packaged_foods` collection · Offline-first IndexedDB cache
+// Any authenticated user can add a food item; it is immediately
+// accessible to all users without admin approval.
+// ══════════════════════════════════════════════════════════════════
+
+let pkgInitialized = false;
+let pkgCurrentPage = 0;
+const PKG_PAGE_SIZE = 25;
+let pkgEditingId = null;
+
+// ── Init ──────────────────────────────────────────────────────────
+async function pkgInit() {
+  if (pkgInitialized) return;
+  pkgInitialized = true;
+  if (typeof PackagedFoodsDB === 'undefined') {
+    console.warn('[pkgInit] PackagedFoodsDB not loaded');
+    return;
+  }
+  await PackagedFoodsDB.ready();
+  pkgRender();
+  pkgUpdateStats();
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function pkgRender() {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+  const query   = (document.getElementById('pkg-search')?.value || '').trim();
+  const sortVal = document.getElementById('pkg-sort')?.value || 'name';
+  const tbody   = document.getElementById('pkg-tbody');
+  const noRes   = document.getElementById('pkg-no-results');
+  if (!tbody) return;
+
+  let items;
+  if (query.length >= 2) {
+    items = PackagedFoodsDB.search(query, { limit: 500 });
+  } else {
+    items = PackagedFoodsDB.list({ page: 0, size: 99999 }).items;
+  }
+
+  items = [...items];
+  const cmp = {
+    name:      (a, b) => (a.name  || '').localeCompare(b.name  || ''),
+    brand:     (a, b) => (a.brand || '').localeCompare(b.brand || ''),
+    kcal_desc: (a, b) => (b.kcal  || 0) - (a.kcal  || 0),
+    kcal_asc:  (a, b) => (a.kcal  || 0) - (b.kcal  || 0),
+    recent:    (a, b) => new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0),
+  };
+  if (cmp[sortVal]) items.sort(cmp[sortVal]);
+
+  const total = items.length;
+  const pages = Math.max(1, Math.ceil(total / PKG_PAGE_SIZE));
+  pkgCurrentPage = Math.min(pkgCurrentPage, pages - 1);
+  const slice = items.slice(pkgCurrentPage * PKG_PAGE_SIZE, (pkgCurrentPage + 1) * PKG_PAGE_SIZE);
+
+  const badge = document.getElementById('pkg-table-badge');
+  if (badge) badge.textContent = `${total} product${total !== 1 ? 's' : ''}`;
+
+  if (!slice.length) {
+    tbody.innerHTML = '';
+    if (noRes) noRes.style.display = '';
+    pkgRenderPagination(0, 0);
+    return;
+  }
+  if (noRes) noRes.style.display = 'none';
+
+  const fmt = v => (v != null && v !== '') ? (+v).toFixed(1) : '—';
+
+  tbody.innerHTML = slice.map(f => {
+    const safeId = (f.id || '').replace(/'/g, "\\'");
+    const submittedBadge = f.submittedBy
+      ? `<span style="font-size:9px;color:var(--text-dim);display:block;margin-top:2px">by ${f.submittedBy}</span>`
+      : '';
+    return `<tr>
+      <td style="font-weight:500;color:var(--text)">${f.name || '—'}${submittedBadge}</td>
+      <td style="color:var(--text-dim)">${f.brand || '—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.barcode || '—'}</td>
+      <td style="text-align:center;color:var(--text-dim)">${f.servingSize != null ? f.servingSize + 'g' : '—'}</td>
+      <td style="color:var(--amber);font-weight:600;text-align:right">${fmt(f.kcal)}</td>
+      <td style="color:var(--blue);text-align:right">${fmt(f.pro)}</td>
+      <td style="color:var(--teal);text-align:right">${fmt(f.cho)}</td>
+      <td style="color:var(--green);text-align:right">${fmt(f.fat)}</td>
+      <td style="text-align:right">${fmt(f.fiber)}</td>
+      <td style="text-align:right">${fmt(f.sodium)}</td>
+      <td style="white-space:nowrap">
+        <button onclick="pkgOpenEditModal('${safeId}')"
+          style="font-family:var(--mono);font-size:9px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:4px;padding:4px 8px;cursor:pointer;margin-right:4px;letter-spacing:.3px">
+          EDIT
+        </button>
+        <button onclick="pkgDelete('${safeId}')"
+          style="font-family:var(--mono);font-size:9px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:4px;padding:4px 8px;cursor:pointer;letter-spacing:.3px">
+          DEL
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  pkgRenderPagination(pkgCurrentPage, pages);
+}
+
+function pkgRenderPagination(page, pages) {
+  const el = document.getElementById('pkg-pagination');
+  if (!el) return;
+  if (pages <= 1) { el.innerHTML = ''; return; }
+
+  const btn = (label, n, active) =>
+    `<button onclick="pkgGoPage(${n})"
+      style="font-family:var(--mono);font-size:10px;padding:5px 11px;border-radius:5px;cursor:pointer;
+             border:1px solid ${active ? 'var(--teal)' : 'var(--border)'};
+             background:${active ? 'var(--teal)' : 'transparent'};
+             color:${active ? '#0d1117' : 'var(--text-dim)'};font-weight:${active ? '700' : '400'}">
+      ${label}
+    </button>`;
+
+  let html = page > 0 ? btn('← Prev', page - 1, false) : '';
+  for (let i = 0; i < pages; i++) {
+    if (pages <= 7 || i === 0 || i === pages - 1 || Math.abs(i - page) <= 1) {
+      html += btn(i + 1, i, i === page);
+    } else if (Math.abs(i - page) === 2) {
+      html += `<span style="color:var(--text-dim);padding:0 2px;font-size:12px">…</span>`;
+    }
+  }
+  if (page < pages - 1) html += btn('Next →', page + 1, false);
+  el.innerHTML = html;
+}
+
+function pkgGoPage(n) {
+  pkgCurrentPage = n;
+  pkgRender();
+  document.getElementById('pkg-table')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Stats card updater ────────────────────────────────────────────
+async function pkgUpdateStats() {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+
+  const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const all   = PackagedFoodsDB.list({ page: 0, size: 99999 });
+  const brands = new Set(all.items.map(f => f.brand).filter(Boolean)).size;
+
+  setEl('pkg-stat-total',  all.total || '0');
+  setEl('pkg-stat-brands', brands || '—');
+  setEl('pkg-stat-status', navigator.onLine ? '🟢 Online' : '🔴 Offline');
+
+  try {
+    const syncTime = await new Promise((res, rej) => {
+      const req = indexedDB.open('OasisPackagedFoods', 1);
+      req.onerror = () => res(null);
+      req.onsuccess = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('meta')) { res(null); return; }
+        const tx  = db.transaction('meta', 'readonly');
+        const get = tx.objectStore('meta').get('lastSync');
+        get.onsuccess = () => res(get.result?.value ?? null);
+        get.onerror   = () => res(null);
+      };
+    });
+    if (syncTime) {
+      const d = new Date(syncTime);
+      setEl('pkg-stat-synced',
+        d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' +
+        d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      );
+    } else {
+      setEl('pkg-stat-synced', 'Never');
+    }
+  } catch {
+    setEl('pkg-stat-synced', '—');
+  }
+}
+
+// ── Add / Edit Modal ──────────────────────────────────────────────
+function pkgOpenAddModal() {
+  pkgEditingId = null;
+  const title = document.getElementById('pkg-modal-title');
+  if (title) title.textContent = 'ADD PACKAGED FOOD';
+  ['name','brand','barcode','serving','kcal','pro','cho','fat','sugar','fiber','sodium']
+    .forEach(f => { const el = document.getElementById('pkg-f-' + f); if (el) el.value = ''; });
+  const overlay = document.getElementById('pkg-modal-overlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function pkgOpenEditModal(id) {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+  const doc = PackagedFoodsDB._docMap?.get(id);
+  if (!doc) { console.warn('[pkgOpenEditModal] doc not found:', id); return; }
+
+  pkgEditingId = id;
+  const title = document.getElementById('pkg-modal-title');
+  if (title) title.textContent = 'EDIT PACKAGED FOOD';
+
+  const set = (fid, val) => {
+    const el = document.getElementById(fid);
+    if (el) el.value = (val != null) ? val : '';
+  };
+  const n = doc.per100g || doc.nutrition || {};
+  set('pkg-f-name',    doc.name    || doc.productName);
+  set('pkg-f-brand',   doc.brand);
+  set('pkg-f-barcode', doc.barcode);
+  set('pkg-f-serving', doc.servingSize);
+  set('pkg-f-kcal',   n.kcal   ?? n.energy_kcal);
+  set('pkg-f-pro',    n.pro    ?? n.protein_g);
+  set('pkg-f-cho',    n.cho    ?? n.carbs_g);
+  set('pkg-f-fat',    n.fat    ?? n.fat_g);
+  set('pkg-f-sugar',  n.sugar  ?? n.sugar_g);
+  set('pkg-f-fiber',  n.fiber  ?? n.fiber_g);
+  set('pkg-f-sodium', n.sodium ?? n.sodium_mg);
+
+  const overlay = document.getElementById('pkg-modal-overlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function pkgCloseModal() {
+  const overlay = document.getElementById('pkg-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+  pkgEditingId = null;
+}
+
+async function pkgSaveModal() {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+
+  const g   = id => { const v = document.getElementById(id)?.value; return (v !== '' && v != null) ? parseFloat(v) : null; };
+  const s   = id => (document.getElementById(id)?.value || '').trim();
+  const name = s('pkg-f-name');
+
+  if (!name) {
+    const el = document.getElementById('pkg-f-name');
+    if (el) { el.style.borderColor = '#f87171'; el.focus(); }
+    return;
+  }
+  const nameEl = document.getElementById('pkg-f-name');
+  if (nameEl) nameEl.style.borderColor = '';
+
+  // Get current user identity for attribution
+  let submittedBy = '';
+  try {
+    const profile = typeof getUserProfile === 'function' ? getUserProfile() : null;
+    const auth    = typeof _getAuth === 'function' ? _getAuth() : null;
+    submittedBy   = profile?.name || profile?.email || auth?.currentUser?.email || '';
+  } catch(e) {}
+
+  const data = {
+    name:        name,
+    brand:       s('pkg-f-brand')  || '',
+    barcode:     s('pkg-f-barcode').replace(/\D/g, '') || '',
+    servingSize: g('pkg-f-serving') ?? 100,
+    per100g: {
+      kcal:   g('pkg-f-kcal'),
+      kj:     (() => { const k = g('pkg-f-kcal'); return k != null ? +(k * 4.184).toFixed(0) : null; })(),
+      pro:    g('pkg-f-pro'),
+      cho:    g('pkg-f-cho'),
+      fat:    g('pkg-f-fat'),
+      sugar:  g('pkg-f-sugar'),
+      fiber:  g('pkg-f-fiber'),
+      sodium: g('pkg-f-sodium'),
+    },
+    // Attribution — who submitted this entry; immediately visible to all users
+    submittedBy: submittedBy || '',
+    verified:    false,   // admin can later mark as verified; does NOT gate visibility
+  };
+
+  const saveBtn = document.querySelector('#pkg-modal-overlay button[onclick="pkgSaveModal()"]');
+  if (saveBtn) { saveBtn.textContent = 'SAVING…'; saveBtn.disabled = true; }
+
+  try {
+    const docId = pkgEditingId || (data.barcode || undefined);
+    await PackagedFoodsDB.add(data, docId);
+    pkgCloseModal();
+    pkgRender();
+    pkgUpdateStats();
+    const isEdit = !!pkgEditingId;
+    showToast(isEdit ? '✓ Packaged food updated' : '✓ Food added — visible to all users', 'success');
+  } catch (err) {
+    console.error('[pkgSaveModal]', err);
+    alert('Save failed: ' + (err.message || String(err)));
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'SAVE FOOD'; saveBtn.disabled = false; }
+  }
+}
+
+async function pkgDelete(id) {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  try {
+    await PackagedFoodsDB.delete(id);
+    pkgRender();
+    pkgUpdateStats();
+    showToast('✓ Product deleted', 'info');
+  } catch (err) {
+    alert('Delete failed: ' + (err.message || String(err)));
+  }
+}
+
+// ── CSV Export ────────────────────────────────────────────────────
+function pkgExportCSV() {
+  if (typeof PackagedFoodsDB === 'undefined') return;
+  const all  = PackagedFoodsDB.list({ page: 0, size: 99999 }).items;
+  const head = 'Product,Brand,Barcode,Serving(g),kcal/100g,Protein(g),Carbs(g),Fat(g),Sugar(g),Fiber(g),Sodium(mg),SubmittedBy,LastUpdated';
+  const rows = all.map(f =>
+    [f.name, f.brand, f.barcode, f.servingSize, f.kcal, f.pro, f.cho, f.fat, f.sugar, f.fiber, f.sodium, f.submittedBy, f.lastUpdated]
+      .map(v => `"${v ?? ''}"`)
+      .join(',')
+  );
+  const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'Oasis_Packaged_Foods.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✓ Packaged foods exported as CSV');
+}
+
+// ── END PKG MODULE ────────────────────────────────────────────────
+
+
 // ── OFFLINE DETECTION ──────────────────────────────────────────────
 (function initOfflineDetection() {
   const banner = document.getElementById('offline-banner');
@@ -10772,7 +11075,7 @@ function uctExportCSV() {
 }
 
 function dbSwitchTab(tab) {
-  ['food','exchange','enteral','packaged'].forEach(t => {
+  ['food','exchange','enteral','pn','renal','packaged'].forEach(t => {
     const panel = document.getElementById('dbpanel-' + t);
     const btn   = document.getElementById('dbtab-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -10780,17 +11083,184 @@ function dbSwitchTab(tab) {
   });
   const exportBtn = document.getElementById('db-export-btn');
   if (exportBtn) {
-    if (tab === 'food')     { exportBtn.onclick = dbExportCSV;  exportBtn.textContent = '⬇ EXPORT CSV'; }
-    if (tab === 'exchange') { exportBtn.onclick = uctExportCSV; exportBtn.textContent = '⬇ EXPORT CSV'; }
-    if (tab === 'enteral')  { exportBtn.onclick = enExportCSV;  exportBtn.textContent = '⬇ EXPORT CSV'; }
-    if (tab === 'packaged') { exportBtn.onclick = pkgExportCSV; exportBtn.textContent = '⬇ EXPORT CSV'; }
+    if (tab === 'food')     { exportBtn.onclick = dbExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
+    if (tab === 'exchange') { exportBtn.onclick = uctExportCSV; exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
+    if (tab === 'enteral')  { exportBtn.onclick = enExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
+    if (tab === 'renal')    { exportBtn.onclick = rnExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
+    if (tab === 'packaged') { exportBtn.onclick = pkgExportCSV; exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
   }
   if (tab === 'enteral'  && !enInitialized)  enInit();
   if (tab === 'exchange' && !uctInitialized) uctInit();
+  if (tab === 'renal'    && !rnInitialized)  rnInit();
   if (tab === 'packaged' && !pkgInitialized) pkgInit();
-  // Restore export btn if switching away from PN panel
+  // Restore export btn visibility (PN panel hides it)
   const _exportBtnR = document.getElementById('db-export-btn');
-  if (_exportBtnR) _exportBtnR.style.display = '';
+  if (_exportBtnR && tab !== 'pn') _exportBtnR.style.display = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENAL EXCHANGE LIST — DATABASE PANEL ENGINE
+// Source: South African Renal Exchange Lists
+//         RenalSmart / Stellenbosch University (Updated 2012)
+// Data: RENAL_EXCHANGE_DB (foodData.js)
+// Columns: Name · Exchange Group · Serving · kcal · Protein
+//          Phosphorus · Potassium · Sodium · Tags · Status
+// ══════════════════════════════════════════════════════════════
+
+let rnInitialized = false;
+
+function rnInit() {
+  if (rnInitialized) return;
+  rnInitialized = true;
+
+  // Populate exchange group dropdown dynamically from data
+  const groups = [...new Set((typeof RENAL_EXCHANGE_DB !== 'undefined' ? RENAL_EXCHANGE_DB : [])
+    .map(e => e.exchange_group).filter(Boolean))].sort();
+  const sel = document.getElementById('rn-group');
+  if (sel && groups.length) {
+    // Clear existing options except "All Groups"
+    while (sel.options.length > 1) sel.remove(1);
+    groups.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g.length > 40 ? g.substring(0, 40) + '…' : g;
+      sel.appendChild(opt);
+    });
+  }
+
+  rnRender();
+}
+
+function rnRender() {
+  const db     = (typeof RENAL_EXCHANGE_DB !== 'undefined') ? RENAL_EXCHANGE_DB : [];
+  const query  = (document.getElementById('rn-search')?.value     || '').toLowerCase().trim();
+  const group  = (document.getElementById('rn-group')?.value      || '');
+  const kTag   = (document.getElementById('rn-k')?.value          || '');
+  const naTag  = (document.getElementById('rn-na')?.value         || '');
+  const po4Tag = (document.getElementById('rn-po4')?.value        || '');
+  const restr  = (document.getElementById('rn-restricted')?.value || '');
+  const sort   = (document.getElementById('rn-sort')?.value       || 'name');
+
+  let rows = db.filter(e => {
+    if (query  && !e.name_normalized?.includes(query) && !e.name?.toLowerCase().includes(query)) return false;
+    if (group  && e.exchange_group !== group) return false;
+    if (kTag   && !(e.tags || []).includes(kTag))   return false;
+    if (naTag  && !(e.tags || []).includes(naTag))   return false;
+    if (po4Tag && !(e.tags || []).includes(po4Tag))  return false;
+    if (restr !== '' && String(e.restricted) !== restr) return false;
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    if (sort === 'name')      return (a.name || '').localeCompare(b.name || '');
+    if (sort === 'po4_desc')  return (b.phosphorus_mg || 0) - (a.phosphorus_mg || 0);
+    if (sort === 'k_desc')    return (b.potassium_mg  || 0) - (a.potassium_mg  || 0);
+    if (sort === 'na_desc')   return (b.sodium_mg     || 0) - (a.sodium_mg     || 0);
+    if (sort === 'kcal_desc') return ((b.energy_kj || 0) / 4.184) - ((a.energy_kj || 0) / 4.184);
+    if (sort === 'group')     return (a.exchange_group || '').localeCompare(b.exchange_group || '');
+    return 0;
+  });
+
+  // Stats
+  const count    = rows.length;
+  const avgPO4   = count ? Math.round(rows.reduce((s, e) => s + (e.phosphorus_mg || 0), 0) / count) : 0;
+  const avgK     = count ? Math.round(rows.reduce((s, e) => s + (e.potassium_mg  || 0), 0) / count) : 0;
+  const avgNa    = count ? Math.round(rows.reduce((s, e) => s + (e.sodium_mg     || 0), 0) / count) : 0;
+  const restrCnt = rows.filter(e => e.restricted).length;
+
+  const _s = id => document.getElementById(id);
+  if (_s('rn-stat-count'))      _s('rn-stat-count').textContent      = count;
+  if (_s('rn-stat-po4'))        _s('rn-stat-po4').textContent        = avgPO4 || '—';
+  if (_s('rn-stat-k'))          { _s('rn-stat-k').textContent = avgK || '—'; _s('rn-stat-k').style.color = '#c084fc'; }
+  if (_s('rn-stat-na'))         _s('rn-stat-na').textContent         = avgNa || '—';
+  if (_s('rn-stat-restricted')) _s('rn-stat-restricted').textContent = restrCnt;
+  if (_s('rn-table-badge'))     _s('rn-table-badge').textContent     = `${count} item${count !== 1 ? 's' : ''} · SA Renal Exchange 2012`;
+
+  // Render tag helper
+  const _tagBadge = tag => {
+    let color = 'var(--text-dim)', bg = 'rgba(100,100,100,.12)', border = 'rgba(100,100,100,.25)';
+    if (tag === 'High Phosphorus')           { color = 'var(--amber)';  bg = 'rgba(251,191,36,.12)';  border = 'rgba(251,191,36,.3)'; }
+    if (tag === 'Low Phosphorus')            { color = 'var(--green)';  bg = 'rgba(0,230,118,.10)';   border = 'rgba(0,230,118,.25)'; }
+    if (tag === 'High Potassium')            { color = '#c084fc';       bg = 'rgba(192,132,252,.12)'; border = 'rgba(192,132,252,.3)'; }
+    if (tag === 'Moderate Potassium')        { color = '#c084fc';       bg = 'rgba(192,132,252,.07)'; border = 'rgba(192,132,252,.2)'; }
+    if (tag === 'Low Potassium')             { color = 'var(--green)';  bg = 'rgba(0,230,118,.10)';   border = 'rgba(0,230,118,.25)'; }
+    if (tag === 'High Sodium')               { color = 'var(--blue)';   bg = 'rgba(96,165,250,.12)';  border = 'rgba(96,165,250,.3)'; }
+    if (tag === 'Low Sodium')                { color = 'var(--green)';  bg = 'rgba(0,230,118,.10)';   border = 'rgba(0,230,118,.25)'; }
+    if (tag === 'Dialysis Friendly')         { color = 'var(--teal)';   bg = 'rgba(29,233,212,.10)';  border = 'rgba(29,233,212,.25)'; }
+    if (tag === 'Fluid Restricted Friendly') { color = 'var(--teal)';   bg = 'rgba(29,233,212,.07)';  border = 'rgba(29,233,212,.2)'; }
+    return `<span style="font-family:var(--mono);font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:100px;white-space:nowrap;color:${color};background:${bg};border:1px solid ${border};display:inline-block;margin:1px 2px 1px 0">${tag}</span>`;
+  };
+
+  // Render PO4/K/Na cell with colour coding
+  const _elCell = (val, type) => {
+    if (val == null || val === '') return '<td style="color:var(--text-dim)">—</td>';
+    let color = 'var(--text)';
+    if (type === 'po4') { color = val > 100 ? 'var(--amber)' : 'var(--green)'; }
+    if (type === 'k')   { color = val > 200 ? '#c084fc' : val >= 120 ? '#c084fc' : 'var(--green)'; }
+    if (type === 'na')  { color = val >= 430 ? 'var(--blue)' : val <= 55 ? 'var(--green)' : 'var(--text)'; }
+    return `<td style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color}">${val}</td>`;
+  };
+
+  // Render table rows
+  const tbody = document.getElementById('rn-tbody');
+  const noRes = document.getElementById('rn-no-results');
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    if (noRes) noRes.style.display = '';
+    return;
+  }
+  if (noRes) noRes.style.display = 'none';
+
+  tbody.innerHTML = rows.map(e => {
+    const kcal    = e.energy_kj ? Math.round(e.energy_kj / 4.184) : '—';
+    const serving = e.serving_measure
+      ? `${e.serving_measure}${e.serving_g ? ' ('+e.serving_g+'g)' : e.serving_ml ? ' ('+e.serving_ml+'mL)' : ''}`
+      : (e.serving_g ? e.serving_g+'g' : e.serving_ml ? e.serving_ml+'mL' : '—');
+    const groupShort = (e.exchange_group || '').replace('Meat & Meat Substitutes - ', 'M&MS — ');
+    const subgroupBadge = e.exchange_subgroup
+      ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:2px">${e.exchange_subgroup}</div>`
+      : '';
+    const tags   = (e.tags || []).map(_tagBadge).join('');
+    const status = e.restricted
+      ? `<td><span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:100px;color:var(--red);background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.35)">⚠ RESTRICTED</span></td>`
+      : `<td style="font-family:var(--mono);font-size:10px;color:var(--green)">✓ Allowed</td>`;
+    const rowBg  = e.restricted ? 'background:rgba(251,113,133,.04)' : '';
+    return `<tr style="${rowBg}">
+      <td style="font-weight:600">${e.name || '—'}${e.clinical_notes ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:2px">⚠ ${e.clinical_notes}</div>` : ''}</td>
+      <td style="font-family:var(--mono);font-size:10px">${groupShort}${subgroupBadge}</td>
+      <td style="font-family:var(--mono);font-size:11px">${serving}</td>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${kcal}</td>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue)">${e.protein_g != null ? e.protein_g.toFixed(1) : '—'}</td>
+      ${_elCell(e.phosphorus_mg, 'po4')}
+      ${_elCell(e.potassium_mg,  'k')}
+      ${_elCell(e.sodium_mg,     'na')}
+      <td style="min-width:160px">${tags}</td>
+      ${status}
+    </tr>`;
+  }).join('');
+}
+
+function rnExportCSV() {
+  const db = (typeof RENAL_EXCHANGE_DB !== 'undefined') ? RENAL_EXCHANGE_DB : [];
+  const headers = ['ID','Name','Exchange Group','Subgroup','Serving (measure)','Serving (g)','Serving (mL)',
+                   'Energy (kJ)','kcal','Protein (g)','Fat (g)','CHO (g)',
+                   'Phosphorus (mg)','Potassium (mg)','Sodium (mg)','Tags','Restricted','Clinical Notes','Source'];
+  const rows = db.map(e => [
+    e.id, e.name, e.exchange_group, e.exchange_subgroup,
+    e.serving_measure, e.serving_g, e.serving_ml,
+    e.energy_kj, e.energy_kj ? Math.round(e.energy_kj / 4.184) : '',
+    e.protein_g, e.fat_g, e.cho_g,
+    e.phosphorus_mg, e.potassium_mg, e.sodium_mg,
+    (e.tags || []).join('; '), e.restricted ? 'Yes' : 'No',
+    e.clinical_notes || '', e.source
+  ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+  const csv  = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a    = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'Renal_Exchange_List.csv'; a.click();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -14090,307 +14560,4 @@ function _dbGlobalSearch(query) {
       _dbClearGlobalPanel();
     }
   }, 600);
-}
-
-// ══════════════════════════════════════════════════════════════
-// PACKAGED FOODS TAB — controller
-// All data access goes through PackagedFoodsDB (foodData.js).
-// No direct Firestore calls here — sync is handled by the DB layer.
-// ══════════════════════════════════════════════════════════════
-
-let pkgInitialized = false;
-let pkgCurrentPage = 0;
-const PKG_PAGE_SIZE = 25;
-let pkgEditingId = null;
-
-async function pkgInit() {
-  pkgInitialized = true;
-  if (typeof PackagedFoodsDB === 'undefined') {
-    console.warn('[pkgInit] PackagedFoodsDB not loaded');
-    return;
-  }
-  await PackagedFoodsDB.ready();
-  pkgRender();
-  pkgUpdateStats();
-}
-
-// ── Render ───────────────────────────────────────────────────
-function pkgRender() {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-  const query  = (document.getElementById('pkg-search')?.value || '').trim();
-  const sortVal = document.getElementById('pkg-sort')?.value || 'name';
-  const tbody   = document.getElementById('pkg-tbody');
-  const noRes   = document.getElementById('pkg-no-results');
-  if (!tbody) return;
-
-  // Fetch candidates
-  let items;
-  if (query.length >= 2) {
-    items = PackagedFoodsDB.search(query, { limit: 500 });
-  } else {
-    items = PackagedFoodsDB.list({ page: 0, size: 99999 }).items;
-  }
-
-  // Sort
-  items = [...items];
-  const cmp = {
-    name:      (a, b) => (a.name  || '').localeCompare(b.name  || ''),
-    brand:     (a, b) => (a.brand || '').localeCompare(b.brand || ''),
-    kcal_desc: (a, b) => (b.kcal  || 0) - (a.kcal  || 0),
-    kcal_asc:  (a, b) => (a.kcal  || 0) - (b.kcal  || 0),
-    recent:    (a, b) => new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0),
-  };
-  if (cmp[sortVal]) items.sort(cmp[sortVal]);
-
-  // Paginate
-  const total = items.length;
-  const pages = Math.max(1, Math.ceil(total / PKG_PAGE_SIZE));
-  pkgCurrentPage = Math.min(pkgCurrentPage, pages - 1);
-  const slice = items.slice(pkgCurrentPage * PKG_PAGE_SIZE, (pkgCurrentPage + 1) * PKG_PAGE_SIZE);
-
-  // Badge
-  const badge = document.getElementById('pkg-table-badge');
-  if (badge) badge.textContent = `${total} product${total !== 1 ? 's' : ''}`;
-
-  if (!slice.length) {
-    tbody.innerHTML = '';
-    if (noRes) noRes.style.display = '';
-    pkgRenderPagination(0, 0);
-    return;
-  }
-  if (noRes) noRes.style.display = 'none';
-
-  const fmt = v => (v != null && v !== '') ? (+v).toFixed(1) : '—';
-
-  tbody.innerHTML = slice.map(f => {
-    const safeId = (f.id || '').replace(/'/g, "\\'");
-    return `<tr>
-      <td style="font-weight:500;color:var(--text)">${f.name || '—'}</td>
-      <td style="color:var(--text-dim)">${f.brand || '—'}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.barcode || '—'}</td>
-      <td style="text-align:center;color:var(--text-dim)">${f.servingSize != null ? f.servingSize + 'g' : '—'}</td>
-      <td style="color:var(--amber);font-weight:600;text-align:right">${fmt(f.kcal)}</td>
-      <td style="color:var(--blue);text-align:right">${fmt(f.pro)}</td>
-      <td style="color:var(--teal);text-align:right">${fmt(f.cho)}</td>
-      <td style="color:var(--green);text-align:right">${fmt(f.fat)}</td>
-      <td style="text-align:right">${fmt(f.fiber)}</td>
-      <td style="text-align:right">${fmt(f.sodium)}</td>
-      <td style="white-space:nowrap">
-        <button onclick="pkgOpenEditModal('${safeId}')"
-          style="font-family:var(--mono);font-size:9px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:4px;padding:4px 8px;cursor:pointer;margin-right:4px;letter-spacing:.3px">
-          EDIT
-        </button>
-        <button onclick="pkgDelete('${safeId}')"
-          style="font-family:var(--mono);font-size:9px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:4px;padding:4px 8px;cursor:pointer;letter-spacing:.3px">
-          DEL
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  pkgRenderPagination(pkgCurrentPage, pages);
-}
-
-function pkgRenderPagination(page, pages) {
-  const el = document.getElementById('pkg-pagination');
-  if (!el) return;
-  if (pages <= 1) { el.innerHTML = ''; return; }
-
-  const btn = (label, n, active) =>
-    `<button onclick="pkgGoPage(${n})"
-      style="font-family:var(--mono);font-size:10px;padding:5px 11px;border-radius:5px;cursor:pointer;
-             border:1px solid ${active ? 'var(--teal)' : 'var(--border)'};
-             background:${active ? 'var(--teal)' : 'transparent'};
-             color:${active ? '#0d1117' : 'var(--text-dim)'};font-weight:${active ? '700' : '400'}">
-      ${label}
-    </button>`;
-
-  let html = page > 0 ? btn('← Prev', page - 1, false) : '';
-  for (let i = 0; i < pages; i++) {
-    if (pages <= 7 || i === 0 || i === pages - 1 || Math.abs(i - page) <= 1) {
-      html += btn(i + 1, i, i === page);
-    } else if (Math.abs(i - page) === 2) {
-      html += `<span style="color:var(--text-dim);padding:0 2px;font-size:12px">…</span>`;
-    }
-  }
-  if (page < pages - 1) html += btn('Next →', page + 1, false);
-  el.innerHTML = html;
-}
-
-function pkgGoPage(n) {
-  pkgCurrentPage = n;
-  pkgRender();
-  // Scroll table into view
-  document.getElementById('pkg-table')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Stats card updater ───────────────────────────────────────
-async function pkgUpdateStats() {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-
-  const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  const all   = PackagedFoodsDB.list({ page: 0, size: 99999 });
-  const brands = new Set(all.items.map(f => f.brand).filter(Boolean)).size;
-
-  setEl('pkg-stat-total',  all.total || '0');
-  setEl('pkg-stat-brands', brands || '—');
-  setEl('pkg-stat-status', navigator.onLine ? '🟢 Online' : '🔴 Offline');
-
-  // Last sync time from IndexedDB meta store
-  try {
-    const syncTime = await new Promise((res, rej) => {
-      const req = indexedDB.open('OasisPackagedFoods', 1);
-      req.onerror = () => res(null);
-      req.onsuccess = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('meta')) { res(null); return; }
-        const tx  = db.transaction('meta', 'readonly');
-        const get = tx.objectStore('meta').get('lastSync');
-        get.onsuccess = () => res(get.result?.value ?? null);
-        get.onerror   = () => res(null);
-      };
-    });
-    if (syncTime) {
-      const d = new Date(syncTime);
-      setEl('pkg-stat-synced',
-        d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' +
-        d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      );
-    } else {
-      setEl('pkg-stat-synced', 'Never');
-    }
-  } catch {
-    setEl('pkg-stat-synced', '—');
-  }
-}
-
-// ── Add / Edit Modal ─────────────────────────────────────────
-function pkgOpenAddModal() {
-  pkgEditingId = null;
-  const title = document.getElementById('pkg-modal-title');
-  if (title) title.textContent = 'ADD PACKAGED FOOD';
-  ['name','brand','barcode','serving','kcal','pro','cho','fat','sugar','fiber','sodium']
-    .forEach(f => { const el = document.getElementById('pkg-f-' + f); if (el) el.value = ''; });
-  const overlay = document.getElementById('pkg-modal-overlay');
-  if (overlay) overlay.style.display = 'flex';
-}
-
-function pkgOpenEditModal(id) {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-  const doc = PackagedFoodsDB._docMap?.get(id);
-  if (!doc) { console.warn('[pkgOpenEditModal] doc not found:', id); return; }
-
-  pkgEditingId = id;
-  const title = document.getElementById('pkg-modal-title');
-  if (title) title.textContent = 'EDIT PACKAGED FOOD';
-
-  const set = (fid, val) => {
-    const el = document.getElementById(fid);
-    if (el) el.value = (val != null) ? val : '';
-  };
-  // Support admin schema (name / per100g) and legacy schema (productName / nutrition)
-  const n = doc.per100g || doc.nutrition || {};
-  set('pkg-f-name',    doc.name    || doc.productName);
-  set('pkg-f-brand',   doc.brand);
-  set('pkg-f-barcode', doc.barcode);
-  set('pkg-f-serving', doc.servingSize);
-  set('pkg-f-kcal',   n.kcal   ?? n.energy_kcal);
-  set('pkg-f-pro',    n.pro    ?? n.protein_g);
-  set('pkg-f-cho',    n.cho    ?? n.carbs_g);
-  set('pkg-f-fat',    n.fat    ?? n.fat_g);
-  set('pkg-f-sugar',  n.sugar  ?? n.sugar_g);
-  set('pkg-f-fiber',  n.fiber  ?? n.fiber_g);
-  set('pkg-f-sodium', n.sodium ?? n.sodium_mg);
-
-  const overlay = document.getElementById('pkg-modal-overlay');
-  if (overlay) overlay.style.display = 'flex';
-}
-
-function pkgCloseModal() {
-  const overlay = document.getElementById('pkg-modal-overlay');
-  if (overlay) overlay.style.display = 'none';
-  pkgEditingId = null;
-}
-
-async function pkgSaveModal() {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-
-  const g   = id => { const v = document.getElementById(id)?.value; return (v !== '' && v != null) ? parseFloat(v) : null; };
-  const s   = id => (document.getElementById(id)?.value || '').trim();
-  const name = s('pkg-f-name');
-
-  if (!name) {
-    // Inline validation feedback
-    const el = document.getElementById('pkg-f-name');
-    if (el) { el.style.borderColor = '#f87171'; el.focus(); }
-    return;
-  }
-  // Reset border
-  const nameEl = document.getElementById('pkg-f-name');
-  if (nameEl) nameEl.style.borderColor = '';
-
-  const data = {
-    name:        name,                         // admin schema field
-    brand:       s('pkg-f-brand')  || '',
-    barcode:     s('pkg-f-barcode').replace(/\D/g, '') || '',
-    servingSize: g('pkg-f-serving') ?? 100,
-    per100g: {                                 // admin schema macros block
-      kcal:   g('pkg-f-kcal'),
-      kj:     (() => { const k = g('pkg-f-kcal'); return k != null ? +(k * 4.184).toFixed(0) : null; })(),
-      pro:    g('pkg-f-pro'),
-      cho:    g('pkg-f-cho'),
-      fat:    g('pkg-f-fat'),
-      sugar:  g('pkg-f-sugar'),
-      fiber:  g('pkg-f-fiber'),
-      sodium: g('pkg-f-sodium'),
-    },
-  };
-
-  const saveBtn = document.querySelector('#pkg-modal-overlay button[onclick="pkgSaveModal()"]');
-  if (saveBtn) { saveBtn.textContent = 'SAVING…'; saveBtn.disabled = true; }
-
-  try {
-    // When editing, use the existing doc ID.
-    // When adding, use barcode as ID if available (ensures barcode uniqueness in Firestore).
-    const docId = pkgEditingId || (data.barcode || undefined);
-    await PackagedFoodsDB.add(data, docId);
-    pkgCloseModal();
-    pkgRender();
-    pkgUpdateStats();
-  } catch (err) {
-    console.error('[pkgSaveModal]', err);
-    alert('Save failed: ' + (err.message || String(err)));
-  } finally {
-    if (saveBtn) { saveBtn.textContent = 'SAVE FOOD'; saveBtn.disabled = false; }
-  }
-}
-
-async function pkgDelete(id) {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-  if (!confirm('Delete this product? This cannot be undone.')) return;
-  try {
-    await PackagedFoodsDB.delete(id);
-    pkgRender();
-    pkgUpdateStats();
-  } catch (err) {
-    alert('Delete failed: ' + (err.message || String(err)));
-  }
-}
-
-// ── CSV Export ───────────────────────────────────────────────
-function pkgExportCSV() {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-  const all  = PackagedFoodsDB.list({ page: 0, size: 99999 }).items;
-  const head = 'Product,Brand,Barcode,Serving(g),kcal/100g,Protein(g),Carbs(g),Fat(g),Sugar(g),Fiber(g),Sodium(mg),LastUpdated';
-  const rows = all.map(f =>
-    [f.name, f.brand, f.barcode, f.servingSize, f.kcal, f.pro, f.cho, f.fat, f.sugar, f.fiber, f.sodium, f.lastUpdated]
-      .map(v => `"${v ?? ''}"`)
-      .join(',')
-  );
-  const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = 'Oasis_Packaged_Foods.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
 }
