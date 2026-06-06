@@ -6,11 +6,6 @@
  *
  * ── TEXT SEARCH  (searchFood / searchLocal) ───────────────────────────────
  *
- *   Layer 0   — PackagedFoodsDB (verified Firestore packaged foods, IDB-cached)
- *               ▶ Synchronous in-memory lookup once IDB has loaded (~200 ms).
- *               ▶ Only verified items (verified:true) are present.
- *               ▶ Results prepended before all other layers; deduplicated by id.
- *
  *   Layer 1   — Local DB (MALAWI_FCT + UCT Exchange + Enteral formulae)
  *               ▶ Instant, offline, always tried first.
  *               ▶ Returns immediately if a complete match is found.
@@ -31,10 +26,6 @@
  *               ▶ Returns OFF nutritional fields mapped to unified shape.
  *
  * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
- *
- *   Layer 0A  — PackagedFoodsDB barcode lookup (verified Firestore items)
- *               ▶ Awaits IDB ready (max 1.5 s), then exact + partial match.
- *               ▶ barcodeSource: 'PackagedDB' | confidenceScore 0.97
  *
  *   Layer A   — Local barcode registry → MALAWI_FCT  (_searchLocalBarcode)
  *               ▶ Instant, fully offline. Covers hand-curated Malawi-market
@@ -1026,94 +1017,11 @@
     return await _fetchOFFBarcode(barcode);
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 0 — PackagedFoodsDB integration
-  //
-  // PackagedFoodsDB (foodData.js) holds admin-verified packaged foods synced
-  // from Firestore. Only documents with verified:true are stored locally.
-  //
-  // Layer 0 wraps both searchLocal and searchBarcode:
-  //   • searchLocal  — PackagedFoodsDB.search() prepended before Malawi FCT /
-  //                    regional results. Deduplication by id prevents doubles.
-  //   • searchBarcode — PackagedFoodsDB.searchBarcode() checked first (Layer 0A),
-  //                    before the hand-curated local registry (Layer A) and
-  //                    Open Food Facts (Layer B).
-  //
-  // PackagedFoodsDB may not be ready synchronously (IDB init is async).
-  // searchLocal is synchronous, so it reads from the in-memory _docMap which
-  // is populated as soon as IDB finishes loading — typically < 200 ms after
-  // page load. If not ready yet, the call returns [] and Layers 1+ handle it.
-  // searchBarcode is async, so we await PackagedFoodsDB.ready() with a timeout.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Attempt a PackagedFoodsDB text search synchronously.
-   * Returns [] silently if PackagedFoodsDB is unavailable or not yet ready.
-   * Results are already in the unified food-object shape (_toFoodShape in foodData.js).
-   */
-  function _pkgSearchLocal(query, limit) {
-    try {
-      if (typeof PackagedFoodsDB === 'undefined' || !PackagedFoodsDB.isReady) return [];
-      return PackagedFoodsDB.search(query, { limit });
-    } catch (_) { return []; }
-  }
-
-  /**
-   * Attempt a PackagedFoodsDB barcode lookup.
-   * Awaits ready() with a 1.5 s timeout so the scanner never hangs.
-   * Returns null silently on any error.
-   */
-  async function _pkgSearchBarcode(barcode) {
-    try {
-      if (typeof PackagedFoodsDB === 'undefined') return null;
-      if (!PackagedFoodsDB.isReady) {
-        await Promise.race([
-          PackagedFoodsDB.ready(),
-          new Promise(res => setTimeout(res, 1500)),
-        ]);
-      }
-      return PackagedFoodsDB.searchBarcode(barcode) ?? null;
-    } catch (_) { return null; }
-  }
-
-  /**
-   * Layer-0-aware searchLocal:
-   *   PackagedFoodsDB hits (verified packaged foods) → Malawi FCT + regional
-   * Deduplicates by id so no result appears twice.
-   */
-  function searchLocalWithPackaged(query, limit = 10) {
-    const pkgHits  = _pkgSearchLocal(query, Math.min(limit, 5));
-    const baseHits = searchLocal(query, limit);
-    const seen     = new Set(pkgHits.map(f => f.id).filter(Boolean));
-    const merged   = [...pkgHits, ...baseHits.filter(f => !seen.has(f.id))];
-    return merged.slice(0, limit);
-  }
-
-  /**
-   * Layer-0-aware searchBarcode:
-   *   Layer 0A — PackagedFoodsDB (verified Firestore items, offline-first)
-   *   Layer A  — Local hand-curated barcode registry
-   *   Layer B  — Open Food Facts v2 API
-   */
-  async function searchBarcodeWithPackaged(barcode) {
-    if (!barcode) return null;
-    // Layer 0A — PackagedFoodsDB
-    const pkgResult = await _pkgSearchBarcode(barcode);
-    if (pkgResult) {
-      pkgResult.barcodeSource    = pkgResult.barcodeSource || 'PackagedDB';
-      pkgResult.confidenceScore  = pkgResult.confidenceScore ?? 0.97;
-      return pkgResult;
-    }
-    // Layers A + B (original pipeline)
-    return searchBarcode(barcode);
-  }
-
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
   global.NTFoodSearch = {
     search:             searchFood,
-    // Layer-0-aware wrappers (PackagedFoodsDB → local → regional → APIs)
-    searchLocal:        searchLocalWithPackaged,
-    searchBarcode:      searchBarcodeWithPackaged,
+    searchLocal:        searchLocal,
+    searchBarcode:      searchBarcode,      // barcode scan entry-point (offline-first)
     clearCache:         clearCache,
     _synonymMap:        SYNONYM_MAP,        // exposed for debugging only
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
@@ -1124,9 +1032,6 @@
     _regionalSearch:    _searchRegional,    // direct regional FCT search
     filterByCountry:    filterByCountry,    // filter results by country code(s)
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary
-    // Raw originals kept for callers that explicitly want no packaged layer
-    _searchLocalRaw:    searchLocal,
-    _searchBarcodeRaw:  searchBarcode,
   };
 
 })(typeof window !== 'undefined' ? window : this);

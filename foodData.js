@@ -7835,7 +7835,6 @@ const BLEND_FOODS = [
 
     try {
       _unsubscribe = db.collection(COLLECTION)
-        .where('verified', '==', true)
         .orderBy('updatedAt', 'asc')
         .onSnapshot(
           { includeMetadataChanges: false },
@@ -7894,7 +7893,7 @@ const BLEND_FOODS = [
     }
     try {
       const lastSync = await _idbGetMeta('lastSync');
-      let   colRef   = db.collection(COLLECTION).where('verified', '==', true);
+      let   colRef   = db.collection(COLLECTION);
       if (lastSync) colRef = colRef.where('updatedAt', '>', new Date(lastSync));
       const snap = await colRef.orderBy('updatedAt', 'asc').get();
       if (snap.empty && lastSync) return 0;
@@ -7933,11 +7932,9 @@ const BLEND_FOODS = [
     try {
       _idb = await _openIDB();
 
-      // Serve cached data immediately so the UI isn't blank.
-      // Only verified docs are loaded — unverified items from a previous
-      // schema version are ignored and will be evicted by the next sync.
+      // Serve cached data immediately so the UI isn't blank
       const stored = await _idbGetAll();
-      _buildIndex(stored.filter(d => d.verified === true));
+      _buildIndex(stored);
       _ready = true;
       _readyResolve(true);
 
@@ -8100,7 +8097,7 @@ const BLEND_FOODS = [
       servingSize:  data.servingSize  ?? 100,
       servingLabel: data.servingLabel || '',
       image:        data.image        || '',
-      verified:     false,   // companion app verifies; only verified items are publicly visible
+      verified:     data.verified     ?? false,
       createdAt:    data.createdAt    || now,
       updatedAt:    now,
     };
