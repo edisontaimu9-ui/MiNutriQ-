@@ -1,7 +1,15 @@
 /**
- * foodSearch.js — Oasis Layered Food Retrieval System
+ * foodSearch.js — Oasis Food Retrieval System
  * ─────────────────────────────────────────────────────────────────────────────
- * Implements a 3-layer offline-first food search strategy:
+ * Two independent search pipelines — text (name-based) and barcode — both
+ * offline-first and falling through to online APIs only when local data misses.
+ *
+ * ── TEXT SEARCH  (searchFood / searchLocal) ───────────────────────────────
+ *
+ *   Layer 0   — PackagedFoodsDB (verified Firestore packaged foods, IDB-cached)
+ *               ▶ Synchronous in-memory lookup once IDB has loaded (~200 ms).
+ *               ▶ Only verified items (verified:true) are present.
+ *               ▶ Results prepended before all other layers; deduplicated by id.
  *
  *   Layer 1   — Local DB (MALAWI_FCT + UCT Exchange + Enteral formulae)
  *               ▶ Instant, offline, always tried first.
@@ -16,22 +24,61 @@
  *               ▶ Only reached when local data is absent/incomplete.
  *               ▶ Fills missing nutritional fields; never overwrites local data.
  *
- * Synonym / fuzzy matching:
- *   Regional food name synonyms (nsima→ugali→sadza, etc.) are resolved before
- *   any search so queries always hit the local DB when a match exists.
+ *   Layer 3   — Open Food Facts Text Search  (_searchOFF, name-based)
+ *               ▶ Last resort when local, regional, AND FDC all miss.
+ *               ▶ Searches packaged/processed foods by product name via
+ *                 OFF /cgi/search.pl endpoint.
+ *               ▶ Returns OFF nutritional fields mapped to unified shape.
  *
- * Output shape (unified food object):
+ * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
+ *
+ *   Layer 0A  — PackagedFoodsDB barcode lookup (verified Firestore items)
+ *               ▶ Awaits IDB ready (max 1.5 s), then exact + partial match.
+ *               ▶ barcodeSource: 'PackagedDB' | confidenceScore 0.97
+ *
+ *   Layer A   — Local barcode registry → MALAWI_FCT  (_searchLocalBarcode)
+ *               ▶ Instant, fully offline. Covers hand-curated Malawi-market
+ *                 barcodes (exact EAN-13) and GS1 company-prefix fallbacks.
+ *               ▶ Returns full Malawi FCT nutrition + measures on hit.
+ *               ▶ barcodeSource: 'LocalDB' | confidenceScore 0.97 / 0.72
+ *
+ *   Layer B   — Open Food Facts v2 Barcode API  (_fetchOFFBarcode)
+ *               ▶ Only reached when Layer A has no match (online).
+ *               ▶ Hits OFF /api/v2/product/{barcode}.json — exact product.
+ *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
+ *               ▶ barcodeSource: 'OFF' | confidenceScore 0.82
+ *
+ * ── QUERY NORMALISATION ──────────────────────────────────────────────────
+ *   All queries are normalised before any search: lowercase → trim whitespace
+ *   → strip punctuation/special chars → collapse runs of spaces.
+ *
+ * ── LAYERED RANKING (local & regional search) ────────────────────────────
+ *   Within each local/regional DB search, results are ranked in three tiers
+ *   so the most specific match always surfaces first:
+ *     Tier A — Exact Match  (score 1.00): normalised query === normalised name
+ *     Tier B — Alias Match  (score 0.90): query matches any food.altNames[]
+ *     Tier C — Token/Fuzzy  (score 0–1 ): weighted token overlap + Levenshtein
+ *   Tier A always beats B; B always beats C. Ties within a tier sort by score.
+ *
+ * ── SYNONYM / FUZZY MATCHING ──────────────────────────────────────────────
+ *   Regional food name synonyms (nsima→ugali→sadza, etc.) are resolved before
+ *   any text search so queries always hit the local DB when a match exists.
+ *
+ * ── OUTPUT SHAPE (unified food object) ───────────────────────────────────
  *   {
  *     id, name, cat,
  *     kcal, kj, pro, cho, fat,       // per 100 g
  *     measures[],                     // from local DB if available
- *     fiber, sodium, sugar,           // extras from APIs if not in local
- *     sourceUsed,                     // 'local' | 'FDC' | 'combined'
- *     confidenceScore,               // 0.0–1.0
- *     lastUpdated,                   // ISO string if available
+ *     fiber, sodium, sugar, salt,     // extras from APIs if not in local
+ *     sourceUsed,                     // 'local' | 'regional' | 'FDC' | 'OFF' | 'combined'
+ *     matchTier,                      // 'exact' | 'alias' | 'token' (local/regional only)
+ *     barcodeSource,                  // 'LocalDB' | 'OFF'  (barcode pipeline only)
+ *     barcodeMatch,                   // 'exact' | 'prefix' | undefined
+ *     confidenceScore,                // 0.0–1.0  (exact=1.00, alias=0.90, token=fuzzy score)
+ *     lastUpdated,                    // ISO string if available
  *   }
  *
- * API keys are used server-side via fetch only — never exposed in console logs.
+ * API keys are kept private — never logged or exposed in console output.
  *
  * Author : Edison Taimu / Oasis
  * ─────────────────────────────────────────────────────────────────────────────
@@ -133,8 +180,15 @@
   // UTILITY HELPERS
   // ══════════════════════════════════════════════════════════════════════════
 
+  /**
+   * Normalise a string for matching:
+   *   • lowercase  • trim whitespace  • strip punctuation/special chars
+   *   • collapse runs of whitespace → single space
+   */
   function _norm(str) {
-    return (str || '').toLowerCase().trim()
+    return (str || '')
+      .toLowerCase()
+      .trim()
       .replace(/[^a-z0-9\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -230,35 +284,106 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1 — LOCAL DATABASE SEARCH (Malawi FCT only)
+  // LAYER 1 — LOCAL DATABASE SEARCH  (Malawi FCT only)
+  //
+  // Three-tier ranking — results are sorted within each tier by score, and
+  // a higher tier always beats a lower tier in the final list:
+  //
+  //   Tier A — EXACT MATCH      score = 1.00
+  //     _norm(term) === _norm(food.name)
+  //     Catches "nsima", "Nsima", "nsima!", "NSIMA (thick)" when the full
+  //     normalised name is an exact hit.
+  //
+  //   Tier B — ALIAS MATCH      score = 0.90
+  //     _norm(term) matches any entry in food.altNames[] (exact comparison
+  //     after normalisation). Rewards foods that explicitly declare synonyms
+  //     without penalising them for not leading with the queried term.
+  //
+  //   Tier C — TOKEN / FUZZY    score = _fuzzyScore()  (threshold >= 0.45)
+  //     Existing weighted token coverage + Levenshtein for single-word queries.
+  //
   // UCT Exchange List is intentionally excluded from general search — it is a
   // diabetic carbohydrate exchange system and is only surfaced through its own
   // dedicated clinical tools (Exchange List reference, meal planner, etc.).
   // ══════════════════════════════════════════════════════════════════════════
 
+  /** Scores a single food entry against an already-normalised query term.
+   *  Returns { score, tier } where tier is 'exact' | 'alias' | 'token'.
+   *  Returns null when the food does not meet any matching threshold. */
+  function _scoreFood(normTerm, food) {
+    const normName = _norm(food.name);
+
+    // Tier A: exact name match
+    if (normTerm === normName) {
+      return { score: 1.00, tier: 'exact' };
+    }
+
+    // Tier B: alias / altNames match
+    if (Array.isArray(food.altNames)) {
+      for (const alias of food.altNames) {
+        if (normTerm === _norm(alias)) {
+          return { score: 0.90, tier: 'alias' };
+        }
+      }
+    }
+
+    // Tier C: token / fuzzy match
+    const fuzzy = _fuzzyScore(normTerm, food.name);
+    if (fuzzy >= 0.45) {
+      return { score: fuzzy, tier: 'token' };
+    }
+
+    return null;
+  }
+
+  /** Tier sort order — lower number = higher priority */
+  const _TIER_ORDER = { exact: 0, alias: 1, token: 2 };
+
   function _searchLocal(terms, limit = 10) {
     const db = (typeof MALAWI_FCT !== 'undefined') ? MALAWI_FCT : [];
     if (!db.length) return [];
 
-    const results = [];
+    // Pre-normalise all search terms once
+    const normTerms = terms.map(_norm).filter(Boolean);
+
+    const hits = [];
     for (const food of db) {
-      let best = 0;
-      for (const term of terms) {
-        const score = _fuzzyScore(term, food.name);
-        if (score > best) best = score;
+      let bestScore = 0;
+      let bestTier  = null;
+
+      for (const nt of normTerms) {
+        const result = _scoreFood(nt, food);
+        if (!result) continue;
+        // Prefer higher-priority tier; break ties by score
+        if (
+          bestTier === null ||
+          _TIER_ORDER[result.tier] < _TIER_ORDER[bestTier] ||
+          (result.tier === bestTier && result.score > bestScore)
+        ) {
+          bestScore = result.score;
+          bestTier  = result.tier;
+        }
       }
-      if (best >= 0.45) {
-        results.push({ food, score: best });
+
+      if (bestTier !== null) {
+        hits.push({ food, score: bestScore, tier: bestTier });
       }
     }
-    results.sort((a, b) => b.score - a.score);
-    return results.slice(0, limit).map(r => {
+
+    // Sort: tier priority first, then descending score within tier
+    hits.sort((a, b) =>
+      _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] ||
+      b.score - a.score
+    );
+
+    return hits.slice(0, limit).map(r => {
       const macros = _per100(r.food);
       return {
         ...r.food,
         ...macros,
         sourceUsed:      'local',
         dbSource:        'Malawi FCT',
+        matchTier:       r.tier,           // 'exact' | 'alias' | 'token'
         confidenceScore: +r.score.toFixed(2),
         lastUpdated:     null,
         _raw:            r.food,
@@ -276,24 +401,55 @@
   function _searchRegional(terms, limit = 10) {
     if (typeof REGIONAL_FCT === 'undefined' || !REGIONAL_FCT.length) return [];
 
-    const results = [];
+    // Pre-normalise terms once
+    const normTerms = terms.map(_norm).filter(Boolean);
+
+    const hits = [];
     for (const food of REGIONAL_FCT) {
-      let best = 0;
-      for (const term of terms) {
-        const s1 = _fuzzyScore(term, food.name);
-        if (s1 > best) best = s1;
-        if (food.altNames) {
+      let bestScore = 0;
+      let bestTier  = null;
+
+      for (const nt of normTerms) {
+        // Tier A: exact name match
+        if (nt === _norm(food.name)) {
+          bestScore = 1.00; bestTier = 'exact'; break;
+        }
+        // Tier B: altNames exact match
+        if (Array.isArray(food.altNames)) {
+          let aliasHit = false;
           for (const alt of food.altNames) {
-            const s2 = _fuzzyScore(term, alt);
-            if (s2 > best) best = s2;
+            if (nt === _norm(alt)) {
+              if (bestTier === null || _TIER_ORDER['alias'] < _TIER_ORDER[bestTier]) {
+                bestScore = 0.90; bestTier = 'alias';
+              }
+              aliasHit = true;
+              break;
+            }
+          }
+          if (aliasHit) continue;
+        }
+        // Tier C: fuzzy on name and altNames
+        const scores = [_fuzzyScore(nt, food.name)];
+        if (Array.isArray(food.altNames)) {
+          for (const alt of food.altNames) scores.push(_fuzzyScore(nt, alt));
+        }
+        const fuzzy = Math.max(...scores);
+        if (fuzzy >= 0.40) {
+          if (bestTier === null || _TIER_ORDER['token'] < _TIER_ORDER[bestTier] ||
+              (bestTier === 'token' && fuzzy > bestScore)) {
+            bestScore = fuzzy; bestTier = 'token';
           }
         }
       }
-      if (best >= 0.40) results.push({ food, score: best });
+
+      if (bestTier !== null) hits.push({ food, score: bestScore, tier: bestTier });
     }
 
-    results.sort((a, b) => b.score - a.score);
-    return results.slice(0, limit).map(r => {
+    hits.sort((a, b) =>
+      _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] || b.score - a.score
+    );
+
+    return hits.slice(0, limit).map(r => {
       const f = r.food;
       return {
         ...f,
@@ -312,6 +468,7 @@
         sodium:          f.sodium  ?? null,
         sourceUsed:      'regional',
         dbSource:        `Regional FCT — ${f.source}`,
+        matchTier:       r.tier,           // 'exact' | 'alias' | 'token'
         confidenceScore: +r.score.toFixed(2),
         lastUpdated:     null,
         _raw:            f,
@@ -353,6 +510,197 @@
     } catch (_e) {
       return null;
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 3 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
+  // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
+  // endpoint to find packaged foods by name. Offline → fails gracefully.
+  // NOTE: For barcode lookups use searchBarcode() / _fetchOFFBarcode (Layer B)
+  // which hits the OFF v2 /product/{barcode}.json endpoint instead.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async function _searchOFF(query) {
+    try {
+      const url = 'https://world.openfoodfacts.org/cgi/search.pl'
+        + '?search_terms=' + encodeURIComponent(query.trim())
+        + '&action=process&json=1&page_size=3'
+        + '&fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,nutriments';
+
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const products = data?.products;
+      if (!Array.isArray(products) || !products.length) return null;
+
+      // Pick the first product that has at least kcal data
+      const p = products.find(pr => {
+        const nm = pr.nutriments || {};
+        return nm['energy-kcal_100g'] != null || nm['energy_100g'] != null;
+      }) || products[0];
+
+      if (!p) return null;
+
+      const nm = p.nutriments || {};
+      const n  = (id) => {
+        const val = nm[id];
+        return (val !== undefined && val !== null && val !== '')
+          ? +parseFloat(val).toFixed(2)
+          : null;
+      };
+
+      const kcalDirect = n('energy-kcal_100g');
+      const kcalFromKj = nm['energy_100g'] != null
+        ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1)
+        : null;
+
+      const rawCat = (p.categories_tags?.[0] || p.food_groups_tags?.[0] || '');
+      const cat    = rawCat.replace(/^[a-z]{2}:/, '') || 'Open Food Facts';
+
+      return {
+        id:              'off_' + (p.code || _norm(p.product_name || query)),
+        name:            (p.product_name || p.product_name_en || '').trim() || query,
+        brand:           (p.brands || '').trim() || null,
+        cat:             cat,
+        kcal:            kcalDirect ?? kcalFromKj,
+        kj:              n('energy_100g'),
+        pro:             n('proteins_100g'),
+        cho:             n('carbohydrates_100g'),
+        fat:             n('fat_100g'),
+        fiber:           n('fiber_100g'),
+        sugar:           n('sugars_100g'),
+        sodium:          n('sodium_100g'),
+        measures:        null,
+        sourceUsed:      'OFF',
+        confidenceScore: 0.65,
+        lastUpdated:     null,
+      };
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BARCODE — OPEN FOOD FACTS (Layer B)
+  // Fetches a single product by barcode from the OFF v2 API.
+  // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
+  // instant even without a network connection.
+  // Distinct from _searchOFF (Layer 3, text-based) — this resolves exact codes.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const _BC_CACHE_KEY = 'oasis_bc_cache_v1';
+  const _BC_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  function _bcCacheGet(barcode) {
+    try {
+      const store = JSON.parse(localStorage.getItem(_BC_CACHE_KEY) || '{}');
+      const entry = store[barcode];
+      if (!entry) return null;
+      if (Date.now() - entry.ts > _BC_CACHE_TTL) {
+        delete store[barcode];
+        localStorage.setItem(_BC_CACHE_KEY, JSON.stringify(store));
+        return null;
+      }
+      return entry.data;
+    } catch (_e) { return null; }
+  }
+
+  function _bcCacheSet(barcode, data) {
+    try {
+      const store = JSON.parse(localStorage.getItem(_BC_CACHE_KEY) || '{}');
+      store[barcode] = { ts: Date.now(), data };
+      const keys = Object.keys(store);
+      if (keys.length > 50) delete store[keys[0]];
+      localStorage.setItem(_BC_CACHE_KEY, JSON.stringify(store));
+    } catch (_e) {}
+  }
+
+  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
+  function _fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' },
+    }).finally(() => clearTimeout(tid));
+  }
+
+  /**
+   * Fetch a single product from Open Food Facts v2 API by barcode.
+   * Returns unified food object on success, null if not found, throws on error.
+   * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
+   * @returns {Promise<object|null>}
+   */
+  async function _fetchOFFBarcode(barcode) {
+    const cached = _bcCacheGet(barcode);
+    if (cached !== null) return cached;
+
+    const url = 'https://world.openfoodfacts.org/api/v2/product/'
+      + encodeURIComponent(barcode.trim())
+      + '.json?fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,nutriments';
+
+    let r;
+    try {
+      r = await _fetchWithTimeout(url, 12000);
+    } catch (netErr) {
+      if (netErr.name === 'AbortError') throw new Error('Request timed out — check connection');
+      throw new Error('Network error: ' + (netErr.message || netErr));
+    }
+
+    if (r.status === 404) return null;          // barcode unknown to OFF
+    if (!r.ok) throw new Error('Open Food Facts returned ' + r.status);
+
+    let d;
+    try { d = await r.json(); }
+    catch (_je) { throw new Error('Bad response from Open Food Facts'); }
+
+    if (d.status !== 1 || !d.product) return null;
+
+    const p  = d.product;
+    const nm = p.nutriments || {};
+    const n  = (id) => {
+      const val = nm[id];
+      return (val !== undefined && val !== null && val !== '')
+        ? +parseFloat(val).toFixed(2)
+        : null;
+    };
+
+    const kcalDirect = n('energy-kcal_100g');
+    const kcalFromKj = nm['energy_100g'] != null
+      ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1)
+      : null;
+
+    const result = {
+      id:              'off_' + barcode,
+      name:            (p.product_name || p.product_name_en || '').trim() || barcode,
+      brand:           (p.brands || '').trim() || null,
+      cat:             (p.categories_tags?.[0] || p.food_groups_tags?.[0] || 'Open Food Facts')
+                         .replace(/^[a-z]{2}:/, ''),
+      barcode,
+      barcodeSource:   'OFF',
+      barcodeMatch:    'exact',
+      kcal:            kcalDirect ?? kcalFromKj,
+      kj:              n('energy_100g'),
+      pro:             n('proteins_100g'),
+      cho:             n('carbohydrates_100g'),
+      fat:             n('fat_100g'),
+      fiber:           n('fiber_100g'),
+      sugar:           n('sugars_100g'),
+      sodium:          n('sodium_100g'),
+      salt:            n('salt_100g'),
+      measures:        null,
+      sourceUsed:      'OFF',
+      confidenceScore: 0.82,
+      lastUpdated:     null,
+      _offProduct:     true,
+    };
+
+    _bcCacheSet(barcode, result);
+    return result;
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -464,7 +812,7 @@
 
   // ══════════════════════════════════════════════════════════════════════════
   // MERGE HELPER
-  // Priority: local > FDC > Ninja — only fills null/missing fields
+  // Priority: local > FDC > OFF — only fills null/missing fields
   // ══════════════════════════════════════════════════════════════════════════
 
   function _merge(base, ext) {
@@ -568,6 +916,18 @@
       best = _merge(best, fdcResult);
     }
 
+    // Layer 3 — Open Food Facts text search
+    // Only reached when all local layers AND FDC returned nothing, or when
+    // the result still has missing macros after FDC enrichment.
+    if (!best || (best.kcal == null && best.pro == null)) {
+      const offResult = await _searchOFF(query);
+      if (!best) {
+        best = offResult;
+      } else if (offResult) {
+        best = _merge(best, offResult);
+      }
+    }
+
     if (best) delete best._raw;
     _cache.set(cacheKey, best);
     return best;
@@ -632,36 +992,141 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PUBLIC BARCODE SEARCH
-  // Offline-only: _LOCAL_BARCODE_DB → full nutrition. Call this from the
-  // scanner UI. Returns null if the local registry has no match.
+  // PUBLIC BARCODE SEARCH — 2-layer OFF barcode resolution
+  //
+  //   Layer A — Local registry → MALAWI_FCT (instant, offline, full nutrition)
+  //             Checked first; returns immediately on hit.
+  //             barcodeSource: 'LocalDB' | confidenceScore 0.97 (exact) / 0.72 (prefix)
+  //
+  //   Layer B — Open Food Facts v2 barcode API (online, 7-day localStorage cache)
+  //             Only reached when Layer A has no match.
+  //             barcodeSource: 'OFF'   | confidenceScore 0.82
+  //
+  // Returns a unified food object or null when both layers find nothing.
+  // Throws on network error so the scanner UI can show a friendly message.
   // ══════════════════════════════════════════════════════════════════════════
 
   /**
    * Resolve a scanned barcode to a food object.
-   *   Layer A — local registry → MALAWI_FCT: instant, offline, full nutrition.
-   * Returns null if the local layer has no match.
+   *
+   * Layer A — Local registry (offline, instant, full Malawi FCT nutrition).
+   * Layer B — Open Food Facts v2 API (online, per-100g nutrients).
+   *
    * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
    * @returns {Promise<object|null>}
    */
   async function searchBarcode(barcode) {
     if (!barcode) return null;
-    return _searchLocalBarcode(barcode) ?? null;
+
+    // ── Layer A: local registry (offline, instant) ────────────────────────
+    const localResult = _searchLocalBarcode(barcode);
+    if (localResult) return localResult;
+
+    // ── Layer B: Open Food Facts v2 barcode API ───────────────────────────
+    return await _fetchOFFBarcode(barcode);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 0 — PackagedFoodsDB integration
+  //
+  // PackagedFoodsDB (foodData.js) holds admin-verified packaged foods synced
+  // from Firestore. Only documents with verified:true are stored locally.
+  //
+  // Layer 0 wraps both searchLocal and searchBarcode:
+  //   • searchLocal  — PackagedFoodsDB.search() prepended before Malawi FCT /
+  //                    regional results. Deduplication by id prevents doubles.
+  //   • searchBarcode — PackagedFoodsDB.searchBarcode() checked first (Layer 0A),
+  //                    before the hand-curated local registry (Layer A) and
+  //                    Open Food Facts (Layer B).
+  //
+  // PackagedFoodsDB may not be ready synchronously (IDB init is async).
+  // searchLocal is synchronous, so it reads from the in-memory _docMap which
+  // is populated as soon as IDB finishes loading — typically < 200 ms after
+  // page load. If not ready yet, the call returns [] and Layers 1+ handle it.
+  // searchBarcode is async, so we await PackagedFoodsDB.ready() with a timeout.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Attempt a PackagedFoodsDB text search synchronously.
+   * Returns [] silently if PackagedFoodsDB is unavailable or not yet ready.
+   * Results are already in the unified food-object shape (_toFoodShape in foodData.js).
+   */
+  function _pkgSearchLocal(query, limit) {
+    try {
+      if (typeof PackagedFoodsDB === 'undefined' || !PackagedFoodsDB.isReady) return [];
+      return PackagedFoodsDB.search(query, { limit });
+    } catch (_) { return []; }
+  }
+
+  /**
+   * Attempt a PackagedFoodsDB barcode lookup.
+   * Awaits ready() with a 1.5 s timeout so the scanner never hangs.
+   * Returns null silently on any error.
+   */
+  async function _pkgSearchBarcode(barcode) {
+    try {
+      if (typeof PackagedFoodsDB === 'undefined') return null;
+      if (!PackagedFoodsDB.isReady) {
+        await Promise.race([
+          PackagedFoodsDB.ready(),
+          new Promise(res => setTimeout(res, 1500)),
+        ]);
+      }
+      return PackagedFoodsDB.searchBarcode(barcode) ?? null;
+    } catch (_) { return null; }
+  }
+
+  /**
+   * Layer-0-aware searchLocal:
+   *   PackagedFoodsDB hits (verified packaged foods) → Malawi FCT + regional
+   * Deduplicates by id so no result appears twice.
+   */
+  function searchLocalWithPackaged(query, limit = 10) {
+    const pkgHits  = _pkgSearchLocal(query, Math.min(limit, 5));
+    const baseHits = searchLocal(query, limit);
+    const seen     = new Set(pkgHits.map(f => f.id).filter(Boolean));
+    const merged   = [...pkgHits, ...baseHits.filter(f => !seen.has(f.id))];
+    return merged.slice(0, limit);
+  }
+
+  /**
+   * Layer-0-aware searchBarcode:
+   *   Layer 0A — PackagedFoodsDB (verified Firestore items, offline-first)
+   *   Layer A  — Local hand-curated barcode registry
+   *   Layer B  — Open Food Facts v2 API
+   */
+  async function searchBarcodeWithPackaged(barcode) {
+    if (!barcode) return null;
+    // Layer 0A — PackagedFoodsDB
+    const pkgResult = await _pkgSearchBarcode(barcode);
+    if (pkgResult) {
+      pkgResult.barcodeSource    = pkgResult.barcodeSource || 'PackagedDB';
+      pkgResult.confidenceScore  = pkgResult.confidenceScore ?? 0.97;
+      return pkgResult;
+    }
+    // Layers A + B (original pipeline)
+    return searchBarcode(barcode);
   }
 
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
   global.NTFoodSearch = {
     search:             searchFood,
-    searchLocal:        searchLocal,
-    searchBarcode:      searchBarcode,      // barcode scan entry-point (offline-first)
+    // Layer-0-aware wrappers (PackagedFoodsDB → local → regional → APIs)
+    searchLocal:        searchLocalWithPackaged,
+    searchBarcode:      searchBarcodeWithPackaged,
     clearCache:         clearCache,
     _synonymMap:        SYNONYM_MAP,        // exposed for debugging only
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
     _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
     _fdcSearch:         _searchFDC,         // public FDC-only search for explicit import UI
+    _offSearch:         _searchOFF,         // public OFF text-search (name-based, Layer 3)
+    _fetchOFFBarcode:   _fetchOFFBarcode,   // public OFF barcode fetch (Layer B) — for scanner UI
     _regionalSearch:    _searchRegional,    // direct regional FCT search
     filterByCountry:    filterByCountry,    // filter results by country code(s)
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary
+    // Raw originals kept for callers that explicitly want no packaged layer
+    _searchLocalRaw:    searchLocal,
+    _searchBarcodeRaw:  searchBarcode,
   };
 
 })(typeof window !== 'undefined' ? window : this);

@@ -82,9 +82,7 @@
     if (aboutVerText) aboutVerText.textContent = 'v' + APP_VERSION;
     const adrVerText = document.getElementById('adr-version-text');
     if (adrVerText) adrVerText.textContent = 'v' + APP_VERSION;
-    // Recipe Calculator tab footer
-    const rcFooterVer = document.getElementById('rc-footer-version');
-    if (rcFooterVer) rcFooterVer.textContent = 'Recipe Calculator  •  Version ' + APP_VERSION;
+
   })();
 
   // ── Firebase Project Configuration ───────────────────
@@ -2883,13 +2881,7 @@ var photoCropper = (function () {
 
   </div><!-- /body -->
 
-  <!-- ── Tab footer — version stamped by RC.init() from APP_VERSION ── -->
-  <div style="padding:0 16px 20px">
-    <div style="border-top:1px dashed rgba(255,255,255,0.07);padding-top:10px;
-      font-family:var(--mono);font-size:8px;color:var(--text-muted);
-      text-align:center;letter-spacing:0.5px"
-      id="rc-footer-version">Recipe Calculator  •  Version —</div>
-  </div>
+
 
 </div><!-- /tab-recipe -->
 
@@ -7178,7 +7170,7 @@ var photoCropper = (function () {
   <!-- Packaged Foods Add/Edit Modal -->
   <div id="pkg-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9100;align-items:center;justify-content:center">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(540px,95vw);max-height:90vh;overflow-y:auto">
-      <div style="font-family:var(--cond);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:18px" id="pkg-modal-title">ADD PACKAGED FOOD</div>
+      <div style="font-family:var(--cond);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:18px" id="pkg-modal-title">SUBMIT PACKAGED FOOD</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="field-group" style="grid-column:1/-1">
           <label class="lbl">Product Name *</label>
@@ -7209,7 +7201,7 @@ var photoCropper = (function () {
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
         <button onclick="pkgCloseModal()" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);background:transparent;border:1px solid var(--border);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">CANCEL</button>
-        <button onclick="pkgSaveModal()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">SAVE FOOD</button>
+        <button onclick="pkgSaveModal()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">SUBMIT FOR REVIEW</button>
       </div>
     </div>
   </div>
@@ -10205,7 +10197,7 @@ function ntClear(scopeId, resultIds) {
     'UCT Exchange': { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     FDC:            { label:'USDA FDC',      color:'#60a5fa', bg:'rgba(96,165,250,.10)',  border:'rgba(96,165,250,.30)'  },
     combined:       { label:'FCT+FDC',       color:'#34d399', bg:'rgba(52,211,153,.10)',  border:'rgba(52,211,153,.30)'  },
-    CaloriesNinja:  { label:'CalorieNinja',  color:'#fb923c', bg:'rgba(251,146,60,.10)',  border:'rgba(251,146,60,.30)'  },
+    OFF:            { label:'Open Food Facts', color:'#84cc16', bg:'rgba(132,204,22,.10)', border:'rgba(132,204,22,.30)'  },
     custom:         { label:'Imported',      color:'#f0b429', bg:'rgba(240,180,41,.10)',  border:'rgba(240,180,41,.30)'  },
   };
 
@@ -10655,10 +10647,9 @@ function ntClear(scopeId, resultIds) {
   'use strict';
 
   /* ── constants ── */
-  const OFF_BASE  = 'https://world.openfoodfacts.org/api/v2/product/';
-  const CACHE_KEY = 'oasis_bc_cache_v1';
+  // NOTE: OFF_BASE / CACHE_KEY / CACHE_TTL removed — barcode fetching is now
+  // handled entirely by NTFoodSearch.searchBarcode() in foodSearch.js.
   const HIST_KEY  = 'oasis_bc_history_v1';
-  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   /* ── state ── */
   let _stream     = null;
@@ -10670,26 +10661,7 @@ function ntClear(scopeId, resultIds) {
   let _scanning   = true;
   let _lastBarcode = '';   // for manual fallback
 
-  /* ── cache helpers ── */
-  function _cacheGet(barcode) {
-    try {
-      const store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-      const entry = store[barcode];
-      if (!entry) return null;
-      if (Date.now() - entry.ts > CACHE_TTL) { delete store[barcode]; localStorage.setItem(CACHE_KEY, JSON.stringify(store)); return null; }
-      return entry.data;
-    } catch(e) { return null; }
-  }
-  function _cacheSet(barcode, data) {
-    try {
-      const store = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-      store[barcode] = { ts: Date.now(), data };
-      // Prune to 50 entries max
-      const keys = Object.keys(store);
-      if (keys.length > 50) { delete store[keys[0]]; }
-      localStorage.setItem(CACHE_KEY, JSON.stringify(store));
-    } catch(e) {}
-  }
+  /* ── history helper (cache helpers moved to foodSearch.js) ── */
   function _historyAdd(barcode, productName) {
     try {
       const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
@@ -10715,78 +10687,8 @@ function ntClear(scopeId, resultIds) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
   }
 
-  /* ── safe timeout fetch (AbortSignal.timeout not in all Android WebViews) ── */
-  function _fetchWithTimeout(url, ms) {
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, {
-      signal: ctrl.signal,
-      headers: { 'Accept': 'application/json' },
-    }).finally(() => clearTimeout(tid));
-  }
-
-  /* ── fetch Open Food Facts ── */
-  async function _fetchOFF(barcode) {
-    // Check cache first
-    const cached = _cacheGet(barcode);
-    if (cached !== null) return cached;
-
-    // Build URL — use v2 JSON endpoint, no trailing slash issues
-    const url = 'https://world.openfoodfacts.org/api/v2/product/'
-              + encodeURIComponent(barcode.trim())
-              + '.json?fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,nutriments';
-
-    let r;
-    try {
-      r = await _fetchWithTimeout(url, 12000);
-    } catch (netErr) {
-      // Distinguish abort (timeout) from actual network failure
-      if (netErr.name === 'AbortError') throw new Error('Request timed out — check connection');
-      throw new Error('Network error: ' + (netErr.message || netErr));
-    }
-
-    if (r.status === 404) return null;   // barcode unknown to OFF
-    if (!r.ok) throw new Error('Open Food Facts returned ' + r.status);
-
-    let d;
-    try { d = await r.json(); }
-    catch (jsonErr) { throw new Error('Bad response from Open Food Facts'); }
-
-    if (d.status !== 1 || !d.product) return null;  // product record missing
-
-    const p = d.product;
-    const nm = p.nutriments || {};
-    const n  = (id) => {
-      const val = nm[id];
-      return (val !== undefined && val !== null && val !== '') ? +parseFloat(val).toFixed(2) : null;
-    };
-
-    // Prefer kcal field; fall back to kJ ÷ 4.184
-    const kcalDirect = n('energy-kcal_100g');
-    const kcalFromKj = nm['energy_100g'] != null ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1) : null;
-
-    const result = {
-      name:   (p.product_name || p.product_name_en || '').trim() || barcode,
-      brand:  (p.brands || '').trim(),
-      cat:    (p.categories_tags?.[0] || p.food_groups_tags?.[0] || 'Open Food Facts')
-                .replace(/^[a-z]{2}:/,''),
-      kcal:   kcalDirect ?? kcalFromKj,
-      kj:     n('energy_100g'),
-      pro:    n('proteins_100g'),
-      cho:    n('carbohydrates_100g'),
-      fat:    n('fat_100g'),
-      fiber:  n('fiber_100g'),
-      sugar:  n('sugars_100g'),
-      sodium: n('sodium_100g'),
-      salt:   n('salt_100g'),
-      barcode,
-      sourceUsed: 'OFF',
-      confidenceScore: 0.82,
-      _offProduct: true,
-    };
-    _cacheSet(barcode, result);
-    return result;
-  }
+  // _fetchWithTimeout and _fetchOFF have been moved to foodSearch.js.
+  // NTFoodSearch.searchBarcode() now handles both layers (LocalDB + OFF).
 
   /* ── helpers to detect incomplete OFF product identity ── */
   function _offIdentityMissing(off) {
@@ -10860,49 +10762,28 @@ function ntClear(scopeId, resultIds) {
     _bcSt('Barcode detected: ' + code + ' — searching…', true);
 
     try {
-      // ── Layer 0: Local barcode registry (Malawi FCT) — instant, offline ──
-      // Checked FIRST so known regional products are resolved without any
-      // network request.  NTFoodSearch.searchBarcode() wraps _LOCAL_BARCODE_DB
-      // and returns a full nutrition + measures object when the barcode is
-      // registered (e.g. Topsoy 6009681152934).
+      // ── Layers A + B: delegated to NTFoodSearch.searchBarcode() ──────────
+      // Layer A — Local barcode registry (Malawi FCT): offline, instant.
+      //           Returns immediately for known barcodes (barcodeSource 'LocalDB').
+      // Layer B — Open Food Facts v2 API: online, 7-day localStorage cache.
+      //           Only reached when Layer A misses (barcodeSource 'OFF').
+      // Both layers return a unified food object; we just read barcodeSource
+      // to choose the right status message.
       let offFood = null;
       if (window.NTFoodSearch && typeof window.NTFoodSearch.searchBarcode === 'function') {
-        const localMatch = await window.NTFoodSearch.searchBarcode(code);
-        if (localMatch && localMatch.barcodeSource === 'LocalDB') {
-          const isPrefix = localMatch.barcodeMatch === 'prefix';
-          // Normalise to the same shape _showBarcodeResults / _offToHpResult expect
-          offFood = {
-            name:            localMatch.name,
-            brand:           localMatch.brand  || '',
-            cat:             localMatch.cat     || 'Legumes',
-            barcode:         code,
-            kcal:            localMatch.kcal,
-            kj:              localMatch.kj,
-            pro:             localMatch.pro,
-            cho:             localMatch.cho,
-            fat:             localMatch.fat,
-            fiber:           localMatch.fiber   ?? null,
-            sugar:           null,
-            sodium:          localMatch.sodium  ?? null,
-            salt:            null,
-            measures:        localMatch.measures || null,
-            sourceUsed:      'LocalDB',
-            confidenceScore: localMatch.confidenceScore || 0.97,
-            _offProduct:     false,
-            _localMatch:     true,
-            _prefixMatch:    isPrefix,
-          };
-          _bcSt(isPrefix
-            ? 'Possible match found (brand recognised) ⚠'
-            : 'Found in local database ✓',
-            false);
+        const result = await window.NTFoodSearch.searchBarcode(code);
+        if (result) {
+          offFood = result;
+          if (result.barcodeSource === 'LocalDB') {
+            _bcSt(result.barcodeMatch === 'prefix'
+              ? 'Possible match found (brand recognised) ⚠'
+              : 'Found in local database ✓',
+              false);
+          } else {
+            // OFF result — already normalised by foodSearch.js
+            _bcSt('Found on Open Food Facts ✓', false);
+          }
         }
-      }
-
-      // ── Layer 1: OpenFoodFacts (only if local DB had no match) ────────────
-      if (!offFood) {
-        _bcSt('Barcode detected: ' + code + ' — fetching…', true);
-        offFood = await _fetchOFF(code);
       }
 
       // ── Layer 2: GS1 Digital Link — identity/metadata only ───────────────
@@ -12217,7 +12098,7 @@ function ntClear(scopeId, resultIds) {
         <p style="margin:0 0 10px">— Interruption, suspension, or discontinuation of Platform services for any reason.</p>
 
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">8. THIRD-PARTY SERVICES</p>
-        <p style="margin:0 0 10px">The Platform integrates with third-party services including <strong>Firebase</strong> (Google LLC) for authentication and data management, the <strong>USDA FoodData Central API</strong> for nutritional reference data, and the <strong>CalorieNinjas API</strong> for supplementary food data. Use of these services is subject to the respective third parties' terms of service and privacy policies. The developers of Oasis CNST are not responsible for the practices, availability, or data handling of third-party service providers.</p>
+        <p style="margin:0 0 10px">The Platform integrates with third-party services including <strong>Firebase</strong> (Google LLC) for authentication and data management, the <strong>USDA FoodData Central API</strong> for nutritional reference data, and <strong>Open Food Facts</strong> for supplementary food data. Use of these services is subject to the respective third parties' terms of service and privacy policies. The developers of Oasis CNST are not responsible for the practices, availability, or data handling of third-party service providers.</p>
 
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">9. ACCOUNT SUSPENSION AND TERMINATION</p>
         <p style="margin:0 0 6px">The Platform developers reserve the right to suspend or permanently terminate any account, at their sole discretion and without prior notice, in circumstances including but not limited to:</p>
@@ -12266,7 +12147,7 @@ function ntClear(scopeId, resultIds) {
         <p style="margin:0 0 6px">The Platform integrates with the following third-party services. Each provider operates under its own privacy policy, and users are encouraged to review those policies independently:</p>
         <p style="margin:0 0 4px">— <strong>Firebase / Google LLC</strong> — Authentication, Firestore database, and cloud infrastructure. Subject to Google's Privacy Policy and Firebase Terms of Service.</p>
         <p style="margin:0 0 4px">— <strong>USDA FoodData Central API</strong> — Provides nutritional composition data for food search functionality. No personal data is transmitted with queries.</p>
-        <p style="margin:0 0 4px">— <strong>CalorieNinjas API</strong> — Supplementary food data retrieval. No personally identifiable information is included in API requests.</p>
+        <p style="margin:0 0 4px">— <strong>Open Food Facts</strong> — Supplementary food data retrieval. No personally identifiable information is included in API requests.</p>
         <p style="margin:0 0 10px">— <strong>Frontiers in Research Search API</strong> — Powers library search for open-access research articles via the Frontiers Search API V1. No personal or patient data is transmitted with search queries.</p>
         <p style="margin:0 0 10px">— <strong>Elsevier APIs (Scopus &amp; ScienceDirect)</strong> — Powers library search for peer-reviewed journal articles and abstracts via the Elsevier Scopus Search API and ScienceDirect Search API. Search queries (keywords only) are transmitted to Elsevier servers. No personal or patient data is included in API requests. Subject to Elsevier's API Terms of Service and Privacy Policy.</p>
         <p style="margin:0 0 10px">We select third-party providers with regard for data security and appropriateness for a healthcare technology context. We are not responsible for the data practices of third-party service providers beyond the scope of our integration.</p>

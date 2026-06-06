@@ -1013,6 +1013,17 @@ async function initFirebase() {
     // ── DEVELOPER PROFILE — sync avatar + role from Firestore ─────
     _fetchDeveloperProfile();
 
+    // ── PACKAGED FOODS — attach verified-only Firestore listener ──
+    if (typeof PackagedFoodsDB !== 'undefined') {
+      PackagedFoodsDB.listen();
+      PackagedFoodsDB.onSync(() => {
+        if (pkgInitialized) {
+          pkgRender();
+          pkgUpdateStats();
+        }
+      });
+    }
+
 
 
   } catch (err) {
@@ -9162,7 +9173,7 @@ function dbGetPer100(food) {
 const _dbGlobalResults = { items: [], active: false };
 
 /**
- * dbRender — Layered Food Search (Local → FDC → CalorieNinjas)
+ * dbRender — Layered Food Search (Local → FDC → Open Food Facts)
  *
  * When the user types a query:
  *   1. Local MALAWI_FCT is searched immediately (sync, fuzzy via NTFoodSearch).
@@ -9347,8 +9358,9 @@ function dbExportCSV() {
 // ══════════════════════════════════════════════════════════════════
 // PKG — PACKAGED FOODS MODULE
 // Firestore `packaged_foods` collection · Offline-first IndexedDB cache
-// Any authenticated user can add a food item; it is immediately
-// accessible to all users without admin approval.
+// Only authenticated users can submit a food item. Submissions are
+// stored with verified=false and reviewed in the companion app.
+// Only verified items are synced to the public database.
 // ══════════════════════════════════════════════════════════════════
 
 let pkgInitialized = false;
@@ -9520,7 +9532,7 @@ async function pkgUpdateStats() {
 function pkgOpenAddModal() {
   pkgEditingId = null;
   const title = document.getElementById('pkg-modal-title');
-  if (title) title.textContent = 'ADD PACKAGED FOOD';
+  if (title) title.textContent = 'SUBMIT PACKAGED FOOD';
   ['name','brand','barcode','serving','kcal','pro','cho','fat','sugar','fiber','sodium']
     .forEach(f => { const el = document.getElementById('pkg-f-' + f); if (el) el.value = ''; });
   const overlay = document.getElementById('pkg-modal-overlay');
@@ -9566,6 +9578,19 @@ function pkgCloseModal() {
 async function pkgSaveModal() {
   if (typeof PackagedFoodsDB === 'undefined') return;
 
+  // ── Auth guard: only signed-in users may submit ──────────────────
+  try {
+    const auth = typeof _getAuth === 'function' ? _getAuth() : null;
+    if (!auth?.currentUser) {
+      showToast('Please sign in to submit a food item.', 'warn');
+      return;
+    }
+  } catch(e) {
+    showToast('Please sign in to submit a food item.', 'warn');
+    return;
+  }
+  // ────────────────────────────────────────────────────────────────
+
   const g   = id => { const v = document.getElementById(id)?.value; return (v !== '' && v != null) ? parseFloat(v) : null; };
   const s   = id => (document.getElementById(id)?.value || '').trim();
   const name = s('pkg-f-name');
@@ -9601,13 +9626,13 @@ async function pkgSaveModal() {
       fiber:  g('pkg-f-fiber'),
       sodium: g('pkg-f-sodium'),
     },
-    // Attribution — who submitted this entry; immediately visible to all users
+    // Attribution — who submitted this entry
     submittedBy: submittedBy || '',
-    verified:    false,   // admin can later mark as verified; does NOT gate visibility
+    verified:    false,   // companion app verifies; only verified items are publicly visible
   };
 
   const saveBtn = document.querySelector('#pkg-modal-overlay button[onclick="pkgSaveModal()"]');
-  if (saveBtn) { saveBtn.textContent = 'SAVING…'; saveBtn.disabled = true; }
+  if (saveBtn) { saveBtn.textContent = 'SUBMITTING…'; saveBtn.disabled = true; }
 
   try {
     const docId = pkgEditingId || (data.barcode || undefined);
@@ -9616,12 +9641,12 @@ async function pkgSaveModal() {
     pkgRender();
     pkgUpdateStats();
     const isEdit = !!pkgEditingId;
-    showToast(isEdit ? '✓ Packaged food updated' : '✓ Food added — visible to all users', 'success');
+    showToast(isEdit ? '✓ Packaged food updated' : '✓ Submitted — will appear once verified in the companion app', 'success');
   } catch (err) {
     console.error('[pkgSaveModal]', err);
     alert('Save failed: ' + (err.message || String(err)));
   } finally {
-    if (saveBtn) { saveBtn.textContent = 'SAVE FOOD'; saveBtn.disabled = false; }
+    if (saveBtn) { saveBtn.textContent = 'SUBMIT FOR REVIEW'; saveBtn.disabled = false; }
   }
 }
 
@@ -14452,12 +14477,12 @@ function _dbRenderGlobalResult(food) {
   const sourceColors = {
     local:         'var(--teal)',
     FDC:           'var(--blue)',
-    CaloriesNinja: '#f59e0b',
+    OFF: '#84cc16',
     combined:      'var(--green)',
   };
   const srcColor  = sourceColors[food.sourceUsed] || 'var(--text-dim)';
   const srcLabel  = {
-    local:'Local DB', FDC:'USDA FDC', CaloriesNinja:'CalorieNinjas', combined:'Combined'
+    local:'Local DB', FDC:'USDA FDC', OFF:'Open Food Facts', combined:'Combined'
   }[food.sourceUsed] || food.sourceUsed;
 
   const confidence = Math.round((food.confidenceScore ?? 0) * 100);
@@ -14529,7 +14554,7 @@ function _dbShowGlobalLoading(query) {
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
          Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
-        <div style="margin-top:6px;font-size:9px">FoodData Central · CalorieNinjas</div>
+        <div style="margin-top:6px;font-size:9px">FoodData Central · Open Food Facts</div>
       </div>
     </div>`;
   const noRes = document.getElementById('db-no-results');
@@ -14538,7 +14563,7 @@ function _dbShowGlobalLoading(query) {
 
 /**
  * Debounced global search — fires 600ms after user stops typing.
- * Uses NTFoodSearch layered retrieval (FDC → CalorieNinjas).
+ * Uses NTFoodSearch layered retrieval (FDC → Open Food Facts).
  */
 function _dbGlobalSearch(query) {
   clearTimeout(_GS_debounceTimer);
