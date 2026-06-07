@@ -7152,7 +7152,7 @@ var photoCropper = (function () {
             <th style="color:var(--green)">Fat (g)</th>
             <th style="color:var(--text-dim)">Fiber (g)</th>
             <th style="color:var(--text-dim)">Sodium (mg)</th>
-            <th style="min-width:80px"></th>
+
           </tr>
         </thead>
         <tbody id="pkg-tbody"></tbody>
@@ -12279,22 +12279,55 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq API key — loaded securely from Firebase Remote Config
-  window.GROQ_API_KEY = '';
+  // Groq + PubMed + Frontiers + Elsevier API keys — loaded securely from Firebase Remote Config
+  window.GROQ_API_KEY      = '';
+  window.PUBMED_API_KEY    = '';
+  window.FRONTIERS_API_KEY = '';
+  window.ELSEVIER_API_KEY  = '';
 
-  (function loadGroqKey() {
+  (function loadRemoteKeys() {
     try {
       const rc = firebase.remoteConfig();
       rc.settings.minimumFetchIntervalMillis = 3600000; // 1 hour cache
-      rc.defaultConfig = { GROQ_API_KEY: '' };
+      rc.defaultConfig = {
+        GROQ_API_KEY:       '',
+        pubmed_api_key:     '',
+        frontiers_api_key:  '',
+        elsevier_api_key:   ''
+      };
 
       rc.fetchAndActivate().then(function () {
-        var key = rc.getValue('GROQ_API_KEY').asString();
-        if (key) {
-          window.GROQ_API_KEY = key;
-          console.log('[Oasis] Remote config loaded ✓');
+        var groqKey      = rc.getValue('GROQ_API_KEY').asString();
+        var pubmedKey    = rc.getValue('pubmed_api_key').asString();
+        var frontiersKey = rc.getValue('frontiers_api_key').asString();
+        var elsevierKey  = rc.getValue('elsevier_api_key').asString();
+
+        if (groqKey) {
+          window.GROQ_API_KEY = groqKey;
+          console.log('[Oasis] Remote config loaded ✓ (Groq)');
         } else {
-          console.warn('[Oasis] Remote config returned empty key');
+          console.warn('[Oasis] Remote config returned empty key (Groq)');
+        }
+
+        if (pubmedKey) {
+          window.PUBMED_API_KEY = pubmedKey;
+          console.log('[Oasis] Remote config loaded ✓ (PubMed)');
+        } else {
+          console.warn('[Oasis] Remote config returned empty key (pubmed_api_key) — using fallback');
+        }
+
+        if (frontiersKey) {
+          window.FRONTIERS_API_KEY = frontiersKey;
+          console.log('[Oasis] Remote config loaded ✓ (Frontiers)');
+        } else {
+          console.warn('[Oasis] Remote config returned empty key (frontiers_api_key) — using fallback');
+        }
+
+        if (elsevierKey) {
+          window.ELSEVIER_API_KEY = elsevierKey;
+          console.log('[Oasis] Remote config loaded ✓ (Elsevier)');
+        } else {
+          console.warn('[Oasis] Remote config returned empty key (elsevier_api_key) — using fallback');
         }
       }).catch(function (err) {
         console.error('[Oasis] Remote config failed:', err);

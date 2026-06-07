@@ -123,17 +123,35 @@
   var _initDone      = false;
 
   /* ── API credentials ── */
-  var RS_PUBMED_KEY      = 'fc03ed1b136070a34347982eb7950c9e3307';
+  /* PubMed API key — loaded at call-time from Remote Config (window.PUBMED_API_KEY),
+     falling back to the hardcoded key only when Remote Config is unavailable.      */
+  var RS_PUBMED_KEY_FALLBACK = 'fc03ed1b136070a34347982eb7950c9e3307';
+  function _getPubMedKey() {
+    var rcKey = typeof window !== 'undefined' && window.PUBMED_API_KEY;
+    return (rcKey && String(rcKey).trim()) || RS_PUBMED_KEY_FALLBACK;
+  }
   var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
   var RS_PAGE_SIZE       = 10;
 
   /* ── Frontiers Search API config ── */
-  var RS_FRONTIERS_KEY  = 'e41a769c392c4760760a1b4702795e77';   // Elsevier-registered key
+  /* Frontiers API key — loaded at call-time from Remote Config (window.FRONTIERS_API_KEY),
+     falling back to the hardcoded key only when Remote Config is unavailable.           */
+  var RS_FRONTIERS_KEY_FALLBACK = 'e41a769c392c4760760a1b4702795e77';
+  function _getFrontiersKey() {
+    var rcKey = typeof window !== 'undefined' && window.FRONTIERS_API_KEY;
+    return (rcKey && String(rcKey).trim()) || RS_FRONTIERS_KEY_FALLBACK;
+  }
   var RS_FRONTIERS_BASE = 'https://search-api.frontiersin.org/api/V1';
   var RS_FRONTIERS_SIZE = 10;
 
   /* ── Layer 3: Elsevier (Scopus + ScienceDirect) config ── */
-  var RS_ELSEVIER_KEY      = 'e41a769c392c4760760a1b4702795e77';
+  /* Elsevier API key — loaded at call-time from Remote Config (window.ELSEVIER_API_KEY),
+     falling back to the hardcoded key only when Remote Config is unavailable.        */
+  var RS_ELSEVIER_KEY_FALLBACK = 'e41a769c392c4760760a1b4702795e77';
+  function _getElsevierKey() {
+    var rcKey = typeof window !== 'undefined' && window.ELSEVIER_API_KEY;
+    return (rcKey && String(rcKey).trim()) || RS_ELSEVIER_KEY_FALLBACK;
+  }
   var RS_ELSEVIER_SCOPUS   = 'https://api.elsevier.com/content/search/scopus';
   var RS_ELSEVIER_SD       = 'https://api.elsevier.com/content/search/sciencedirect';
   var RS_ELSEVIER_ABSTRACT = 'https://api.elsevier.com/content/abstract/scopus_id/';
@@ -2173,7 +2191,7 @@
     var base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
     var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + RS_PAGE_SIZE +
       '&retstart=' + retstart +
-      '&api_key=' + RS_PUBMED_KEY +
+      '&api_key=' + _getPubMedKey() +
       '&term=' + encodeURIComponent(query) +
       (yearFrom || yearTo
         ? '&datetype=pdat&mindate=' + (yearFrom || '1900') + '/01/01' +
@@ -2187,7 +2205,7 @@
         var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
         if (!ids.length) return { results: [], total: total };
 
-        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + RS_PUBMED_KEY +
+        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + _getPubMedKey() +
           '&id=' + ids.join(',');
         return fetch(summaryUrl)
           .then(function(r){ return r.json(); })
@@ -2219,7 +2237,7 @@
   /* ── PubMed: fetch abstract for a single PMID ── */
   function _rsPubMedAbstract(pmid, callback) {
     var url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?' +
-      'db=pubmed&retmode=xml&rettype=abstract&api_key=' + RS_PUBMED_KEY +
+      'db=pubmed&retmode=xml&rettype=abstract&api_key=' + _getPubMedKey() +
       '&id=' + pmid;
     fetch(url)
       .then(function(r){ return r.text(); })
@@ -2635,7 +2653,7 @@
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,' +
              'prism:doi,prism:url,dc:description,openaccess,subtype,subtypeDescription,eid';
-    return _elsFetch(url, { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' }, 'GL-Scopus')
+    return _elsFetch(url, { 'X-ELS-APIKey': _getElsevierKey(), 'Accept': 'application/json' }, 'GL-Scopus')
     .then(function(data) {
       var sr    = (data && data['search-results']) || {};
       var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
@@ -2680,7 +2698,7 @@
     var base     = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
     var fullTerm = '(' + query + ') AND ' + GL_PT_FILTER + ' AND (' + GL_ORG_FILTER + ')';
     var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + GL_PAGE_SIZE +
-      '&retstart=' + retstart + '&api_key=' + RS_PUBMED_KEY +
+      '&retstart=' + retstart + '&api_key=' + _getPubMedKey() +
       '&term=' + encodeURIComponent(fullTerm);
 
     return fetch(searchUrl)
@@ -2690,7 +2708,7 @@
         var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
         if (!ids.length) return { results: [], total: total };
 
-        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + RS_PUBMED_KEY +
+        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + _getPubMedKey() +
           '&id=' + ids.join(',');
         return fetch(summaryUrl)
           .then(function(r){ return r.json(); })
@@ -2862,7 +2880,7 @@
 
     return fetch(url, {
       headers: {
-        'X-ELS-APIKey': RS_FRONTIERS_KEY,
+        'X-ELS-APIKey': _getFrontiersKey(),
         'Accept':       'application/json'
       }
     })
@@ -3172,7 +3190,7 @@
 
         /* ── Auth / API key problems ── */
         if (r.status === 401 || r.status === 403) {
-          console.error('[ELS ' + source + '] Auth error (' + r.status + '): verify RS_ELSEVIER_KEY is valid and has Scopus entitlement.');
+          console.error('[ELS ' + source + '] Auth error (' + r.status + '): verify elsevier_api_key in Remote Config has Scopus entitlement.');
           throw new Error('ELS_AUTH_' + r.status);
         }
 
@@ -3242,7 +3260,7 @@
   function _elsAbstractFetch(scopusId, callback) {
     if (!scopusId) { callback(''); return; }
     var url  = RS_ELSEVIER_ABSTRACT + encodeURIComponent(scopusId);
-    var hdrs = { 'X-ELS-APIKey': RS_ELSEVIER_KEY, 'Accept': 'application/json' };
+    var hdrs = { 'X-ELS-APIKey': _getElsevierKey(), 'Accept': 'application/json' };
     _elsFetch(url, hdrs, 'AbstractRetrieval')
       .then(function(data) {
         /* JSON path */
@@ -3262,7 +3280,7 @@
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var start = (page - 1) * RS_ELSEVIER_SIZE;
     var headers = {
-      'X-ELS-APIKey': RS_ELSEVIER_KEY,
+      'X-ELS-APIKey': _getElsevierKey(),
       'Accept':       'application/json'
     };
 

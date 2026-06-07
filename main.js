@@ -9441,16 +9441,7 @@ function pkgRender() {
       <td style="color:var(--green);text-align:right">${fmt(f.fat)}</td>
       <td style="text-align:right">${fmt(f.fiber)}</td>
       <td style="text-align:right">${fmt(f.sodium)}</td>
-      <td style="white-space:nowrap">
-        <button onclick="pkgOpenEditModal('${safeId}')"
-          style="font-family:var(--mono);font-size:9px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:4px;padding:4px 8px;cursor:pointer;margin-right:4px;letter-spacing:.3px">
-          EDIT
-        </button>
-        <button onclick="pkgDelete('${safeId}')"
-          style="font-family:var(--mono);font-size:9px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:4px;padding:4px 8px;cursor:pointer;letter-spacing:.3px">
-          DEL
-        </button>
-      </td>
+
     </tr>`;
   }).join('');
 
