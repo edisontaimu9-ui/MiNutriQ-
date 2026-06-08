@@ -2761,10 +2761,206 @@ function openAbout(){
   } else if(typeof _fetchDeveloperProfile === 'function') {
     _fetchDeveloperProfile();
   }
+  _initMyFeedbackListener();
 }
 function closeAbout(){
   document.getElementById('about-drawer').classList.remove('open');
   document.getElementById('about-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════════
+   MY SUBMISSIONS — About Drawer inbox
+   Listens to the user's own feedback docs in real-time and
+   renders them with any admin replies.
+   ════════════════════════════════════════════════════════════ */
+
+/** Firestore Timestamp → readable string */
+function _fmtSubmissionTs(ts) {
+  if (!ts) return '';
+  var d;
+  if (typeof ts.toDate === 'function') d = ts.toDate();
+  else if (ts instanceof Date)         d = ts;
+  else if (typeof ts === 'string')     d = new Date(ts);
+  else return '';
+  if (isNaN(d.getTime())) return '';
+  var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var h = d.getHours(), m = d.getMinutes();
+  var ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return mo[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() +
+         ' · ' + h + ':' + (m < 10 ? '0' + m : m) + ' ' + ap;
+}
+
+/** Escape HTML entities to prevent XSS when building innerHTML strings */
+function _escHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Sets up a real-time Firestore listener for the current user's feedback.
+ * Idempotent — safe to call on every openAbout().
+ */
+function _initMyFeedbackListener() {
+  var uid = _getAuth()?.currentUser?.uid;
+  if (!uid || typeof db === 'undefined') return;
+  if (window._myFbListenerActive) return;
+  window._myFbListenerActive = true;
+
+  db.collection('feedback')
+    .where('userId', '==', uid)
+    .orderBy('sentAt', 'desc')
+    .limit(20)
+    .onSnapshot(function(snap) {
+      var docs = snap.docs.map(function(d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+      _renderMyFeedback(docs);
+    }, function(err) {
+      console.warn('[Oasis] myFeedback listener:', err);
+    });
+}
+
+/**
+ * Renders each submission as a compact card inside #my-fb-list.
+ * Handles empty state, admin replies, and unread badge.
+ */
+function _renderMyFeedback(docs) {
+  var list  = document.getElementById('my-fb-list');
+  var badge = document.getElementById('my-fb-unread-badge');
+  if (!list) return;
+
+  /* ── Empty state ── */
+  if (!docs || docs.length === 0) {
+    list.innerHTML = '<span style="font-family:var(--sans);font-size:12px;color:var(--text-muted)">No feedback submitted yet.</span>';
+    if (badge) badge.style.display = 'none';
+    return;
+  }
+
+  var unreadCount = 0;
+  var toMark      = [];
+  var html        = '';
+
+  docs.forEach(function(doc) {
+    var hasReply = !!(doc.adminReply && doc.adminReply.message);
+    var isUnread = hasReply && doc.replyRead === false;
+    if (isUnread) { unreadCount++; toMark.push(doc.id); }
+
+    var msg      = doc.message || '';
+    var preview  = msg.length > 80 ? msg.slice(0, 80) + '…' : msg;
+    var emoji    = doc.emoji        || '💬';
+    var typeLabel= doc.feedbackType || 'General';
+    var subject  = doc.subject      || '';
+    var sentStr  = _fmtSubmissionTs(doc.sentAt);
+
+    /* ── Card wrapper ── */
+    html += '<div style="' +
+      'padding:12px 14px;' +
+      'background:var(--surface1,#0d1628);' +
+      'border:1px solid ' + (isUnread ? 'rgba(29,233,212,0.35)' : 'rgba(96,165,250,0.18)') + ';' +
+      'border-left:2px solid ' + (isUnread ? 'var(--teal,#1de9d4)' : 'rgba(96,165,250,0.28)') + ';' +
+      'border-radius:var(--r-md,10px);' +
+      'display:flex;flex-direction:column;gap:6px;' +
+    '">';
+
+    /* ── Top row: emoji + type badge + date ── */
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">';
+    html +=   '<div style="display:flex;align-items:center;gap:6px">';
+    html +=     '<span style="font-size:14px;line-height:1">' + emoji + '</span>';
+    html +=     '<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.8px;' +
+                  'color:var(--blue,#60a5fa);background:rgba(96,165,250,0.08);' +
+                  'border:1px solid rgba(96,165,250,0.22);border-radius:4px;padding:2px 7px">' +
+                  _escHtml(typeLabel) + '</span>';
+    html +=   '</div>';
+    if (sentStr) {
+      html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted);flex-shrink:0">' +
+                _escHtml(sentStr) + '</span>';
+    }
+    html += '</div>';
+
+    /* ── Subject ── */
+    if (subject) {
+      html += '<div style="font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text-bright)">' +
+                _escHtml(subject) + '</div>';
+    }
+
+    /* ── Message preview ── */
+    html += '<div style="font-family:var(--sans);font-size:11.5px;color:var(--text);line-height:1.6">' +
+              _escHtml(preview) + '</div>';
+
+    /* ── Admin reply block ── */
+    if (hasReply) {
+      var replyTs = _fmtSubmissionTs(doc.adminReply.repliedAt);
+      html += '<div style="' +
+        'margin-top:4px;padding:10px 12px;' +
+        'background:rgba(29,233,212,0.05);' +
+        'border:1px solid rgba(29,233,212,0.22);' +
+        'border-left:2px solid var(--teal,#1de9d4);' +
+        'border-radius:0 var(--r-sm,7px) var(--r-sm,7px) 0;' +
+        'display:flex;flex-direction:column;gap:5px' +
+      '">';
+
+      /* reply label row */
+      html += '<div style="display:flex;align-items:center;gap:6px">';
+      html +=   '<span style="font-family:var(--mono);font-size:9px;font-weight:700;' +
+                  'letter-spacing:0.8px;color:var(--teal,#1de9d4)">↩ Reply from Admin</span>';
+      if (isUnread) {
+        html += '<span style="font-family:var(--mono);font-size:7.5px;font-weight:700;' +
+                  'color:var(--teal,#1de9d4);background:rgba(29,233,212,0.12);' +
+                  'border:1px solid rgba(29,233,212,0.3);border-radius:10px;padding:1px 6px">NEW</span>';
+      }
+      html += '</div>';
+
+      /* reply body */
+      html += '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75">' +
+                _escHtml(doc.adminReply.message) + '</div>';
+
+      /* reply meta: admin name + timestamp */
+      html += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:1px">';
+      if (doc.adminReply.adminName) {
+        html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted)">— ' +
+                  _escHtml(doc.adminReply.adminName) + '</span>';
+      }
+      if (replyTs) {
+        html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted)">' +
+                  _escHtml(replyTs) + '</span>';
+      }
+      html += '</div>';
+
+      html += '</div>'; /* /reply block */
+    }
+
+    html += '</div>'; /* /card */
+  });
+
+  list.innerHTML = html;
+
+  /* ── Unread badge ── */
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.textContent = unreadCount === 1 ? '● NEW REPLY' : '● ' + unreadCount + ' NEW REPLIES';
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  /* ── Mark unread replies as read after 2 s ── */
+  if (toMark.length > 0) {
+    setTimeout(function() {
+      toMark.forEach(function(id) { _markReplyRead(id); });
+    }, 2000);
+  }
+}
+
+/** Writes replyRead: true to a feedback doc (non-critical — silent on error). */
+async function _markReplyRead(docId) {
+  try {
+    await db.collection('feedback').doc(docId).update({ replyRead: true });
+  } catch(e) { /* silent — non-critical */ }
 }
 function kebabCycleTheme(){
   var order = Object.keys(THEMES); // ['ocean','slate','forest','amber','clinical','midnight']
@@ -6783,10 +6979,11 @@ function renderRecallMeals() {
             <select class="field-inp" id="meal-${mi}-fct-cat" onchange="filterFctItems(${mi})" style="font-size:11px">
               <option value="">— All Categories —</option>
               ${FCT_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}
+              <option value="Packaged Foods">📦 Packaged Foods</option>
             </select>
           </div>
           <div class="field-group">
-            <label class="field-lbl"> Food Item (Malawi FCT)</label>
+            <label class="field-lbl" id="meal-${mi}-fct-food-lbl"> Food Item (Malawi FCT)</label>
             <select class="field-inp" id="meal-${mi}-fct-food" onchange="updateFctPortions(${mi})" style="font-size:11px">
               ${MALAWI_FCT.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}
             </select>
@@ -6995,45 +7192,170 @@ function addRecallFormula(mi) {
 }
 
 function filterFctItems(mi) {
-  const cat = document.getElementById(`meal-${mi}-fct-cat`).value;
-  const sel = document.getElementById(`meal-${mi}-fct-food`);
-  const filtered = cat ? MALAWI_FCT.filter(f=>f.cat===cat) : MALAWI_FCT;
-  sel.innerHTML = filtered.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  const cat   = document.getElementById(`meal-${mi}-fct-cat`).value;
+  const sel   = document.getElementById(`meal-${mi}-fct-food`);
+  const lblEl = document.getElementById(`meal-${mi}-fct-food-lbl`);
+
+  if (cat === 'Packaged Foods') {
+    // ── Packaged Foods branch ────────────────────────────────────────
+    if (lblEl) lblEl.textContent = '\u{1F4E6} Food Item (Packaged Foods DB)';
+    const db = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    if (!db || !db._docMap || !db._docMap.size) {
+      sel.innerHTML = '<option value="">\u23F3 Loading packaged foods\u2026</option>';
+      if (db && typeof db.onSync === 'function') {
+        db.onSync(() => filterFctItems(mi));
+      }
+      updateFctPortions(mi);
+      return;
+    }
+    const entries = [];
+    db._docMap.forEach((doc, id) => {
+      const name  = doc.name || doc.productName || id;
+      const brand = doc.brand ? ` — ${doc.brand}` : '';
+      entries.push({ id, label: `${name}${brand}` });
+    });
+    entries.sort((a, b) => a.label.localeCompare(b.label));
+    sel.innerHTML = entries.map(e => `<option value="pkg:${e.id}">${e.label}</option>`).join('');
+  } else {
+    // ── Malawi FCT branch ────────────────────────────────────────────
+    if (lblEl) lblEl.textContent = ' Food Item (Malawi FCT)';
+    const filtered = cat ? MALAWI_FCT.filter(f => f.cat === cat) : MALAWI_FCT;
+    sel.innerHTML  = filtered.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  }
+
   updateFctPortions(mi);
 }
 
 function updateFctPortions(mi) {
-  const foodId = document.getElementById(`meal-${mi}-fct-food`)?.value;
-  const food = MALAWI_FCT.find(f=>f.id===foodId);
+  const foodId  = document.getElementById(`meal-${mi}-fct-food`)?.value;
   const portSel = document.getElementById(`meal-${mi}-fct-portion`);
-  const infoEl = document.getElementById(`meal-${mi}-fct-info`);
-  if (!food || !portSel) return;
-  portSel.innerHTML = food.measures.map((m,i)=>`<option value="${i}">${m.lbl}</option>`).join('');
+  const infoEl  = document.getElementById(`meal-${mi}-fct-info`);
+  if (!portSel) return;
+
+  // ── Packaged Foods branch ─────────────────────────────────────────
+  if (foodId && foodId.startsWith('pkg:')) {
+    const pkgId = foodId.slice(4);
+    const db    = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    const doc   = db?._docMap?.get(pkgId);
+    if (!doc) { portSel.innerHTML = '<option>—</option>'; portSel._pkgMeasures = null; return; }
+
+    const n          = doc.per100g || doc.nutrition || {};
+    const kcal100    = +(n.kcal   ?? n.energy_kcal ?? 0);
+    const pro100     = +(n.pro    ?? n.protein_g   ?? 0);
+    const cho100     = +(n.cho    ?? n.carbs_g     ?? 0);
+    const fat100     = +(n.fat    ?? n.fat_g       ?? 0);
+    const kj100      = +(n.kj    ?? (kcal100 * 4.184));
+    const servingSize = +(doc.servingSize ?? 100);
+    const servingLabel = doc.servingLabel || doc.servingDescription || 'serving';
+    const ratio      = servingSize / 100;
+    const ratioHalf  = (servingSize / 2) / 100;
+
+    const measures = [
+      {
+        lbl:  `1 serving \u2014 ${servingLabel} (${servingSize}g)`,
+        kcal: Math.round(kcal100 * ratio),
+        pro:  +((pro100 * ratio).toFixed(1)),
+        cho:  +((cho100 * ratio).toFixed(1)),
+        fat:  +((fat100 * ratio).toFixed(1)),
+        kj:   Math.round(kj100  * ratio),
+        grams: servingSize,
+      },
+      {
+        lbl:  `\u00BD serving (${servingSize / 2}g)`,
+        kcal: Math.round(kcal100 * ratioHalf),
+        pro:  +((pro100 * ratioHalf).toFixed(1)),
+        cho:  +((cho100 * ratioHalf).toFixed(1)),
+        fat:  +((fat100 * ratioHalf).toFixed(1)),
+        kj:   Math.round(kj100  * ratioHalf),
+        grams: servingSize / 2,
+      },
+      {
+        lbl:  '100 g',
+        kcal: Math.round(kcal100),
+        pro:  +pro100.toFixed(1),
+        cho:  +cho100.toFixed(1),
+        fat:  +fat100.toFixed(1),
+        kj:   Math.round(kj100),
+        grams: 100,
+      },
+    ];
+
+    portSel._pkgMeasures = measures;
+    portSel.innerHTML = measures.map((m, i) => `<option value="${i}">${m.lbl}</option>`).join('');
+    const m0 = measures[0];
+    if (infoEl) infoEl.innerHTML = `${m0.kcal} kcal<br>${m0.pro}g pro`;
+    portSel.onchange = () => {
+      const idx = parseInt(portSel.value) || 0;
+      const mx  = measures[idx];
+      if (infoEl) infoEl.innerHTML = `${mx.kcal} kcal<br>${mx.pro}g pro`;
+    };
+    return;
+  }
+
+  // ── Malawi FCT branch ─────────────────────────────────────────────
+  portSel._pkgMeasures = null;
+  const food = MALAWI_FCT.find(f => f.id === foodId);
+  if (!food) return;
+  portSel.innerHTML = food.measures.map((m, i) => `<option value="${i}">${m.lbl}</option>`).join('');
   const m = food.measures[0];
   if (infoEl) infoEl.innerHTML = `${m.kcal} kcal<br>${m.pro}g pro`;
   portSel.onchange = () => {
-    const idx = parseInt(portSel.value)||0;
-    const mx = food.measures[idx];
+    const idx = parseInt(portSel.value) || 0;
+    const mx  = food.measures[idx];
     if (infoEl) infoEl.innerHTML = `${mx.kcal} kcal<br>${mx.pro}g pro`;
   };
 }
 
 function addRecallFct(mi) {
-  const foodId = document.getElementById(`meal-${mi}-fct-food`)?.value;
-  const food = MALAWI_FCT.find(f=>f.id===foodId);
+  const foodId  = document.getElementById(`meal-${mi}-fct-food`)?.value;
+  const portSel = document.getElementById(`meal-${mi}-fct-portion`);
+  const qty     = parseFloat(document.getElementById(`meal-${mi}-fct-qty`).value) || 1;
+
+  // ── Packaged Foods branch ─────────────────────────────────────────
+  if (foodId && foodId.startsWith('pkg:')) {
+    const pkgId   = foodId.slice(4);
+    const db      = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    const doc     = db?._docMap?.get(pkgId);
+    if (!doc) return;
+    const measures = portSel?._pkgMeasures;
+    if (!measures || !measures.length) return;
+    const portIdx = parseInt(portSel?.value) || 0;
+    const m       = measures[portIdx];
+    if (!m) return;
+    const name    = doc.name || doc.productName || pkgId;
+    const brand   = doc.brand ? ` (${doc.brand})` : '';
+    if (!recallData[mi]) recallData[mi] = [];
+    recallData[mi].push({
+      mode: 'fct', source: 'packaged',
+      label: `${name}${brand} \u2014 ${m.lbl}`,
+      baseKcal: m.kcal, basePro: m.pro, baseCho: m.cho, baseFat: m.fat, baseKj: m.kj,
+      kcal: Math.round(m.kcal * qty),
+      pro:  parseFloat((m.pro  * qty).toFixed(1)),
+      cho:  parseFloat((m.cho  * qty).toFixed(1)),
+      fat:  parseFloat((m.fat  * qty).toFixed(1)),
+      kj:   Math.round(m.kj   * qty),
+      exchanges: 1, qty,
+    });
+    document.getElementById(`meal-${mi}-fct-qty`).value = '1';
+    renderMealItems(mi);
+    updateRecallTotals();
+    return;
+  }
+
+  // ── Malawi FCT branch ─────────────────────────────────────────────
+  const food = MALAWI_FCT.find(f => f.id === foodId);
   if (!food) return;
-  const portIdx = parseInt(document.getElementById(`meal-${mi}-fct-portion`).value)||0;
-  const qty = parseFloat(document.getElementById(`meal-${mi}-fct-qty`).value)||1;
+  const portIdx = parseInt(portSel?.value) || 0;
   const m = food.measures[portIdx];
   if (!recallData[mi]) recallData[mi] = [];
   recallData[mi].push({
-    mode:'fct', label:`${food.name} — ${m.lbl}`,
-    baseKcal:m.kcal, basePro:m.pro, baseCho:m.cho, baseFat:m.fat, baseKj:m.kj,
-    kcal:Math.round(m.kcal*qty), pro:parseFloat((m.pro*qty).toFixed(1)),
-    cho:parseFloat((m.cho*qty).toFixed(1)), fat:parseFloat((m.fat*qty).toFixed(1)),
-    kj:Math.round(m.kj*qty), exchanges:1, qty
+    mode: 'fct', label: `${food.name} \u2014 ${m.lbl}`,
+    baseKcal: m.kcal, basePro: m.pro, baseCho: m.cho, baseFat: m.fat, baseKj: m.kj,
+    kcal: Math.round(m.kcal * qty), pro: parseFloat((m.pro * qty).toFixed(1)),
+    cho:  parseFloat((m.cho * qty).toFixed(1)), fat: parseFloat((m.fat * qty).toFixed(1)),
+    kj: Math.round(m.kj * qty), exchanges: 1, qty,
   });
-  document.getElementById(`meal-${mi}-fct-qty`).value='1';
+  document.getElementById(`meal-${mi}-fct-qty`).value = '1';
   renderMealItems(mi);
   updateRecallTotals();
 }
@@ -7667,9 +7989,35 @@ function syncMealPlanFromCalc(sourceKey) {
 function filterMpFoods() {
   const cat = document.getElementById('mp-food-cat').value;
   const sel = document.getElementById('mp-food-item');
+  const lbl = document.getElementById('mp-food-item-lbl');
   sel.innerHTML = '<option value="">— Select item —</option>';
   document.getElementById('mp-food-info').style.display = 'none';
   if (!cat) return;
+
+  // ── Packaged Foods branch ──────────────────────────────────────────
+  if (cat === 'packaged') {
+    if (lbl) lbl.textContent = '📦 Food Item (Packaged Foods DB)';
+    const db = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    if (!db || !db._docMap || !db._docMap.size) {
+      sel.innerHTML = '<option value="">⏳ Loading packaged foods…</option>';
+      if (db && typeof db.onSync === 'function') db.onSync(() => filterMpFoods());
+      return;
+    }
+    const entries = [];
+    db._docMap.forEach((doc, id) => {
+      const name  = doc.name || doc.productName || id;
+      const brand = doc.brand ? ` — ${doc.brand}` : '';
+      entries.push({ id, label: `${name}${brand}` });
+    });
+    entries.sort((a, b) => a.label.localeCompare(b.label));
+    sel.innerHTML = '<option value="">— Select item —</option>' +
+      entries.map(e => `<option value="pkg:${e.id}">${e.label}</option>`).join('');
+    sel.onchange = onMpFoodSelect;
+    return;
+  }
+
+  // Reset label for all non-packaged branches
+  if (lbl) lbl.textContent = 'Food Item';
 
   // Handle UCT exchange subcategory filters
   let foods;
@@ -7708,6 +8056,77 @@ function filterMpFoods() {
 function onMpFoodSelect() {
   const val = document.getElementById('mp-food-item').value;
   if (!val) { document.getElementById('mp-food-info').style.display = 'none'; return; }
+
+  // ── Packaged Foods branch ──────────────────────────────────────────
+  if (val.startsWith('pkg:')) {
+    const pkgId  = val.slice(4);
+    const db     = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    const doc    = db?._docMap?.get(pkgId);
+    if (!doc) { document.getElementById('mp-food-info').style.display = 'none'; return; }
+
+    const n          = doc.per100g || doc.nutrition || {};
+    const kcal100    = +(n.kcal   ?? n.energy_kcal ?? 0);
+    const pro100     = +(n.pro    ?? n.protein_g   ?? 0);
+    const cho100     = +(n.cho    ?? n.carbs_g     ?? 0);
+    const fat100     = +(n.fat    ?? n.fat_g       ?? 0);
+    const kj100      = +(n.kj    ?? (kcal100 * 4.184));
+    const servingSize  = +(doc.servingSize ?? 100);
+    const servingLabel = doc.servingLabel || doc.servingDescription || 'serving';
+    const ratio      = servingSize / 100;
+    const ratioHalf  = (servingSize / 2) / 100;
+
+    const measures = [
+      {
+        lbl:   `1 serving — ${servingLabel} (${servingSize}g)`,
+        kcal:  Math.round(kcal100 * ratio),
+        pro:   +((pro100 * ratio).toFixed(1)),
+        cho:   +((cho100 * ratio).toFixed(1)),
+        fat:   +((fat100 * ratio).toFixed(1)),
+        kj:    Math.round(kj100  * ratio),
+        grams: servingSize,
+      },
+      {
+        lbl:   `½ serving (${servingSize / 2}g)`,
+        kcal:  Math.round(kcal100 * ratioHalf),
+        pro:   +((pro100 * ratioHalf).toFixed(1)),
+        cho:   +((cho100 * ratioHalf).toFixed(1)),
+        fat:   +((fat100 * ratioHalf).toFixed(1)),
+        kj:    Math.round(kj100  * ratioHalf),
+        grams: servingSize / 2,
+      },
+      {
+        lbl:   '100 g',
+        kcal:  Math.round(kcal100),
+        pro:   +pro100.toFixed(1),
+        cho:   +cho100.toFixed(1),
+        fat:   +fat100.toFixed(1),
+        kj:    Math.round(kj100),
+        grams: 100,
+      },
+    ];
+
+    const portSel = document.getElementById('mp-item-portion');
+    portSel._pkgMeasures = measures;
+    portSel.innerHTML = measures.map((m, i) => `<option value="${i}">${m.lbl}</option>`).join('');
+
+    const showPkgInfo = (idx) => {
+      const m    = measures[idx];
+      const info = document.getElementById('mp-food-info');
+      info.style.display = '';
+      info.innerHTML = `<span style="color:var(--teal)">${m.kcal} kcal</span> · <span style="color:var(--blue)">${m.pro}g protein</span> · <span style="color:var(--amber)">${m.cho}g CHO</span> · <span style="color:var(--green)">${m.fat}g fat</span> · ${m.kj} kJ`;
+      const name  = doc.name || doc.productName || pkgId;
+      const brand = doc.brand ? ` (${doc.brand})` : '';
+      document.getElementById('mp-item-desc').value = `${name}${brand} — ${m.lbl}`;
+    };
+
+    showPkgInfo(parseInt(portSel.value) || 0);
+    portSel.onchange = () => showPkgInfo(parseInt(portSel.value) || 0);
+    return;
+  }
+
+  // ── UCT / MP_FOODS branches ────────────────────────────────────────
+  // Clear any stale packaged cache
+  document.getElementById('mp-item-portion')._pkgMeasures = null;
 
   let food;
   if (val.startsWith('uct_')) {
@@ -7753,6 +8172,37 @@ function addMpItem() {
   const initQty = parseFloat(document.getElementById('mp-item-qty')?.value) || 1;
   if (!val) { showToast('Select a food item first'); return; }
 
+  // ── Packaged Foods branch ──────────────────────────────────────────
+  if (val.startsWith('pkg:')) {
+    const pkgId   = val.slice(4);
+    const db      = typeof PackagedFoodsDB !== 'undefined' ? PackagedFoodsDB : null;
+    const doc     = db?._docMap?.get(pkgId);
+    if (!doc) { showToast('Packaged food not found'); return; }
+    const portSel = document.getElementById('mp-item-portion');
+    const measures = portSel?._pkgMeasures;
+    if (!measures || !measures.length) { showToast('Select a portion first'); return; }
+    const pi = parseInt(portSel.value) || 0;
+    const m  = measures[pi];
+    if (!m) return;
+    if (!mpData[mi]) mpData[mi] = [];
+    mpData[mi].push({
+      source: 'packaged',
+      desc, name: doc.name || doc.productName || pkgId, portion: m.lbl, qty: initQty,
+      baseKcal: m.kcal, basePro: m.pro, baseCho: m.cho, baseFat: m.fat, baseKj: m.kj,
+      kcal: Math.round(m.kcal * initQty),
+      pro:  parseFloat((m.pro  * initQty).toFixed(1)),
+      cho:  parseFloat((m.cho  * initQty).toFixed(1)),
+      fat:  parseFloat((m.fat  * initQty).toFixed(1)),
+      kj:   Math.round(m.kj   * initQty),
+    });
+    if (document.getElementById('mp-item-qty')) document.getElementById('mp-item-qty').value = '1';
+    renderMpMeals();
+    updateMpTotals();
+    showToast('Added: ' + desc);
+    return;
+  }
+
+  // ── UCT / MP_FOODS branches ────────────────────────────────────────
   let food;
   if (val.startsWith('uct_')) {
     const parts = val.split('_');

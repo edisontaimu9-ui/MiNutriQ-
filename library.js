@@ -21,17 +21,22 @@
  *  • view / download tracking counters
  *  • Admin dashboard hooks: exposes window.LibraryAdminAPI
  *
- * Firebase:
- *  • Firestore collection : library_resources
- *  • Firestore collection : library_bookmarks/{uid}/items
- *  • Storage path         : library_uploads/{uid}/{timestamp}_{filename}
+ * Storage / Database:
+ *  • Appwrite Storage bucket  : APPWRITE_BUCKET_ID   (see appwriteClient.js)
+ *  • Appwrite Database        : APPWRITE_DATABASE_ID
+ *  • Appwrite Collection      : APPWRITE_COLLECTION_ID
+ *  • Bookmarks                : localStorage  key "oasis_lib_bm_{uid}"
+ *
+ * Firebase Auth is NOT migrated — window.firebase.auth() is still used
+ * for session management.  Only Storage and Firestore have been replaced.
  *
  * Integration:
- *  1. Add firebase-storage-compat.js SDK before this script (see index.html patch)
- *  2. Add <script src="library.js"></script> before </body> in index.html
- *  3. Firestore & Storage security rules: see LIBRARY_RULES.txt (companion file)
+ *  1. Add Appwrite SDK CDN before appwriteClient.js (see appwriteClient.js)
+ *  2. Add <script src="appwriteClient.js"></script> before library.js
+ *  3. Add <script src="library.js"></script> before </body> in index.html
+ *  4. Appwrite bucket/collection permissions: see appwriteClient.js header
  *
- * Firestore document schema (library_resources/{id}):
+ * Appwrite document schema (library_resources collection):
  *  {
  *    title         : string           // display title
  *    titleLower    : string           // lowercase — used for dup-check queries
@@ -40,14 +45,14 @@
  *    tags          : string[]
  *    source        : string           // publisher / journal / organisation
  *    fileType      : 'pdf'|'docx'|'image'|'link'
- *    fileURL       : string           // Storage download URL  (empty for links)
- *    externalLink  : string           // external URL          (empty for files)
+ *    fileId        : string           // Appwrite Storage file $id (empty for links)
+ *    externalLink  : string           // external URL             (empty for files)
  *    fileName      : string
  *    fileSize      : number           // bytes
  *    uploadedBy    : string           // Firebase Auth UID
  *    uploaderName  : string
- *    uploadedAt    : Timestamp
- *    status        : 'pending'|'approved'|'rejected'
+ *    createdAt     : string           // ISO 8601 timestamp (maps to uploadedAt in UI)
+ *    status        : 'approved'|'rejected'  // open publishing — uploads are approved immediately
  *    reviewNote    : string           // admin comment
  *    bookmarkCount : number
  *    viewCount     : number
@@ -62,11 +67,18 @@
   /* ════════════════════════════════════════════════════
      CONSTANTS
   ════════════════════════════════════════════════════ */
-  var LIB_VERSION       = '1.2.0';
-  var LIB_COL           = 'library_resources';
-  var LIB_BM_COL        = 'library_bookmarks';
-  var LIB_STORAGE       = 'library_uploads';
-  var LIB_MAX_MB        = 25;
+  var LIB_VERSION       = '1.3.0';   // bumped: Appwrite backend migration
+  /* Appwrite config — values are set by appwriteClient.js and read at call-time
+     so that the script can be loaded before window.APPWRITE_* are defined.    */
+  var _AW_DB_ID   = function(){ return window.APPWRITE_DATABASE_ID   || ''; };
+  var _AW_COL_ID  = function(){ return window.APPWRITE_COLLECTION_ID || ''; };
+  var _AW_BKT_ID  = function(){ return window.APPWRITE_BUCKET_ID     || ''; };
+  var _AW_EP      = function(){ return window.APPWRITE_ENDPOINT       || ''; };
+  var _AW_PROJ    = function(){ return window.APPWRITE_PROJECT_ID     || ''; };
+
+  /* Legacy name kept for LibraryAdminAPI.COLLECTION compatibility */
+  var LIB_COL     = 'library_resources';
+  var LIB_MAX_MB  = 25;
 
   var LIB_MIME_MAP = {
     'application/pdf': 'pdf',
@@ -104,13 +116,11 @@
   /* ════════════════════════════════════════════════════
      STATE
   ════════════════════════════════════════════════════ */
-  var _db            = null;
-  var _storage       = null;
   var _auth          = null;
   var _user          = null;
   var _resources     = [];      // approved resources cache
   var _myResources   = [];      // current user's uploads cache
-  var _bookmarks     = {};      // { resourceId: true }
+  var _bookmarks     = {};      // { resourceId: true } — stored in localStorage
   var _panel         = 'browse';
   var _filterCat     = '';
   var _filterType    = '';
@@ -340,18 +350,78 @@
       '.lib-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}',
       '.lib-tag{font-family:var(--mono);font-size:8.5px;padding:2px 7px;border-radius:100px;',
         'background:rgba(29,233,212,.06);border:1px solid rgba(29,233,212,.14);color:var(--teal)}',
-      '.lib-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;',
+      '.lib-card-foot{display:flex;align-items:center;justify-content:flex-start;gap:8px;',
         'margin-top:9px;padding-top:9px;border-top:1px solid rgba(30,41,59,.55)}',
       '.lib-card-cat{font-family:var(--mono);font-size:8.5px;color:var(--text-muted);',
-        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.lib-card-acts{display:flex;gap:4px;flex-shrink:0}',
+        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}',
+      '.lib-card-acts{display:none}',/* hidden — replaced by lib-cta-bar */
 
-      /* ── Icon button ── */
+      /* ── Icon button (legacy, kept for viewer fallback) ── */
       '.lib-ibtn{width:29px;height:29px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);',
         'color:var(--text-dim);display:flex;align-items:center;justify-content:center;',
         'cursor:pointer;transition:all .15s;font-size:12px;flex-shrink:0}',
       '.lib-ibtn:hover{border-color:var(--teal);color:var(--teal)}',
       '.lib-ibtn.bm-active{color:var(--amber);border-color:rgba(240,180,41,.35);background:rgba(240,180,41,.07)}',
+
+      /* ── CTA Action Bar ── */
+      '.lib-cta-bar{display:flex;gap:5px;padding:10px 0 2px;margin-top:6px;border-top:1px solid rgba(30,41,59,.6)}',
+
+      /* Base button */
+      '.lib-cta-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;',
+        'min-height:48px;padding:9px 4px 8px;border-radius:11px;border:1px solid transparent;',
+        'cursor:pointer;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.6px;',
+        'text-transform:uppercase;transition:all .2s cubic-bezier(.34,1.56,.64,1);',
+        'position:relative;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;',
+        'background:none;outline:none;-webkit-appearance:none}',
+
+      /* Focus ring for keyboard nav */
+      '.lib-cta-btn:focus-visible{outline:2px solid rgba(29,233,212,.65);outline-offset:2px}',
+
+      /* Ripple layer */
+      '.lib-cta-btn::before{content:"";position:absolute;inset:0;background:currentColor;opacity:0;',
+        'transition:opacity .15s;border-radius:inherit}',
+      '.lib-cta-btn:active::before{opacity:.07}',
+
+      /* Save / Bookmark */
+      '.lib-cta-save{background:rgba(240,180,41,.09);border-color:rgba(240,180,41,.28);color:rgba(240,180,41,.75)}',
+      '.lib-cta-save:hover{background:rgba(240,180,41,.17);border-color:rgba(240,180,41,.55);',
+        'color:var(--amber,#f0b429);transform:translateY(-1px);',
+        'box-shadow:0 4px 12px rgba(240,180,41,.12)}',
+      '.lib-cta-save:active{transform:translateY(0) scale(.97)}',
+      '.lib-cta-save.bm-active{background:rgba(240,180,41,.2);border-color:rgba(240,180,41,.65);',
+        'color:var(--amber,#f0b429);',
+        'box-shadow:0 0 14px rgba(240,180,41,.18),inset 0 0 12px rgba(240,180,41,.07)}',
+      '.lib-cta-save.bm-active .lib-cta-icon{filter:drop-shadow(0 0 4px rgba(240,180,41,.6))}',
+
+      /* Share */
+      '.lib-cta-share{background:rgba(96,165,250,.09);border-color:rgba(96,165,250,.28);color:rgba(96,165,250,.75)}',
+      '.lib-cta-share:hover{background:rgba(96,165,250,.17);border-color:rgba(96,165,250,.55);',
+        'color:#60a5fa;transform:translateY(-1px);',
+        'box-shadow:0 4px 12px rgba(96,165,250,.12)}',
+      '.lib-cta-share:active{transform:translateY(0) scale(.97)}',
+
+      /* Download — primary CTA, highest visual priority */
+      '.lib-cta-dl{background:rgba(29,233,212,.13);border-color:rgba(29,233,212,.45);color:var(--teal,#1de9d4);',
+        'box-shadow:0 0 10px rgba(29,233,212,.08),inset 0 1px 0 rgba(29,233,212,.12)}',
+      '.lib-cta-dl:hover{background:rgba(29,233,212,.22);border-color:var(--teal,#1de9d4);',
+        'transform:translateY(-1px);',
+        'box-shadow:0 4px 18px rgba(29,233,212,.22),inset 0 1px 0 rgba(29,233,212,.2)}',
+      '.lib-cta-dl:active{transform:translateY(0) scale(.97)}',
+      '.lib-cta-dl .lib-cta-icon{filter:drop-shadow(0 0 3px rgba(29,233,212,.4))}',
+
+      /* Icon container */
+      '.lib-cta-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;',
+        'transition:transform .2s cubic-bezier(.34,1.56,.64,1)}',
+      '.lib-cta-btn:hover .lib-cta-icon{transform:scale(1.15)}',
+      '.lib-cta-icon svg{width:15px;height:15px}',
+
+      /* Text label */
+      '.lib-cta-label{font-size:8px;line-height:1;letter-spacing:.7px;',
+        'font-family:var(--mono);font-weight:700;transition:opacity .15s}',
+
+      /* Completed flash */
+      '.lib-cta-btn.cta-done{animation:ctaBtnDone .45s ease forwards}',
+      '@keyframes ctaBtnDone{0%{transform:scale(1)}35%{transform:scale(1.08)}75%{transform:scale(.98)}100%{transform:scale(1)}}',
 
       /* ── Status badges ── */
       '.lib-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;',
@@ -457,12 +527,14 @@
       '.lib-vcontent img{width:100%;height:100%;object-fit:contain;display:block}',
       '.lib-vmeta{background:var(--surface);border-top:1px solid var(--border);',
         'padding:12px 14px;flex-shrink:0;max-height:220px;overflow-y:auto}',
-      '.lib-vacts{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}',
-      '.lib-vbtn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;',
+      '.lib-vacts{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}',
+      '.lib-vbtn{display:flex;align-items:center;gap:5px;padding:8px 15px;border-radius:8px;',
         'font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;',
-        'cursor:pointer;transition:all .15s;border:1px solid var(--border);',
-        'background:var(--surface2);color:var(--text-dim);text-decoration:none}',
-      '.lib-vbtn:hover{border-color:var(--teal);color:var(--teal)}',
+        'cursor:pointer;transition:all .18s cubic-bezier(.34,1.56,.64,1);border:1px solid var(--border);',
+        'background:var(--surface2);color:var(--text-dim);text-decoration:none;',
+        'min-height:38px;-webkit-tap-highlight-color:transparent}',
+      '.lib-vbtn:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-1px)}',
+      '.lib-vbtn:active{transform:scale(.97)}',
       '.lib-vbtn.primary{background:rgba(29,233,212,.1);border-color:rgba(29,233,212,.3);color:var(--teal)}',
 
       /* ── Citation block ── */
@@ -648,22 +720,50 @@
   }
 
   /* ════════════════════════════════════════════════════
-     FIREBASE ACCESSORS
+     APPWRITE ACCESSORS
   ════════════════════════════════════════════════════ */
-  function _db2() {
-    if (_db) return _db;
-    if (typeof db !== 'undefined' && db) { _db = db; return _db; }
-    if (typeof firebase !== 'undefined') { _db = firebase.firestore(); return _db; }
-    return null;
+
+  /** Return Appwrite Databases instance (set by appwriteClient.js). */
+  function _awDb() {
+    return (typeof window !== 'undefined' && window.AppwriteDatabases) || null;
   }
 
-  function _stor() {
-    if (_storage) return _storage;
-    if (typeof firebase !== 'undefined' && firebase.storage) {
-      _storage = firebase.storage(); return _storage;
-    }
-    return null;
+  /** Return Appwrite Storage instance (set by appwriteClient.js). */
+  function _awStor() {
+    return (typeof window !== 'undefined' && window.AppwriteStorage) || null;
   }
+
+  /**
+   * Build a direct Appwrite Storage view URL for use in <img>, <a>, and
+   * Google Docs Viewer.  The bucket must allow read("any") (or equivalent)
+   * for unauthenticated browser requests to succeed.
+   * @param {string} fileId — Appwrite file $id
+   * @returns {string}
+   */
+  function _awFileUrl(fileId) {
+    if (!fileId) return '';
+    return _AW_EP() + '/storage/buckets/' + _AW_BKT_ID() +
+           '/files/' + encodeURIComponent(fileId) +
+           '/view?project=' + _AW_PROJ();
+  }
+
+  /**
+   * Normalise an Appwrite document to the shape expected by all existing
+   * render/logic code.  Maps $id → id and createdAt → uploadedAt so that
+   * _fmtDate(), _getYear(), and card templates work unchanged.
+   * @param {Object} doc — raw Appwrite document
+   * @returns {Object}
+   */
+  function _awNormDoc(doc) {
+    return Object.assign({}, doc, {
+      id:         doc.$id,
+      uploadedAt: doc.createdAt   // _fmtDate() already handles ISO strings
+    });
+  }
+
+  /* ════════════════════════════════════════════════════
+     FIREBASE AUTH ACCESSORS  (unchanged — Auth is not migrated)
+  ════════════════════════════════════════════════════ */
 
   function _authObj() {
     if (_auth) return _auth;
@@ -682,14 +782,8 @@
     return true;
   }
 
-  function _fsv() {
-    // Firebase server value shortcuts
-    return {
-      ts:  firebase.firestore.FieldValue.serverTimestamp(),
-      inc1: firebase.firestore.FieldValue.increment(1),
-      dec1: firebase.firestore.FieldValue.increment(-1)
-    };
-  }
+  /* _fsv() removed — Appwrite has no server-side FieldValue equivalents.
+     Timestamps use new Date().toISOString(); counters use read-then-write. */
 
   /* ════════════════════════════════════════════════════
      CITATION GENERATOR
@@ -698,7 +792,8 @@
     var year     = _getYear(r.uploadedAt);
     var title    = r.title || 'Untitled';
     var source   = r.source || 'Unknown';
-    var url      = r.fileURL || r.externalLink || '';
+    /* Prefer Appwrite file view URL; fall back to fileURL (legacy) or externalLink */
+    var url      = r.fileId ? _awFileUrl(r.fileId) : (r.fileURL || r.externalLink || '');
     var accessed = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     if (style === 'apa') {
       // APA 7th — Organization/Author. (Year). Title. Source. Retrieved Date, from URL
@@ -723,8 +818,15 @@
           (r.status==='pending'?'⏳ Pending':r.status==='approved'?'✓ Approved':'✗ Rejected')+
         '</span> '
       : '';
-    return '<div class="lib-card" onclick="LibraryModule.openResource(\''+r.id+'\')">' +
-      '<div class="lib-card-row">' +
+    /* SVG icon definitions */
+    var bmIcon = bm
+      ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+      : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+    var shareIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+    var dlIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    var hasDl = !!(r.fileId||r.fileURL||r.externalLink);
+    return '<div class="lib-card">' +
+      '<div class="lib-card-row" onclick="LibraryModule.openResource(\''+r.id+'\')" style="cursor:pointer">' +
         '<div class="lib-card-icon '+_typeCls(r.fileType)+'">'+_typeIcon(r.fileType)+'</div>' +
         '<div class="lib-card-info">' +
           '<div class="lib-card-title">'+_esc(r.title)+'</div>' +
@@ -737,15 +839,33 @@
           (showOasisBadge ? '<span class="rs-source-badge rs-badge-oasis" style="margin-right:5px">Oasis</span>' : '') +
           statusBadge+_esc(_catLabel(r.category))+
         '</div>' +
-        '<div class="lib-card-acts" onclick="event.stopPropagation()">' +
-          '<button class="lib-ibtn'+(bm?' bm-active':'')+'" data-bmid="'+r.id+'" title="'+(bm?'Remove bookmark':'Bookmark')+'" '+
-            'onclick="LibraryModule.toggleBookmark(\''+r.id+'\')">'+(bm?'🔖':'☆')+'</button>' +
-          '<button class="lib-ibtn" title="Share" onclick="LibraryModule.shareResource(\''+r.id+'\')" aria-label="Share">↗</button>' +
-          (r.fileURL||r.externalLink
-            ? '<button class="lib-ibtn" title="Download / Open" onclick="LibraryModule.downloadResource(\''+r.id+'\')" aria-label="Download">↓</button>'
-            : '') +
-        '</div>' +
       '</div>' +
+      /* ── CTA Action Bar ── */
+      '<div class="lib-cta-bar" role="group" aria-label="Resource actions">' +
+        '<button class="lib-cta-btn lib-cta-save'+(bm?' bm-active':'')+'" '+
+          'data-bmid="'+r.id+'" '+
+          'title="'+(bm?'Remove from saved':'Save resource')+'" '+
+          'aria-label="'+(bm?'Remove from saved':'Save resource')+'" '+
+          'aria-pressed="'+(bm?'true':'false')+'" '+
+          'onclick="event.stopPropagation();LibraryModule.toggleBookmark(\''+r.id+'\')">'+
+          '<span class="lib-cta-icon">'+bmIcon+'</span>'+
+          '<span class="lib-cta-label">'+(bm?'Saved':'Save')+'</span>'+
+        '</button>'+
+        '<button class="lib-cta-btn lib-cta-share" '+
+          'title="Share resource" aria-label="Share resource" '+
+          'onclick="event.stopPropagation();LibraryModule.shareResource(\''+r.id+'\')">'+
+          '<span class="lib-cta-icon">'+shareIcon+'</span>'+
+          '<span class="lib-cta-label">Share</span>'+
+        '</button>'+
+        (hasDl
+          ? '<button class="lib-cta-btn lib-cta-dl" '+
+              'title="Download or open resource" aria-label="Download resource" '+
+              'onclick="event.stopPropagation();LibraryModule.downloadResource(\''+r.id+'\')">'+
+              '<span class="lib-cta-icon">'+dlIcon+'</span>'+
+              '<span class="lib-cta-label">Download</span>'+
+            '</button>'
+          : '') +
+      '</div>'+
     '</div>';
   }
 
@@ -1620,120 +1740,163 @@
   }
 
   /* ════════════════════════════════════════════════════
-     DATA: LOAD APPROVED
+     DATA: LOAD APPROVED  (Appwrite Databases)
   ════════════════════════════════════════════════════ */
   function _loadApproved() {
-    var d = _db2();
-    if (!d) { _renderBrowse(); return; }
-    document.getElementById('lib-browse-cards').innerHTML = '<div class="lib-spin"></div>';
-    d.collection(LIB_COL)
-      .where('status','==','approved')
-      .orderBy('uploadedAt','desc')
-      .limit(120)
-      .get()
-      .then(function(snap) {
-        _resources = snap.docs.map(function(doc){ return Object.assign({id:doc.id},doc.data()); });
-        _sqClearCache();   // invalidate scored search cache after fresh data
-        _renderBrowse();
-        _renderBookmarks();
-      })
-      .catch(function(e) {
-        console.error('[Library] loadApproved:',e);
-        _renderBrowse();
-      });
+    var awdb = _awDb();
+    if (!awdb) { _renderBrowse(); return; }
+    var cont = document.getElementById('lib-browse-cards');
+    if (cont) cont.innerHTML = '<div class="lib-spin"></div>';
+    awdb.listDocuments(
+      _AW_DB_ID(),
+      _AW_COL_ID(),
+      [
+        Appwrite.Query.equal('status', 'approved'),
+        Appwrite.Query.orderDesc('createdAt'),
+        Appwrite.Query.limit(120)
+      ]
+    ).then(function(resp) {
+      _resources = resp.documents.map(_awNormDoc);
+      _sqClearCache();   // invalidate scored search cache after fresh data
+      _renderBrowse();
+      _renderBookmarks();
+    }).catch(function(e) {
+      console.error('[Library] loadApproved:', e);
+      _renderBrowse();
+    });
   }
 
   /* ════════════════════════════════════════════════════
-     DATA: MY UPLOADS (real-time)
+     DATA: MY UPLOADS  (Appwrite Databases + Realtime)
   ════════════════════════════════════════════════════ */
   function _subscribeMyUploads() {
-    var d = _db2();
-    var uid = _curUser() && _curUser().uid;
-    if (!d || !uid) {
-      _renderMine();
-      return;
-    }
+    var awdb = _awDb();
+    var uid  = _curUser() && _curUser().uid;
+    if (!awdb || !uid) { _renderMine(); return; }
+
+    /* Tear down previous subscription */
     if (_unsubMine) { _unsubMine(); _unsubMine = null; }
+
     var prevStatuses = {};
     _myResources.forEach(function(r){ prevStatuses[r.id] = r.status; });
 
-    _unsubMine = d.collection(LIB_COL)
-      .where('uploadedBy','==',uid)
-      .orderBy('uploadedAt','desc')
-      .onSnapshot(function(snap) {
-        _myResources = snap.docs.map(function(doc){ return Object.assign({id:doc.id},doc.data()); });
-        // Detect status changes for notifications
-        snap.docChanges().forEach(function(change) {
-          if (change.type === 'modified') {
-            var data = change.doc.data();
-            var prev = prevStatuses[change.doc.id];
-            if (prev && prev !== data.status && data.status !== 'pending') {
-              var msg = data.status === 'approved'
-                ? '✓ "'+data.title+'" was approved'
-                : '✗ "'+data.title+'" was not approved';
-              _toast(msg, data.status === 'approved' ? 'success' : 'warning', 5500);
-              // Show nav dot
-              var dot = document.getElementById('lib-nav-dot');
-              if (dot) dot.classList.add('show');
-            }
-          }
-        });
-        _myResources.forEach(function(r){ prevStatuses[r.id] = r.status; });
+    /* ── One-shot fetch helper — shared by initial load and realtime refresh ── */
+    function _fetchMine() {
+      return awdb.listDocuments(
+        _AW_DB_ID(),
+        _AW_COL_ID(),
+        [
+          Appwrite.Query.equal('uploadedBy', uid),
+          Appwrite.Query.orderDesc('createdAt'),
+          Appwrite.Query.limit(100)
+        ]
+      ).then(function(resp) {
+        _myResources = resp.documents.map(_awNormDoc);
         _renderMine();
-      }, function(err){ console.error('[Library] myUploads err:', err); });
+        return _myResources;
+      });
+    }
+
+    /* Initial load */
+    _fetchMine().then(function(resources) {
+      resources.forEach(function(r){ prevStatuses[r.id] = r.status; });
+    }).catch(function(e){ console.error('[Library] myUploads err:', e); _renderMine(); });
+
+    /* ── Appwrite Realtime subscription for status-change toasts ── */
+    var awclient = window.AppwriteClient;
+    if (awclient && typeof awclient.subscribe === 'function') {
+      var channel = 'databases.' + _AW_DB_ID() +
+                    '.collections.' + _AW_COL_ID() + '.documents';
+      _unsubMine = awclient.subscribe(channel, function(response) {
+        var doc = response && response.payload;
+        if (!doc || doc.uploadedBy !== uid) return;
+
+        var normalized = _awNormDoc(doc);
+        var prev = prevStatuses[normalized.id];
+
+        /* Detect admin status changes and surface toast + nav dot */
+        if (prev && prev !== normalized.status && normalized.status !== 'pending') {
+          var msg = normalized.status === 'approved'
+            ? '✓ "' + normalized.title + '" was approved'
+            : '✗ "' + normalized.title + '" was not approved';
+          _toast(msg, normalized.status === 'approved' ? 'success' : 'warning', 5500);
+          var dot = document.getElementById('lib-nav-dot');
+          if (dot) dot.classList.add('show');
+        }
+
+        /* Refresh the full list after any change to this user's docs */
+        _fetchMine().then(function(resources) {
+          resources.forEach(function(r){ prevStatuses[r.id] = r.status; });
+        }).catch(function(){});
+      });
+    }
   }
 
   /* ════════════════════════════════════════════════════
-     DATA: BOOKMARKS
+     DATA: BOOKMARKS  (localStorage — no Appwrite collection)
+     Key format: "oasis_lib_bm_{uid}"
   ════════════════════════════════════════════════════ */
   function _loadBookmarks() {
-    var d = _db2();
     var uid = _curUser() && _curUser().uid;
-    if (!d || !uid) { _renderBookmarks(); return; }
-    d.collection(LIB_BM_COL).doc(uid).collection('items').get()
-      .then(function(snap) {
-        _bookmarks = {};
-        snap.docs.forEach(function(doc){ _bookmarks[doc.id] = true; });
-        _renderBookmarks();
-        // Refresh bookmark icons on browse cards
-        document.querySelectorAll('[data-bmid]').forEach(function(btn) {
-          var id = btn.getAttribute('data-bmid');
-          var active = !!_bookmarks[id];
-          btn.classList.toggle('bm-active', active);
-          btn.title = active ? 'Remove bookmark' : 'Bookmark';
-          btn.textContent = active ? '🔖' : '☆';
-        });
-      })
-      .catch(function(e){ console.error('[Library] loadBookmarks:', e); });
+    _bookmarks = {};
+    if (uid) {
+      try {
+        var raw = localStorage.getItem('oasis_lib_bm_' + uid);
+        if (raw) _bookmarks = JSON.parse(raw) || {};
+      } catch (e) { /* ignore parse errors */ }
+    }
+    _renderBookmarks();
+    /* Refresh bookmark icons on already-rendered browse cards */
+    document.querySelectorAll('[data-bmid]').forEach(function(btn) {
+      var id     = btn.getAttribute('data-bmid');
+      var active = !!_bookmarks[id];
+      btn.classList.toggle('bm-active', active);
+      btn.title = active ? 'Remove from saved' : 'Save resource';
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      var iconEl  = btn.querySelector('.lib-cta-icon');
+      var labelEl = btn.querySelector('.lib-cta-label');
+      if (iconEl) {
+        iconEl.innerHTML = active
+          ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+          : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+      }
+      if (labelEl) labelEl.textContent = active ? 'Saved' : 'Save';
+    });
   }
 
   /* ════════════════════════════════════════════════════
-     BOOKMARK TOGGLE
+     BOOKMARK TOGGLE  (localStorage)
   ════════════════════════════════════════════════════ */
   function _toggleBookmark(resourceId) {
     if (!_requireAuth()) return;
-    var d = _db2();
     var uid = _curUser().uid;
-    var itemRef = d.collection(LIB_BM_COL).doc(uid).collection('items').doc(resourceId);
-    var resRef  = d.collection(LIB_COL).doc(resourceId);
-    var fv = _fsv();
     if (_bookmarks[resourceId]) {
       delete _bookmarks[resourceId];
-      itemRef.delete().catch(function(){});
-      resRef.update({ bookmarkCount: fv.dec1 }).catch(function(){});
-      _toast('Removed from bookmarks', 'info');
+      _toast('Removed from saved', 'info');
     } else {
       _bookmarks[resourceId] = true;
-      itemRef.set({ addedAt: fv.ts }).catch(function(){});
-      resRef.update({ bookmarkCount: fv.inc1 }).catch(function(){});
-      _toast('Bookmarked!', 'success');
+      _toast('✓ Saved to bookmarks', 'success');
     }
-    // Update all buttons with this resource ID
+    try {
+      localStorage.setItem('oasis_lib_bm_' + uid, JSON.stringify(_bookmarks));
+    } catch (e) { /* quota exceeded or private mode — silent */ }
+    /* Update all buttons with this resource ID */
     document.querySelectorAll('[data-bmid="'+resourceId+'"]').forEach(function(btn) {
       var active = !!_bookmarks[resourceId];
       btn.classList.toggle('bm-active', active);
-      btn.title = active ? 'Remove bookmark' : 'Bookmark';
-      btn.textContent = active ? '🔖' : '☆';
+      btn.title = active ? 'Remove from saved' : 'Save resource';
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      var iconEl  = btn.querySelector('.lib-cta-icon');
+      var labelEl = btn.querySelector('.lib-cta-label');
+      if (iconEl) {
+        iconEl.innerHTML = active
+          ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+          : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+      }
+      if (labelEl) labelEl.textContent = active ? 'Saved' : 'Save';
+      /* Micro-animation on state change */
+      btn.classList.add('cta-done');
+      setTimeout(function(){ btn.classList.remove('cta-done'); }, 500);
     });
     _renderBookmarks();
   }
@@ -1754,10 +1917,20 @@
     titleEl.textContent = r.title || 'Resource';
 
     // Content pane
-    if (r.fileType === 'pdf' && r.fileURL) {
-      content.innerHTML = '<iframe src="'+r.fileURL+'#toolbar=1&navpanes=0" title="'+_esc(r.title)+'" allowfullscreen></iframe>';
-    } else if (r.fileType === 'image' && r.fileURL) {
-      content.innerHTML = '<img src="'+r.fileURL+'" alt="'+_esc(r.title)+'" loading="lazy" style="width:100%;height:100%;object-fit:contain;display:block">';
+    if (r.fileType === 'pdf' && (r.fileId || r.fileURL)) {
+      var pdfSrc = r.fileId ? _awFileUrl(r.fileId) : r.fileURL;
+      content.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:16px;padding:24px;text-align:center">'+
+          '<div style="font-size:44px">📄</div>'+
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Use the button below to open or download this PDF.</div>'+
+          '<a href="'+pdfSrc+'" target="_blank" rel="noopener noreferrer" '+
+            'style="padding:11px 28px;background:rgba(29,233,212,.1);border:1px solid var(--teal);border-radius:9px;'+
+            'color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:700;text-decoration:none">'+
+            '↓ Open PDF ↗</a>'+
+        '</div>';
+    } else if (r.fileType === 'image' && (r.fileId || r.fileURL)) {
+      var imgSrc = r.fileId ? _awFileUrl(r.fileId) : r.fileURL;
+      content.innerHTML = '<img src="'+imgSrc+'" alt="'+_esc(r.title)+'" loading="lazy" style="width:100%;height:100%;object-fit:contain;display:block">';
     } else if (r.fileType === 'link' && r.externalLink) {
       content.innerHTML =
         '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:16px;padding:24px;text-align:center">'+
@@ -1795,14 +1968,31 @@
       : '';
 
     // Metadata pane
+    /* Resolve the action URL: Appwrite fileId takes priority over legacy fileURL */
+    var _actUrl = r.fileId ? _awFileUrl(r.fileId) : (r.fileURL || r.externalLink || '');
+    var _bmActive = !!_bookmarks[r.id];
+    var _bmSvgFilled = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+    var _bmSvgEmpty = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+    var _shareSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+    var _dlSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
     meta.innerHTML =
       '<div class="lib-vacts">'+
-        (r.fileURL||r.externalLink
-          ? '<a href="'+(r.fileURL||r.externalLink)+'" target="_blank" rel="noopener noreferrer" '+
-              'class="lib-vbtn primary" onclick="LibraryModule._trackView(\''+r.id+'\',\'download\')">↓ Download / Open</a>'
+        (_actUrl
+          ? '<a href="'+_actUrl+'" target="_blank" rel="noopener noreferrer" '+
+              'class="lib-vbtn primary" style="gap:6px;font-size:11px;padding:9px 18px;border-radius:9px;background:rgba(29,233,212,.15);border-color:rgba(29,233,212,.5);box-shadow:0 0 12px rgba(29,233,212,.15)" '+
+              'onclick="LibraryModule._trackView(\''+r.id+'\',\'download\')">'+_dlSvg+' Download / Open</a>'
           : '') +
-        '<button class="lib-vbtn" onclick="LibraryModule.toggleBookmark(\''+r.id+'\')">☆ Bookmark</button>'+
-        '<button class="lib-vbtn" onclick="LibraryModule.shareResource(\''+r.id+'\')">↗ Share</button>'+
+        '<button class="lib-vbtn'+((_bmActive)?' bm-active':'')+'" '+
+          'data-bmid="'+r.id+'" '+
+          'style="gap:6px;font-size:11px;padding:9px 16px;border-radius:9px;'+
+          ((_bmActive)?'background:rgba(240,180,41,.18);border-color:rgba(240,180,41,.55);color:var(--amber)':'')+'" '+
+          'onclick="LibraryModule.toggleBookmark(\''+r.id+'\')">'+
+          '<span class="lib-cta-icon" style="width:16px;height:16px">'+(_bmActive?_bmSvgFilled:_bmSvgEmpty)+'</span>'+
+          '<span class="lib-cta-label" style="font-size:11px;letter-spacing:.3px;text-transform:none;font-weight:600">'+(_bmActive?'Saved':'Save')+'</span>'+
+        '</button>'+
+        '<button class="lib-vbtn" '+
+          'style="gap:6px;font-size:11px;padding:9px 16px;border-radius:9px;background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.35);color:#60a5fa" '+
+          'onclick="LibraryModule.shareResource(\''+r.id+'\')">'+_shareSvg+' Share</button>'+
       '</div>'+
       '<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:10px;line-height:1.7">'+
         '<strong style="color:var(--text-dim)">Source:</strong> '+_esc(r.source||'—')+'&nbsp;·&nbsp;'+
@@ -1839,14 +2029,21 @@
     _activeRes = null;
   }
 
+  /* ── View / download counter ─────────────────────────────────────────────
+     Appwrite has no server-side atomic increment.  We do a best-effort
+     read-then-write; race conditions are acceptable for analytics counters.
+  ───────────────────────────────────────────────────────────────────────── */
   function _trackView(resourceId, action) {
-    var d = _db2();
-    if (!d) return;
-    var fv = _fsv();
+    var awdb = _awDb();
+    if (!awdb) return;
     var field = action === 'view' ? 'viewCount' : 'downloadCount';
-    var update = {};
-    update[field] = fv.inc1;
-    d.collection(LIB_COL).doc(resourceId).update(update).catch(function(){});
+    awdb.getDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId)
+      .then(function(doc) {
+        var patch = {};
+        patch[field] = (doc[field] || 0) + 1;
+        return awdb.updateDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId, patch);
+      })
+      .catch(function(){}); // silent — tracking is non-critical
   }
 
   /* ════════════════════════════════════════════════════
@@ -1870,7 +2067,7 @@
   function _downloadResource(resourceId) {
     var r = _resources.concat(_myResources).filter(function(x){return x.id===resourceId;})[0];
     if (!r) return;
-    var url = r.fileURL || r.externalLink;
+    var url = r.fileId ? _awFileUrl(r.fileId) : (r.fileURL || r.externalLink);
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer');
       _trackView(resourceId, 'download');
@@ -2019,18 +2216,23 @@
   }
 
   /* ════════════════════════════════════════════════════
-     DUPLICATE CHECK
+     DUPLICATE CHECK  (Appwrite Databases)
   ════════════════════════════════════════════════════ */
   function _checkDup(title, cb) {
-    var d = _db2();
-    var uid = _curUser() && _curUser().uid;
-    if (!d || !uid) { cb(false); return; }
-    d.collection(LIB_COL)
-      .where('uploadedBy','==',uid)
-      .where('titleLower','==',title.toLowerCase().trim())
-      .limit(1).get()
-      .then(function(snap){ cb(!snap.empty); })
-      .catch(function(){ cb(false); });
+    var awdb = _awDb();
+    var uid  = _curUser() && _curUser().uid;
+    if (!awdb || !uid) { cb(false); return; }
+    awdb.listDocuments(
+      _AW_DB_ID(),
+      _AW_COL_ID(),
+      [
+        Appwrite.Query.equal('uploadedBy', uid),
+        Appwrite.Query.equal('titleLower', title.toLowerCase().trim()),
+        Appwrite.Query.limit(1)
+      ]
+    ).then(function(resp) {
+      cb(resp.total > 0);
+    }).catch(function() { cb(false); });
   }
 
   /* ════════════════════════════════════════════════════
@@ -2068,51 +2270,63 @@
     });
   }
 
+  /* ════════════════════════════════════════════════════
+     UPLOAD — EXECUTE  (Appwrite Storage + Databases)
+  ════════════════════════════════════════════════════ */
   function _doUpload(title, desc, category, source, type, linkUrl) {
-    var btn = document.getElementById('lib-submit-btn');
+    var btn      = document.getElementById('lib-submit-btn');
     var progWrap = document.getElementById('lib-prog-wrap');
     var progBar  = document.getElementById('lib-prog-bar');
     var progLbl  = document.getElementById('lib-prog-lbl');
-    if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
+    if (btn)      { btn.disabled = true; btn.textContent = 'Uploading…'; }
     if (progWrap) progWrap.style.display = 'block';
 
-    var fileURL  = type === 'link' ? linkUrl : '';
+    var fileId   = '';
     var fileName = '';
     var fileSize = 0;
-    var fv = _fsv();
-    var d = _db2();
-    var user = _curUser();
+    var awdb     = _awDb();
+    var awst     = _awStor();
+    var user     = _curUser();
 
+    /* ── Create Appwrite document after file is (optionally) uploaded ── */
     function _saveDoc() {
       if (progLbl) progLbl.textContent = 'Saving metadata…';
-      if (progBar)  progBar.style.width = '95%';
-      return d.collection(LIB_COL).add({
-        title:         title,
-        titleLower:    title.toLowerCase().trim(),
-        description:   desc,
-        category:      category,
-        tags:          _uploadTags.slice(),
-        source:        source,
-        fileType:      type,
-        fileURL:       fileURL,
-        externalLink:  type === 'link' ? linkUrl : '',
-        fileName:      fileName,
-        fileSize:      fileSize,
-        uploadedBy:    user.uid,
-        uploaderName:  user.displayName || user.email || 'Anonymous',
-        uploadedAt:    fv.ts,
-        status:        'pending',
-        reviewNote:    '',
-        bookmarkCount: 0,
-        viewCount:     0,
-        downloadCount: 0
-      });
+      if (progBar) progBar.style.width = '95%';
+      return awdb.createDocument(
+        _AW_DB_ID(),
+        _AW_COL_ID(),
+        Appwrite.ID.unique(),
+        {
+          title:         title,
+          titleLower:    title.toLowerCase().trim(),
+          description:   desc,
+          category:      category,
+          tags:          _uploadTags.slice(),
+          source:        source,
+          fileType:      type,
+          /* Appwrite file ID (empty for external links) */
+          fileId:        fileId,
+          externalLink:  type === 'link' ? linkUrl : '',
+          fileName:      fileName,
+          fileSize:      fileSize,
+          uploadedBy:    user.uid,
+          uploaderName:  user.displayName || user.email || 'Anonymous',
+          /* ISO timestamp — _fmtDate() handles this via new Date(ts) path */
+          createdAt:     new Date().toISOString(),
+          /* Open publishing: authenticated uploads are immediately visible */
+          status:        'approved',
+          reviewNote:    '',
+          bookmarkCount: 0,
+          viewCount:     0,
+          downloadCount: 0
+        }
+      );
     }
 
     function _onDone() {
       if (progBar) progBar.style.width = '100%';
-      if (progLbl) progLbl.textContent = 'Submitted ✓';
-      _toast('✓ Resource submitted for review','success', 4000);
+      if (progLbl) progLbl.textContent = 'Published ✓';
+      _toast('✓ Resource published', 'success', 4000);
       _resetUploadForm();
       LibraryModule.switchPanel('myuploads');
       if (btn) { btn.disabled = false; btn.textContent = '↑ SUBMIT FOR REVIEW'; }
@@ -2124,38 +2338,37 @@
 
     function _onErr(err) {
       console.error('[Library] upload err:', err);
-      _toast('Upload failed — '+(err && err.message ? err.message : 'please try again'),'error');
+      _toast('Upload failed — '+(err && err.message ? err.message : 'please try again'), 'error');
       if (btn) { btn.disabled = false; btn.textContent = '↑ SUBMIT FOR REVIEW'; }
       if (progWrap) progWrap.style.display = 'none';
     }
 
     if (type === 'link') {
+      /* External links — skip file upload, save doc directly */
       _saveDoc().then(_onDone).catch(_onErr);
     } else {
-      var stor = _stor();
-      if (!stor) { _toast('Storage not available — reload and try again','error'); _onErr(new Error('No storage')); return; }
-      var uid = user.uid;
-      var safeName = _selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-      var path = LIB_STORAGE + '/' + uid + '/' + Date.now() + '_' + safeName;
-      var ref = stor.ref(path);
-      var task = ref.put(_selectedFile);
+      /* File upload → Appwrite Storage, then save metadata doc */
+      if (!awst) {
+        _toast('Storage not available — reload and try again', 'error');
+        _onErr(new Error('No Appwrite Storage'));
+        return;
+      }
+      if (progBar) progBar.style.width = '10%';
+      if (progLbl) progLbl.textContent = 'Uploading…';
 
-      task.on('state_changed',
-        function(snap) {
-          var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-          if (progBar) progBar.style.width = pct + '%';
-          if (progLbl) progLbl.textContent = 'Uploading… ' + pct + '%';
-        },
-        _onErr,
-        function() {
-          task.snapshot.ref.getDownloadURL().then(function(url) {
-            fileURL  = url;
-            fileName = _selectedFile.name;
-            fileSize = _selectedFile.size;
-            return _saveDoc();
-          }).then(_onDone).catch(_onErr);
-        }
-      );
+      /* Appwrite createFile() resolves when the upload completes.
+         No progress events are available via the SDK; we advance the
+         bar to 80 % on success to mirror the old Firebase progress UX. */
+      awst.createFile(_AW_BKT_ID(), Appwrite.ID.unique(), _selectedFile)
+        .then(function(fileDoc) {
+          if (progBar) progBar.style.width = '80%';
+          fileId   = fileDoc.$id;
+          fileName = _selectedFile.name;
+          fileSize = _selectedFile.size;
+          return _saveDoc();
+        })
+        .then(_onDone)
+        .catch(_onErr);
     }
   }
 
@@ -3873,92 +4086,101 @@
   }
 
   /* ════════════════════════════════════════════════════
-     ADMIN API (consumed by admin dashboard)
+     ADMIN API  (consumed by admin dashboard)
+     All operations now use Appwrite Databases + Storage.
+     Firebase Auth UID is still used for uploadedBy checks.
   ════════════════════════════════════════════════════ */
   window.LibraryAdminAPI = {
     /**
      * Approve a resource.
-     * @param {string} resourceId
+     * @param {string} resourceId — Appwrite document $id
      * @param {string} [note]      optional admin note
      */
     approve: function(resourceId, note) {
-      var d = _db2();
-      if (!d) return Promise.reject('No Firestore');
-      return d.collection(LIB_COL).doc(resourceId).update({
+      var awdb = _awDb();
+      if (!awdb) return Promise.reject('No Appwrite DB');
+      return awdb.updateDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId, {
         status:     'approved',
         reviewNote: note || '',
-        reviewedAt: _fsv().ts
+        reviewedAt: new Date().toISOString()
       });
     },
+
     /**
      * Reject a resource.
      * @param {string} resourceId
-     * @param {string} note        reason for rejection (required)
+     * @param {string} note — reason for rejection (required)
      */
     reject: function(resourceId, note) {
-      var d = _db2();
-      if (!d) return Promise.reject('No Firestore');
-      return d.collection(LIB_COL).doc(resourceId).update({
+      var awdb = _awDb();
+      if (!awdb) return Promise.reject('No Appwrite DB');
+      return awdb.updateDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId, {
         status:     'rejected',
         reviewNote: note || 'Did not meet submission criteria.',
-        reviewedAt: _fsv().ts
+        reviewedAt: new Date().toISOString()
       });
     },
+
     /**
      * Update resource metadata (admin edit).
      * @param {string} resourceId
-     * @param {Object} fields      partial update — any writable fields
+     * @param {Object} fields — partial update
      */
     update: function(resourceId, fields) {
-      var d = _db2();
-      if (!d) return Promise.reject('No Firestore');
+      var awdb = _awDb();
+      if (!awdb) return Promise.reject('No Appwrite DB');
       var safe = {};
       ['title','description','category','tags','source','status','reviewNote'].forEach(function(k){
         if (Object.prototype.hasOwnProperty.call(fields, k)) safe[k] = fields[k];
       });
       if (safe.title) safe.titleLower = safe.title.toLowerCase().trim();
-      return d.collection(LIB_COL).doc(resourceId).update(safe);
+      return awdb.updateDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId, safe);
     },
+
     /**
-     * Delete a resource and its Storage file.
+     * Delete a resource and its Appwrite Storage file.
      * @param {string} resourceId
      */
     delete: function(resourceId) {
-      var d = _db2();
-      if (!d) return Promise.reject('No Firestore');
-      return d.collection(LIB_COL).doc(resourceId).get().then(function(snap) {
-        var data = snap.data() || {};
-        var del = d.collection(LIB_COL).doc(resourceId).delete();
-        if (data.fileURL) {
-          var stor = _stor();
-          if (stor) {
-            try { stor.refFromURL(data.fileURL).delete().catch(function(){}); } catch(e){}
+      var awdb = _awDb();
+      var awst = _awStor();
+      if (!awdb) return Promise.reject('No Appwrite DB');
+      return awdb.getDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId)
+        .then(function(doc) {
+          var del = awdb.deleteDocument(_AW_DB_ID(), _AW_COL_ID(), resourceId);
+          /* Best-effort: delete file from Storage — ignore errors */
+          if (doc.fileId && awst) {
+            awst.deleteFile(_AW_BKT_ID(), doc.fileId).catch(function(){});
           }
-        }
-        return del;
-      });
+          return del;
+        });
     },
+
     /**
      * Fetch all resources with a specific status for admin listing.
      * @param {'pending'|'approved'|'rejected'|'all'} status
      * @returns {Promise<Array>}
      */
     fetchByStatus: function(status) {
-      var d = _db2();
-      if (!d) return Promise.reject('No Firestore');
-      var q = d.collection(LIB_COL).orderBy('uploadedAt','desc').limit(300);
-      if (status && status !== 'all') q = q.where('status','==',status);
-      return q.get().then(function(snap) {
-        return snap.docs.map(function(doc){ return Object.assign({id:doc.id}, doc.data()); });
-      });
+      var awdb = _awDb();
+      if (!awdb) return Promise.reject('No Appwrite DB');
+      var queries = [
+        Appwrite.Query.orderDesc('createdAt'),
+        Appwrite.Query.limit(300)
+      ];
+      if (status && status !== 'all') {
+        queries.push(Appwrite.Query.equal('status', status));
+      }
+      return awdb.listDocuments(_AW_DB_ID(), _AW_COL_ID(), queries)
+        .then(function(resp) {
+          return resp.documents.map(_awNormDoc);
+        });
     },
-    /**
-     * Get categories list (for admin category manager).
-     */
+
+    /** Get categories list (for admin category manager). */
     getCategories: function() { return LIB_CATEGORIES.slice(); },
-    /**
-     * Expose Firestore collection name for direct admin queries.
-     */
+
+    /** Expose collection name for legacy admin code compatibility. */
     COLLECTION: LIB_COL
   };
 

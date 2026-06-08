@@ -50,7 +50,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -548,6 +548,15 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         SEND FEEDBACK
       </button>
+    </div>
+
+    <!-- ── ADMIN REPLIES — hidden until a reply exists ── -->
+    <div id="fb-replies-wrap" style="display:none;border-top:1px solid rgba(29,233,212,0.2);margin-top:12px;padding-top:14px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2" stroke-linecap="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        <span style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--teal,#1de9d4);text-transform:uppercase">Replies from Admin</span>
+      </div>
+      <div id="fb-replies-list" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto"></div>
     </div>
 
   </div>
@@ -1850,6 +1859,7 @@ var photoCropper = (function () {
 
       </div>
     </div>
+
 
   </div>
 </div>
@@ -5389,10 +5399,11 @@ var photoCropper = (function () {
             <option value="exchange_sugar">UCT — Sugar/Sweets</option>
             <option value="exchange_alcohol"> UCT — Alcohol</option>
             <option value="exchange_combo"> UCT — Combination Foods</option>
+            <option value="packaged">📦 Packaged Foods</option>
           </select>
         </div>
         <div class="field-group">
-          <label class="lbl">Food Item</label>
+          <label class="lbl" id="mp-food-item-lbl">Food Item</label>
           <select class="sel" id="mp-food-item">
             <option value="">— Select category first —</option>
           </select>
@@ -11799,6 +11810,12 @@ function ntClear(scopeId, resultIds) {
 </script>
 
 <script src="pes.js"></script>
+
+<!-- Appwrite Web SDK — required by library.js (Storage + Databases).
+     Firebase Auth is NOT replaced; only library Storage/DB use Appwrite. -->
+<script src="https://cdn.jsdelivr.net/npm/appwrite@15/dist/iife/sdk.js"></script>
+<script src="appwriteClient.js"></script>
+
 <script src="library.js"></script>
 <script src="assessment.js"></script>
 <script src="recipeCalculator.js"></script>
@@ -11925,6 +11942,79 @@ function ntClear(scopeId, resultIds) {
       b.classList.toggle('fb-type-active', b.getAttribute('data-type')==='Bug Report');
     });
   }
+
+  /* ── Admin replies watcher ──────────────────────────────────────────────
+     Starts once, silently. Never shows "Loading…".
+     The replies panel (#fb-replies-wrap) stays hidden until a real reply
+     exists; it appears automatically when Firestore delivers one.
+     ──────────────────────────────────────────────────────────────────── */
+  (function _watchAdminReplies() {
+    if (typeof firebase === 'undefined' || typeof firebase.auth !== 'function') return;
+
+    function _fmtTs(ts) {
+      if (!ts) return '';
+      var d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+      if (isNaN(d.getTime())) return '';
+      var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return mo[d.getMonth()] + ' ' + d.getDate() + ' · ' + h + ':' + (m<10?'0'+m:m) + ' ' + ap;
+    }
+
+    function _esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function _render(docs) {
+      var wrap = document.getElementById('fb-replies-wrap');
+      var list = document.getElementById('fb-replies-list');
+      if (!wrap || !list) return;
+
+      /* Only show docs that have an adminReply */
+      var replied = docs.filter(function(d){ return d.adminReply && d.adminReply.message; });
+      if (!replied.length) { wrap.style.display = 'none'; return; }
+
+      wrap.style.display = '';
+      list.innerHTML = replied.map(function(doc) {
+        var r = doc.adminReply;
+        var subj = doc.subject ? '<div style="font-family:var(--sans);font-size:11px;font-weight:600;color:var(--text-bright,#f0f6fc);margin-bottom:4px">' + _esc(doc.subject) + '</div>' : '';
+        var meta = (r.adminName ? '— ' + _esc(r.adminName) + '&ensp;' : '') + _esc(_fmtTs(r.repliedAt));
+        return '<div style="padding:11px 13px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.25);border-left:2px solid var(--teal,#1de9d4);border-radius:0 8px 8px 0;display:flex;flex-direction:column;gap:5px">' +
+          subj +
+          '<div style="font-family:var(--sans);font-size:12.5px;color:var(--text-bright,#f0f6fc);line-height:1.75">' + _esc(r.message) + '</div>' +
+          '<div style="font-family:var(--mono);font-size:8px;color:var(--text-muted,#6e7681)">' + meta + '</div>' +
+          '</div>';
+      }).join('');
+
+      /* Mark unread replies as read after 2 s */
+      setTimeout(function(){
+        replied.forEach(function(doc){
+          if (doc.replyRead === false && typeof db !== 'undefined') {
+            db.collection('feedback').doc(doc.id).update({ replyRead: true }).catch(function(){});
+          }
+        });
+      }, 2000);
+    }
+
+    function _startWatcher(uid) {
+      if (!uid || typeof db === 'undefined' || !db) return;
+      db.collection('feedback')
+        .where('userId', '==', uid)
+        .orderBy('sentAt', 'desc')
+        .limit(20)
+        .onSnapshot(function(snap) {
+          _render(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
+        }, function(){ /* silent on error — panel stays hidden */ });
+    }
+
+    var auth = firebase.auth();
+    if (auth.currentUser) {
+      _startWatcher(auth.currentUser.uid);
+    } else {
+      var _u = auth.onAuthStateChanged(function(user){ _u(); _startWatcher(user ? user.uid : null); });
+    }
+  })();
 
   /* ── open/close ── */
   window.openFeedbackModal = function(){
