@@ -19,5 +19,7 @@ export default async function(context) {
     PUBMED_API_KEY:    process.env.PUBMED_API_KEY     || '',
     FRONTIERS_API_KEY: process.env.FRONTIERS_API_KEY  || '',
     ELSEVIER_API_KEY:  process.env.ELSEVIER_API_KEY   || '',
+    VAPID_PUBLIC_KEY:  process.env.VAPID_PUBLIC_KEY   || '',
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY  || '',
   }, 200, corsHeaders);
 }
