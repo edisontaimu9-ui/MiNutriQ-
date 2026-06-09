@@ -12376,46 +12376,20 @@ function ntClear(scopeId, resultIds) {
   window.ELSEVIER_API_KEY  = '';
 
   (function loadRemoteKeys() {
-    function fetchKeys() {
-      var user = firebase.auth().currentUser;
-      if (!user) {
-        firebase.auth().onAuthStateChanged(function(u) {
-          if (u) getKeysForUser(u);
-          else console.warn('[Oasis] No authenticated user — keys not loaded');
-        });
-        return;
-      }
-      getKeysForUser(user);
-    }
-
-    function getKeysForUser(user) {
-      user.getIdToken().then(function(idToken) {
-        return fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + idToken
-          },
-          body: JSON.stringify({})
-        });
-      })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.GROQ_API_KEY)      { window.GROQ_API_KEY      = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
-        if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY    = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
-        if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
-        if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY  = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
-      })
-      .catch(function(err) {
-        console.error('[Oasis] Failed to load config from Appwrite:', err);
-      });
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', fetchKeys);
-    } else {
-      fetchKeys();
-    }
+    fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.GROQ_API_KEY)      { window.GROQ_API_KEY      = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
+      if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY    = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
+      if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
+      if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY  = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
+    })
+    .catch(function(err) {
+      console.error('[Oasis] Failed to load config from Appwrite:', err);
+    });
   })();
 </script>
 <script src="references.js" defer></script>
