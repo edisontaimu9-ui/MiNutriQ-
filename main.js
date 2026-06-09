@@ -725,8 +725,7 @@ const appState = {
 // VAPID public key — generated for this deployment
 window.NT_VAPID_PUBLIC_KEY = 'BAKpV7-Tpqvvoxt934v69Dy5ahqZUilbrC3yOEr68hTzqDQ6y9pa1mRz7vqa5xRKja49riUXQqOH9a5pLKfVqzo';
 
-// VAPID private key — keep this secret; used server-side to sign push messages
-// NT_VAPID_PRIVATE_KEY = 'DlyEHHFp98LkMTllZwFdIot6w8Ouk4KpwIcVs2UkOWE' (store on your server, NOT here in production)
+
 
 /** Initialise push support once the SW registration is available */
 async function _initPushNotifications(reg) {

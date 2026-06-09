@@ -12369,11 +12369,12 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq + PubMed + Frontiers + Elsevier API keys — loaded securely from Appwrite Function
-  window.GROQ_API_KEY      = '';
-  window.PUBMED_API_KEY    = '';
-  window.FRONTIERS_API_KEY = '';
-  window.ELSEVIER_API_KEY  = '';
+  // Groq + PubMed + Frontiers + Elsevier + VAPID keys — loaded securely from Appwrite Function
+  window.GROQ_API_KEY        = '';
+  window.PUBMED_API_KEY      = '';
+  window.FRONTIERS_API_KEY   = '';
+  window.ELSEVIER_API_KEY    = '';
+  window.NT_VAPID_PUBLIC_KEY = '';
 
   (function loadRemoteKeys() {
     fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
@@ -12382,10 +12383,11 @@ function ntClear(scopeId, resultIds) {
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      if (data.GROQ_API_KEY)      { window.GROQ_API_KEY      = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
-      if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY    = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
-      if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
-      if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY  = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
+      if (data.GROQ_API_KEY)      { window.GROQ_API_KEY        = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
+      if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY      = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
+      if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY   = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
+      if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY    = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
+      if (data.VAPID_PUBLIC_KEY)  { window.NT_VAPID_PUBLIC_KEY = data.VAPID_PUBLIC_KEY;  console.log('[Oasis] Config loaded ✓ (VAPID)'); }
     })
     .catch(function(err) {
       console.error('[Oasis] Failed to load config from Appwrite:', err);
