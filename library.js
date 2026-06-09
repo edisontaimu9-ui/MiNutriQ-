@@ -129,38 +129,33 @@
   var _citStyle      = 'apa';
   var _uploadTags    = [];
   var _selectedFile  = null;
-  var _unsubMine     = null;    // Firestore real-time unsubscribe fn
+  var _unsubMine     = null;    // Appwrite Realtime unsubscribe fn — my uploads
+  var _unsubBrowse   = null;    // Appwrite Realtime unsubscribe fn — browse/approved list
   var _initDone      = false;
 
   /* ── API credentials ── */
-  /* PubMed API key — loaded at call-time from Remote Config (window.PUBMED_API_KEY),
-     falling back to the hardcoded key only when Remote Config is unavailable.      */
-  var RS_PUBMED_KEY_FALLBACK = 'fc03ed1b136070a34347982eb7950c9e3307';
+  /* PubMed API key — loaded at call-time from Remote Config (window.PUBMED_API_KEY). */
   function _getPubMedKey() {
-    var rcKey = typeof window !== 'undefined' && window.PUBMED_API_KEY;
-    return (rcKey && String(rcKey).trim()) || RS_PUBMED_KEY_FALLBACK;
+    return (typeof window !== 'undefined' && window.PUBMED_API_KEY)
+      ? String(window.PUBMED_API_KEY).trim() : '';
   }
   var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
   var RS_PAGE_SIZE       = 10;
 
   /* ── Frontiers Search API config ── */
-  /* Frontiers API key — loaded at call-time from Remote Config (window.FRONTIERS_API_KEY),
-     falling back to the hardcoded key only when Remote Config is unavailable.           */
-  var RS_FRONTIERS_KEY_FALLBACK = 'e41a769c392c4760760a1b4702795e77';
+  /* Frontiers API key — loaded at call-time from Remote Config (window.FRONTIERS_API_KEY). */
   function _getFrontiersKey() {
-    var rcKey = typeof window !== 'undefined' && window.FRONTIERS_API_KEY;
-    return (rcKey && String(rcKey).trim()) || RS_FRONTIERS_KEY_FALLBACK;
+    return (typeof window !== 'undefined' && window.FRONTIERS_API_KEY)
+      ? String(window.FRONTIERS_API_KEY).trim() : '';
   }
   var RS_FRONTIERS_BASE = 'https://search-api.frontiersin.org/api/V1';
   var RS_FRONTIERS_SIZE = 10;
 
   /* ── Layer 3: Elsevier (Scopus + ScienceDirect) config ── */
-  /* Elsevier API key — loaded at call-time from Remote Config (window.ELSEVIER_API_KEY),
-     falling back to the hardcoded key only when Remote Config is unavailable.        */
-  var RS_ELSEVIER_KEY_FALLBACK = 'e41a769c392c4760760a1b4702795e77';
+  /* Elsevier API key — loaded at call-time from Remote Config (window.ELSEVIER_API_KEY). */
   function _getElsevierKey() {
-    var rcKey = typeof window !== 'undefined' && window.ELSEVIER_API_KEY;
-    return (rcKey && String(rcKey).trim()) || RS_ELSEVIER_KEY_FALLBACK;
+    return (typeof window !== 'undefined' && window.ELSEVIER_API_KEY)
+      ? String(window.ELSEVIER_API_KEY).trim() : '';
   }
   var RS_ELSEVIER_SCOPUS   = 'https://api.elsevier.com/content/search/scopus';
   var RS_ELSEVIER_SD       = 'https://api.elsevier.com/content/search/sciencedirect';
@@ -825,7 +820,7 @@
     var shareIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
     var dlIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
     var hasDl = !!(r.fileId||r.fileURL||r.externalLink);
-    return '<div class="lib-card">' +
+    return '<div class="lib-card" data-lib-id="'+r.id+'">' +
       '<div class="lib-card-row" onclick="LibraryModule.openResource(\''+r.id+'\')" style="cursor:pointer">' +
         '<div class="lib-card-icon '+_typeCls(r.fileType)+'">'+_typeIcon(r.fileType)+'</div>' +
         '<div class="lib-card-info">' +
@@ -1708,7 +1703,7 @@
       var viewBtn = r.status === 'approved'
         ? '<button class="lib-act-link" onclick="LibraryModule.openResource(\''+r.id+'\')">View Public Resource →</button>'
         : '';
-      return '<div class="lib-my-card">' +
+      return '<div class="lib-my-card" data-lib-id="'+r.id+'">' +
         '<div class="lib-my-head">' +
           '<div class="lib-card-icon '+_typeCls(r.fileType)+'" style="width:32px;height:32px;font-size:14px">'+_typeIcon(r.fileType)+'</div>' +
           '<div style="flex:1;min-width:0">' +
@@ -1740,6 +1735,138 @@
   }
 
   /* ════════════════════════════════════════════════════
+     REALTIME HELPERS — BROWSE PANEL
+  ════════════════════════════════════════════════════ */
+
+  /**
+   * Remove a resource from the in-memory cache, search-score cache,
+   * any localStorage bookmark entry, and the live DOM — with a
+   * short fade so the disappearance is not jarring.
+   * @param {string} id — normalised resource id (doc.$id)
+   */
+  function _removeLibraryItemById(id) {
+    /* 1. Purge from approved cache */
+    _resources = _resources.filter(function(r){ return r.id !== id; });
+
+    /* 2. Invalidate scored search cache (stale scores reference the old list) */
+    _sqClearCache();
+
+    /* 3. Purge from localStorage bookmarks (resource no longer exists) */
+    var uid = _curUser() && _curUser().uid;
+    if (uid) {
+      try {
+        var bmKey  = 'oasis_lib_bm_' + uid;
+        var bmRaw  = localStorage.getItem(bmKey);
+        if (bmRaw) {
+          var bm = JSON.parse(bmRaw) || {};
+          if (bm[id]) {
+            delete bm[id];
+            delete _bookmarks[id];
+            localStorage.setItem(bmKey, JSON.stringify(bm));
+          }
+        }
+      } catch(e) { /* quota or private mode — silent */ }
+    }
+
+    /* 4. Fade-and-remove every DOM card that references this id */
+    document.querySelectorAll('[data-lib-id="' + id + '"]').forEach(function(el) {
+      el.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+      el.style.opacity    = '0';
+      el.style.transform  = 'scale(0.97)';
+      setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    });
+
+    /* 5. If the resource is open in the viewer, close it */
+    if (_activeRes && _activeRes.id === id) _closeViewer();
+
+    /* 6. Update the resource count badge */
+    var badge = document.getElementById('lib-res-count');
+    if (badge) badge.textContent = _resources.length;
+  }
+
+  /**
+   * Subscribe to Appwrite Realtime on the library collection.
+   * Handles three event types for the public browse panel:
+   *   • databases.*.collections.*.documents.*.delete  — remove from list
+   *   • databases.*.collections.*.documents.*.update  — re-check status;
+   *     remove if no longer approved
+   *   • databases.*.collections.*.documents.*.create  — insert if approved
+   *
+   * Called once after the initial _loadApproved() fetch completes.
+   * Tears down any existing subscription first so tab-switching never
+   * leaks listeners.
+   */
+  function _subscribeApproved() {
+    var awclient = window.AppwriteClient;
+    if (!awclient || typeof awclient.subscribe !== 'function') return;
+
+    /* Tear down previous browse subscription */
+    if (_unsubBrowse) {
+      try { _unsubBrowse(); } catch(e) {}
+      _unsubBrowse = null;
+    }
+
+    var channel = 'databases.' + _AW_DB_ID() +
+                  '.collections.' + _AW_COL_ID() + '.documents';
+
+    _unsubBrowse = awclient.subscribe(channel, function(response) {
+      var events  = response.events  || [];
+      var doc     = response.payload;
+      if (!doc) return;
+
+      var isDelete = events.some(function(e){ return e.indexOf('.delete') !== -1; });
+      var isUpdate = events.some(function(e){ return e.indexOf('.update') !== -1; });
+      var isCreate = events.some(function(e){ return e.indexOf('.create') !== -1; });
+
+      /* ── DELETE: remove immediately ─────────────────────────────────── */
+      if (isDelete) {
+        _removeLibraryItemById(doc.$id);
+        return;
+      }
+
+      /* ── UPDATE: status may have changed ────────────────────────────── */
+      if (isUpdate) {
+        var normalised = _awNormDoc(doc);
+        if (normalised.status !== 'approved') {
+          /* Was approved, now rejected/pending — pull it from browse */
+          _removeLibraryItemById(normalised.id);
+        } else {
+          /* Still approved — refresh its entry in cache and re-render */
+          var idx = -1;
+          for (var i = 0; i < _resources.length; i++) {
+            if (_resources[i].id === normalised.id) { idx = i; break; }
+          }
+          if (idx !== -1) {
+            _resources[idx] = normalised;
+          } else {
+            /* Was not in list before (e.g. admin re-approved) — prepend */
+            _resources.unshift(normalised);
+          }
+          _sqClearCache();
+          if (!_searchQ || !_searchQ.trim()) _renderBrowse();
+        }
+        return;
+      }
+
+      /* ── CREATE: show immediately if approved ────────────────────────── */
+      if (isCreate) {
+        var newDoc = _awNormDoc(doc);
+        if (newDoc.status === 'approved') {
+          /* Avoid duplicates (can fire twice on some SDK versions) */
+          var already = _resources.some(function(r){ return r.id === newDoc.id; });
+          if (!already) {
+            _resources.unshift(newDoc);
+            _sqClearCache();
+            if (!_searchQ || !_searchQ.trim()) _renderBrowse();
+          }
+        }
+      }
+    });
+
+    console.log('[Library] Realtime browse subscription active — channel:', channel);
+  }
+
+  /* ════════════════════════════════════════════════════
      DATA: LOAD APPROVED  (Appwrite Databases)
   ════════════════════════════════════════════════════ */
   function _loadApproved() {
@@ -1760,6 +1887,7 @@
       _sqClearCache();   // invalidate scored search cache after fresh data
       _renderBrowse();
       _renderBookmarks();
+      _subscribeApproved();   // ← keep browse panel in sync with Appwrite Realtime
     }).catch(function(e) {
       console.error('[Library] loadApproved:', e);
       _renderBrowse();
@@ -3953,7 +4081,7 @@
             '</div>'+
 
             '<div class="lib-row">'+
-              '<label class="lib-lbl">Tags <em>*</em> <span style="font-weight:400;text-transform:none;font-size:8.5px;opacity:.7">(Enter or comma to add · max 10)</span></label>'+
+              '<label class="lib-lbl">Tags <em>*</em> <span style="font-weight:400;text-transform:none;font-size:8.5px;opacity:.7">(Type tag → press comma → press backspace to add · max 10)</span></label>'+
               '<div class="lib-tags-wrap" id="lib-tags-wrap" onclick="document.getElementById(\'lib-tag-input\').focus()">'+
                 '<input type="text" id="lib-tag-input" class="lib-tag-txt" placeholder="Add tag…" '+
                   'onkeydown="LibraryModule.handleTagKey(event)" oninput="LibraryModule.handleTagInput(this.value)">'+
@@ -4204,6 +4332,9 @@
           _loadApproved();
           _loadBookmarks();
         } else {
+          /* Tear down Realtime subscriptions on sign-out */
+          if (_unsubBrowse) { try { _unsubBrowse(); } catch(e) {} _unsubBrowse = null; }
+          if (_unsubMine)   { try { _unsubMine();   } catch(e) {} _unsubMine   = null; }
           _resources = [];
           _renderBrowse();
         }
