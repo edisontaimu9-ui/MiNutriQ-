@@ -1,5 +1,11 @@
  export default async function(context) {
   const { req, res, log } = context;
+
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.empty();
+  }
+
   log('Config keys requested');
 
   return res.json({
