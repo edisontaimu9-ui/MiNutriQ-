@@ -25,11 +25,29 @@
   const GROQ_MODEL    = 'llama-3.3-70b-versatile';
   const MAX_TOKENS    = 900;
 
-  // API key: set via window.GROQ_API_KEY (from .env / config) or fallback
+  // API key: set via window.GROQ_API_KEY (from Appwrite Function)
+  // Waits up to 5 seconds for the key to be loaded before giving up
   function _getKey() {
     return (typeof window !== 'undefined' && window.GROQ_API_KEY)
       ? window.GROQ_API_KEY
       : '';
+  }
+
+  function _waitForKey(timeoutMs = 5000) {
+    if (_getKey()) return Promise.resolve(_getKey());
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        const key = _getKey();
+        if (key) {
+          clearInterval(interval);
+          resolve(key);
+        } else if (Date.now() - start >= timeoutMs) {
+          clearInterval(interval);
+          reject(new Error('API key not available — please refresh the page'));
+        }
+      }, 100);
+    });
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
@@ -591,11 +609,12 @@ Core principles:
 
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
+    const apiKey = await _waitForKey();
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${_getKey()}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model:       GROQ_MODEL,
