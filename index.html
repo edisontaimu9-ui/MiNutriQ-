@@ -12369,61 +12369,52 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq + PubMed + Frontiers + Elsevier API keys — loaded securely from Firebase Remote Config
+  // Groq + PubMed + Frontiers + Elsevier API keys — loaded securely from Appwrite Function
   window.GROQ_API_KEY      = '';
   window.PUBMED_API_KEY    = '';
   window.FRONTIERS_API_KEY = '';
   window.ELSEVIER_API_KEY  = '';
 
   (function loadRemoteKeys() {
-    try {
-      const rc = firebase.remoteConfig();
-      rc.settings.minimumFetchIntervalMillis = 3600000; // 1 hour cache
-      rc.defaultConfig = {
-        GROQ_API_KEY:       '',
-        pubmed_api_key:     '',
-        frontiers_api_key:  '',
-        elsevier_api_key:   ''
-      };
+    function fetchKeys() {
+      var user = firebase.auth().currentUser;
+      if (!user) {
+        firebase.auth().onAuthStateChanged(function(u) {
+          if (u) getKeysForUser(u);
+          else console.warn('[Oasis] No authenticated user — keys not loaded');
+        });
+        return;
+      }
+      getKeysForUser(user);
+    }
 
-      rc.fetchAndActivate().then(function () {
-        var groqKey      = rc.getValue('GROQ_API_KEY').asString();
-        var pubmedKey    = rc.getValue('pubmed_api_key').asString();
-        var frontiersKey = rc.getValue('frontiers_api_key').asString();
-        var elsevierKey  = rc.getValue('elsevier_api_key').asString();
-
-        if (groqKey) {
-          window.GROQ_API_KEY = groqKey;
-          console.log('[Oasis] Remote config loaded ✓ (Groq)');
-        } else {
-          console.warn('[Oasis] Remote config returned empty key (Groq)');
-        }
-
-        if (pubmedKey) {
-          window.PUBMED_API_KEY = pubmedKey;
-          console.log('[Oasis] Remote config loaded ✓ (PubMed)');
-        } else {
-          console.warn('[Oasis] Remote config returned empty key (pubmed_api_key) — using fallback');
-        }
-
-        if (frontiersKey) {
-          window.FRONTIERS_API_KEY = frontiersKey;
-          console.log('[Oasis] Remote config loaded ✓ (Frontiers)');
-        } else {
-          console.warn('[Oasis] Remote config returned empty key (frontiers_api_key) — using fallback');
-        }
-
-        if (elsevierKey) {
-          window.ELSEVIER_API_KEY = elsevierKey;
-          console.log('[Oasis] Remote config loaded ✓ (Elsevier)');
-        } else {
-          console.warn('[Oasis] Remote config returned empty key (elsevier_api_key) — using fallback');
-        }
-      }).catch(function (err) {
-        console.error('[Oasis] Remote config failed:', err);
+    function getKeysForUser(user) {
+      user.getIdToken().then(function(idToken) {
+        return fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + idToken
+          },
+          body: JSON.stringify({})
+        });
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.GROQ_API_KEY)      { window.GROQ_API_KEY      = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
+        if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY    = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
+        if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
+        if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY  = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
+      })
+      .catch(function(err) {
+        console.error('[Oasis] Failed to load config from Appwrite:', err);
       });
-    } catch (e) {
-      console.error('[Oasis] Remote config init error:', e);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fetchKeys);
+    } else {
+      fetchKeys();
     }
   })();
 </script>
