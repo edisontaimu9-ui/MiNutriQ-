@@ -273,6 +273,38 @@
     return [key];
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // QUANTITY DETECTION & STRIPPING
+  //
+  // Any query containing a measurement (weight, volume, count, or a natural-
+  // language fraction) is considered a "quantity query" and routed directly
+  // to FatSecret, bypassing the LLM classifier entirely.
+  //
+  //   Detected patterns:
+  //     Weight   — 200g, 100 grams, 1.5 kg, 2oz, 1lb
+  //     Volume   — 250ml, 1 cup, 2 tbsp, 1 tsp, 1 fl oz
+  //     Count    — 2 slices, 1 piece, 3 scoops, 1 serving
+  //     Fraction — half a cup, a tablespoon of, a slice
+  //
+  //   _stripQuantity removes the measurement tokens so "200g chicken breast"
+  //   becomes "chicken breast" — a cleaner query for FatSecret and FDC.
+  //   Falls back to the original query if stripping leaves an empty string.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // Single compiled regex — reset lastIndex before each use (global flag)
+  const _QTY_RE = /\b(?:\d+(?:[.,]\d+)?\s*(?:g|kg|mg|oz|lbs?|grams?|kilograms?|milligrams?|ounces?|pounds?|ml|l|litres?|liters?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|fl\.?\s*oz|pieces?|slices?|servings?|portions?|scoops?)|(?:half|quarter|a|an)\s+(?:cups?|tablespoons?|teaspoons?|tbsp|tsp|slices?|pieces?|servings?))\b/gi;
+
+  function _hasQuantity(query) {
+    _QTY_RE.lastIndex = 0;
+    return _QTY_RE.test(query);
+  }
+
+  function _stripQuantity(query) {
+    _QTY_RE.lastIndex = 0;
+    const stripped = query.replace(_QTY_RE, '').replace(/\s+/g, ' ').trim();
+    return stripped.length >= 2 ? stripped : query; // never return an empty/tiny string
+  }
+
   /** Check if a local food object has all required macro fields */
   function _isComplete(food) {
     if (!food) return false;
@@ -1001,7 +1033,7 @@ Query: "${query}"`;
   // ══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Main entry point — offline-first, then LLM-classified API routing.
+   * Main entry point — offline-first, quantity-aware, then LLM-classified API routing.
    *
    * Offline layers (always run first, zero network cost):
    *   Layer 1    — Local DB  (Malawi FCT)
@@ -1009,15 +1041,27 @@ Query: "${query}"`;
    *   → Complete offline result → returns immediately. No API calls.
    *
    * Online routing (only when offline layers miss or are incomplete):
-   *   Query is classified by _classifyQuery() → 'raw' | 'dish' | 'branded'
+   *
+   *   Step 1 — Quantity check  (_hasQuantity)
+   *     Any query with a measurement (200g chicken breast, 1 cup rice, 2 slices
+   *     bread, half a tbsp oil…) goes straight to FatSecret regardless of food
+   *     type. The measurement tokens are stripped before the API call so
+   *     "200g chicken breast" → FatSecret("chicken breast").
+   *     Skips _classifyQuery entirely — no Groq call for portioned queries.
+   *
+   *     quantity → FatSecret first → FDC fallback
+   *
+   *   Step 2 — Classification  (_classifyQuery, only for unportioned queries)
+   *     Uses llama-3.1-8b-instant to classify the remaining queries.
    *
    *   ┌──────────┬──────────────────┬────────────────────────┐
+   *   │ quantity │ FatSecret        │ FDC                    │
    *   │ raw      │ FDC              │ FatSecret              │
    *   │ dish     │ FatSecret        │ FDC                    │
    *   │ branded  │ FatSecret        │ OFF (Open Food Facts)  │
    *   └──────────┴──────────────────┴────────────────────────┘
    *
-   * The result is stamped with queryType ('raw'|'dish'|'branded') for UI use.
+   * Results are stamped with queryType for UI / debug use.
    *
    * @param  {string}  query
    * @param  {object}  [opts]
@@ -1039,7 +1083,6 @@ Query: "${query}"`;
       const regional = _searchRegional(terms, 10);
       const combined = [...locals, ...regional];
       combined.sort((a, b) => b.confidenceScore - a.confidenceScore);
-      // Deduplicate by normalised name (regional can overlap with local)
       const seen   = new Set();
       const unique = combined.filter(r => {
         const k = _norm(r.name);
@@ -1070,7 +1113,6 @@ Query: "${query}"`;
       if (!best) {
         best = topRegional;
       } else {
-        // Keep whichever has higher confidence; merge micronutrients in
         if (topRegional.confidenceScore >= best.confidenceScore) {
           best = _merge(topRegional, best);
           best.sourceUsed = 'regional';
@@ -1090,50 +1132,76 @@ Query: "${query}"`;
       }
     }
 
-    // ── Online layers — classify query to determine API call order ─────────
-    // _classifyQuery() runs against the Groq API (~50 ms); falls back to
-    // 'raw' on any error so the search is never blocked by it.
-    const queryType = await _classifyQuery(query); // 'raw' | 'dish' | 'branded'
+    // ── Online routing ────────────────────────────────────────────────────
+    //
+    // Quantity check runs first — no need to classify "200g chicken breast".
+    // For portioned queries the measurement is stripped before hitting APIs
+    // so FatSecret / FDC receive clean food names, not raw strings like "200g".
 
-    if (queryType === 'raw') {
-      // ── raw: FDC → FatSecret ──────────────────────────────────────────
-      const fdcResult = await _searchFDC(query);
-      if (!best)        best = fdcResult;
-      else if (fdcResult) best = _merge(best, fdcResult);
+    const hasQty   = _hasQuantity(query);
+    const apiQuery = hasQty ? _stripQuantity(query) : query;
+    let   queryType;
 
-      if (!best || best.kcal == null) {
-        const fsResult = await _searchFatSecret(query);
-        if (!best)       best = fsResult;
-        else if (fsResult) best = _merge(best, fsResult);
-      }
+    if (hasQty) {
+      // ── quantity: FatSecret → FDC ─────────────────────────────────────
+      queryType = 'quantity';
 
-    } else if (queryType === 'dish') {
-      // ── dish: FatSecret → FDC ────────────────────────────────────────
-      const fsResult = await _searchFatSecret(query);
-      if (!best)       best = fsResult;
+      const fsResult = await _searchFatSecret(apiQuery);
+      if (!best)         best = fsResult;
       else if (fsResult) best = _merge(best, fsResult);
 
       if (!best || best.kcal == null) {
-        const fdcResult = await _searchFDC(query);
-        if (!best)        best = fdcResult;
+        const fdcResult = await _searchFDC(apiQuery);
+        if (!best)          best = fdcResult;
         else if (fdcResult) best = _merge(best, fdcResult);
       }
 
     } else {
-      // ── branded: FatSecret → OFF ─────────────────────────────────────
-      const fsResult = await _searchFatSecret(query);
-      if (!best)       best = fsResult;
-      else if (fsResult) best = _merge(best, fsResult);
+      // ── no quantity: classify → route ────────────────────────────────
+      // _classifyQuery uses llama-3.1-8b-instant (~50 ms); falls back to
+      // 'raw' on any error so the search is never blocked.
+      queryType = await _classifyQuery(query);
 
-      if (!best || best.kcal == null) {
-        const offResult = await _searchOFF(query);
-        if (!best)        best = offResult;
-        else if (offResult) best = _merge(best, offResult);
+      if (queryType === 'raw') {
+        // raw: FDC → FatSecret ──────────────────────────────────────────
+        const fdcResult = await _searchFDC(apiQuery);
+        if (!best)          best = fdcResult;
+        else if (fdcResult) best = _merge(best, fdcResult);
+
+        if (!best || best.kcal == null) {
+          const fsResult = await _searchFatSecret(apiQuery);
+          if (!best)         best = fsResult;
+          else if (fsResult) best = _merge(best, fsResult);
+        }
+
+      } else if (queryType === 'dish') {
+        // dish: FatSecret → FDC ─────────────────────────────────────────
+        const fsResult = await _searchFatSecret(apiQuery);
+        if (!best)         best = fsResult;
+        else if (fsResult) best = _merge(best, fsResult);
+
+        if (!best || best.kcal == null) {
+          const fdcResult = await _searchFDC(apiQuery);
+          if (!best)          best = fdcResult;
+          else if (fdcResult) best = _merge(best, fdcResult);
+        }
+
+      } else {
+        // branded: FatSecret → OFF ──────────────────────────────────────
+        const fsResult = await _searchFatSecret(apiQuery);
+        if (!best)         best = fsResult;
+        else if (fsResult) best = _merge(best, fsResult);
+
+        if (!best || best.kcal == null) {
+          const offResult = await _searchOFF(apiQuery);
+          if (!best)          best = offResult;
+          else if (offResult) best = _merge(best, offResult);
+        }
       }
     }
 
     if (best) {
-      best.queryType = queryType; // stamp for UI / debug
+      best.queryType = queryType; // 'quantity' | 'raw' | 'dish' | 'branded'
       delete best._raw;
     }
 
@@ -1251,6 +1319,8 @@ Query: "${query}"`;
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary
     _classifyQuery:     _classifyQuery,     // LLM query classifier — exposed for testing
     _fatSecretSearch:   _searchFatSecret,   // FatSecret search — exposed for dev inspection
+    _hasQuantity:       _hasQuantity,       // quantity detector — exposed for testing
+    _stripQuantity:     _stripQuantity,     // quantity stripper — exposed for testing
   };
 
 })(typeof window !== 'undefined' ? window : this);
