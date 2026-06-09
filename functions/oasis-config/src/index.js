@@ -1,9 +1,15 @@
- export default async function(context) {
+export default async function(context) {
   const { req, res, log } = context;
+
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return res.empty();
+    return res.send('', 204, corsHeaders);
   }
 
   log('Config keys requested');
@@ -13,5 +19,5 @@
     PUBMED_API_KEY:    process.env.PUBMED_API_KEY     || '',
     FRONTIERS_API_KEY: process.env.FRONTIERS_API_KEY  || '',
     ELSEVIER_API_KEY:  process.env.ELSEVIER_API_KEY   || '',
-  });
- }
+  }, 200, corsHeaders);
+}
