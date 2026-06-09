@@ -7,15 +7,15 @@ export default async function(context) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return res.send('', 204, corsHeaders);
   }
 
-  log('Config keys requested');
+  const groqKey = process.env.GROQ_API_KEY || '';
+  log('Config keys requested — GROQ key length: ' + groqKey.length);
 
   return res.json({
-    GROQ_API_KEY:      process.env.GROQ_API_KEY      || '',
+    GROQ_API_KEY:      groqKey,
     PUBMED_API_KEY:    process.env.PUBMED_API_KEY     || '',
     FRONTIERS_API_KEY: process.env.FRONTIERS_API_KEY  || '',
     ELSEVIER_API_KEY:  process.env.ELSEVIER_API_KEY   || '',
