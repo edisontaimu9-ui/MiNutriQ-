@@ -267,8 +267,8 @@
   function _isComplete(food) {
     if (!food) return false;
     const m = food.measures?.[0];
-    if (!m) return false;
-    return REQUIRED_FIELDS.every(f => m[f] != null && m[f] !== '' && m[f] !== '—');
+    if (m) return REQUIRED_FIELDS.every(f => m[f] != null && m[f] !== '' && m[f] !== '—');
+    return REQUIRED_FIELDS.every(f => food[f] != null && food[f] !== '');
   }
 
   /** Extract per-100g macros from a MALAWI_FCT food entry */
@@ -509,7 +509,7 @@
       // Parse the food_description string: "Per 100g - Calories: 89kcal | Fat: 0.33g | Carbs: 22.84g | Protein: 1.09g"
       const desc = f.food_description || '';
       const _pn  = (label) => {
-        const m = desc.match(new RegExp(label + '[:\s]+([\d.]+)', 'i'));
+        const m = desc.match(new RegExp(label + '[:\\s]+([\\d.]+)', 'i'));
         return m ? +parseFloat(m[1]).toFixed(2) : null;
       };
 
@@ -980,10 +980,11 @@
 
     // ── Multi-result mode (for autocomplete / global search UI) ────────────
     if (multi) {
-      const regional = _searchRegional(terms, limit);
+      const MULTI_LIMIT = 5;
+      const regional = _searchRegional(terms, MULTI_LIMIT);
       const combined = [...locals, ...regional];
       combined.sort((a, b) => b.confidenceScore - a.confidenceScore);
-      const result = combined.slice(0, limit);
+      const result = combined.slice(0, MULTI_LIMIT);
       _cache.set(cacheKey, result);
       return result;
     }
