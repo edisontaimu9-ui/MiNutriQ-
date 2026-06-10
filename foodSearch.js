@@ -1,80 +1,3 @@
-/**
- * foodSearch.js — Oasis Food Retrieval System
- * ─────────────────────────────────────────────────────────────────────────────
- * Two independent search pipelines — text (name-based) and barcode — both
- * offline-first and falling through to online APIs only when local data misses.
- *
- * ── TEXT SEARCH  (searchFood / searchLocal) ───────────────────────────────
- *
- *   Layer 1   — Local DB (MALAWI_FCT + UCT Exchange + Enteral formulae)
- *               ▶ Instant, offline, always tried first.
- *               ▶ Returns immediately if a complete match is found.
- *
- *   Layer 1.5 — Regional FCT (TZ, ZM, MZ, ZW, ZA) from regionalFCT.js
- *               ▶ Instant, offline. Searched when Layer 1 misses or is
- *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
- *               ▶ Requires regionalFCT.js loaded before this script.
- *
- *   Layer 2   — USDA FoodData Central API
- *               ▶ Only reached when local data is absent/incomplete.
- *               ▶ Fills missing nutritional fields; never overwrites local data.
- *
- *   Layer 3   — Open Food Facts Text Search  (_searchOFF, name-based)
- *               ▶ Last resort when local, regional, AND FDC all miss.
- *               ▶ Searches packaged/processed foods by product name via
- *                 OFF /cgi/search.pl endpoint.
- *               ▶ Returns OFF nutritional fields mapped to unified shape.
- *
- * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
- *
- *   Layer A   — Local barcode registry → MALAWI_FCT  (_searchLocalBarcode)
- *               ▶ Instant, fully offline. Covers hand-curated Malawi-market
- *                 barcodes (exact EAN-13) and GS1 company-prefix fallbacks.
- *               ▶ Returns full Malawi FCT nutrition + measures on hit.
- *               ▶ barcodeSource: 'LocalDB' | confidenceScore 0.97 / 0.72
- *
- *   Layer B   — Open Food Facts v2 Barcode API  (_fetchOFFBarcode)
- *               ▶ Only reached when Layer A has no match (online).
- *               ▶ Hits OFF /api/v2/product/{barcode}.json — exact product.
- *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
- *               ▶ barcodeSource: 'OFF' | confidenceScore 0.82
- *
- * ── QUERY NORMALISATION ──────────────────────────────────────────────────
- *   All queries are normalised before any search: lowercase → trim whitespace
- *   → strip punctuation/special chars → collapse runs of spaces.
- *
- * ── LAYERED RANKING (local & regional search) ────────────────────────────
- *   Within each local/regional DB search, results are ranked in three tiers
- *   so the most specific match always surfaces first:
- *     Tier A — Exact Match  (score 1.00): normalised query === normalised name
- *     Tier B — Alias Match  (score 0.90): query matches any food.altNames[]
- *     Tier C — Token/Fuzzy  (score 0–1 ): weighted token overlap + Levenshtein
- *   Tier A always beats B; B always beats C. Ties within a tier sort by score.
- *
- * ── SYNONYM / FUZZY MATCHING ──────────────────────────────────────────────
- *   Regional food name synonyms (nsima→ugali→sadza, etc.) are resolved before
- *   any text search so queries always hit the local DB when a match exists.
- *
- * ── OUTPUT SHAPE (unified food object) ───────────────────────────────────
- *   {
- *     id, name, cat,
- *     kcal, kj, pro, cho, fat,       // per 100 g
- *     measures[],                     // from local DB if available
- *     fiber, sodium, sugar, salt,     // extras from APIs if not in local
- *     sourceUsed,                     // 'local' | 'regional' | 'FDC' | 'OFF' | 'combined'
- *     matchTier,                      // 'exact' | 'alias' | 'token' (local/regional only)
- *     barcodeSource,                  // 'LocalDB' | 'OFF'  (barcode pipeline only)
- *     barcodeMatch,                   // 'exact' | 'prefix' | undefined
- *     confidenceScore,                // 0.0–1.0  (exact=1.00, alias=0.90, token=fuzzy score)
- *     lastUpdated,                    // ISO string if available
- *   }
- *
- * API keys are kept private — never logged or exposed in console output.
- *
- * Author : Edison Taimu / Oasis
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
 (function (global) {
   'use strict';
 
@@ -167,9 +90,9 @@
   // ── CACHE (session-level, keyed by normalised query) ──────────────────────
   const _cache = new Map();
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // UTILITY HELPERS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   /**
    * Normalise a string for matching:
@@ -274,7 +197,7 @@
     };
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // LAYER 1 — LOCAL DATABASE SEARCH  (Malawi FCT only)
   //
   // Three-tier ranking — results are sorted within each tier by score, and
@@ -296,7 +219,7 @@
   // UCT Exchange List is intentionally excluded from general search — it is a
   // diabetic carbohydrate exchange system and is only surfaced through its own
   // dedicated clinical tools (Exchange List reference, meal planner, etc.).
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   /** Scores a single food entry against an already-normalised query term.
    *  Returns { score, tier } where tier is 'exact' | 'alias' | 'token'.
@@ -382,12 +305,12 @@
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // LAYER 1.5 — REGIONAL FCT (TZ, ZM, MZ, ZW, ZA)
   // Searches REGIONAL_FCT global from regionalFCT.js.
   // Returns the same unified shape as _searchLocal(), plus micronutrients.
   // Falls through silently when regionalFCT.js is not loaded.
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   function _searchRegional(terms, limit = 10) {
     if (typeof REGIONAL_FCT === 'undefined' || !REGIONAL_FCT.length) return [];
@@ -467,9 +390,9 @@
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // LAYER 2 — USDA FOODDATA CENTRAL
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   async function _searchFDC(query) {
     try {
@@ -503,13 +426,13 @@
     }
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // LAYER 3 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
   // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
   // endpoint to find packaged foods by name. Offline → fails gracefully.
   // NOTE: For barcode lookups use searchBarcode() / _fetchOFFBarcode (Layer B)
   // which hits the OFF v2 /product/{barcode}.json endpoint instead.
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   async function _searchOFF(query) {
     try {
@@ -575,13 +498,13 @@
     }
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // BARCODE — OPEN FOOD FACTS (Layer B)
   // Fetches a single product by barcode from the OFF v2 API.
   // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
   // instant even without a network connection.
   // Distinct from _searchOFF (Layer 3, text-based) — this resolves exact codes.
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   const _BC_CACHE_KEY = 'oasis_bc_cache_v1';
   const _BC_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -694,7 +617,7 @@
     return result;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // LOCAL BARCODE REGISTRY
   // Hand-curated map of EAN-13 barcodes → MALAWI_FCT food IDs.
   // Covers Malawi-market packaged products whose barcodes are unlikely to be
@@ -707,7 +630,7 @@
   //   619       — Zimbabwe
   //   627       — Kenya / East Africa
   //   690–699   — China (common import goods)
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   const _LOCAL_BARCODE_DB = {
     // ── South-African / regionally distributed products ───────────────────
     '6009681152934': 'soya_pieces_topsoy',   // Topsoy TSP soya pieces (dry) 200g
@@ -801,10 +724,10 @@
     return null;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // MERGE HELPER
   // Priority: local > FDC > OFF — only fills null/missing fields
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   function _merge(base, ext) {
     if (!ext) return base;
@@ -828,9 +751,9 @@
     return out;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // PUBLIC API
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   /**
    * Main entry point.
@@ -948,9 +871,9 @@
     _cache.clear();
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // REGIONAL UI HELPERS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   /**
    * filterByCountry(results, countryCodes)
@@ -982,7 +905,7 @@
     };
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // PUBLIC BARCODE SEARCH — 2-layer OFF barcode resolution
   //
   //   Layer A — Local registry → MALAWI_FCT (instant, offline, full nutrition)
@@ -995,7 +918,7 @@
   //
   // Returns a unified food object or null when both layers find nothing.
   // Throws on network error so the scanner UI can show a friendly message.
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
 
   /**
    * Resolve a scanned barcode to a food object.
