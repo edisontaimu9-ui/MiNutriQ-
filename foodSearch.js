@@ -15,13 +15,9 @@
  *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
  *               ▶ Requires regionalFCT.js loaded before this script.
  *
- *   Layer 2   — USDA FoodData Central API  +  FatSecret  (parallel)
- *               ▶ Both fired simultaneously via Promise.allSettled when local
- *                 data is absent/incomplete.
- *               ▶ FDC and FatSecret results are compared; the one with more
- *                 complete macros wins, then merged with the other.
- *               ▶ FatSecret is proxied through an Appwrite Cloud Function so
- *                 OAuth credentials never reach the client.
+ *   Layer 2   — USDA FoodData Central API
+ *               ▶ Only reached when local data is absent/incomplete.
+ *               ▶ Fills missing nutritional fields; never overwrites local data.
  *
  *   Layer 3   — Open Food Facts Text Search  (_searchOFF, name-based)
  *               ▶ Last resort when local, regional, AND FDC all miss.
@@ -508,131 +504,6 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2b — FATSECRET  (_searchFatSecret)
-  //
-  // Runs in parallel with USDA FDC (both are Layer 2).  Proxied through an
-  // Appwrite Cloud Function so the FatSecret OAuth credentials never touch
-  // the client.  The function accepts:
-  //   POST  application/json  { "query": "<food name>" }
-  // and returns either:
-  //   • A FatSecret v1 foods.search response  { foods: { food: [...] } }
-  //   • A pre-normalised object                { name, kcal, pro, cho, fat, … }
-  //   • A FatSecret single-food object         { food_name, food_description, … }
-  //
-  // food_description is parsed when present:
-  //   "Per 100g - Calories: 165kcal | Fat: 3.57g | Carbs: 0g | Protein: 31g"
-  // ══════════════════════════════════════════════════════════════════════════
-
-  const _FS_URL = 'https://6a272486000253600027.sgp.appwrite.run';
-
-  /** Parse a FatSecret food_description string → { kcal, fat, cho, pro } */
-  function _parseFSDescription(desc) {
-    if (!desc || typeof desc !== 'string') return {};
-    const kcal = desc.match(/Calories:\s*([\d.]+)\s*kcal/i);
-    const fat  = desc.match(/Fat:\s*([\d.]+)\s*g/i);
-    const carb = desc.match(/Carbs?:\s*([\d.]+)\s*g/i);
-    const prot = desc.match(/Protein:\s*([\d.]+)\s*g/i);
-    return {
-      kcal: kcal ? +parseFloat(kcal[1]).toFixed(1) : null,
-      fat:  fat  ? +parseFloat(fat[1]).toFixed(2)  : null,
-      cho:  carb ? +parseFloat(carb[1]).toFixed(2) : null,
-      pro:  prot ? +parseFloat(prot[1]).toFixed(2) : null,
-    };
-  }
-
-  /** Map a raw FatSecret food object (v1 shape) → unified food object */
-  function _mapFSFood(fsFood) {
-    if (!fsFood) return null;
-    const macros = _parseFSDescription(fsFood.food_description);
-    const name   = (fsFood.food_name || '').trim();
-    if (!name) return null;
-
-    // Reject if we couldn't extract any macros at all
-    if (macros.kcal == null && macros.pro == null) return null;
-
-    return {
-      id:              'fs_' + (fsFood.food_id || _norm(name)),
-      name,
-      cat:             fsFood.food_type === 'Brand'
-                         ? (fsFood.brand_name || 'FatSecret')
-                         : (fsFood.food_type || 'General'),
-      brand:           fsFood.brand_name || null,
-      kcal:            macros.kcal,
-      kj:              macros.kcal != null ? +(macros.kcal * 4.184).toFixed(0) : null,
-      pro:             macros.pro,
-      cho:             macros.cho,
-      fat:             macros.fat,
-      fiber:           null,
-      sugar:           null,
-      sodium:          null,
-      measures:        null,
-      sourceUsed:      'FatSecret',
-      confidenceScore: 0.65,
-      lastUpdated:     null,
-    };
-  }
-
-  async function _searchFatSecret(query) {
-    try {
-      const res = await fetch(_FS_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body:    JSON.stringify({ query: query.trim() }),
-        signal:  AbortSignal.timeout(8000),
-      });
-      if (!res.ok) return null;
-
-      const data = await res.json();
-      if (!data) return null;
-
-      // ── Shape A: FatSecret v1 search response ──────────────────────────
-      if (data.foods?.food) {
-        const list = Array.isArray(data.foods.food)
-          ? data.foods.food
-          : [data.foods.food];
-        for (const item of list) {
-          const mapped = _mapFSFood(item);
-          if (mapped) return mapped;
-        }
-        return null;
-      }
-
-      // ── Shape B: pre-normalised by the Appwrite function ───────────────
-      if (data.kcal != null || data.pro != null) {
-        const name = (data.name || data.food_name || query).trim();
-        return {
-          id:              'fs_' + _norm(name),
-          name,
-          cat:             data.cat || data.food_type || 'FatSecret',
-          brand:           data.brand || null,
-          kcal:            data.kcal  != null ? +parseFloat(data.kcal).toFixed(1)  : null,
-          kj:              data.kj    != null ? +parseFloat(data.kj).toFixed(0)    :
-                           data.kcal  != null ? +(data.kcal * 4.184).toFixed(0)    : null,
-          pro:             data.pro   != null ? +parseFloat(data.pro).toFixed(2)   : null,
-          cho:             data.cho   != null ? +parseFloat(data.cho).toFixed(2)   : null,
-          fat:             data.fat   != null ? +parseFloat(data.fat).toFixed(2)   : null,
-          fiber:           data.fiber != null ? +parseFloat(data.fiber).toFixed(2) : null,
-          sugar:           data.sugar != null ? +parseFloat(data.sugar).toFixed(2) : null,
-          sodium:          data.sodium!= null ? +parseFloat(data.sodium).toFixed(2): null,
-          measures:        null,
-          sourceUsed:      'FatSecret',
-          confidenceScore: 0.65,
-          lastUpdated:     null,
-        };
-      }
-
-      // ── Shape C: single FatSecret food object ─────────────────────────
-      if (data.food_name || data.food_description) {
-        return _mapFSFood(data);
-      }
-
-      return null;
-    } catch (_e) {
-      return null;
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
   // LAYER 3 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
   // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
   // endpoint to find packaged foods by name. Offline → fails gracefully.
@@ -1027,43 +898,18 @@
       }
     }
 
-    // Layer 2 — USDA FDC  +  FatSecret  (parallel)
-    // Both are fired simultaneously; the one with more complete macros wins,
-    // then fields missing in the winner are filled from the other.
-    const [fdcSettled, fsSettled] = await Promise.allSettled([
-      _searchFDC(query),
-      _searchFatSecret(query),
-    ]);
-    const fdcResult = fdcSettled.status === 'fulfilled' ? fdcSettled.value : null;
-    const fsResult  = fsSettled.status  === 'fulfilled' ? fsSettled.value  : null;
-
-    // Pick the richer Layer-2 result, then merge the other into it
-    let layer2 = null;
-    if (fdcResult && fsResult) {
-      const fdcMacros = [fdcResult.kcal, fdcResult.pro, fdcResult.cho, fdcResult.fat].filter(v => v != null).length;
-      const fsMacros  = [fsResult.kcal,  fsResult.pro,  fsResult.cho,  fsResult.fat ].filter(v => v != null).length;
-      if (fsMacros > fdcMacros) {
-        // FatSecret is more complete — use it as base, fill gaps from FDC
-        layer2 = _merge(fsResult, fdcResult);
-        layer2.sourceUsed = 'FatSecret';
-      } else {
-        // FDC is more complete (or equal) — use it as base, fill gaps from FatSecret
-        layer2 = _merge(fdcResult, fsResult);
-        layer2.sourceUsed = 'FDC';
-      }
-    } else {
-      layer2 = fdcResult ?? fsResult ?? null;
-    }
+    // Layer 2 — FDC
+    const fdcResult = await _searchFDC(query);
 
     if (!best) {
-      best = layer2;
-    } else if (layer2) {
-      best = _merge(best, layer2);
+      best = fdcResult;
+    } else if (fdcResult) {
+      best = _merge(best, fdcResult);
     }
 
     // Layer 3 — Open Food Facts text search
-    // Only reached when all local layers AND both Layer-2 sources returned
-    // nothing, or the result still has missing macros.
+    // Only reached when all local layers AND FDC returned nothing, or when
+    // the result still has missing macros after FDC enrichment.
     if (!best || (best.kcal == null && best.pro == null)) {
       const offResult = await _searchOFF(query);
       if (!best) {
@@ -1181,7 +1027,6 @@
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
     _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
     _fdcSearch:         _searchFDC,         // public FDC-only search for explicit import UI
-    _fatSecretSearch:   _searchFatSecret,   // public FatSecret-only search (Appwrite proxy)
     _offSearch:         _searchOFF,         // public OFF text-search (name-based, Layer 3)
     _fetchOFFBarcode:   _fetchOFFBarcode,   // public OFF barcode fetch (Layer B) — for scanner UI
     _regionalSearch:    _searchRegional,    // direct regional FCT search

@@ -14917,13 +14917,12 @@ function _dbRenderGlobalResult(food) {
   const sourceColors = {
     local:         'var(--teal)',
     FDC:           'var(--blue)',
-    FatSecret:     '#f97316',
     OFF: '#84cc16',
     combined:      'var(--green)',
   };
   const srcColor  = sourceColors[food.sourceUsed] || 'var(--text-dim)';
   const srcLabel  = {
-    local:'Local DB', FDC:'USDA FDC', FatSecret:'FatSecret', OFF:'Open Food Facts', combined:'Combined'
+    local:'Local DB', FDC:'USDA FDC', OFF:'Open Food Facts', combined:'Combined'
   }[food.sourceUsed] || food.sourceUsed;
 
   const confidence = Math.round((food.confidenceScore ?? 0) * 100);
@@ -14995,7 +14994,7 @@ function _dbShowGlobalLoading(query) {
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
          Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
-        <div style="margin-top:6px;font-size:9px">FoodData Central · FatSecret · Open Food Facts</div>
+        <div style="margin-top:6px;font-size:9px">FoodData Central · Open Food Facts</div>
       </div>
     </div>`;
   const noRes = document.getElementById('db-no-results');
@@ -15004,7 +15003,7 @@ function _dbShowGlobalLoading(query) {
 
 /**
  * Debounced global search — fires 600ms after user stops typing.
- * Uses NTFoodSearch layered retrieval (FDC + FatSecret in parallel → Open Food Facts).
+ * Uses NTFoodSearch layered retrieval (FDC → Open Food Facts).
  */
 function _dbGlobalSearch(query) {
   clearTimeout(_GS_debounceTimer);
