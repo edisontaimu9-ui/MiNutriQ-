@@ -9691,16 +9691,17 @@ function dbRender() {
   }
   if (badge) badge.textContent = `${foods.length} of ${MALAWI_FCT.length} foods`;
 
+  // Always fire global search (FatSecret → FDC → OFF) so Layer 2+ is reached
+  // even when local FCT has results. NTFoodSearch.search() short-circuits at
+  // Layer 1 for locally-complete foods, so no wasteful API calls are made.
+  if (search.length >= 2) _dbGlobalSearch(search);
+
   if (!foods.length) {
     tbody.innerHTML = '';
     if (noRes) noRes.style.display = '';
-    // Trigger global (API) search when local has nothing
-    if (search.length >= 2) _dbGlobalSearch(search);
     return;
   }
   if (noRes) noRes.style.display = 'none';
-  // Clear any previous global results panel
-  _dbClearGlobalPanel();
 
   // Update measure header
   const thMeasure = document.getElementById('db-th-measure');
@@ -14917,12 +14918,14 @@ function _dbRenderGlobalResult(food) {
   const sourceColors = {
     local:         'var(--teal)',
     FDC:           'var(--blue)',
-    OFF: '#84cc16',
+    OFF:           '#84cc16',
+    FatSecret:     'var(--amber)',
     combined:      'var(--green)',
   };
   const srcColor  = sourceColors[food.sourceUsed] || 'var(--text-dim)';
   const srcLabel  = {
-    local:'Local DB', FDC:'USDA FDC', OFF:'Open Food Facts', combined:'Combined'
+    local:'Local DB', FDC:'USDA FDC', OFF:'Open Food Facts',
+    FatSecret:'FatSecret', combined:'Combined'
   }[food.sourceUsed] || food.sourceUsed;
 
   const confidence = Math.round((food.confidenceScore ?? 0) * 100);
@@ -14994,7 +14997,7 @@ function _dbShowGlobalLoading(query) {
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
          Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
-        <div style="margin-top:6px;font-size:9px">FoodData Central · Open Food Facts</div>
+        <div style="margin-top:6px;font-size:9px">FatSecret · FoodData Central · Open Food Facts</div>
       </div>
     </div>`;
   const noRes = document.getElementById('db-no-results');
