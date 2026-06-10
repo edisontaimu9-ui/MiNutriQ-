@@ -492,7 +492,6 @@
       const url = _FATSECRET_FN + '?query=' + encodeURIComponent(query.trim());
       const res = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       });
       if (!res.ok) return null;
@@ -542,7 +541,6 @@
       const url = _FATSECRET_FN + '?query=' + encodeURIComponent(barcode.trim()) + '&mode=barcode';
       const res = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       });
       if (!res.ok) return null;
@@ -555,7 +553,6 @@
       const detailUrl = _FATSECRET_FN + '?query=' + encodeURIComponent(foodId) + '&mode=get';
       const detailRes = await fetch(detailUrl, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       });
       if (!detailRes.ok) return null;
