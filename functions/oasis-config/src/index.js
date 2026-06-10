@@ -15,11 +15,13 @@ export default async function(context) {
   log('Config keys requested — GROQ key length: ' + groqKey.length);
 
   return res.json({
-    GROQ_API_KEY:      groqKey,
-    PUBMED_API_KEY:    process.env.PUBMED_API_KEY     || '',
-    FRONTIERS_API_KEY: process.env.FRONTIERS_API_KEY  || '',
-    ELSEVIER_API_KEY:  process.env.ELSEVIER_API_KEY   || '',
-    VAPID_PUBLIC_KEY:  process.env.VAPID_PUBLIC_KEY   || '',
-    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY  || '',
+    GROQ_API_KEY:              groqKey,
+    PUBMED_API_KEY:            process.env.PUBMED_API_KEY              || '',
+    FRONTIERS_API_KEY:         process.env.FRONTIERS_API_KEY           || '',
+    ELSEVIER_API_KEY:          process.env.ELSEVIER_API_KEY            || '',
+    VAPID_PUBLIC_KEY:          process.env.VAPID_PUBLIC_KEY            || '',
+    VAPID_PRIVATE_KEY:         process.env.VAPID_PRIVATE_KEY           || '',
+    FATSECRET_CONSUMER_KEY:    process.env.FATSECRET_CONSUMER_KEY      || '',
+    FATSECRET_CONSUMER_SECRET: process.env.FATSECRET_CONSUMER_SECRET   || '',
   }, 200, corsHeaders);
 }
