@@ -93,9 +93,35 @@
     fdc:    'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
   });
 
-  // ── FATSECRET APPWRITE FUNCTION ENDPOINT ──────────────────────────────────
+  // ── FATSECRET APPWRITE FUNCTION ───────────────────────────────────────────
   // OAuth 1.0 signing is handled server-side; keys never touch the browser.
-  const _FATSECRET_FN = 'https://6a272486000253600027.sgp.appwrite.run';
+  // Calls are routed through the Appwrite SDK (window.AppwriteFunctions),
+  // not via a raw fetch to the .appwrite.run URL.
+  const _FATSECRET_FN_ID = 'fatsecret-food-search';
+
+  /**
+   * _callFatSecretFn(path)
+   * ──────────────────────
+   * Thin wrapper around window.AppwriteFunctions.createExecution().
+   * `path` is the query-string path, e.g. '/?query=banana&mode=barcode'.
+   * Returns the parsed JSON body of the execution response, or null on error.
+   */
+  async function _callFatSecretFn(path) {
+    if (!window.AppwriteFunctions) {
+      console.warn('[FatSecret] AppwriteFunctions not ready');
+      return null;
+    }
+    const exec = await window.AppwriteFunctions.createExecution(
+      _FATSECRET_FN_ID,   // functionId
+      '',                  // body — params are in the path (GET)
+      false,               // async  = false → wait for result
+      path,                // xpath  — e.g. /?query=banana
+      'GET',               // method
+      {}                   // headers
+    );
+    if (!exec || !exec.responseBody) return null;
+    return JSON.parse(exec.responseBody);
+  }
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
   // Maps alternative / regional names → canonical local DB search term(s).
@@ -489,13 +515,8 @@
 
   async function _searchFatSecret(query) {
     try {
-      const url = _FATSECRET_FN + '?query=' + encodeURIComponent(query.trim());
-      const res = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
+      const data = await _callFatSecretFn('/?query=' + encodeURIComponent(query.trim()));
+      if (!data) return null;
 
       // FatSecret returns foods.food as array or single object
       const foods = data?.foods?.food;
@@ -538,25 +559,19 @@
   // ── FatSecret Barcode Lookup (Layer B) ────────────────────────────────────
   async function _fetchFatSecretBarcode(barcode) {
     try {
-      const url = _FATSECRET_FN + '?query=' + encodeURIComponent(barcode.trim()) + '&mode=barcode';
-      const res = await fetch(url, {
-        method: 'GET',
-        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
+      const data = await _callFatSecretFn(
+        '/?query=' + encodeURIComponent(barcode.trim()) + '&mode=barcode'
+      );
+      if (!data) return null;
 
       const foodId = data?.food_id?.value;
       if (!foodId) return null;
 
-      // Now fetch full food details using the food id
-      const detailUrl = _FATSECRET_FN + '?query=' + encodeURIComponent(foodId) + '&mode=get';
-      const detailRes = await fetch(detailUrl, {
-        method: 'GET',
-        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-      });
-      if (!detailRes.ok) return null;
-      const detail = await detailRes.json();
+      // Fetch full food details using the food id
+      const detail = await _callFatSecretFn(
+        '/?query=' + encodeURIComponent(foodId) + '&mode=get'
+      );
+      if (!detail) return null;
       const f = detail?.food;
       if (!f) return null;
 
