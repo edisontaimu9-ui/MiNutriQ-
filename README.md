@@ -28,6 +28,8 @@ The application guides users through structured nutrition assessments, calculate
 - **🍽️ Enteral & Parenteral Support** — Feeding route calculations and guidance
 - **📊 Nutritional Screening** — Malnutrition risk assessment tools
 - **📈 Growth Charts** — Pediatric growth monitoring and reference data
+- **🍳 Recipe Calculator** — Nutrient calculation for custom recipes
+- **🌍 Regional Food Composition Tables** — Localized food databases
 
 ### 🗂️ Content & Data
 
@@ -58,64 +60,93 @@ The application guides users through structured nutrition assessments, calculate
 | **PWA** | Service Worker (sw.js) + App Shell |
 | **Authentication** | Firebase Authentication |
 | **Database** | Cloud Firestore + Realtime Database |
+| **Backend Functions** | Firebase Cloud Functions (Node.js) |
 | **Charts** | Chart.js 4.x |
 | **Icons** | Lucide (SVG icons) |
 | **Fonts** | Google Fonts (Syne, Outfit, JetBrains Mono) |
-| **Deployment** | GitHub Pages / Custom domain |
+| **Deployment** | GitHub Pages + Custom domain |
 
-### Modular File Structure
+### Complete File Structure
 
 ```
 Oasis-/
-├── 📄 index.html              # Main application shell & HTML structure
-├── 🎨 styles.css              # Global styles & design system
-├── ⚙️  main.js                 # Core app logic, routing, UI control, state management
+│
+├── 📄 index.html                    # Main application shell (~860 KB)
+├── 🎨 styles.css                    # Global styles & design system (~162 KB)
+├── ⚙️  main.js                       # Core app logic, routing, UI control (~1.4 MB)
 │
 ├── 📦 OFFLINE MODULES (Basic calculations - work without internet)
-│   ├── pediNutrition.js        # Pediatric nutrition calculations (Mifflin-St Jeor, WHO, etc.)
-│   ├── pediBurn.js             # Pediatric burn assessment formulas
-│   ├── parenteral.js           # Parenteral nutrition calculations
-│   ├── screening.js            # Malnutrition screening (MUST, NRS-2002, SGA)
-│   ├── foodData.js             # Built-in food database (compressed, local)
-│   ├── growthCharts.js         # Growth chart percentiles & z-score calculations
-│   └── assessment.js           # General nutrition assessment utilities
+│   ├── pediNutrition.js             # Pediatric nutrition assessment (~560 KB)
+│   ├── pediBurn.js                  # Pediatric burn assessment (~448 KB)
+│   ├── parenteral.js                # Parenteral nutrition calculations (~52 KB)
+│   ├── screening.js                 # Malnutrition screening tools (~127 KB)
+│   ├── assessment.js                # General nutrition assessment (~39 KB)
+│   ├── foodData.js                  # Built-in food database (~215 KB)
+│   ├── foodSearch.js                # Food database search (~45 KB)
+│   ├── growthCharts.js              # Growth chart data & percentiles (~73 KB)
+│   ├── recipeCalculator.js          # Recipe nutrient calculator (~48 KB)
+│   └── regionalFCT.js               # Regional food composition tables (~38 KB)
 │
 ├── 📦 ONLINE MODULES (Advanced features - require internet)
-│   ├── dni.js                  # Drug-nutrient interactions (Firebase-backed)
-│   ├── cde.js                  # Advanced clinical decision engines
-│   ├── library.js              # Reference library & guidelines lookup
-│   ├── references.js           # Citation & evidence base (cloud-sourced)
-│   └── oasisAI.js              # AI-powered decision support (API-dependent)
+│   ├── dni.js                       # Drug-nutrient interactions (~137 KB)
+│   ├── cde.js                       # Clinical decision engines (~40 KB)
+│   ├── library.js                   # Reference library & guidelines (~224 KB)
+│   ├── references.js                # Citation & evidence base (~21 KB)
+│   ├── oasisAI.js                   # AI-powered decision support (~145 KB)
+│   └── pes.js                       # Nutrition education support (~64 KB)
 │
 ├── 📡 SERVICE & SYNC
-│   ├── sw.js                   # Service Worker (offline caching, background sync)
-│   ├── firebaseConfig.js       # Firebase configuration & initialization
-│   └── syncManager.js          # Cloud sync logic for assessments
+│   ├── sw.js                        # Service Worker (offline caching, background sync)
+│   ├── appwriteClient.js            # Backend client configuration (~5 KB)
 │
 ├── 🎯 PWA & DEPLOYMENT
-│   ├── manifest.json           # PWA manifest (icons, metadata, theme)
-│   ├── CNAME                   # Custom domain configuration (minutriq.me)
-│   └── sw-assets.json          # Service Worker cache manifest
+│   ├── manifest.json                # PWA manifest (icons, metadata, theme)
+│   ├── CNAME                        # Custom domain configuration (minutriq.me)
+│   └── _.gitignore.txt              # Git ignore rules
+│
+├── 🔧 CONFIGURATION & CI/CD
+│   └── .github/
+│       └── dependabot.yml           # Dependency management configuration
+│
+└── ☁️ BACKEND FUNCTIONS
+    └── functions/
+        └── oasis-config/
+            ├── package.json         # Node.js dependencies
+            └── src/
+                └── index.js         # Cloud Function entry point
 ```
 
 ### Module Dependency Graph
 
 ```
 main.js (router & state)
-    ├── pediNutrition.js ✅ OFFLINE
-    ├── pediBurn.js ✅ OFFLINE
-    ├── parenteral.js ✅ OFFLINE
-    ├── screening.js ✅ OFFLINE
-    ├── assessment.js ✅ OFFLINE
-    ├── foodData.js + foodSearch.js ✅ OFFLINE
-    ├── growthCharts.js ✅ OFFLINE
     │
-    ├── dni.js 🔵 ONLINE (requires Firebase + internet)
-    ├── cde.js 🔵 ONLINE (cloud-backed decision support)
-    ├── library.js 🔵 ONLINE (reference lookups)
-    ├── oasisAI.js 🔵 ONLINE (external API calls)
+    ├─── OFFLINE MODULES ✅ (work without internet)
+    │    ├── pediNutrition.js
+    │    ├── pediBurn.js
+    │    ├── parenteral.js
+    │    ├── screening.js
+    │    ├── assessment.js
+    │    ├── foodData.js + foodSearch.js
+    │    ├── growthCharts.js
+    │    ├── recipeCalculator.js
+    │    └── regionalFCT.js
     │
-    └── sw.js (background service)
+    ├─── ONLINE MODULES 🔵 (requires Firebase + internet)
+    │    ├── dni.js
+    │    ├── cde.js
+    │    ├── library.js
+    │    ├── references.js
+    │    ├── oasisAI.js
+    │    └── pes.js
+    │
+    ├─── SERVICE LAYER
+    │    ├── sw.js (background service)
+    │    └── appwriteClient.js (backend client)
+    │
+    └─── STYLES & CONFIG
+         ├── styles.css
+         └── manifest.json
 ```
 
 ---
@@ -190,9 +221,12 @@ main.js (router & state)
 | **Assessment** | General nutrition evaluations | All settings | ✅ |
 | **Growth Charts** | Monitor pediatric growth | Community health | ✅ |
 | **Food Database** | Nutrient lookup & meal planning | Meal planners | ✅ |
+| **Recipe Calculator** | Calculate recipe nutrition | Nutrition educators | ✅ |
+| **Regional Food Tables** | Localized food composition | All settings | ✅ |
 | **Parenteral Nutrition** | IV feeding calculations | ICU, hospital | ✅ |
 | **Drug-Nutrient Interactions** | Check medication-food interactions | Clinical teams | 🔵 Online |
 | **Clinical Decision Engines** | Advanced decision support | Advanced users | 🔵 Online |
+| **Nutrition Education** | Educational materials & support | Students, educators | 🔵 Online |
 | **Reference Library** | Evidence-based guidelines lookup | Students, clinicians | 🔵 Online |
 
 ---
@@ -241,6 +275,8 @@ main.js (router & state)
 - **Food Database** — Built-in nutritional composition lookup
 - **Growth Charts** — CDC/WHO growth percentiles & z-scores
 - **Micronutrient Needs** — Age/sex-specific RDA calculations
+- **Recipe Calculations** — Custom recipe nutrient analysis
+- **Regional Food Tables** — Localized food composition data
 
 **Offline Capabilities:**
 - ✅ All basic calculations work without internet
@@ -248,6 +284,7 @@ main.js (router & state)
 - ✅ View saved patient records
 - ✅ Create new patient records offline (sync when connected)
 - ✅ Print reports locally
+- ✅ Recipe nutrient calculations
 
 ### 🔵 Requires Internet (Advanced Features)
 
@@ -255,6 +292,7 @@ main.js (router & state)
 - **Advanced Clinical Decision Engines** — Cloud-backed algorithms
 - **Reference Library** — Online guideline & evidence base
 - **AI-Powered Recommendations** — External API-dependent
+- **Nutrition Education Support** — Cloud-sourced content
 - **Data Synchronization** — Firestore sync across devices
 - **User Authentication** — Firebase login verification
 
@@ -316,7 +354,8 @@ Frontend:        HTML5 + CSS3 + Vanilla JavaScript (no build step)
 Architecture:    Modular, feature-based JS modules
 PWA:            Service Worker (app shell cache strategy)
 Offline:        IndexedDB for local persistence
-Backend:        Firebase (Auth + Firestore + RTDB)
+Backend:        Firebase (Auth + Firestore + RTDB + Cloud Functions)
+Backend Runtime: Node.js (functions/oasis-config)
 Hosting:        GitHub Pages + Custom Domain (minutriq.me)
 Version:        1.3.0
 Last Updated:   2026-06-10
@@ -382,6 +421,19 @@ git commit -m "Update feature or calculation"
 git push origin main
 ```
 
+### Cloud Functions Deployment
+
+Backend functions are located in `functions/oasis-config/`:
+
+```bash
+# Install dependencies
+cd functions/oasis-config
+npm install
+
+# Deploy to Firebase
+firebase deploy --only functions
+```
+
 ---
 
 ## 🔧 Contributing Guide
@@ -421,6 +473,7 @@ When adding new features:
 - Import only necessary dependencies
 - Add graceful offline handling
 - Update this README with module info
+- Add unit tests in respective module
 
 ---
 
@@ -489,7 +542,7 @@ This project is licensed under the **MIT License** — see LICENSE file for deta
 - **Status:** Active Development
 - **Last Updated:** 2026-06-10
 - **Deployment:** [minutriq.me](http://minutriq.me/)
-- **Offline Capable:** ✅ Basic calculations + food database
+- **Offline Capable:** ✅ Basic calculations + food database + recipes
 - **Online Features:** Advanced DNI, AI recommendations, cloud sync
 
 ### Planned Features (Roadmap)
