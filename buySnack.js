@@ -3,40 +3,47 @@
 //
 // Usage:
 //   import { initBuySnack } from './buySnack.js';
-//   initBuySnack(loadedConfig?.paychangu_secret_key);
+//   initBuySnack(loadedConfig?.paychangu_public_key);
 //
 // Add trigger anywhere in your HTML:
 //   <button id="buy-snack-btn">🍿 Buy me a Snack</button>
 //
-// Security: pass your Paychangu secret key via Firebase Remote Config
-// key name: "paychangu_secret_key"
-// OR proxy through a Cloudflare Worker and set PAYCHANGU_ENDPOINT below.
+// Security model:
+//   • PUBLIC key  — passed here from Remote Config key "paychangu_public_key".
+//                   Safe to expose in frontend code.
+//   • SECRET key  — stored ONLY as an Appwrite Function environment variable
+//                   (PAYCHANGU_SECRET_KEY). Never sent to the browser.
+//
+// Payment flow:
+//   Browser → Appwrite Function (PAYCHANGU_FUNCTION_ID)
+//           → Function injects secret key → Paychangu API
+//           → checkout_url returned to browser
 
-const PAYCHANGU_ENDPOINT = 'https://api.paychangu.com/payment';
-// Cloudflare Worker proxy (recommended):
-// const PAYCHANGU_ENDPOINT = 'https://your-worker.your-subdomain.workers.dev/paychangu';
+// ── Appwrite Function that proxies Paychangu payment initiation ──
+// Set this to the Function ID from your Appwrite console.
+const PAYCHANGU_FUNCTION_ID = 'paychangu-proxy'; // ← update if your function ID differs
 
 const SNACKS = [
-  { id: 'mandasi',   emoji: '🍩', name: 'Mandasi',    desc: 'Classic Malawian fried dough', price: 500,  color: '#F59E0B', bg: '#FFFBEB' },
-  { id: 'popcorn',   emoji: '🍿', name: 'Popcorn',    desc: 'Light & crunchy snack',        price: 800,  color: '#EF4444', bg: '#FEF2F2' },
-  { id: 'samosa',    emoji: '🥟', name: 'Samosa',     desc: 'Crispy & spicy pastry',        price: 1000, color: '#10B981', bg: '#ECFDF5' },
-  { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1500, color: '#F59E0B', bg: '#FFFDE7' },
-  { id: 'crisps',    emoji: '🥔', name: 'Crisps',     desc: 'Crunchy packet crisps',        price: 2000, color: '#8B5CF6', bg: '#F5F3FF' },
-  { id: 'chips',     emoji: '🍟', name: 'Chips',      desc: 'Hot street chips',             price: 2500, color: '#F97316', bg: '#FFF7ED' },
-  { id: 'cake',      emoji: '🎂', name: 'Cake Slice', desc: 'Sweet celebration treat',      price: 3500, color: '#EC4899', bg: '#FDF2F8' },
-  { id: 'box',       emoji: '🎁', name: 'Snack Box',  desc: 'The full spread!',             price: 6000, color: '#3B82F6', bg: '#EFF6FF', badge: 'Best' },
+  { id: 'doughnut',  emoji: '🍩', name: 'Doughnut',   desc: 'Sweet glazed treat',           price: 1000, color: '#F59E0B', bg: '#FFFBEB' },
+  { id: 'popcorn',   emoji: '🍿', name: 'Popcorn',    desc: 'Light & crunchy snack',        price: 1500, color: '#EF4444', bg: '#FEF2F2' },
+  { id: 'samosa',    emoji: '🥟', name: 'Samosa',     desc: 'Crispy & spicy pastry',        price: 2000, color: '#10B981', bg: '#ECFDF5' },
+  { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 2500, color: '#F59E0B', bg: '#FFFDE7' },
+  { id: 'crisps',    emoji: '🥔', name: 'Crisps',     desc: 'Crunchy packet crisps',        price: 3000, color: '#8B5CF6', bg: '#F5F3FF' },
+  { id: 'chips',     emoji: '🍟', name: 'Chips',      desc: 'Hot street chips',             price: 3500, color: '#F97316', bg: '#FFF7ED' },
+  { id: 'cake',      emoji: '🎂', name: 'Cake Slice', desc: 'Sweet celebration treat',      price: 5000, color: '#EC4899', bg: '#FDF2F8' },
+  { id: 'box',       emoji: '🎁', name: 'Snack Box',  desc: 'The full spread!',             price: 8000, color: '#3B82F6', bg: '#EFF6FF', badge: 'Best' },
   { id: 'custom',    emoji: '✏️', name: 'Custom',     desc: 'Enter your own amount',        price: 0,    color: '#6B7280', bg: '#F9FAFB' },
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let _selectedSnack = null;
-let _customAmount  = 0;
-let _paychanguKey  = null;
+let _selectedSnack     = null;
+let _customAmount      = 0;
+let _paychanguPublicKey = null;  // public key only — secret lives in Appwrite Function
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export function initBuySnack(paychanguSecretKey = null) {
-  _paychanguKey = paychanguSecretKey;
+export function initBuySnack(paychanguPublicKey = null) {
+  _paychanguPublicKey = paychanguPublicKey;
   _injectStyles();
   _injectModal();
   _bindTriggers();
@@ -87,11 +94,11 @@ function _injectModal() {
         <div class="bs-field">
           <label for="bs-custom-input">
             Your amount <span class="bs-req">*</span>
-            <span class="bs-opt">minimum MWK 100</span>
+            <span class="bs-opt">minimum MWK 1,000</span>
           </label>
           <div class="bs-prefix-wrap">
             <span class="bs-prefix">MWK</span>
-            <input type="number" id="bs-custom-input" placeholder="e.g. 5000" min="100"/>
+            <input type="number" id="bs-custom-input" placeholder="e.g. 2000" min="1000"/>
           </div>
         </div>
       </div>
@@ -206,7 +213,30 @@ function _selectSnack(id) {
 
   // Highlight card
   document.querySelectorAll('.bs-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById(`bs-card-${id}`)?.classList.add('selected');
+  const card = document.getElementById(`bs-card-${id}`);
+  card?.classList.add('selected');
+
+  // ── Animate the emoji ────────────────────────────────────────────────────
+  const ANIM_MAP = {
+    doughnut:  'bs-anim-spin',    // satisfying full spin
+    popcorn:   'bs-anim-bounce',  // popcorn popping
+    samosa:    'bs-anim-shake',   // crispy sizzle
+    zitumbuwa: 'bs-anim-bounce',  // banana fritter jiggle
+    crisps:    'bs-anim-shake',   // crunchy crinkle
+    chips:     'bs-anim-pop',     // hot chips pop
+    cake:      'bs-anim-pop',     // celebration pop
+    box:       'bs-anim-spin',    // exciting gift spin
+    custom:    'bs-anim-pop',     // pencil pop
+  };
+  const emojiEl  = card?.querySelector('.bs-card-emoji');
+  const animClass = ANIM_MAP[id] || 'bs-anim-pop';
+  if (emojiEl) {
+    emojiEl.classList.remove('bs-anim-pop','bs-anim-spin','bs-anim-bounce','bs-anim-shake');
+    // Force reflow so re-clicking the same card restarts the animation
+    void emojiEl.offsetWidth;
+    emojiEl.classList.add(animClass);
+    emojiEl.addEventListener('animationend', () => emojiEl.classList.remove(animClass), { once: true });
+  }
 
   const isCustom = id === 'custom';
 
@@ -231,12 +261,12 @@ function _selectSnack(id) {
 function _updateCustomAmount(amount) {
   _customAmount = amount;
   const snack = SNACKS.find(s => s.id === 'custom');
-  const valid = amount >= 100;
+  const valid = amount >= 1000;
 
   _updatePreview(
     snack.emoji,
     'Custom Snack',
-    valid ? 'Your custom amount' : 'Minimum MWK 100',
+    valid ? 'Your custom amount' : 'Minimum MWK 1,000',
     valid ? amount : 0,
     snack.color,
     snack.bg
@@ -286,8 +316,8 @@ async function _processDonation() {
 
   const finalPrice = _selectedSnack.isCustom ? _customAmount : _selectedSnack.price;
 
-  if (!finalPrice || finalPrice < 100) {
-    _showError('Please enter a valid amount (minimum MWK 100).');
+  if (!finalPrice || finalPrice < 1000) {
+    _showError('Please enter a valid amount (minimum MWK 1,000).');
     document.getElementById('bs-custom-input')?.focus();
     return;
   }
@@ -304,54 +334,70 @@ async function _processDonation() {
   const [firstName, ...rest] = name.split(' ');
   const lastName = rest.join(' ') || 'Supporter';
 
-  const secretKey = _paychanguKey
-    ?? window.PAYCHANGU_SECRET_KEY
-    ?? (typeof loadedConfig !== 'undefined' && loadedConfig?.paychangu_secret_key)
+  // Public key — safe to send from the browser.
+  // The Appwrite Function injects the secret key server-side.
+  const publicKey = _paychanguPublicKey
+    ?? window.PAYCHANGU_PUBLIC_KEY
+    ?? (typeof loadedConfig !== 'undefined' && loadedConfig?.paychangu_public_key)
     ?? null;
 
-  if (!secretKey) {
-    _showError('Payment not configured. Please contact the developer.');
-    console.error('[buySnack] No Paychangu secret key. Pass it to initBuySnack() or add "paychangu_secret_key" to Firebase Remote Config.');
+  // AppwriteFunctions must be initialised by appwriteClient.js
+  if (typeof window.AppwriteFunctions === 'undefined') {
+    _showError('Payment not available — Appwrite client not initialised.');
+    console.error('[buySnack] window.AppwriteFunctions is undefined. Ensure appwriteClient.js loads before buySnack.js.');
     return;
   }
 
   _setLoading(true);
 
   try {
-    const res = await fetch(PAYCHANGU_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${secretKey}`,
-        'Content-Type':  'application/json',
-        'Accept':        'application/json',
+    const payload = {
+      amount:       finalPrice,
+      currency:     'MWK',
+      email,
+      first_name:   firstName,
+      last_name:    lastName,
+      ...(phone      && { phone_number: phone }),
+      ...(publicKey  && { public_key: publicKey }),   // forwarded so the Function can use it if needed
+      callback_url:  'https://minutriq.me',
+      return_url:    'https://minutriq.me/?donated=true',
+      tx_ref:        `OASIS-SNACK-${Date.now()}`,
+      customization: {
+        title:       'Support Oasis',
+        description: `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼`,
+        logo:        'https://minutriq.me/icons/icon-192.png',
       },
-      body: JSON.stringify({
-        amount:       finalPrice,
-        currency:     'MWK',
-        email,
-        first_name:   firstName,
-        last_name:    lastName,
-        ...(phone && { phone_number: phone }),
-        callback_url: 'https://minutriq.me',
-        return_url:   'https://minutriq.me/?donated=true',
-        tx_ref:       `OASIS-SNACK-${Date.now()}`,
-        customization: {
-          title:       'Support Oasis',
-          description: `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼`,
-          logo:        'https://minutriq.me/icons/icon-192.png',
-        },
-      }),
-    });
+    };
 
-    const data = await res.json();
+    // ── Call Appwrite Function proxy ──────────────────────────────────────────
+    // The Function reads PAYCHANGU_SECRET_KEY from its env vars and calls
+    // https://api.paychangu.com/payment, then returns { status, data }.
+    const exec = await window.AppwriteFunctions.createExecution(
+      PAYCHANGU_FUNCTION_ID,
+      JSON.stringify(payload),
+      false  // synchronous — wait for the checkout_url
+    );
 
-    if (data?.status === 'success' && data?.data?.checkout_url) {
+    let data;
+    try {
+      data = JSON.parse(exec.responseBody);
+    } catch (_) {
+      throw new Error('Invalid response from payment proxy.');
+    }
+
+    if (exec.responseStatusCode !== 200 || data?.status !== 'success') {
+      _showError(data?.message || 'Payment could not be initiated. Please try again.');
+      return;
+    }
+
+    if (data?.data?.checkout_url) {
       window.location.href = data.data.checkout_url;
     } else {
-      _showError(data?.message || 'Payment could not be initiated. Please try again.');
+      _showError('No checkout URL returned. Please try again.');
     }
+
   } catch (err) {
-    console.error('[buySnack] Fetch error:', err);
+    console.error('[buySnack] Appwrite Function error:', err);
     _showError('Network error. Check your connection and try again.');
   } finally {
     _setLoading(false);
@@ -460,9 +506,42 @@ function _injectStyles() {
       padding: 2px 5px; border-radius: 99px;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .bs-card-emoji { font-size: 24px; line-height: 1.2; }
+    .bs-card-emoji { font-size: 24px; line-height: 1.2; display: inline-block; }
     .bs-card-name  { font-size: 10px; font-weight: 700; color: #374151; line-height: 1.2; }
     .bs-card-price { font-size: 11px; font-weight: 700; color: #6b7280; transition: color 0.15s; }
+
+    /* ── Emoji click animations ── */
+    @keyframes bs-pop {
+      0%   { transform: scale(1)    rotate(0deg); }
+      25%  { transform: scale(1.55) rotate(-12deg); }
+      50%  { transform: scale(1.7)  rotate(10deg); }
+      70%  { transform: scale(1.3)  rotate(-6deg); }
+      85%  { transform: scale(1.15) rotate(3deg); }
+      100% { transform: scale(1)    rotate(0deg); }
+    }
+    @keyframes bs-spin-pop {
+      0%   { transform: scale(1)    rotate(0deg); }
+      40%  { transform: scale(1.6)  rotate(180deg); }
+      70%  { transform: scale(1.25) rotate(340deg); }
+      100% { transform: scale(1)    rotate(360deg); }
+    }
+    @keyframes bs-bounce {
+      0%,100% { transform: translateY(0)   scale(1); }
+      30%     { transform: translateY(-10px) scale(1.3); }
+      55%     { transform: translateY(-5px)  scale(1.15); }
+      75%     { transform: translateY(-8px)  scale(1.2); }
+    }
+    @keyframes bs-shake {
+      0%,100% { transform: scale(1) rotate(0deg); }
+      20%     { transform: scale(1.4) rotate(-15deg); }
+      40%     { transform: scale(1.5) rotate(15deg); }
+      60%     { transform: scale(1.4) rotate(-10deg); }
+      80%     { transform: scale(1.2) rotate(8deg); }
+    }
+    .bs-card-emoji.bs-anim-pop      { animation: bs-pop      0.45s cubic-bezier(0.36,0.07,0.19,0.97); }
+    .bs-card-emoji.bs-anim-spin     { animation: bs-spin-pop 0.5s  cubic-bezier(0.36,0.07,0.19,0.97); }
+    .bs-card-emoji.bs-anim-bounce   { animation: bs-bounce   0.5s  cubic-bezier(0.36,0.07,0.19,0.97); }
+    .bs-card-emoji.bs-anim-shake    { animation: bs-shake    0.45s cubic-bezier(0.36,0.07,0.19,0.97); }
 
     .bs-custom-wrap { margin-bottom: 14px; }
 

@@ -50,7 +50,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://api.paychangu.com;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -12409,7 +12409,7 @@ function ntClear(scopeId, resultIds) {
     display: none;
     position: fixed;
     bottom: calc(var(--bottom-nav-h, 60px) + var(--sab, 0px) + 16px);
-    left: 20px;
+    right: 20px;
     z-index: 900;
     align-items: center;
     gap: 7px;
@@ -12440,9 +12440,10 @@ function ntClear(scopeId, resultIds) {
 <script type="module">
   import { initBuySnack } from './buySnack.js';
 
-  // Init widget — key is read lazily from window.PAYCHANGU_SECRET_KEY at pay time
-  // (loaded asynchronously by loadRemoteKeys from the Appwrite Function above)
-  initBuySnack(null); // null = will read window.PAYCHANGU_SECRET_KEY at runtime
+  // Init widget — public key read lazily from window.PAYCHANGU_PUBLIC_KEY at pay time
+  // (loaded asynchronously from Remote Config key "paychangu_public_key").
+  // Secret key lives ONLY in the Appwrite Function environment — never in the browser.
+  initBuySnack(null); // null = will read window.PAYCHANGU_PUBLIC_KEY at runtime
 
   // ── FAB visibility: only show on home tab ──
   const fab     = document.getElementById('bs-fab');
