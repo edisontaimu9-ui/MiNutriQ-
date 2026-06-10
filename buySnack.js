@@ -24,15 +24,15 @@
 const PAYCHANGU_FUNCTION_ID = 'paychangu-proxy'; // ← update if your function ID differs
 
 const SNACKS = [
-  { id: 'doughnut',  emoji: '🍩', name: 'Doughnut',   desc: 'Sweet glazed treat',           price: 1000, color: '#F59E0B', bg: '#FFFBEB' },
-  { id: 'popcorn',   emoji: '🍿', name: 'Popcorn',    desc: 'Light & crunchy snack',        price: 1500, color: '#EF4444', bg: '#FEF2F2' },
-  { id: 'samosa',    emoji: '🥟', name: 'Samosa',     desc: 'Crispy & spicy pastry',        price: 2000, color: '#10B981', bg: '#ECFDF5' },
-  { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 2500, color: '#F59E0B', bg: '#FFFDE7' },
-  { id: 'crisps',    emoji: '🥔', name: 'Crisps',     desc: 'Crunchy packet crisps',        price: 3000, color: '#8B5CF6', bg: '#F5F3FF' },
-  { id: 'chips',     emoji: '🍟', name: 'Chips',      desc: 'Hot street chips',             price: 3500, color: '#F97316', bg: '#FFF7ED' },
-  { id: 'cake',      emoji: '🎂', name: 'Cake Slice', desc: 'Sweet celebration treat',      price: 5000, color: '#EC4899', bg: '#FDF2F8' },
-  { id: 'box',       emoji: '🎁', name: 'Snack Box',  desc: 'The full spread!',             price: 8000, color: '#3B82F6', bg: '#EFF6FF', badge: 'Best' },
-  { id: 'custom',    emoji: '✏️', name: 'Custom',     desc: 'Enter your own amount',        price: 0,    color: '#6B7280', bg: '#F9FAFB' },
+  { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1000,  color: '#F59E0B', bg: '#FFFDE7' },
+  { id: 'doughnut',  emoji: '🍩', name: 'Doughnut',   desc: 'Sweet glazed treat',           price: 2000,  color: '#F59E0B', bg: '#FFFBEB' },
+  { id: 'popcorn',   emoji: '🍿', name: 'Popcorn',    desc: 'Light & crunchy snack',        price: 3000,  color: '#EF4444', bg: '#FEF2F2' },
+  { id: 'samosa',    emoji: '🥟', name: 'Samosa',     desc: 'Crispy & spicy pastry',        price: 4000,  color: '#10B981', bg: '#ECFDF5' },
+  { id: 'crisps',    emoji: '🥔', name: 'Crisps',     desc: 'Crunchy packet crisps',        price: 5000,  color: '#8B5CF6', bg: '#F5F3FF' },
+  { id: 'chips',     emoji: '🍟', name: 'Chips',      desc: 'Hot street chips',             price: 6000,  color: '#F97316', bg: '#FFF7ED' },
+  { id: 'cake',      emoji: '🎂', name: 'Cake Slice', desc: 'Sweet celebration treat',      price: 8000,  color: '#EC4899', bg: '#FDF2F8' },
+  { id: 'box',       emoji: '🎁', name: 'Snack Box',  desc: 'The full spread!',             price: 10000, color: '#3B82F6', bg: '#EFF6FF', badge: 'Best' },
+  { id: 'custom',    emoji: '✏️', name: 'Custom',     desc: 'Enter your own amount',        price: 0,     color: '#6B7280', bg: '#F9FAFB' },
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -614,7 +614,24 @@ function _injectStyles() {
     .bs-pm.airtel   { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
     .bs-pm.mpamba   { color: #0369a1; border-color: #93c5fd; background: #eff6ff; }
     .bs-pm.bank     { color: #065f46; border-color: #6ee7b7; background: #ecfdf5; }
-    .bs-pm.card     { color: #5b21b6; border-color: #c4b5fd; background: #f5f3ff; }
+    .bs-pm.card {
+      color: #5b21b6; border-color: #c4b5fd; background: #f5f3ff;
+      position: relative; overflow: hidden;
+    }
+    .bs-pm.card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -120%;
+      width: 70%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
+      animation: bs-card-swipe 2.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes bs-card-swipe {
+      0%   { left: -120%; }
+      60%  { left: 160%;  }
+      100% { left: 160%;  }
+    }
 
     .bs-note { text-align: center; font-size: 11px; color: #9ca3af; }
 
