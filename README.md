@@ -1,6 +1,6 @@
 # 🥗 Oasis — Clinical Nutrition Decision Support Tool
 
-> A Progressive Web App (PWA) for healthcare professionals and nutrition students performing clinical nutrition assessments with offline support, cloud synchronization, and evidence-based decision support.
+> A Progressive Web App (PWA) for healthcare professionals and nutrition students performing clinical nutrition assessments with offline support, cloud synchronization, and evidence-based decision making.
 
 **Live:** [minutriq.me](http://minutriq.me/)
 
@@ -173,9 +173,10 @@ Oasis-/
 - **User Accounts** — Each user has isolated, private account
 - **Data Encryption** — All data encrypted in transit (SSL/TLS) and at rest
 - **Offline Mode** — Calculations run locally; no data sent when offline
-- **Firebase Security** — Leverages Google Cloud infrastructure
+- **Firebase Security Rules** — Leverages Google Cloud infrastructure with fine-grained access control
 - **No Third-party Tracking** — No ads, analytics, or external tracking
 - **Medical Grade** — Designed for confidential patient information
+- **HIPAA Considerations** — Suitable for healthcare environments
 
 ---
 
@@ -183,17 +184,18 @@ Oasis-/
 
 ### Minimum Requirements
 
-- **Browser:** Chrome, Edge, Firefox, Safari (mobile or desktop)
+- **Browser:** Chrome 90+, Edge 90+, Firefox 88+, Safari 14+ (mobile or desktop)
 - **Screen:** 360px wide (mobile) or larger
 - **Internet:** Initial download only; works offline thereafter
-- **Storage:** ~15–20 MB on device
+- **Storage:** ~20–25 MB on device
+- **JavaScript:** Must be enabled
 
 ### Supported Platforms
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| **iOS** (13+) | ✅ Full support | Safari or Chrome |
-| **Android** (7+) | ✅ Full support | Chrome or Edge |
+| **iOS** (14+) | ✅ Full support | Safari or Chrome |
+| **Android** (8+) | ✅ Full support | Chrome or Edge |
 | **Windows/Mac/Linux** | ✅ Full support | Any modern browser |
 | **Tablets** | ✅ Optimized | Landscape + portrait |
 
@@ -204,26 +206,29 @@ Oasis-/
 ### 📊 Calculations & Algorithms
 
 Oasis includes evidence-based formulas for:
-- **REE (Resting Energy Expenditure):** Mifflin-St Jeor, Harris-Benedict
-- **Protein Requirements:** WHO guidelines, disease-specific
-- **Micronutrient Needs:** Age/sex-specific RDAs
-- **Burn Nutrition:** Curreri formula, Toronto formula
-- **Growth Assessment:** CDC/WHO growth percentiles
+- **REE (Resting Energy Expenditure):** Mifflin-St Jeor, Harris-Benedict, Schofield
+- **Protein Requirements:** WHO guidelines, disease-specific recommendations
+- **Micronutrient Needs:** Age/sex-specific RDAs and AIs
+- **Burn Nutrition:** Curreri formula, Toronto formula, Modified Brooke formula
+- **Growth Assessment:** CDC/WHO growth percentiles and z-scores
+- **Nutritional Screening:** MUST, NRS-2002, Subjective Global Assessment (SGA)
 
 ### 🧠 Clinical Decision Support
 
-- **Nutrition diagnosis codes** (IDNT)
-- **Intervention recommendations** based on diagnosis
-- **Monitoring parameters** and frequency
-- **Evidence references** for all recommendations
+- **Nutrition diagnosis codes** (IDNT — Nutrition Care Process)
+- **Intervention recommendations** based on diagnosis and clinical context
+- **Monitoring parameters** and frequency guidelines
+- **Evidence references** for all recommendations with citations
+- **Clinical notes** functionality for personalized patient assessments
 
 ### 📱 Offline Capabilities
 
 - ✅ All calculations work offline
 - ✅ Food database fully available
 - ✅ View saved patient records
-- ❌ Data syncing waits for internet connection
-- ❌ New patient records sync when online
+- ✅ Create new patient records offline (sync when connected)
+- ❌ Data syncing requires internet connection
+- ❌ Firebase real-time features (presence, collaboration)
 
 ---
 
@@ -236,8 +241,9 @@ When signed in with internet:
 - ✅ Real-time presence tracking
 - ✅ Session management across devices
 - ✅ Backup of all calculations and notes
+- ✅ Sync conflict resolution
 
-**No sync = No data loss:** Local records persist even if sync fails.
+**No sync = No data loss:** Local records persist even if sync fails. Changes sync automatically when connection is restored.
 
 ---
 
@@ -248,18 +254,21 @@ When signed in with internet:
 - Practice nutrition calculations in a safe environment
 - Build clinical decision-making skills
 - Offline study during rotations or remote learning
+- Assessment practice without internet dependency
 
 ### For Clinicians
 - Quick bedside reference during rounds
 - Standardized assessment workflows
 - Evidence-based recommendations at point-of-care
 - Documentation with printable reports
+- Fast calculations in time-constrained environments
 
 ### For Nutrition Teams
 - Consistent assessment protocols across settings
 - Reduced calculation errors
 - Time-saving in busy departments
 - Scalable without additional cost (offline works everywhere)
+- Centralized record-keeping with cloud sync
 
 ---
 
@@ -268,11 +277,12 @@ When signed in with internet:
 ### Tech Stack Summary
 
 ```
-Frontend:        HTML5 + CSS3 + Vanilla JS
-PWA:            Service Worker (app shell cache)
+Frontend:        HTML5 + CSS3 + Vanilla JavaScript (no build step)
+PWA:            Service Worker (app shell cache strategy)
 Backend:        Firebase (Auth + Firestore + RTDB)
-Hosting:        GitHub Pages + Custom Domain
-Version:        1.2.9
+Hosting:        GitHub Pages + Custom Domain (minutriq.me)
+Version:        1.3.0
+Last Updated:   2026-06-10
 ```
 
 ### Local Development
@@ -285,22 +295,68 @@ Version:        1.2.9
 
 2. **Open locally:**
    ```bash
-   # Simple HTTP server (Python)
+   # Simple HTTP server (Python 3)
    python -m http.server 8000
+   
+   # Or Python 2
+   python -m SimpleHTTPServer 8000
    
    # Or Node.js
    npx http-server
+   
+   # Or using Live Server (VS Code extension)
    ```
 
 3. **Visit:** `http://localhost:8000`
 
+4. **For offline testing:**
+   - Open DevTools (F12) → Application → Service Workers
+   - Check "Offline" to simulate offline mode
+
 ### Building & Deployment
 
-The app is fully static. To deploy:
+The app is fully static (no build process required):
 
-1. Push to GitHub Pages
-2. Configure custom domain (CNAME file already present)
-3. Service Worker automatically caches assets
+1. Push to GitHub repository
+2. GitHub Pages automatically serves from `main` branch
+3. Custom domain configured via CNAME file
+4. Service Worker automatically caches and updates assets
+5. DNS points to GitHub Pages servers
+
+**To deploy changes:**
+```bash
+git add .
+git commit -m "Update description"
+git push origin main
+```
+
+---
+
+## 🔧 Contributing Guide
+
+Found a bug? Have a feature idea? Want to improve clinical content?
+
+### How to Contribute
+
+1. **Report Issues:**
+   - Open an issue with details and steps to reproduce
+   - Include browser, device, and OS information
+   - Provide screenshots if applicable
+
+2. **Suggest Enhancements:**
+   - Use GitHub Discussions for feature requests
+   - Describe the use case and expected behavior
+   - Suggest clinical modules or improvements
+
+3. **Report Clinical Errors:**
+   - Ensure accuracy of medical calculations
+   - Reference the guideline or study used
+   - Provide the correction with evidence
+
+4. **Improve Code:**
+   - Submit pull requests with clear commit messages
+   - Test changes in offline mode
+   - Follow the existing code style and structure
 
 ---
 
@@ -308,13 +364,25 @@ The app is fully static. To deploy:
 
 The application references:
 
-- **WHO Nutrition Guidelines** — Child growth, micronutrient needs
-- **Academy of Nutrition and Dietetics (AND)** — Evidence Analysis Library
-- **ASPEN** — Parenteral nutrition standards
-- **FDA** — Food composition database
-- **Clinical Practice Guidelines** — Burn care, pediatric nutrition
+- **WHO Nutrition Guidelines** — Child growth, micronutrient needs, complementary feeding
+- **Academy of Nutrition and Dietetics (AND)** — Evidence Analysis Library, IDNT
+- **ASPEN** — American Society for Parenteral and Enteral Nutrition standards
+- **CDC** — Growth charts and nutritional surveillance data
+- **FDA** — Food composition database (USDA FoodData Central)
+- **Clinical Practice Guidelines** — Burn care, pediatric nutrition, critical care
+- **National Guidelines** — Evidence-based recommendations by region
 
 All calculations include citations to source evidence.
+
+---
+
+## 📧 Contact & Support
+
+- **Author:** Edison Taimu — BSc Nutrition and Dietetics (Hons), Malawi
+- **Repository:** [github.com/edisontaimu9-ui/Oasis-](https://github.com/edisontaimu9-ui/Oasis-)
+- **Website:** [minutriq.me](http://minutriq.me/)
+- **GitHub Issues:** [Report bugs or suggest features](https://github.com/edisontaimu9-ui/Oasis-/issues)
+- **In-App Feedback:** Use the Feedback button on any page
 
 ---
 
@@ -323,31 +391,12 @@ All calculations include citations to source evidence.
 **Oasis is for educational and clinical decision-support purposes only.**
 
 - ❌ **Does NOT replace professional clinical judgment**
-- ❌ **Does NOT provide medical advice**
-- ✅ **Supports** clinician decision-making
-- ✅ **Assists** in education and training
+- ❌ **Does NOT provide medical advice or diagnosis**
+- ❌ **Does NOT establish a doctor-patient relationship**
+- ✅ **Supports** evidence-based clinician decision-making
+- ✅ **Assists** in education, training, and professional development
 
-Always consult with qualified healthcare professionals. Users are responsible for validating all outputs against patient-specific factors and clinical guidelines.
-
----
-
-## 🤝 Contributing
-
-Found a bug? Have a feature idea? Want to improve clinical content?
-
-1. **Open an issue** with details and steps to reproduce
-2. **Suggest enhancements** via GitHub Discussions
-3. **Report clinical errors** to ensure accuracy
-4. **Share feedback** on usability and workflows
-
----
-
-## 📧 Contact & Support
-
-- **Author:** Edison Taimu — BSc Nutrition and Dietetics (Hons), Malawi
-- **Email:** inquiries via GitHub Issues
-- **Website:** [minutriq.me](http://minutriq.me/)
-- **Feedback:** Use the in-app Feedback button
+**Liability:** Users are responsible for validating all outputs against patient-specific factors, current clinical guidelines, and institutional protocols. Always consult with qualified healthcare professionals before making clinical decisions.
 
 ---
 
@@ -360,33 +409,44 @@ This project is licensed under the **MIT License** — see LICENSE file for deta
 ## 🙏 Acknowledgments
 
 - **Firebase** for scalable backend infrastructure
-- **Chart.js** for data visualization
-- **Lucide Icons** for beautiful UI icons
-- **Google Fonts** for typography
-- **WHO & ASPEN** for evidence-based guidelines
-- **Nutrition & dietetics community** for feedback and support
+- **Chart.js** for powerful data visualization
+- **Lucide Icons** for beautiful, accessible UI icons
+- **Google Fonts** for excellent typography (Syne, Outfit, JetBrains Mono)
+- **WHO & ASPEN** for evidence-based clinical guidelines
+- **Nutrition & dietetics community** for feedback, validation, and support
+- **Healthcare professionals** who contributed clinical expertise
 
 ---
 
-## 🌟 Status
+## 🌟 Status & Roadmap
 
-- **Version:** 1.2.9
+### Current Status
+- **Version:** 1.3.0
 - **Status:** Active Development
-- **Last Updated:** 2026-06-01
+- **Last Updated:** 2026-06-10
 - **Deployment:** [minutriq.me](http://minutriq.me/)
 
----
+### Planned Features (Roadmap)
 
-## 🗺️ Roadmap (Future)
+**Q3 2026:**
+- [ ] Enhanced nutrition diagnosis system
+- [ ] Expanded drug-nutrient interactions database
+- [ ] Print-to-PDF functionality improvements
 
+**Q4 2026:**
 - [ ] Multi-language support (Chichewa, Swahili, French)
 - [ ] Advanced AI-powered nutrition recommendations
-- [ ] Integration with EHR systems
+- [ ] Patient data import/export (CSV, Excel)
+
+**2027:**
+- [ ] Integration with EHR systems (FHIR standards)
 - [ ] Mobile app native versions (iOS/Android)
 - [ ] Collaborative patient assessments (team mode)
 - [ ] Advanced analytics & audit logs
-- [ ] Telehealth integration
+- [ ] Telehealth/remote consultation integration
 
 ---
 
-**Thank you for using Oasis!** Help us improve clinical nutrition care. 🌍
+**Thank you for using Oasis!** Help us improve clinical nutrition care worldwide. 🌍
+
+For updates, visit the [GitHub repository](https://github.com/edisontaimu9-ui/Oasis-) or follow development on the Issues board.
