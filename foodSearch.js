@@ -15,32 +15,19 @@
  *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
  *               ▶ Requires regionalFCT.js loaded before this script.
  *
- *   Layer 2   — USDA FoodData Central API  (_searchFDC)
- *               ▶ Reached when local/regional data is absent or incomplete.
- *               ▶ Fills missing nutritional fields; never overwrites local data.
- *               ▶ Routing priority depends on query classification (see below).
- *
- *   Layer 2.5 — FatSecret  (_searchFatSecret, proxied via Appwrite Function)
- *               ▶ Reached for dish and branded queries (see routing table).
- *               ▶ Proxied server-side — OAuth2 credentials never touch the PWA.
- *               ▶ Returns per-serving data; Appwrite Function normalises → per 100g.
- *               ▶ Falls through silently on network error.
+ *   Layer 2   — USDA FoodData Central API  +  FatSecret  (parallel)
+ *               ▶ Both fired simultaneously via Promise.allSettled when local
+ *                 data is absent/incomplete.
+ *               ▶ FDC and FatSecret results are compared; the one with more
+ *                 complete macros wins, then merged with the other.
+ *               ▶ FatSecret is proxied through an Appwrite Cloud Function so
+ *                 OAuth credentials never reach the client.
  *
  *   Layer 3   — Open Food Facts Text Search  (_searchOFF, name-based)
- *               ▶ Fallback for branded queries when FatSecret misses.
+ *               ▶ Last resort when local, regional, AND FDC all miss.
  *               ▶ Searches packaged/processed foods by product name via
  *                 OFF /cgi/search.pl endpoint.
  *               ▶ Returns OFF nutritional fields mapped to unified shape.
- *
- * ── QUERY CLASSIFICATION & API ROUTING ───────────────────────────────────
- *   Before any online API call, the query is classified by _classifyQuery()
- *   using llama-3.1-8b-instant via Groq (max_tokens: 5, ~50 ms).
- *   Falls back to 'raw' on any error so offline-first behaviour is unaffected.
- *
- *   Classification → API routing:
- *     raw     →  FDC first        →  FatSecret fallback
- *     dish    →  FatSecret first  →  FDC fallback
- *     branded →  FatSecret first  →  OFF fallback
  *
  * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
  *
@@ -99,13 +86,6 @@
   const _KEYS = Object.freeze({
     fdc:    'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
   });
-
-  // ── FATSECRET PROXY ───────────────────────────────────────────────────────
-  // All FatSecret requests are routed through an Appwrite Function that holds
-  // OAuth2 credentials server-side. The PWA never sees client_id / secret.
-  // The Function also normalises FatSecret's per-serving values → per 100g
-  // before returning, so _searchFatSecret() always receives a clean payload.
-  const _FATSECRET_PROXY = 'https://6a272486000253600027.sgp.appwrite.run';
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
   // Maps alternative / regional names → canonical local DB search term(s).
@@ -271,38 +251,6 @@
       return [key, ...partials.flatMap(p => SYNONYM_MAP[p]).map(_norm)];
     }
     return [key];
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // QUANTITY DETECTION & STRIPPING
-  //
-  // Any query containing a measurement (weight, volume, count, or a natural-
-  // language fraction) is considered a "quantity query" and routed directly
-  // to FatSecret, bypassing the LLM classifier entirely.
-  //
-  //   Detected patterns:
-  //     Weight   — 200g, 100 grams, 1.5 kg, 2oz, 1lb
-  //     Volume   — 250ml, 1 cup, 2 tbsp, 1 tsp, 1 fl oz
-  //     Count    — 2 slices, 1 piece, 3 scoops, 1 serving
-  //     Fraction — half a cup, a tablespoon of, a slice
-  //
-  //   _stripQuantity removes the measurement tokens so "200g chicken breast"
-  //   becomes "chicken breast" — a cleaner query for FatSecret and FDC.
-  //   Falls back to the original query if stripping leaves an empty string.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  // Single compiled regex — reset lastIndex before each use (global flag)
-  const _QTY_RE = /\b(?:\d+(?:[.,]\d+)?\s*(?:g|kg|mg|oz|lbs?|grams?|kilograms?|milligrams?|ounces?|pounds?|ml|l|litres?|liters?|cups?|tbsps?|tablespoons?|tsps?|teaspoons?|fl\.?\s*oz|pieces?|slices?|servings?|portions?|scoops?)|(?:half|quarter|a|an)\s+(?:cups?|tablespoons?|teaspoons?|tbsp|tsp|slices?|pieces?|servings?))\b/gi;
-
-  function _hasQuantity(query) {
-    _QTY_RE.lastIndex = 0;
-    return _QTY_RE.test(query);
-  }
-
-  function _stripQuantity(query) {
-    _QTY_RE.lastIndex = 0;
-    const stripped = query.replace(_QTY_RE, '').replace(/\s+/g, ' ').trim();
-    return stripped.length >= 2 ? stripped : query; // never return an empty/tiny string
   }
 
   /** Check if a local food object has all required macro fields */
@@ -560,6 +508,131 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 2b — FATSECRET  (_searchFatSecret)
+  //
+  // Runs in parallel with USDA FDC (both are Layer 2).  Proxied through an
+  // Appwrite Cloud Function so the FatSecret OAuth credentials never touch
+  // the client.  The function accepts:
+  //   POST  application/json  { "query": "<food name>" }
+  // and returns either:
+  //   • A FatSecret v1 foods.search response  { foods: { food: [...] } }
+  //   • A pre-normalised object                { name, kcal, pro, cho, fat, … }
+  //   • A FatSecret single-food object         { food_name, food_description, … }
+  //
+  // food_description is parsed when present:
+  //   "Per 100g - Calories: 165kcal | Fat: 3.57g | Carbs: 0g | Protein: 31g"
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const _FS_URL = 'https://6a272486000253600027.sgp.appwrite.run';
+
+  /** Parse a FatSecret food_description string → { kcal, fat, cho, pro } */
+  function _parseFSDescription(desc) {
+    if (!desc || typeof desc !== 'string') return {};
+    const kcal = desc.match(/Calories:\s*([\d.]+)\s*kcal/i);
+    const fat  = desc.match(/Fat:\s*([\d.]+)\s*g/i);
+    const carb = desc.match(/Carbs?:\s*([\d.]+)\s*g/i);
+    const prot = desc.match(/Protein:\s*([\d.]+)\s*g/i);
+    return {
+      kcal: kcal ? +parseFloat(kcal[1]).toFixed(1) : null,
+      fat:  fat  ? +parseFloat(fat[1]).toFixed(2)  : null,
+      cho:  carb ? +parseFloat(carb[1]).toFixed(2) : null,
+      pro:  prot ? +parseFloat(prot[1]).toFixed(2) : null,
+    };
+  }
+
+  /** Map a raw FatSecret food object (v1 shape) → unified food object */
+  function _mapFSFood(fsFood) {
+    if (!fsFood) return null;
+    const macros = _parseFSDescription(fsFood.food_description);
+    const name   = (fsFood.food_name || '').trim();
+    if (!name) return null;
+
+    // Reject if we couldn't extract any macros at all
+    if (macros.kcal == null && macros.pro == null) return null;
+
+    return {
+      id:              'fs_' + (fsFood.food_id || _norm(name)),
+      name,
+      cat:             fsFood.food_type === 'Brand'
+                         ? (fsFood.brand_name || 'FatSecret')
+                         : (fsFood.food_type || 'General'),
+      brand:           fsFood.brand_name || null,
+      kcal:            macros.kcal,
+      kj:              macros.kcal != null ? +(macros.kcal * 4.184).toFixed(0) : null,
+      pro:             macros.pro,
+      cho:             macros.cho,
+      fat:             macros.fat,
+      fiber:           null,
+      sugar:           null,
+      sodium:          null,
+      measures:        null,
+      sourceUsed:      'FatSecret',
+      confidenceScore: 0.65,
+      lastUpdated:     null,
+    };
+  }
+
+  async function _searchFatSecret(query) {
+    try {
+      const res = await fetch(_FS_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body:    JSON.stringify({ query: query.trim() }),
+        signal:  AbortSignal.timeout(8000),
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data) return null;
+
+      // ── Shape A: FatSecret v1 search response ──────────────────────────
+      if (data.foods?.food) {
+        const list = Array.isArray(data.foods.food)
+          ? data.foods.food
+          : [data.foods.food];
+        for (const item of list) {
+          const mapped = _mapFSFood(item);
+          if (mapped) return mapped;
+        }
+        return null;
+      }
+
+      // ── Shape B: pre-normalised by the Appwrite function ───────────────
+      if (data.kcal != null || data.pro != null) {
+        const name = (data.name || data.food_name || query).trim();
+        return {
+          id:              'fs_' + _norm(name),
+          name,
+          cat:             data.cat || data.food_type || 'FatSecret',
+          brand:           data.brand || null,
+          kcal:            data.kcal  != null ? +parseFloat(data.kcal).toFixed(1)  : null,
+          kj:              data.kj    != null ? +parseFloat(data.kj).toFixed(0)    :
+                           data.kcal  != null ? +(data.kcal * 4.184).toFixed(0)    : null,
+          pro:             data.pro   != null ? +parseFloat(data.pro).toFixed(2)   : null,
+          cho:             data.cho   != null ? +parseFloat(data.cho).toFixed(2)   : null,
+          fat:             data.fat   != null ? +parseFloat(data.fat).toFixed(2)   : null,
+          fiber:           data.fiber != null ? +parseFloat(data.fiber).toFixed(2) : null,
+          sugar:           data.sugar != null ? +parseFloat(data.sugar).toFixed(2) : null,
+          sodium:          data.sodium!= null ? +parseFloat(data.sodium).toFixed(2): null,
+          measures:        null,
+          sourceUsed:      'FatSecret',
+          confidenceScore: 0.65,
+          lastUpdated:     null,
+        };
+      }
+
+      // ── Shape C: single FatSecret food object ─────────────────────────
+      if (data.food_name || data.food_description) {
+        return _mapFSFood(data);
+      }
+
+      return null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // LAYER 3 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
   // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
   // endpoint to find packaged foods by name. Offline → fails gracefully.
@@ -666,21 +739,13 @@
     } catch (_e) {}
   }
 
-  /**
-   * Safe fetch with manual AbortController timeout (Android WebView compat).
-   * Accepts an optional opts object so POST requests (e.g. FatSecret proxy)
-   * can pass method / headers / body while still getting the abort guard.
-   * Default headers include Accept: application/json; caller opts.headers
-   * are merged on top and can override.
-   */
-  function _fetchWithTimeout(url, ms, opts = {}) {
+  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
+  function _fetchWithTimeout(url, ms) {
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), ms);
-    const { headers: callerHeaders = {}, ...restOpts } = opts;
     return fetch(url, {
-      ...restOpts,
-      signal:  ctrl.signal,
-      headers: { 'Accept': 'application/json', ...callerHeaders },
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' },
     }).finally(() => clearTimeout(tid));
   }
 
@@ -893,180 +958,15 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // QUERY CLASSIFIER — LLM-based intent routing
-  //
-  // Uses llama-3.1-8b-instant (max_tokens: 5, temp: 0) for near-zero latency.
-  // Reads window.GROQ_API_KEY — loaded at app init by the Appwrite Function
-  // fetch; silently returns 'raw' (the safe default) if the key isn't ready.
-  //
-  // Returns: 'raw' | 'dish' | 'branded'
-  //
-  //   raw     — whole / minimally processed ingredient (chicken breast, nsima,
-  //             usipa, groundnuts, banana, eggs)
-  //   dish    — cooked mixed meal or recipe (beef stew, fried rice, bean soup,
-  //             nsima with relish)
-  //   branded — packaged product with a visible brand name (Coca Cola,
-  //             Weetabix, Topsoy, Digestive biscuits)
-  //
-  // Fail-safes:
-  //   • No Groq key         → 'raw'   (don't block search)
-  //   • Network / API error → 'raw'
-  //   • Unexpected response → 'raw'
-  //   • Query < 3 chars     → 'raw'   (too short to classify reliably)
-  // ══════════════════════════════════════════════════════════════════════════
-
-  async function _classifyQuery(query) {
-    if (!query || query.trim().length < 3) return 'raw';
-
-    const key = (typeof window !== 'undefined') ? window.GROQ_API_KEY : null;
-    if (!key) return 'raw';
-
-    const prompt =
-`You are a food query classifier for a clinical nutrition app.
-
-Classify the query as one of:
-- "raw" — whole, raw or minimally processed food (chicken breast, rice, banana, eggs, nsima, usipa, groundnuts, kapenta, nkhwani, mgaiwa)
-- "dish" — cooked mixed meal or recipe (beef stew, chicken curry, fried rice, nsima with relish, bean soup)
-- "branded" — packaged product with a visible brand name (Coca Cola, Digestive biscuits, Topsoy, Weetabix, Cremora)
-
-Rules:
-- African / Malawian staples (nsima, usipa, kapenta, nandolo, mgaiwa, chibwabwa) are always "raw"
-- If unsure between raw and dish, choose "raw"
-
-Reply with ONLY one word: raw, dish, or branded. No punctuation.
-
-Query: "${query}"`;
-
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${key}`,
-        },
-        body: JSON.stringify({
-          model:       'llama-3.1-8b-instant',
-          max_tokens:  5,
-          temperature: 0,
-          messages:    [{ role: 'user', content: prompt }],
-        }),
-      });
-
-      if (!res.ok) return 'raw';
-      const data  = await res.json();
-      const label = data?.choices?.[0]?.message?.content?.trim().toLowerCase();
-      return ['raw', 'dish', 'branded'].includes(label) ? label : 'raw';
-
-    } catch (_e) {
-      return 'raw';
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2.5 — FATSECRET  (_searchFatSecret)
-  //
-  // FatSecret uses OAuth2 client credentials — secrets must never live in the
-  // PWA bundle.  All requests are proxied through the Appwrite Function at
-  // _FATSECRET_PROXY, which:
-  //   1. Exchanges client_id / client_secret for a bearer token (cached).
-  //   2. Calls FatSecret foods.search with the query.
-  //   3. Picks the best serving per result (closest to 100g or explicit 100g).
-  //   4. Normalises nutrient values to per-100g before responding.
-  //
-  // Proxy request  (POST _FATSECRET_PROXY):
-  //   { action: 'search', query: string, maxResults?: number }
-  //
-  // Proxy response:
-  //   { items: [{ name, brand?, cat?, kcal, pro, cho, fat,
-  //               fiber?, sugar?, sodium? }] }
-  //   or { error: string } on failure
-  //
-  // Returns a unified food object or null on miss / error.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  async function _searchFatSecret(query) {
-    if (!query) return null;
-
-    let r;
-    try {
-      r = await _fetchWithTimeout(_FATSECRET_PROXY, 10000, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action: 'search', query: query.trim(), maxResults: 5 }),
-      });
-    } catch (_e) {
-      return null; // network error — fall through to next layer
-    }
-
-    if (!r.ok) return null;
-
-    let data;
-    try { data = await r.json(); } catch (_je) { return null; }
-
-    const item = data?.items?.[0];
-    if (!item) return null;
-
-    // Proxy already normalised to per 100g — map to unified shape
-    return {
-      id:              'fs_' + _norm(item.name).replace(/\s+/g, '_'),
-      name:            item.name   || query,
-      brand:           item.brand  ?? null,
-      cat:             item.cat    ?? 'FatSecret',
-      kcal:            item.kcal   ?? null,
-      kj:              item.kcal   != null ? +(item.kcal * 4.184).toFixed(0) : null,
-      pro:             item.pro    ?? null,
-      cho:             item.cho    ?? null,
-      fat:             item.fat    ?? null,
-      fiber:           item.fiber  ?? null,
-      sugar:           item.sugar  ?? null,
-      sodium:          item.sodium ?? null,
-      measures:        null,
-      sourceUsed:      'FatSecret',
-      dbSource:        'FatSecret',
-      confidenceScore: 0.78,
-      lastUpdated:     null,
-    };
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
   // PUBLIC API
   // ══════════════════════════════════════════════════════════════════════════
 
   /**
-   * Main entry point — offline-first, quantity-aware, then LLM-classified API routing.
-   *
-   * Offline layers (always run first, zero network cost):
-   *   Layer 1    — Local DB  (Malawi FCT)
-   *   Layer 1.5  — Regional FCT  (TZ, ZM, MZ, ZW, ZA)
-   *   → Complete offline result → returns immediately. No API calls.
-   *
-   * Online routing (only when offline layers miss or are incomplete):
-   *
-   *   Step 1 — Quantity check  (_hasQuantity)
-   *     Any query with a measurement (200g chicken breast, 1 cup rice, 2 slices
-   *     bread, half a tbsp oil…) goes straight to FatSecret regardless of food
-   *     type. The measurement tokens are stripped before the API call so
-   *     "200g chicken breast" → FatSecret("chicken breast").
-   *     Skips _classifyQuery entirely — no Groq call for portioned queries.
-   *
-   *     quantity → FatSecret first → FDC fallback
-   *
-   *   Step 2 — Classification  (_classifyQuery, only for unportioned queries)
-   *     Uses llama-3.1-8b-instant to classify the remaining queries.
-   *
-   *   ┌──────────┬──────────────────┬────────────────────────┐
-   *   │ quantity │ FatSecret        │ FDC                    │
-   *   │ raw      │ FDC              │ FatSecret              │
-   *   │ dish     │ FatSecret        │ FDC                    │
-   *   │ branded  │ FatSecret        │ OFF (Open Food Facts)  │
-   *   └──────────┴──────────────────┴────────────────────────┘
-   *
-   * Results are stamped with queryType for UI / debug use.
-   *
-   * @param  {string}  query
+   * Main entry point.
+   * @param  {string}  query        - User search query
    * @param  {object}  [opts]
    * @param  {boolean} [opts.enrich=false]  Force API enrichment even if local is complete
-   * @param  {boolean} [opts.multi=false]   Return array of top matches (up to 10)
+   * @param  {boolean} [opts.multi=false]   Return array of top matches (up to 5)
    * @returns {Promise<object|object[]|null>}
    */
   async function searchFood(query, opts = {}) {
@@ -1075,22 +975,15 @@ Query: "${query}"`;
 
     if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
-    const terms  = _expandQuery(query);
-    const locals = _searchLocal(terms);
+    const terms   = _expandQuery(query);
+    const locals  = _searchLocal(terms);
 
-    // ── Multi-result mode (autocomplete / global search UI) ───────────────
+    // ── Multi-result mode (for autocomplete / global search UI) ────────────
     if (multi) {
-      const regional = _searchRegional(terms, 10);
+      const regional = _searchRegional(terms, limit);
       const combined = [...locals, ...regional];
       combined.sort((a, b) => b.confidenceScore - a.confidenceScore);
-      const seen   = new Set();
-      const unique = combined.filter(r => {
-        const k = _norm(r.name);
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
-      const result = unique.slice(0, 10);
+      const result = combined.slice(0, limit);
       _cache.set(cacheKey, result);
       return result;
     }
@@ -1098,7 +991,7 @@ Query: "${query}"`;
     // ── Single best match mode ─────────────────────────────────────────────
     let best = locals[0] ?? null;
 
-    // Layer 1 complete match → return immediately (no network needed)
+    // Layer 1 complete match → return immediately
     if (best && _isComplete(best._raw ?? best) && !enrich) {
       const out = { ...best };
       delete out._raw;
@@ -1113,16 +1006,18 @@ Query: "${query}"`;
       if (!best) {
         best = topRegional;
       } else {
+        // Keep whichever has the higher confidence; merge micronutrients in
         if (topRegional.confidenceScore >= best.confidenceScore) {
           best = _merge(topRegional, best);
           best.sourceUsed = 'regional';
         } else {
+          // Decorate local result with micronutrients from regional match
           for (const mic of ['iron', 'zinc', 'vitA', 'calcium']) {
             if (best[mic] == null && topRegional[mic] != null) best[mic] = topRegional[mic];
           }
         }
       }
-      // Regional complete → return without any API calls
+      // If regional result is complete (has all macros), return without hitting APIs
       if (!enrich && best.kcal != null && best.pro != null &&
           best.cho != null && best.fat != null) {
         const out = { ...best };
@@ -1132,79 +1027,53 @@ Query: "${query}"`;
       }
     }
 
-    // ── Online routing ────────────────────────────────────────────────────
-    //
-    // Quantity check runs first — no need to classify "200g chicken breast".
-    // For portioned queries the measurement is stripped before hitting APIs
-    // so FatSecret / FDC receive clean food names, not raw strings like "200g".
+    // Layer 2 — USDA FDC  +  FatSecret  (parallel)
+    // Both are fired simultaneously; the one with more complete macros wins,
+    // then fields missing in the winner are filled from the other.
+    const [fdcSettled, fsSettled] = await Promise.allSettled([
+      _searchFDC(query),
+      _searchFatSecret(query),
+    ]);
+    const fdcResult = fdcSettled.status === 'fulfilled' ? fdcSettled.value : null;
+    const fsResult  = fsSettled.status  === 'fulfilled' ? fsSettled.value  : null;
 
-    const hasQty   = _hasQuantity(query);
-    const apiQuery = hasQty ? _stripQuantity(query) : query;
-    let   queryType;
-
-    if (hasQty) {
-      // ── quantity: FatSecret → FDC ─────────────────────────────────────
-      queryType = 'quantity';
-
-      const fsResult = await _searchFatSecret(apiQuery);
-      if (!best)         best = fsResult;
-      else if (fsResult) best = _merge(best, fsResult);
-
-      if (!best || best.kcal == null) {
-        const fdcResult = await _searchFDC(apiQuery);
-        if (!best)          best = fdcResult;
-        else if (fdcResult) best = _merge(best, fdcResult);
-      }
-
-    } else {
-      // ── no quantity: classify → route ────────────────────────────────
-      // _classifyQuery uses llama-3.1-8b-instant (~50 ms); falls back to
-      // 'raw' on any error so the search is never blocked.
-      queryType = await _classifyQuery(query);
-
-      if (queryType === 'raw') {
-        // raw: FDC → FatSecret ──────────────────────────────────────────
-        const fdcResult = await _searchFDC(apiQuery);
-        if (!best)          best = fdcResult;
-        else if (fdcResult) best = _merge(best, fdcResult);
-
-        if (!best || best.kcal == null) {
-          const fsResult = await _searchFatSecret(apiQuery);
-          if (!best)         best = fsResult;
-          else if (fsResult) best = _merge(best, fsResult);
-        }
-
-      } else if (queryType === 'dish') {
-        // dish: FatSecret → FDC ─────────────────────────────────────────
-        const fsResult = await _searchFatSecret(apiQuery);
-        if (!best)         best = fsResult;
-        else if (fsResult) best = _merge(best, fsResult);
-
-        if (!best || best.kcal == null) {
-          const fdcResult = await _searchFDC(apiQuery);
-          if (!best)          best = fdcResult;
-          else if (fdcResult) best = _merge(best, fdcResult);
-        }
-
+    // Pick the richer Layer-2 result, then merge the other into it
+    let layer2 = null;
+    if (fdcResult && fsResult) {
+      const fdcMacros = [fdcResult.kcal, fdcResult.pro, fdcResult.cho, fdcResult.fat].filter(v => v != null).length;
+      const fsMacros  = [fsResult.kcal,  fsResult.pro,  fsResult.cho,  fsResult.fat ].filter(v => v != null).length;
+      if (fsMacros > fdcMacros) {
+        // FatSecret is more complete — use it as base, fill gaps from FDC
+        layer2 = _merge(fsResult, fdcResult);
+        layer2.sourceUsed = 'FatSecret';
       } else {
-        // branded: FatSecret → OFF ──────────────────────────────────────
-        const fsResult = await _searchFatSecret(apiQuery);
-        if (!best)         best = fsResult;
-        else if (fsResult) best = _merge(best, fsResult);
+        // FDC is more complete (or equal) — use it as base, fill gaps from FatSecret
+        layer2 = _merge(fdcResult, fsResult);
+        layer2.sourceUsed = 'FDC';
+      }
+    } else {
+      layer2 = fdcResult ?? fsResult ?? null;
+    }
 
-        if (!best || best.kcal == null) {
-          const offResult = await _searchOFF(apiQuery);
-          if (!best)          best = offResult;
-          else if (offResult) best = _merge(best, offResult);
-        }
+    if (!best) {
+      best = layer2;
+    } else if (layer2) {
+      best = _merge(best, layer2);
+    }
+
+    // Layer 3 — Open Food Facts text search
+    // Only reached when all local layers AND both Layer-2 sources returned
+    // nothing, or the result still has missing macros.
+    if (!best || (best.kcal == null && best.pro == null)) {
+      const offResult = await _searchOFF(query);
+      if (!best) {
+        best = offResult;
+      } else if (offResult) {
+        best = _merge(best, offResult);
       }
     }
 
-    if (best) {
-      best.queryType = queryType; // 'quantity' | 'raw' | 'dish' | 'branded'
-      delete best._raw;
-    }
-
+    if (best) delete best._raw;
     _cache.set(cacheKey, best);
     return best;
   }
@@ -1312,15 +1181,12 @@ Query: "${query}"`;
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
     _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
     _fdcSearch:         _searchFDC,         // public FDC-only search for explicit import UI
+    _fatSecretSearch:   _searchFatSecret,   // public FatSecret-only search (Appwrite proxy)
     _offSearch:         _searchOFF,         // public OFF text-search (name-based, Layer 3)
     _fetchOFFBarcode:   _fetchOFFBarcode,   // public OFF barcode fetch (Layer B) — for scanner UI
     _regionalSearch:    _searchRegional,    // direct regional FCT search
     filterByCountry:    filterByCountry,    // filter results by country code(s)
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary
-    _classifyQuery:     _classifyQuery,     // LLM query classifier — exposed for testing
-    _fatSecretSearch:   _searchFatSecret,   // FatSecret search — exposed for dev inspection
-    _hasQuantity:       _hasQuantity,       // quantity detector — exposed for testing
-    _stripQuantity:     _stripQuantity,     // quantity stripper — exposed for testing
   };
 
 })(typeof window !== 'undefined' ? window : this);
