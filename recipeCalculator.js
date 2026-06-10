@@ -1,30 +1,3 @@
-/**
- * recipeCalculator.js — Recipe Calculator Module
- * Oasis Clinical Nutrition Decision Support System
- * ─────────────────────────────────────────────────────────────────────────
- * Features:
- *   • Dynamic ingredient rows with Malawi FCT + Open Food Facts lookup
- *   • Ingredient scaling (batch multiplier)
- *   • Weight change % calculator  [ ((Final − Initial) / Initial) × 100 ]
- *   • Unit support: g · ml · cups · tbsp · tsp · dessert spoon · pinch
- *   • Auto-save form state to localStorage
- *   • Recipe summary card (printable)
- *
- * Placement : Tools → Recipe Calculator  (below Clinical Tools on Home screen)
- * Tab id    : tab-recipe
- * Global    : window.RC  (RecipeCalculator)
- *
- * Dependencies (loaded before this file in index.html):
- *   foodData.js   → MALAWI_FCT  (global)
- *   foodSearch.js → NTFoodSearch.search()  (global, async)
- *
- * Author : Edison Taimu
- * ─────────────────────────────────────────────────────────────────────────
- */
-
-/* ══════════════════════════════════════════════════════════════════════════
-   IIFE — all internals scoped; only window.RC exposed
-══════════════════════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
 
@@ -68,7 +41,7 @@
     } catch (_) {}
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
   function _uid() {
     return 'ing_' + Math.random().toString(36).slice(2, 9);
   }
@@ -145,7 +118,7 @@
       if (results.length >= limit) break;
       const nameMatch = f.name.toLowerCase().includes(q);
       const altMatch  = Array.isArray(f.altNames) &&
-                        f.altNames.some(a => a.toLowerCase().includes(q));
+                         f.altNames.some(a => a.toLowerCase().includes(q));
       const idMatch   = f.id === q;
       if (idMatch || nameMatch || altMatch) {
         if (!seen.has(f.id)) {
@@ -700,7 +673,7 @@
 
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
       btn.style.animation = 'rc-spin 0.7s linear infinite';
     }
     if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted)">Searching…</span>`;
@@ -766,7 +739,7 @@
     return _state.ingredients.find(i => i.id === id) || null;
   }
 
-  // ── Scale factor ──────────────────────────────────────────────────────────
+  // ── Scale factor ────────────────────────────────────────────────────────
   function _onScaleChange(val) {
     const n = parseFloat(val);
     _state.scaleFactor = isNaN(n) || n <= 0 ? 1 : n;
@@ -774,7 +747,7 @@
     _updateLiveTotals();
   }
 
-  // ── Weight inputs ─────────────────────────────────────────────────────────
+  // ── Weight inputs ────────────────────────────────────────────────────────
   function _onWeightInput(field, val) {
     _state[field] = val;
     _save();
@@ -953,7 +926,7 @@
     el.style.color   = type === 'warn' ? '#fb923c' : '#fb7185';
   }
 
-  // ── Clear / Reset ─────────────────────────────────────────────────────────
+  // ── Clear / Reset ─────��──────────────────────────────────────────────────
   function _clearAll() {
     if (!confirm('Clear all recipe data? This cannot be undone.')) return;
     _state = _defaultState();
@@ -974,7 +947,7 @@
     _updateLiveTotals();
   }
 
-  // ── Escape HTML ───────────────────────────────────────────────────────────
+  // ── Escape HTML ──────────────────────────────────────────────────────────
   function _escHtml(str) {
     if (!str) return '';
     return String(str)
@@ -984,9 +957,9 @@
       .replace(/"/g, '&quot;');
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // PUBLIC INIT — called by switchTab('recipe') in main.js
-  // ══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   function init() {
     _load();
     // Always refresh userName from user profile on every init
@@ -1040,7 +1013,7 @@
     _renderAll();
   }
 
-  // ── Save as PDF ───────────────────────────────────────────────────────────
+  // ── Save as PDF ──────────────────────────────────────────────────────
   function _savePDF() {
     const card = _el('rc-card');
     if (!card || !card.innerHTML.trim()) {
