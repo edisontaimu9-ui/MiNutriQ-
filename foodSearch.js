@@ -15,18 +15,17 @@
  *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
  *               ▶ Requires regionalFCT.js loaded before this script.
  *
- *   Layer 2   — FatSecret Platform API  (_searchFatSecret)
- *               ▶ Premier Free tier — US packaged & branded food database.
- *               ▶ Reached after local layers miss or are incomplete.
- *               ▶ Returns macros parsed from food_description (per-100g).
- *               ▶ OAuth 1.0 HMAC-SHA1 signed via Web Crypto API.
+ *   Layer 2   — FatSecret REST API  (_searchFatSecret)
+ *               ▶ Only reached when local data is absent/incomplete.
+ *               ▶ Strong packaged/branded food coverage globally.
+ *               ▶ OAuth 1.0 signed via Appwrite Function (keys never in browser).
  *
- *   Layer 3   — USDA FoodData Central API  (was Layer 2)
- *               ▶ Only reached when local + FatSecret data is absent/incomplete.
+ *   Layer 3   — USDA FoodData Central API  (_searchFDC)
+ *               ▶ Reached when local AND FatSecret miss or return incomplete.
  *               ▶ Fills missing nutritional fields; never overwrites local data.
  *
- *   Layer 4   — Open Food Facts Text Search  (_searchOFF, name-based)  (was Layer 3)
- *               ▶ Last resort when local, regional, FatSecret, AND FDC all miss.
+ *   Layer 4   — Open Food Facts Text Search  (_searchOFF, name-based)
+ *               ▶ Last resort when all layers above miss.
  *               ▶ Searches packaged/processed foods by product name via
  *                 OFF /cgi/search.pl endpoint.
  *               ▶ Returns OFF nutritional fields mapped to unified shape.
@@ -40,13 +39,12 @@
  *               ▶ barcodeSource: 'LocalDB' | confidenceScore 0.97 / 0.72
  *
  *   Layer B   — FatSecret Barcode API  (_fetchFatSecretBarcode)
- *               ▶ Two-step: find_id_for_barcode → food.get.v4 for full nutrition.
- *               ▶ Only reached when Layer A has no match (online).
- *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
- *               ▶ barcodeSource: 'FatSecret' | confidenceScore 0.88
+ *               ▶ Reached when Layer A misses; uses FatSecret food.find_id_for_barcode.
+ *               ▶ OAuth 1.0 signed via Appwrite Function (keys never in browser).
+ *               ▶ barcodeSource: 'FatSecret' | confidenceScore 0.90
  *
- *   Layer C   — Open Food Facts v2 Barcode API  (_fetchOFFBarcode)  (was Layer B)
- *               ▶ Only reached when Layers A and B both miss (online).
+ *   Layer C   — Open Food Facts v2 Barcode API  (_fetchOFFBarcode)
+ *               ▶ Only reached when Layers A and B have no match (online).
  *               ▶ Hits OFF /api/v2/product/{barcode}.json — exact product.
  *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
  *               ▶ barcodeSource: 'OFF' | confidenceScore 0.82
@@ -92,10 +90,12 @@
 
   // ── PRIVATE API KEYS (not logged) ─────────────────────────────────────────
   const _KEYS = Object.freeze({
-    fdc:             'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
-    fatSecretKey:    '2da4e1404a71449caa9160741b11507f',
-    fatSecretSecret: 'eece7d6765dd42f08406d02e9372350b',
+    fdc:    'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
   });
+
+  // ── FATSECRET APPWRITE FUNCTION ENDPOINT ──────────────────────────────────
+  // OAuth 1.0 signing is handled server-side; keys never touch the browser.
+  const _FATSECRET_FN = 'https://6a272486000253600027.sgp.appwrite.run';
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
   // Maps alternative / regional names → canonical local DB search term(s).
@@ -197,22 +197,6 @@
       .replace(/[^a-z0-9\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-  }
-
-  /** Percent-encode per RFC 3986 — used for OAuth 1.0 signature building */
-  function _pct(s) {
-    return encodeURIComponent(String(s))
-      .replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
-  }
-
-  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
-  function _fetchWithTimeout(url, ms) {
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, {
-      signal:  ctrl.signal,
-      headers: { 'Accept': 'application/json' },
-    }).finally(() => clearTimeout(tid));
   }
 
   /** Levenshtein distance (capped at 3 for performance) */
@@ -498,117 +482,113 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // FATSECRET OAUTH 1.0 HELPER
-  // Builds a fully-signed GET URL for any FatSecret REST API call.
-  // Two-legged OAuth 1.0 (no access token) with HMAC-SHA1 via Web Crypto.
-  // Requires HTTPS context (Web Crypto API availability).
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Build a complete signed GET URL for a FatSecret REST API call.
-   * @param  {object} apiParams  e.g. { method: 'foods.search', search_expression: 'rice', format: 'json' }
-   * @returns {Promise<string>}  Fully signed URL ready to fetch
-   */
-  async function _fatSecretURL(apiParams) {
-    const FS_ENDPOINT = 'https://platform.fatsecret.com/rest/server.api';
-
-    const allParams = {
-      oauth_consumer_key:     _KEYS.fatSecretKey,
-      oauth_nonce:            Math.random().toString(36).slice(2) + Date.now().toString(36),
-      oauth_signature_method: 'HMAC-SHA1',
-      oauth_timestamp:        String(Math.floor(Date.now() / 1000)),
-      oauth_version:          '1.0',
-      ...apiParams,
-    };
-
-    // 1. Sort + percent-encode all params into a normalised parameter string
-    const normParams = Object.keys(allParams)
-      .sort()
-      .map(k => `${_pct(k)}=${_pct(allParams[k])}`)
-      .join('&');
-
-    // 2. Signature base string:  METHOD & encoded_url & encoded_params
-    const baseString = `GET&${_pct(FS_ENDPOINT)}&${_pct(normParams)}`;
-
-    // 3. Signing key = consumer_secret + '&'  (two-legged: no token secret)
-    const signingKey = `${_pct(_KEYS.fatSecretSecret)}&`;
-
-    // 4. HMAC-SHA1 via Web Crypto API
-    const enc       = new TextEncoder();
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw', enc.encode(signingKey),
-      { name: 'HMAC', hash: 'SHA-1' },
-      false, ['sign']
-    );
-    const rawSig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(baseString));
-    const b64Sig = btoa(String.fromCharCode(...new Uint8Array(rawSig)));
-
-    // 5. Append signature and build final query string
-    const signedParams = { ...allParams, oauth_signature: b64Sig };
-    const qs = Object.keys(signedParams)
-      .sort()
-      .map(k => `${_pct(k)}=${_pct(signedParams[k])}`)
-      .join('&');
-
-    return `${FS_ENDPOINT}?${qs}`;
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2 — FATSECRET FOOD SEARCH
-  // FatSecret Premier Free — US packaged & branded food database.
-  // Reached after local (Layer 1) and regional (Layer 1.5) both miss or
-  // are incomplete. Returns a unified food object or null.
-  // API: foods.search — per-100g macros parsed from food_description string.
+  // LAYER 2 — FATSECRET REST API  (_searchFatSecret)
+  // Called via Appwrite Function which handles OAuth 1.0 signing server-side.
+  // Returns unified food object or null on miss / error.
   // ══════════════════════════════════════════════════════════════════════════
 
   async function _searchFatSecret(query) {
     try {
-      const url = await _fatSecretURL({
-        method:            'foods.search',
-        search_expression: query.trim(),
-        format:            'json',
-        max_results:       '5',
+      const url = _FATSECRET_FN + '?query=' + encodeURIComponent(query.trim());
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       });
-
-      const res = await _fetchWithTimeout(url, 8000);
       if (!res.ok) return null;
       const data = await res.json();
 
+      // FatSecret returns foods.food as array or single object
       const foods = data?.foods?.food;
       if (!foods) return null;
       const list = Array.isArray(foods) ? foods : [foods];
       if (!list.length) return null;
 
-      // Prefer a Generic (raw ingredient) hit; fall back to Brand
-      const hit = list.find(f => f.food_type === 'Generic') ?? list[0];
+      const f = list[0];
 
-      // food_description format (per 100g entry preferred):
-      //   "Per 100g - Calories: 452kcal | Fat: 25.00g | Carbs: 50.00g | Protein: 10.00g"
-      const per100 = list.find(f => (f.food_description || '').includes('100g')) ?? hit;
-      const desc   = per100?.food_description || '';
-
-      const kcal = parseFloat(desc.match(/Calories:\s*([\d.]+)/i)?.[1] ?? '') || null;
-      const fat  = parseFloat(desc.match(/Fat:\s*([\d.]+)/i)?.[1]      ?? '') || null;
-      const cho  = parseFloat(desc.match(/Carbs:\s*([\d.]+)/i)?.[1]    ?? '') || null;
-      const pro  = parseFloat(desc.match(/Protein:\s*([\d.]+)/i)?.[1]  ?? '') || null;
+      // Parse the food_description string: "Per 100g - Calories: 89kcal | Fat: 0.33g | Carbs: 22.84g | Protein: 1.09g"
+      const desc = f.food_description || '';
+      const _pn  = (label) => {
+        const m = desc.match(new RegExp(label + '[:\s]+([\d.]+)', 'i'));
+        return m ? +parseFloat(m[1]).toFixed(2) : null;
+      };
 
       return {
-        id:              `fs_${per100?.food_id ?? hit.food_id}`,
-        name:            per100?.food_name    ?? hit.food_name,
-        cat:             hit.food_type === 'Brand'
-                           ? (hit.brand_name || 'FatSecret')
-                           : (hit.food_type  || 'FatSecret'),
-        kcal,
-        kj:              kcal != null ? +(kcal * 4.184).toFixed(0) : null,
-        pro,
-        cho,
-        fat,
+        id:              'fs_' + f.food_id,
+        name:            (f.food_name || '').trim(),
+        brand:           (f.brand_name || '').trim() || null,
+        cat:             f.food_type || 'FatSecret',
+        kcal:            _pn('Calories'),
+        kj:              _pn('Calories') != null ? +(_pn('Calories') * 4.184).toFixed(0) : null,
+        pro:             _pn('Protein'),
+        cho:             _pn('Carbs'),
+        fat:             _pn('Fat'),
         fiber:           null,
         sugar:           null,
         sodium:          null,
         measures:        null,
         sourceUsed:      'FatSecret',
-        confidenceScore: 0.78,
+        confidenceScore: 0.75,
+        lastUpdated:     null,
+      };
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  // ── FatSecret Barcode Lookup (Layer B) ────────────────────────────────────
+  async function _fetchFatSecretBarcode(barcode) {
+    try {
+      const url = _FATSECRET_FN + '?query=' + encodeURIComponent(barcode.trim()) + '&mode=barcode';
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+
+      const foodId = data?.food_id?.value;
+      if (!foodId) return null;
+
+      // Now fetch full food details using the food id
+      const detailUrl = _FATSECRET_FN + '?query=' + encodeURIComponent(foodId) + '&mode=get';
+      const detailRes = await fetch(detailUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
+      });
+      if (!detailRes.ok) return null;
+      const detail = await detailRes.json();
+      const f = detail?.food;
+      if (!f) return null;
+
+      const serving = Array.isArray(f.servings?.serving)
+        ? f.servings.serving.find(s => s.serving_description?.includes('100g')) || f.servings.serving[0]
+        : f.servings?.serving;
+      if (!serving) return null;
+
+      const _n = (k) => serving[k] != null ? +parseFloat(serving[k]).toFixed(2) : null;
+
+      return {
+        id:              'fs_' + f.food_id,
+        name:            (f.food_name || '').trim(),
+        brand:           (f.brand_name || '').trim() || null,
+        cat:             f.food_type || 'FatSecret',
+        barcode,
+        barcodeSource:   'FatSecret',
+        barcodeMatch:    'exact',
+        kcal:            _n('calories'),
+        kj:              _n('calories') != null ? +(_n('calories') * 4.184).toFixed(0) : null,
+        pro:             _n('protein'),
+        cho:             _n('carbohydrate'),
+        fat:             _n('fat'),
+        fiber:           _n('fiber'),
+        sugar:           _n('sugar'),
+        sodium:          _n('sodium'),
+        measures:        null,
+        sourceUsed:      'FatSecret',
+        confidenceScore: 0.90,
         lastUpdated:     null,
       };
     } catch (_e) {
@@ -617,7 +597,7 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 3 — USDA FOODDATA CENTRAL  (was Layer 2 — shifted down for FatSecret)
+  // LAYER 3 — USDA FOODDATA CENTRAL
   // ══════════════════════════════════════════════════════════════════════════
 
   async function _searchFDC(query) {
@@ -653,12 +633,11 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 4 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)  (was Layer 3)
-  // Searched only when FatSecret and FDC also return null. Uses the OFF
-  // /cgi/search.pl endpoint to find packaged foods by name.
-  // Offline → fails gracefully.
-  // NOTE: For barcode lookups use searchBarcode() — Layer B is FatSecret,
-  // Layer C is _fetchOFFBarcode which hits the OFF v2 /product/{barcode}.json.
+  // LAYER 4 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
+  // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
+  // endpoint to find packaged foods by name. Offline → fails gracefully.
+  // NOTE: For barcode lookups use searchBarcode() / _fetchOFFBarcode (Layer B)
+  // which hits the OFF v2 /product/{barcode}.json endpoint instead.
   // ══════════════════════════════════════════════════════════════════════════
 
   async function _searchOFF(query) {
@@ -726,11 +705,11 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // BARCODE — OPEN FOOD FACTS (Layer C)  (was Layer B — shifted down for FatSecret)
+  // BARCODE — OPEN FOOD FACTS (Layer B)
   // Fetches a single product by barcode from the OFF v2 API.
   // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
   // instant even without a network connection.
-  // Distinct from _searchOFF (Layer 4, text-based) — this resolves exact codes.
+  // Distinct from _searchOFF (Layer 3, text-based) — this resolves exact codes.
   // ══════════════════════════════════════════════════════════════════════════
 
   const _BC_CACHE_KEY = 'oasis_bc_cache_v1';
@@ -758,6 +737,16 @@
       if (keys.length > 50) delete store[keys[0]];
       localStorage.setItem(_BC_CACHE_KEY, JSON.stringify(store));
     } catch (_e) {}
+  }
+
+  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
+  function _fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' },
+    }).finally(() => clearTimeout(tid));
   }
 
   /**
@@ -832,133 +821,6 @@
 
     _bcCacheSet(barcode, result);
     return result;
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // BARCODE — FATSECRET  (Layer B)
-  // Two-step: food.find_id_for_barcode → food.get.v4 for full nutrition.
-  // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
-  // instant even without a network connection.
-  // Only reached when local registry (Layer A) has no match.
-  // barcodeSource: 'FatSecret' | confidenceScore 0.88
-  // ══════════════════════════════════════════════════════════════════════════
-
-  const _FS_CACHE_KEY = 'oasis_fs_bc_cache_v1';
-  const _FS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  function _fsCacheGet(barcode) {
-    try {
-      const store = JSON.parse(localStorage.getItem(_FS_CACHE_KEY) || '{}');
-      const entry = store[barcode];
-      if (!entry) return null;
-      if (Date.now() - entry.ts > _FS_CACHE_TTL) {
-        delete store[barcode];
-        localStorage.setItem(_FS_CACHE_KEY, JSON.stringify(store));
-        return null;
-      }
-      return entry.data;
-    } catch (_e) { return null; }
-  }
-
-  function _fsCacheSet(barcode, data) {
-    try {
-      const store = JSON.parse(localStorage.getItem(_FS_CACHE_KEY) || '{}');
-      store[barcode] = { ts: Date.now(), data };
-      const keys = Object.keys(store);
-      if (keys.length > 50) delete store[keys[0]];
-      localStorage.setItem(_FS_CACHE_KEY, JSON.stringify(store));
-    } catch (_e) {}
-  }
-
-  /**
-   * Resolve a scanned barcode via FatSecret's two-step API:
-   *   1. food.find_id_for_barcode  → food_id
-   *   2. food.get.v4               → full nutrition panel (Premier required)
-   *
-   * Cached in localStorage (7-day TTL, 50-entry cap).
-   * Returns null when barcode is unknown to FatSecret.
-   * Throws on network error so the scanner UI can show a friendly message.
-   *
-   * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
-   * @returns {Promise<object|null>}
-   */
-  async function _fetchFatSecretBarcode(barcode) {
-    if (!barcode) return null;
-    const digits = barcode.replace(/\D/g, '');
-
-    const cached = _fsCacheGet(digits);
-    if (cached !== null) return cached;
-
-    try {
-      // ── Step 1: resolve barcode → food_id ─────────────────────────────────
-      const findUrl = await _fatSecretURL({
-        method:  'food.find_id_for_barcode',
-        barcode: digits,
-        format:  'json',
-      });
-      const findRes = await _fetchWithTimeout(findUrl, 10000);
-      if (!findRes.ok) return null;
-      const findData = await findRes.json();
-
-      const foodId = findData?.food_id?.value;
-      if (!foodId) return null;                 // barcode not in FatSecret DB
-
-      // ── Step 2: fetch full nutrition via food.get.v4 ──────────────────────
-      const getUrl = await _fatSecretURL({
-        method:  'food.get.v4',
-        food_id: String(foodId),
-        format:  'json',
-      });
-      const getRes = await _fetchWithTimeout(getUrl, 10000);
-      if (!getRes.ok) return null;
-      const getData = await getRes.json();
-
-      const food = getData?.food;
-      if (!food) return null;
-
-      // Prefer the explicit per-100g serving; fall back to first serving
-      const servings = food.servings?.serving;
-      const sList    = Array.isArray(servings) ? servings : (servings ? [servings] : []);
-      const s100     = sList.find(s =>
-        (s.metric_serving_amount === '100.000' || s.metric_serving_amount === '100') &&
-        (s.metric_serving_unit === 'g' || (s.serving_description || '').toLowerCase().includes('100g'))
-      ) ?? sList[0];
-
-      if (!s100) return null;
-
-      const _n = v => (v != null && v !== '') ? +parseFloat(v).toFixed(2) : null;
-      const kcal = _n(s100.calories);
-
-      const result = {
-        id:              `fs_${food.food_id}`,
-        name:            food.food_name,
-        brand:           food.brand_name ?? null,
-        cat:             food.brand_name ?? food.food_type ?? 'FatSecret',
-        barcode:         digits,
-        barcodeSource:   'FatSecret',
-        barcodeMatch:    'exact',
-        kcal,
-        kj:              kcal != null ? +(kcal * 4.184).toFixed(0) : null,
-        pro:             _n(s100.protein),
-        cho:             _n(s100.carbohydrate),
-        fat:             _n(s100.fat),
-        fiber:           _n(s100.fiber),
-        sugar:           _n(s100.sugar),
-        sodium:          _n(s100.sodium),
-        salt:            s100.sodium != null ? +(_n(s100.sodium) * 2.5).toFixed(2) : null,
-        measures:        null,
-        sourceUsed:      'FatSecret',
-        confidenceScore: 0.88,
-        lastUpdated:     null,
-      };
-
-      _fsCacheSet(digits, result);
-      return result;
-
-    } catch (netErr) {
-      if (netErr.name === 'AbortError') throw new Error('FatSecret request timed out — check connection');
-      throw new Error('FatSecret network error: ' + (netErr.message || netErr));
-    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1070,7 +932,7 @@
 
   // ══════════════════════════════════════════════════════════════════════════
   // MERGE HELPER
-  // Priority: local > regional > FatSecret > FDC > OFF — only fills null/missing fields
+  // Priority: local > FDC > OFF — only fills null/missing fields
   // ══════════════════════════════════════════════════════════════════════════
 
   function _merge(base, ext) {
@@ -1167,33 +1029,25 @@
 
     // Layer 2 — FatSecret
     const fsResult = await _searchFatSecret(query);
+
     if (!best) {
       best = fsResult;
     } else if (fsResult) {
       best = _merge(best, fsResult);
     }
 
-    // Early return if FatSecret completed all macros
-    if (!enrich && best && best.kcal != null && best.pro != null &&
-        best.cho != null && best.fat != null) {
-      const out = { ...best };
-      delete out._raw;
-      _cache.set(cacheKey, out);
-      return out;
-    }
-
-    // Layer 3 — FDC
-    const fdcResult = await _searchFDC(query);
-
-    if (!best) {
-      best = fdcResult;
-    } else if (fdcResult) {
-      best = _merge(best, fdcResult);
+    // Layer 3 — FDC (reached when local AND FatSecret miss or are incomplete)
+    if (!best || (best.kcal == null && best.pro == null)) {
+      const fdcResult = await _searchFDC(query);
+      if (!best) {
+        best = fdcResult;
+      } else if (fdcResult) {
+        best = _merge(best, fdcResult);
+      }
     }
 
     // Layer 4 — Open Food Facts text search
-    // Only reached when local, regional, FatSecret, AND FDC all returned
-    // nothing, or when the result still has missing macros after enrichment.
+    // Only reached when all layers above returned nothing.
     if (!best || (best.kcal == null && best.pro == null)) {
       const offResult = await _searchOFF(query);
       if (!best) {
@@ -1297,9 +1151,9 @@
     const localResult = _searchLocalBarcode(barcode);
     if (localResult) return localResult;
 
-    // ── Layer B: FatSecret barcode API ────────────────────────────────────
-    const fsResult = await _fetchFatSecretBarcode(barcode);
-    if (fsResult) return fsResult;
+    // ── Layer B: FatSecret barcode API ───────────────────────────────────
+    const fsBarcode = await _fetchFatSecretBarcode(barcode);
+    if (fsBarcode) return fsBarcode;
 
     // ── Layer C: Open Food Facts v2 barcode API ───────────────────────────
     return await _fetchOFFBarcode(barcode);
@@ -1307,21 +1161,21 @@
 
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
   global.NTFoodSearch = {
-    search:                 searchFood,
-    searchLocal:            searchLocal,
-    searchBarcode:          searchBarcode,          // barcode scan entry-point (offline-first)
-    clearCache:             clearCache,
-    _synonymMap:            SYNONYM_MAP,            // exposed for debugging only
-    _localBarcodeDB:        _LOCAL_BARCODE_DB,      // exposed for dev inspection
-    _brandPrefixDB:         _BRAND_PREFIX_DB,       // exposed for dev inspection
-    _fatSecretSearch:       _searchFatSecret,       // FatSecret text search (Layer 2)
-    _fetchFatSecretBarcode: _fetchFatSecretBarcode, // FatSecret barcode fetch (Layer B)
-    _fdcSearch:             _searchFDC,             // FDC-only search (Layer 3)
-    _offSearch:             _searchOFF,             // OFF text-search (Layer 4)
-    _fetchOFFBarcode:       _fetchOFFBarcode,       // OFF barcode fetch (Layer C)
-    _regionalSearch:        _searchRegional,        // direct regional FCT search
-    filterByCountry:        filterByCountry,        // filter results by country code(s)
-    getRegionalStats:       getRegionalStats,       // regional DB coverage summary
+    search:             searchFood,
+    searchLocal:        searchLocal,
+    searchBarcode:      searchBarcode,      // barcode scan entry-point (offline-first)
+    clearCache:         clearCache,
+    _synonymMap:        SYNONYM_MAP,        // exposed for debugging only
+    _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
+    _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
+    _fdcSearch:         _searchFDC,         // public FDC-only search (Layer 3)
+    _offSearch:         _searchOFF,         // public OFF text-search (Layer 4)
+    _fatSecretSearch:   _searchFatSecret,   // public FatSecret text search (Layer 2)
+    _fetchFatSecretBarcode: _fetchFatSecretBarcode, // public FatSecret barcode (Layer B)
+    _fetchOFFBarcode:   _fetchOFFBarcode,   // public OFF barcode fetch (Layer C) — for scanner UI
+    _regionalSearch:    _searchRegional,    // direct regional FCT search
+    filterByCountry:    filterByCountry,    // filter results by country code(s)
+    getRegionalStats:   getRegionalStats,   // regional DB coverage summary
   };
 
 })(typeof window !== 'undefined' ? window : this);
