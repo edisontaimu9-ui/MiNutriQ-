@@ -148,7 +148,7 @@ function _injectModal() {
           <span class="bs-pm airtel">📱 Airtel Money</span>
           <span class="bs-pm mpamba">📱 TNM Mpamba</span>
           <span class="bs-pm bank">🏦 Bank Transfer</span>
-          <span class="bs-pm card">💳 Card</span>
+          <span class="bs-pm card"><span class="bs-card-ticker">💳 Card</span></span>
         </div>
       </div>
 
@@ -616,21 +616,19 @@ function _injectStyles() {
     .bs-pm.bank     { color: #065f46; border-color: #6ee7b7; background: #ecfdf5; }
     .bs-pm.card {
       color: #5b21b6; border-color: #c4b5fd; background: #f5f3ff;
-      position: relative; overflow: hidden;
+      overflow: hidden; min-width: 68px; text-align: center;
     }
-    .bs-pm.card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -120%;
-      width: 70%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.72), transparent);
-      animation: bs-card-swipe 2.2s ease-in-out infinite;
-      pointer-events: none;
+    .bs-card-ticker {
+      display: inline-block;
+      animation: bs-card-march 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      white-space: nowrap;
     }
-    @keyframes bs-card-swipe {
-      0%   { left: -120%; }
-      60%  { left: 160%;  }
-      100% { left: 160%;  }
+    @keyframes bs-card-march {
+      0%   { transform: translateX(-120%); opacity: 0;   }
+      12%  { opacity: 1; }
+      80%  { transform: translateX(120%);  opacity: 1;   }
+      90%  { opacity: 0; }
+      100% { transform: translateX(120%);  opacity: 0;   }
     }
 
     .bs-note { text-align: center; font-size: 11px; color: #9ca3af; }
