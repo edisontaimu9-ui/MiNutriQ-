@@ -143,7 +143,7 @@ function _injectModal() {
 
       <!-- Payment methods -->
       <div class="bs-pay-methods">
-        <span class="bs-pm-label">Pay via</span>
+        <span class="bs-pm-label">Accepted Payment Methods</span>
         <div class="bs-pm-badges">
           <span class="bs-pm airtel"><img class="bs-pm-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23E63329'/%3E%3Cpath d='M10.6 11H9.2L8.7 9.6H6.3L5.8 11H4.4L6.8 5h2l2.8 6zm-2.3-2.3L7.5 6.5l-.8 2.2h1.6z' fill='white'/%3E%3C/svg%3E" alt=""> Airtel Money</span>
           <span class="bs-pm mpamba"><img class="bs-pm-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%231B8C3A'/%3E%3Cpath d='M3.5 11V5h1.8l1.7 3 1.7-3H10.5v6H9.2V7.2L7.3 10H6.7L4.8 7.2V11z' fill='white'/%3E%3C/svg%3E" alt=""> TNM Mpamba</span>
