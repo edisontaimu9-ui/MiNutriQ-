@@ -145,8 +145,8 @@ function _injectModal() {
       <div class="bs-pay-methods">
         <span class="bs-pm-label">Pay via</span>
         <div class="bs-pm-badges">
-          <span class="bs-pm airtel">📱 Airtel Money</span>
-          <span class="bs-pm mpamba">📱 TNM Mpamba</span>
+          <span class="bs-pm airtel"><img class="bs-pm-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23E63329'/%3E%3Cpath d='M10.6 11H9.2L8.7 9.6H6.3L5.8 11H4.4L6.8 5h2l2.8 6zm-2.3-2.3L7.5 6.5l-.8 2.2h1.6z' fill='white'/%3E%3C/svg%3E" alt=""> Airtel Money</span>
+          <span class="bs-pm mpamba"><img class="bs-pm-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%231B8C3A'/%3E%3Cpath d='M3.5 11V5h1.8l1.7 3 1.7-3H10.5v6H9.2V7.2L7.3 10H6.7L4.8 7.2V11z' fill='white'/%3E%3C/svg%3E" alt=""> TNM Mpamba</span>
           <span class="bs-pm bank">🏦 Bank Transfer</span>
           <span class="bs-pm card"><span class="bs-card-ticker">💳 Card</span></span>
         </div>
@@ -611,9 +611,10 @@ function _injectStyles() {
     .bs-pm-label    { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; }
     .bs-pm-badges   { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
     .bs-pm          { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; border: 1.5px solid; }
-    .bs-pm.airtel   { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
-    .bs-pm.mpamba   { color: #0369a1; border-color: #93c5fd; background: #eff6ff; }
-    .bs-pm.bank     { color: #065f46; border-color: #6ee7b7; background: #ecfdf5; }
+    .bs-pm.airtel   { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+    .bs-pm.mpamba   { color: #166534; border-color: #86efac; background: #f0fdf4; }
+    .bs-pm.bank     { color: #92400e; border-color: #fcd34d; background: #fffbeb; }
+    .bs-pm-icon     { width: 14px; height: 14px; vertical-align: middle; margin-right: 3px; border-radius: 50%; position: relative; top: -1px; }
     .bs-pm.card {
       color: #5b21b6; border-color: #c4b5fd; background: #f5f3ff;
       overflow: hidden; min-width: 68px; text-align: center;
