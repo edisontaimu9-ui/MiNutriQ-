@@ -1882,7 +1882,7 @@ body:not(.ob-authed) .tab-content {
   --input-text:      var(--text-bright);
   --input-border:    #1e293b;
   --input-focus:     rgba(29,233,212,0.45);
-  --tab-inactive:    var(--text-dim);
+  --tab-inactive:    #EAF4FF;   /* near-white — brighter inactive labels */
   --tab-active:      var(--teal);
   --btn-secondary-bg:    rgba(15,23,42,0.8);
   --btn-secondary-text:  var(--text-dim);
@@ -1959,8 +1959,8 @@ body {
 /* Section dividers and reference text */
 .card-header .card-title { color: var(--text-bright) !important; }
 /* Tab labels */
-.tab-label { color: var(--text-dim); }
-.tab-label.active, [data-tab].active .tab-label { color: var(--tab-active) !important; }
+.tab-label { color: #EAF4FF; }
+.tab-label.active, [data-tab].active .tab-label { color: var(--tab-active) !important; font-weight: 700; }
 /* Recent activity meta */
 .hp-recent-meta { color: var(--text-dim) !important; }
 .hp-recent-diag { color: var(--text-bright) !important; }
@@ -2574,17 +2574,23 @@ header {
   gap: 5px;
 }
 .tab .tab-icon  { font-size: 13px; flex-shrink: 0; line-height: 1; display: inline-flex; align-items: center; }
-.tab .tab-label { letter-spacing: 0.7px; }
+.tab .tab-label { letter-spacing: 0.7px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
 
 /* Active accent colours */
 .tab-clinical.active    { color: var(--teal);  border-bottom-color: var(--teal);  background: rgba(29,233,212,0.05); }
 .tab-assess.active      { color: var(--blue);  border-bottom-color: var(--blue);  background: rgba(96,165,250,0.05); }
 .tab-support.active     { color: var(--teal);  border-bottom-color: var(--teal);  background: rgba(29,233,212,0.05); }
 
+/* Active tab: label glow shadow (top nav) */
+.tab-clinical.active .tab-label,
+.tab-support.active  .tab-label  { text-shadow: 0 0 10px rgba(29,233,212,0.55),  0 1px 4px rgba(0,0,0,0.6); }
+.tab-assess.active   .tab-label  { text-shadow: 0 0 10px rgba(96,165,250,0.55),  0 1px 4px rgba(0,0,0,0.6); }
+
 .tab:hover:not(.active) {
   color: var(--text);
   background: rgba(255,255,255,0.025);
 }
+.tab:hover:not(.active) .tab-label { color: #ffffff; }
 
 /* Light mode */
 
@@ -2632,7 +2638,7 @@ header {
   justify-content: center;
 }
 .bottom-nav .tab .tab-icon { font-size: 16px; }
-.bottom-nav .tab .tab-label { font-size: 8.5px; letter-spacing: 0.5px; white-space: nowrap; }
+.bottom-nav .tab .tab-label { font-size: 8.5px; letter-spacing: 0.5px; white-space: nowrap; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
 
 /* Bottom nav active states — border flips to top */
 .bottom-nav .tab-clinical.active {
@@ -2653,6 +2659,11 @@ header {
   border-bottom-color: transparent;
   background: rgba(167,139,250,0.05);
 }
+
+/* Active tab: label glow shadow (bottom nav) */
+.bottom-nav .tab-clinical.active .tab-label { text-shadow: 0 0 8px rgba(29,233,212,0.6),  0 1px 3px rgba(0,0,0,0.7); }
+.bottom-nav .tab-assess.active   .tab-label { text-shadow: 0 0 8px rgba(96,165,250,0.6),  0 1px 3px rgba(0,0,0,0.7); }
+.bottom-nav .tab-support.active  .tab-label { text-shadow: 0 0 8px rgba(167,139,250,0.6), 0 1px 3px rgba(0,0,0,0.7); }
 
 /* ── Edge fade indicators ── */
 .bnav-fade {
