@@ -21,7 +21,7 @@
 
 // ── Appwrite Function that proxies Paychangu payment initiation ──
 // Set this to the Function ID from your Appwrite console.
-const PAYCHANGU_FUNCTION_ID = 'paychangu-proxy'; // ← update if your function ID differs
+const PAYCHANGU_FUNCTION_ID = 'paychangu_proxy'; // ← update if your function ID differs
 
 const SNACKS = [
   { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1000,  color: '#F59E0B', bg: '#FFFDE7' },
