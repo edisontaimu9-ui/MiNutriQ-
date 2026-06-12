@@ -177,9 +177,12 @@
   /* ── 1. Body: two-column CSS Grid ──────────────────────────── */
   body {
     display: grid;
-    grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     padding-bottom: 0 !important;
+    max-width: 1600px;        /* don't stretch on very wide monitors */
+    margin-left: auto;
+    margin-right: auto;
     min-height: 100vh;
   }
 
@@ -227,10 +230,10 @@
     flex-wrap: nowrap;
     align-items: stretch;
 
-    /* Geometry */
+    /* Geometry — no max-height cap; bottom-nav flows below in row 3 */
     width: var(--sidebar-w);
-    max-height: 60vh;          /* leave room for bottom-nav below */
-    overflow-y: auto;
+    height: auto;
+    overflow-y: visible;
     overflow-x: hidden;
 
     /* Sticky within viewport */
@@ -247,19 +250,8 @@
     z-index: 175;
   }
 
-  /* Sidebar section label */
-  .tabs::before {
-    content: 'MAIN';
-    display: block;
-    font-family: var(--mono);
-    font-size: 7.5px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    color: var(--text-muted);
-    padding: 2px 14px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    margin-bottom: 8px;
-  }
+  /* No section label — all nav items form one unified list */
+  .tabs::before { display: none; }
 
   /* Each tab: horizontal row in the vertical sidebar */
   .tabs .tab {
@@ -325,26 +317,16 @@
     width: var(--sidebar-w);
     height: auto;
 
-    /* Visual: transparent, separator line above */
+    /* Visual: transparent, no separator — seamless with .tabs above */
     background: transparent;
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: none;
     border-bottom: none;
-    padding: 8px 8px 20px;
+    padding: 0 8px 20px;
     z-index: 175;
   }
 
-  /* Section label above secondary nav */
-  .bottom-nav-wrap::before {
-    content: 'TOOLS';
-    display: block;
-    font-family: var(--mono);
-    font-size: 7.5px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    color: var(--text-muted);
-    padding: 4px 14px 10px;
-    margin-bottom: 4px;
-  }
+  /* No section label — unified list with .tabs */
+  .bottom-nav-wrap::before { display: none; }
 
   /* Vertical bottom-nav */
   .bottom-nav {
@@ -410,7 +392,7 @@
   .main {
     grid-column: 2;
     grid-row: 2 / span 100;
-    max-width: 100%;
+    max-width: 1100px;        /* content doesn't stretch on wide screens */
     width: 100%;
     margin: 0;
     padding: 24px 32px;
@@ -419,17 +401,21 @@
 
   /* ── 7. Content expansion ────────────────────────────────────── */
 
-  /* Tools → 5 columns */
+  /* Tools — fixed card width, no stretching, one row */
   .hp-tools-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 100px));
+    justify-content: start;
+    gap: 12px;
     padding: 0 24px;
   }
   .hp-tool-card { padding: 20px 14px 16px; }
   .hp-tool-icon-wrap { width: 46px; height: 46px; border-radius: 12px; }
 
-  /* Module grid → 5 columns */
-  .mod-grid { grid-template-columns: repeat(5, 1fr); }
+  /* Module / assessment grid — same: fixed width, no stretch */
+  .mod-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 120px));
+    justify-content: start;
+  }
 
   /* References → 4 columns */
   .hp-refs { grid-template-columns: repeat(4, 1fr); }
@@ -499,9 +485,16 @@
   header { padding: 0 48px; }
   .main  { padding: 28px 40px; }
 
-  /* 6-column grids on wide monitor */
-  .hp-tools-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
-  .mod-grid       { grid-template-columns: repeat(6, 1fr); }
+  /* Wide desktop — slightly larger cards, still no stretching */
+  .hp-tools-grid {
+    grid-template-columns: repeat(auto-fill, minmax(94px, 108px));
+    justify-content: start;
+    gap: 14px;
+  }
+  .mod-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 124px));
+    justify-content: start;
+  }
   .hp-refs        { grid-template-columns: repeat(4, 1fr); }
 
   .metrics-grid {
