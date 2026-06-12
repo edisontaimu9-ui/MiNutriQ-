@@ -1699,24 +1699,103 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
      FALLBACK JS TEXT — used if AI is unavailable or still loading
   ══════════════════════════════════════════════════════════════ */
   function fallbackND() {
-    if (isNEC) return `All enteral feeds are currently withheld in the context of confirmed or suspected necrotising enterocolitis, with glucose homeostasis maintained via intravenous ${N.dexSol}. This feeding route decision reflects the absolute contraindication to luminal substrate in active NEC — the bowel requires complete rest to halt disease progression. Cumulative protein and fat deficits are accruing and must be explicitly documented. Total fluid is maintained at ${N.fluidTarget} mL/kg/day via IV dextrose only, with electrolytes — sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day, potassium ${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day, calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day — supplemented directly into the dextrose bag once adequate urine output is confirmed. Blood glucose should be monitored every 1–2 hours targeting 2.5–10 mmol/L. Enteral re-introduction follows a minimum of 7–14 days of clinical stability, commencing with trophic EBM volumes guided by Bell staging criteria. Daily weight and cumulative deficit documentation are mandatory.`;
-    if (route === 'trophic') return `Trophic enteral feeds at ${N.enStart} mL/kg/day have been initiated for intestinal mucosal priming in this ${gaWk}-week, ${bwLabel} infant who is haemodynamically stable but not yet ready for meaningful nutritional enteral volumes. This route was selected because the gut's secretory and hormonal responses to luminal substrate are beneficial even at volumes too low for macronutrient delivery — reducing the risk of NEC and supporting gut-associated immunity. Primary energy and glucose support is delivered via ${N.dexSol} IV dextrose at GIR ${N.girTarget.lo}–${N.girTarget.hi} mg/kg/min. Protein and fat delivery at trophic volumes is negligible — advancement to partial and full enteral feeds by ${N.enAdvance} mL/kg/day every 12–24 hours must be the clinical priority, toward a target of ${N.enFull} mL/kg/day within ${N.daysToFull}. Total fluid target is ${N.fluidTarget} mL/kg/day; IV dextrose currently constitutes ${N.ivPct}% of the fluid budget and must be weaned proportionally as EN advances. Electrolytes — sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day restricted in Days 1–2, potassium ${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day withheld until UO confirmed — should be added to the dextrose infusion once physiological stability is established. Blood glucose monitoring every 1–2 hours (target 2.5–10 mmol/L) is mandatory in the transition phase. EBM is the preferred enteral substrate.`;
-    if (route === 'full_en') return `Full enteral nutrition has been established as the primary route in this ${gaWk}-week, ${bwLabel} infant whose gastrointestinal function is sufficiently mature to meet all nutritional requirements enterally. This route was selected because enteral nutrition is the only available source of protein, fat, and micronutrients in this resource-limited NICU — IV amino acids and lipid emulsion are not available. Current EN volume is ${N.enVolTarget} mL/kg/day, advancing toward a target of ${N.enFull} mL/kg/day. EBM at current volume provides ${N.enEnergyKcalKg} kcal/kg/day and ${N.ebmProtKg} g/kg/day protein against a target of ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day; human milk fortification should be introduced at ≥40–100 mL/kg/day to close this protein gap. IV dextrose (${N.dexSol}) continues for glucose stability at GIR ${N.girTarget.lo}–${N.girTarget.hi} mg/kg/min and must be weaned gradually as full EN is consolidated. Total fluid target is ${N.fluidTarget} mL/kg/day; the IV component currently represents ${N.ivPct}% and should reduce to zero as full EN is achieved. Sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day, calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day, and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day should be supplemented enterally. Daily weight targeting ${(N.bwCat === 'ELBW' || N.bwCat === 'periviable') ? '15–20 g/kg/day' : '20–30 g/day'} confirms adequate energy and protein delivery.`;
-    if (isTPN) return `Total parenteral nutrition has been selected as the primary feeding route because enteral feeding is currently contraindicated or insufficient to meet the nutritional requirements of this ${gaWk}-week, ${bwLabel} infant in the context of ${stressLabel}. TPN provides all three macronutrients intravenously: amino acids advancing from ${N.tpnAAInitial ? N.tpnAAInitial.lo + '–' + N.tpnAAInitial.hi : '2–3'} to ${N.tpnAATarget ? N.tpnAATarget.lo + '–' + N.tpnAATarget.hi : '3.5–4.0'} g/kg/day over Day 3–5; lipid emulsion advancing from ${N.tpnLipidInitial ? N.tpnLipidInitial.lo + '–' + N.tpnLipidInitial.hi : '2–3'} to ${N.tpnLipidTargetKg ? N.tpnLipidTargetKg.toFixed(1) : '3'} g/kg/day over 24–48h; dextrose titrated from GIR ${N.girTarget ? N.girTarget.lo + '–' + N.girTarget.hi : '5–7'} mg/kg/min advancing toward the target range. Trophic EBM feeds should be introduced alongside TPN at the earliest safe opportunity to protect gut mucosal integrity. Fluid management requires careful co-ordination: total target is ${N.fluidTarget} mL/kg/day, with the TPN bag volume, drug infusions, and any enteral volume summed and held within this limit. Sodium and potassium should be restricted in Days 1–2 and added to the PN bag once adequate urine output is confirmed. Calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day should be incorporated into the PN admixture maintaining a Ca:P mass ratio ≤1.8. Blood glucose monitoring every 2–4 hours targets 2.5–10 mmol/L; reduce dextrose and not give insulin without close supervision to avoid hypoglycaemia. PN weaning should begin as EN advances — reduce IV amino acids when EN protein exceeds 2.5 g/kg/day, wean lipid and dextrose proportionally, and complete transition over 24–48h to prevent rebound hypoglycaemia. Transition planning to full enteral feeds should be initiated actively from Day 3.`;
-    return `Partial enteral nutrition combined with IV dextrose support has been selected for this ${gaWk}-week, ${bwLabel} infant in the ${phaseLabel} phase. This route reflects the current state of GI maturation — enteral feeds at ${N.enVolTarget} mL/kg/day are tolerated but cannot yet meet the full energy and protein requirements, necessitating IV dextrose bridging. This approach was chosen because in the absence of IV amino acids and lipid (unavailable in this Malawi NICU), advancing enteral feeds as rapidly as safe is the only means of increasing protein and fat delivery. Advancing EN by ${N.enAdvance} mL/kg/day every 12–24 hours while reducing IV dextrose proportionally maintains total fluid within the ${N.fluidTarget} mL/kg/day target. Currently, IV dextrose represents ${N.ivPct}% (${N.dexVolDay} mL/day) and EN ${N.enPct}% (${N.enVolDay} mL/day) of the fluid budget. ${N.fluidIVAlert ? 'The IV component currently exceeds the enteral component — enteral advancement is the immediate clinical priority.' : ''} Electrolyte management requires sodium restriction in Days 1–2 followed by supplementation at ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day as urine output establishes, calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day added to the dextrose infusion. Blood glucose should be monitored q1–2h in the transition phase. EBM is the preferred enteral substrate; HMF at ≥40–100 mL/kg/day is essential to approach the protein target of ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day. Daily weight monitoring confirms the adequacy of the combined regimen and guides advancement decisions.`;
+    const ul = (items) => `<ul style="margin:0;padding-left:18px;list-style:disc">${items.filter(Boolean).map(i => `<li style="margin:0 0 8px">${i}</li>`).join('')}</ul>`;
+
+    if (isNEC) return ul([
+      `Maintain complete bowel rest (NPO) — all enteral feeds withheld due to confirmed/suspected NEC.`,
+      `Provide total energy and glucose support via IV ${N.dexSol} dextrose, GIR ${N.girTarget.lo}–${N.girTarget.hi} mg/kg/min.`,
+      `Document cumulative protein and fat deficit daily during NPO period.`,
+      `Maintain total fluid at ${N.fluidTarget} mL/kg/day via IV dextrose only.`,
+      `Supplement electrolytes once urine output established — sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day, potassium ${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day, calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day.`,
+      `Monitor blood glucose q1–2h, target 2.5–10 mmol/L.`,
+      `Re-introduce trophic EBM feeds after minimum 7–14 days clinical stability, guided by Bell staging criteria.`,
+      `Record daily weight and continue cumulative deficit documentation.`
+    ]);
+
+    if (route === 'trophic') return ul([
+      `Initiate trophic enteral feeds at ${N.enStart} mL/kg/day for gut mucosal priming (GA ${gaWk} wk, ${bwLabel}).`,
+      `Deliver primary energy/glucose via IV ${N.dexSol} dextrose, GIR ${N.girTarget.lo}–${N.girTarget.hi} mg/kg/min.`,
+      `Advance enteral volume by ${N.enAdvance} mL/kg/day q12–24h toward full feeds of ${N.enFull} mL/kg/day (est. ${N.daysToFull}).`,
+      `Maintain total fluid target at ${N.fluidTarget} mL/kg/day; wean IV dextrose proportionally as EN increases (currently IV ${N.ivPct}% of fluid budget).`,
+      `Restrict sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day on Days 1–2; add once urine output confirmed.`,
+      `Withhold potassium ${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day until urine output confirmed.`,
+      `Monitor blood glucose q1–2h, target 2.5–10 mmol/L during transition phase.`,
+      `Use EBM as preferred enteral substrate.`
+    ]);
+
+    if (route === 'full_en') return ul([
+      `Establish full enteral nutrition as primary route — GI function sufficient to meet all requirements (GA ${gaWk} wk, ${bwLabel}).`,
+      `Advance EN volume from ${N.enVolTarget} mL/kg/day toward target ${N.enFull} mL/kg/day.`,
+      `Provide EBM at current volume: ${N.enEnergyKcalKg} kcal/kg/day and ${N.ebmProtKg} g/kg/day protein vs target ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day.`,
+      N.protDeficitEbm > 0 ? `Introduce human milk fortification (HMF) at ≥40–100 mL/kg/day to close the ${N.protDeficitEbm} g/kg/day protein deficit.` : `Continue current regimen — protein target met or approached.`,
+      `Wean IV ${N.dexSol} dextrose (GIR ${N.girTarget.lo}–${N.girTarget.hi} mg/kg/min) gradually as EN consolidates; IV currently ${N.ivPct}% of ${N.fluidTarget} mL/kg/day total.`,
+      `Supplement sodium ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day, calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day, and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day enterally.`,
+      `Monitor daily weight, target ${(N.bwCat === 'ELBW' || N.bwCat === 'periviable') ? '15–20 g/kg/day' : '20–30 g/day'}, to confirm adequacy of energy/protein delivery.`
+    ]);
+
+    if (isTPN) return ul([
+      `Initiate total parenteral nutrition — enteral feeding contraindicated/insufficient (GA ${gaWk} wk, ${bwLabel}, ${stressLabel}).`,
+      `Advance IV amino acids from ${N.tpnAAInitial ? N.tpnAAInitial.lo + '–' + N.tpnAAInitial.hi : '2–3'} to ${N.tpnAATarget ? N.tpnAATarget.lo + '–' + N.tpnAATarget.hi : '3.5–4.0'} g/kg/day over Day 3–5.`,
+      `Advance IV lipid emulsion from ${N.tpnLipidInitial ? N.tpnLipidInitial.lo + '–' + N.tpnLipidInitial.hi : '2–3'} to ${N.tpnLipidTargetKg ? N.tpnLipidTargetKg.toFixed(1) : '3'} g/kg/day over 24–48h.`,
+      `Titrate dextrose GIR from ${N.girTarget ? N.girTarget.lo + '–' + N.girTarget.hi : '5–7'} mg/kg/min toward target range; monitor glucose q2–4h, target 2.5–10 mmol/L.`,
+      `Introduce trophic EBM feeds alongside TPN at earliest safe opportunity to preserve gut mucosal integrity.`,
+      `Maintain total fluid at ${N.fluidTarget} mL/kg/day, summing TPN, drug infusions, and any enteral volume.`,
+      `Incorporate calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day into PN admixture, maintaining Ca:P mass ratio ≤1.8.`,
+      `Begin PN weaning from Day 3–5 — reduce amino acids once EN protein exceeds 2.5 g/kg/day; wean lipid and dextrose over 24–48h to prevent rebound hypoglycaemia.`
+    ]);
+
+    return ul([
+      `Provide partial enteral nutrition (${N.enVolTarget} mL/kg/day) with IV dextrose bridging (${phaseLabel} phase, GA ${gaWk} wk, ${bwLabel}).`,
+      `Advance EN by ${N.enAdvance} mL/kg/day q12–24h while reducing IV dextrose proportionally to maintain ${N.fluidTarget} mL/kg/day total fluid.`,
+      `Current fluid split: IV dextrose ${N.ivPct}% (${N.dexVolDay} mL/day), enteral ${N.enPct}% (${N.enVolDay} mL/day).`,
+      N.fluidIVAlert ? `Prioritise enteral advancement — IV component currently exceeds enteral component.` : '',
+      `Restrict sodium Days 1–2, then supplement at ${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day as urine output establishes.`,
+      `Add calcium ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day and phosphate ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day to dextrose infusion.`,
+      `Monitor blood glucose q1–2h during transition phase, target 2.5–10 mmol/L.`,
+      `Use EBM as preferred enteral substrate; introduce HMF at ≥40–100 mL/kg/day to approach protein target of ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day.`,
+      `Monitor daily weight to guide advancement decisions.`
+    ]);
   }
 
   function fallbackE() {
-    return `Nursing staff and caregivers should be educated on the following: correct nasogastric tube position verification before each feed (pH or aspiration method); assessment of enteral feed tolerance including gastric residual thresholds (>50% of feed volume), abdominal distension, and bilious aspirates; ${isELBW||isVLBW ? 'the rationale and technique for human milk fortification once feeds reach ≥40–100 mL/kg/day; ' : ''}breast milk expression frequency (every 2–3 hours, 8–12 times per 24 hours) and correct storage (4°C for ≤96 hours; −18°C for ≤3 months); thermoregulation principles including the role of Kangaroo Mother Care in reducing insensible losses and promoting milk supply; and blood glucose monitoring targets (2.5–10 mmol/L) with escalation thresholds.`;
+    const ul = (items) => `<ul style="margin:0;padding-left:18px;list-style:disc">${items.filter(Boolean).map(i => `<li style="margin:0 0 8px">${i}</li>`).join('')}</ul>`;
+    return ul([
+      `Verify nasogastric tube position before every feed (pH or aspiration method).`,
+      `Assess enteral feed tolerance before each bolus — gastric residual >50% of feed volume, abdominal distension, or bilious aspirates require escalation.`,
+      isELBW || isVLBW ? `Educate on human milk fortification rationale and technique once feeds reach ≥40–100 mL/kg/day.` : '',
+      `Support breast milk expression every 2–3 hours (8–12 times/24h); store at 4°C ≤96 hours or −18°C ≤3 months.`,
+      `Maintain hand hygiene and aseptic technique during milk handling and feed preparation.`,
+      `Apply Kangaroo Mother Care to reduce insensible losses, promote milk supply, and support neurodevelopment.`,
+      `Monitor blood glucose to target 2.5–10 mmol/L; escalate hypoglycaemia <2.5 mmol/L immediately.`,
+      isMBDP ? `Educate on MBDP monitoring — ALP/PO4 schedule, Ca:P ratio in feeds, and necessity of HMF.` : ''
+    ]);
   }
 
   function fallbackC() {
+    const ul = (items) => `<ul style="margin:0;padding-left:18px;list-style:disc">${items.filter(Boolean).map(i => `<li style="margin:0 0 8px">${i}</li>`).join('')}</ul>`;
     const growthGoal = isELBW ? '15–20 g/kg/day' : '20–30 g/day';
-    return `Families should be counselled that the feeding plan for this ${gaWk}-week infant is designed to maximise nutritional delivery safely within the physiological constraints of extreme prematurity. ${phase === 'transition' ? 'In the transition phase, glucose stability is the immediate priority; feeding volumes will increase incrementally over the coming days as tolerance is established. ' : phase === 'catchup' ? 'The catch-up growth phase requires sustained energy and protein above standard maintenance; consistent feeding practices and avoidance of unnecessary feed interruptions are critical during this window. ' : ''}Daily weight monitoring guides feeding adjustments, with a target gain of ${growthGoal} (ESPGHAN 2022). Families are encouraged to participate in skin-to-skin care, milk expression, and feed observations. Transition to home or step-down care will incorporate a clear supplementation schedule, growth monitoring plan, and community dietetic follow-up referral.`;
+    return ul([
+      `Counsel families that the feeding plan for this ${gaWk}-week infant balances nutritional delivery with the physiological limits of prematurity.`,
+      phase === 'transition' ? `Explain that glucose stability is the immediate priority; feeding volumes will increase incrementally as tolerance is established.` : phase === 'catchup' ? `Explain that the catch-up growth phase requires sustained energy/protein above maintenance; consistent feeding without unnecessary interruptions is critical.` : `Set expectations for steady, phase-appropriate feeding progression and growth.`,
+      `Set growth expectation: target weight gain of ${growthGoal} (ESPGHAN 2022), monitored daily.`,
+      `Normalise feeding tolerance variability for families; clarify which signs warrant concern vs. expected fluctuation.`,
+      `Encourage participation in skin-to-skin care, milk expression, and feed observations to support breastfeeding transition.`,
+      isNEC ? `Communicate the time-limited nature of bowel rest and the planned re-introduction process during NEC management.` : '',
+      `Plan discharge preparation: supplementation schedule, growth monitoring plan, and community dietetic follow-up referral.`
+    ]);
   }
 
   function fallbackRC() {
-    return `Multidisciplinary coordination for this infant's nutrition care involves: Neonatology — for feeding route decisions, prescription of electrolyte supplementation, and escalation of clinical concerns; Nursing — for bedside implementation of the feed plan, tolerance monitoring, documentation, and handover; Lactation — for milk expression support, supply optimisation, and breastfeeding transition planning; ${isTPN ? 'Pharmacy — for TPN admixture preparation, calcium-phosphate compatibility, and parenteral micronutrient review (minimum three times weekly); ' : ''}and Dietetics — for twice-weekly nutrition care plan review in ${isELBW||isVLBW ? 'ELBW/VLBW' : 'LBW'} infants, including growth trajectory assessment on Fenton 2013 charts, cumulative deficit documentation, and transition planning. Biochemical monitoring — electrolytes three times weekly; ALP and phosphate monthly from week 4 for infants with birth weight <1 500 g; daily weight and weekly anthropometrics.`;
+    const ul = (items) => `<ul style="margin:0;padding-left:18px;list-style:disc">${items.filter(Boolean).map(i => `<li style="margin:0 0 8px">${i}</li>`).join('')}</ul>`;
+    return ul([
+      `Neonatology: confirm feeding route decisions, prescribe electrolyte supplementation, define clinical escalation triggers.`,
+      `Nursing: implement feed plan at bedside, monitor tolerance, document and communicate at handover.`,
+      `Lactation: support milk expression, optimise supply, plan transition to direct breastfeeding.`,
+      isTPN ? `Pharmacy: prepare TPN admixture, verify calcium-phosphate compatibility, review parenteral micronutrients ≥3×/week.` : '',
+      `Dietetics: conduct twice-weekly nutrition care plan review for ${isELBW||isVLBW ? 'ELBW/VLBW' : 'LBW'} infants, including Fenton 2013 growth trajectory assessment and cumulative deficit documentation.`,
+      `Biochemical monitoring: electrolytes 3×/week; ALP and phosphate monthly from week 4 for BW <1500 g.`,
+      `Anthropometrics: daily weight and weekly length/head circumference.`
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -1724,7 +1803,7 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
   ══════════════════════════════════════════════════════════════ */
   function domainShell(id, code, title, subtitle, icon, accentColor, accentRgb, initialText, isLoading) {
     const shimmer = isLoading ? `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0 10px;opacity:0.7">
+      <div class="ni-shimmer" style="display:flex;align-items:center;gap:8px;padding:6px 0 10px;opacity:0.7">
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out infinite"></div>
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out 0.4s infinite"></div>
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out 0.8s infinite"></div>
@@ -1749,9 +1828,9 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
           <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">${subtitle}</div>
         </div>
       </div>
-      <div id="${id}" style="padding:0 2px;font-family:var(--sans);font-size:12.5px;color:var(--text);line-height:1.88;transition:opacity 0.4s">
+      <div id="${id}" style="padding:0 2px;font-family:var(--sans);font-size:12.5px;color:var(--text);line-height:1.7;transition:opacity 0.4s">
         ${shimmer}
-        <p style="margin:0 0 8px;opacity:${isLoading?'0.45':'1'}">${initialText}</p>
+        <div style="margin:0;opacity:${isLoading?'0.45':'1'}">${initialText}</div>
       </div>
     </div>`;
   }
@@ -1838,25 +1917,25 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
 
     const clinicalCtx = buildClinicalContext();
 
-    /* Helper: update a domain div with AI text */
+    /* Helper: update a domain div with AI text (rendered as bullet points) */
     function _applyDomain(domId, text) {
       const el = document.getElementById(domId);
       if (!el) return;
-      /* Split paragraphs for better readability */
-      const paras = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-      el.innerHTML = `<div class="ni-domain-text">${
-        paras.map(p => `<p style="margin:0 0 10px;line-height:1.88">${p}</p>`).join('')
-      }</div>`;
+      /* Split into bullet lines — accept markdown bullets (-, *, •) or one item per line */
+      const lines = text.split(/\n+/).map(l => l.trim().replace(/^[-*•]\s*/, '')).filter(Boolean);
+      el.innerHTML = `<div class="ni-domain-text"><ul style="margin:0;padding-left:18px;list-style:disc">${
+        lines.map(l => `<li style="margin:0 0 8px;line-height:1.7">${l}</li>`).join('')
+      }</ul></div>`;
     }
 
     function _applyError(domId) {
       const el = document.getElementById(domId);
       if (!el) return;
-      /* On error, ensure the fallback text remains visible */
-      const existing = el.querySelector('p');
-      if (existing) existing.style.opacity = '1';
-      const dots = el.querySelector('div');
-      if (dots) dots.remove();
+      /* On error, remove loading shimmer and ensure fallback bullet list remains visible */
+      const shimmer = el.querySelector('.ni-shimmer');
+      if (shimmer) shimmer.remove();
+      const content = el.querySelector('ul')?.parentElement;
+      if (content) content.style.opacity = '1';
     }
 
     /* ── Domain ND ── */
@@ -1865,19 +1944,19 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
 CALCULATED DATA FROM THE PRETERM NUTRITION ENGINE:
 ${clinicalCtx}
 
-Write 5–6 substantial clinical paragraphs (no headings, no bullet points, no numbering) covering ALL of the following domains seamlessly:
+Write 8–10 concise, specific, evidence-based bullet points (one line each, starting with "- ", NO paragraphs, NO sub-bullets, NO headings) covering:
 
-PARAGRAPH 1 — FEEDING ROUTE SELECTION & RATIONALE: Explain precisely WHY the selected feeding route (${routeLabel}) was chosen for this infant. Integrate the clinical justification based on gestational age (${gaWk} wk), birth weight category (${N.bwCat}), clinical phase (${phaseLabel}), and any stress factors (${stressLabel}). ${isTPN ? 'Explain the TPN initiation strategy — amino acid and lipid advancement, GIR titration, and the rationale for IV-first approach.' : 'Explain how the enteral route was prioritised given the absence of IV amino acids and lipid in this resource-limited NICU.'}${isNEC ? ' Address the NPO rationale, cumulative deficit documentation, and re-introduction timeline.' : ''}
+- FEEDING ROUTE SELECTION & RATIONALE: state the selected route (${routeLabel}) and the clinical justification based on GA (${gaWk} wk), birth weight category (${N.bwCat}), phase (${phaseLabel}), and stress factors (${stressLabel}). ${isTPN ? 'Include the TPN initiation strategy — amino acid/lipid advancement and GIR titration.' : 'State why enteral route is prioritised given no IV amino acids/lipid in this resource-limited NICU.'}${isNEC ? ' Include NPO rationale and re-introduction timeline.' : ''}
+- FEEDING PROGRESSION: starting volume (${N.enStart} mL/kg/day), advancement rate (${N.enAdvance} mL/kg/day q12–24h), target full feeds (${N.enFull} mL/kg/day, estimated ${N.daysToFull}).
+- PROTEIN/FORTIFICATION: protein gap with EBM (${N.ebmProtKg} g/kg/day vs target ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day); HMF initiation threshold (≥40–100 mL/kg/day); Lactogen 1 as alternative if needed.
+- FLUID TARGET: total fluid (${N.fluidTarget} mL/kg/day = ${N.fluidTotalMl} mL/day); IV dextrose (${N.ivPct}% = ${N.dexVolDay} mL/day) vs enteral (${N.enPct}% = ${N.enVolDay} mL/day) split.${N.fluidIVAlert ? ' Flag the current fluid imbalance (IV > EN) and the correction plan.' : ''}
+- FLUID WEANING RULE: reduce IV dextrose proportionally as EN volume advances.${isRadiant ? ' Note radiant warmer increases IWL by 20–30 mL/kg/day; recommend incubator transition.' : ''}
+- ELECTROLYTES: sodium (${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day, restrict Days 1–2), potassium (${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day, withhold Day 1 in ELBW), calcium (${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day, IV gluconate if oral unavailable), phosphate (${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day, MBDP risk).
+- GLUCOSE: IV dextrose solution (${N.dexSol}), GIR target ${N.girTarget ? N.girTarget.lo + '–' + N.girTarget.hi : '?'} mg/kg/min, and hyperglycaemia management.${isMBDP ? ' Include MBDP-specific ALP/PO4 monitoring and Ca:P ratio.' : ''}
+- MONITORING: daily weight (target ${(N.bwCat === 'ELBW' || N.bwCat === 'periviable') ? '15–20 g/kg/day' : '20–30 g/day'}), blood glucose q1–2h Day 1–2 (target 2.5–10 mmol/L), electrolytes 3×/week, ALP monthly from week 4 for BW <1500 g.
+- TOLERANCE/ESCALATION: ${route !== 'tpn' ? 'enteral tolerance criteria (residuals, distension, bilious aspirates) and escalation thresholds, with proportional IV weaning on EN advance.' : 'PN line monitoring, daily GI reassessment, and criteria for initiating EN.'} Escalation criteria to neonatology. Reference Fenton 2013 growth tracking and cumulative deficit documentation.${isNEC ? '\n- NEC MANAGEMENT: bowel rest, cumulative deficit accrual, Bell staging, re-introduction protocol.' : ''}${isTPN ? '\n- PN WEANING: wean amino acids when EN protein >2.5 g/kg/day; wean lipid and dextrose over 24–48h to prevent rebound hypoglycaemia.' : ''}
 
-PARAGRAPH 2 — FEEDING PROGRESSION & FORTIFICATION: Describe the enteral advancement strategy — starting volume (${N.enStart} mL/kg/day), advancement rate (${N.enAdvance} mL/kg/day q12–24h), target full feeds (${N.enFull} mL/kg/day, estimated ${N.daysToFull}). Explain the protein gap context using EBM (${N.ebmProtKg} g/kg/day vs target ${N.protTarget.lo}–${N.protTarget.hi} g/kg/day) and when HMF should be introduced (at ≥40–100 mL/kg/day). Address Lactogen 1 as alternative if EBM is insufficient.
-
-PARAGRAPH 3 — FLUID MANAGEMENT STRATEGY: Address total fluid target (${N.fluidTarget} mL/kg/day = ${N.fluidTotalMl} mL/day), how IV dextrose (${N.ivPct}% = ${N.dexVolDay} mL/day) and enteral (${N.enPct}% = ${N.enVolDay} mL/day) components interrelate and must be balanced.${N.fluidIVAlert ? ' Address the current fluid imbalance — IV component exceeds EN — and the clinical strategy to correct this.' : ''} Explain the weaning rule: IV dextrose rate must be reduced proportionally as EN volume advances. ${isRadiant ? 'Specifically address the radiant warmer context — IWL is elevated by 20–30 mL/kg/day and fluid totals must be adjusted accordingly; transition to incubator is recommended.' : ''}
-
-PARAGRAPH 4 — ELECTROLYTE MANAGEMENT: Integrate electrolyte management naturally. Address sodium (${N.elec.na.lo}–${N.elec.na.hi} mEq/kg/day — restriction in Days 1–2, addition to dextrose once UO established), potassium (${N.elec.k.lo}–${N.elec.k.hi} mEq/kg/day — withhold Day 1 in ELBW), calcium (${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/day — IV gluconate if oral unavailable) and phosphate (${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/day — MBDP risk). Include IV dextrose glucose load (${N.dexSol}, GIR ${N.girTarget ? N.girTarget.lo + '–' + N.girTarget.hi : '?'} mg/kg/min) and hyperglycaemia management. ${isMBDP ? 'Address MBDP specifically — ALP and PO4 monitoring schedule, Ca:P ratio, HMF introduction threshold.' : ''}
-
-PARAGRAPH 5 — MONITORING & ESCALATION PLAN: Detail the monitoring schedule as part of the nutrition delivery plan. Daily weight (target ${(N.bwCat === 'ELBW' || N.bwCat === 'periviable') ? '15–20 g/kg/day' : '20–30 g/day'}), blood glucose q1–2h Day 1–2 (target 2.5–10 mmol/L), electrolytes 3×/week, ALP monthly from week 4 for BW <1500 g. ${route !== 'tpn' ? 'Enteral tolerance assessment protocol — residual volumes, distension, bilious aspirates, and escalation thresholds. Describe how advancing EN triggers proportional IV dextrose reduction.' : 'PN line monitoring and daily GI function reassessment. Describe the trigger criteria for initiating enteral feeds.'} Specify escalation criteria to neonatology. Reference Fenton 2013 growth chart monitoring and cumulative deficit documentation.${isNEC ? '\nPARAGRAPH 6 — NEC MANAGEMENT: Specifically address bowel rest, cumulative deficit accrual, Bell staging, and re-introduction protocol.' : ''}${isTPN ? '\nPARAGRAPH 6 — PN WEANING STRATEGY: Detail the PN-to-EN transition plan — when and how to wean amino acids (EN protein >2.5 g/kg/day), lipid, and dextrose. Do not abruptly stop — wean over 24–48h to prevent rebound hypoglycaemia.' : ''}
-
-Write as a clinician — precise, authoritative, evidence-based. Do NOT use bullet points. Do NOT use headings. Do NOT say "in conclusion". Do NOT mention AI.`;
+Each bullet must be specific, measurable, and actionable. Use professional clinical nutrition terminology. Do NOT use paragraphs. Do NOT say "in conclusion". Do NOT mention AI.`;
 
     /* ── Domain E ── */
     const ePrompt = `You are a senior neonatal dietitian writing the "Nutrition Education (E)" section of a Nutrition Care Process intervention plan for a preterm infant.
@@ -1885,13 +1964,14 @@ Write as a clinician — precise, authoritative, evidence-based. Do NOT use bull
 CALCULATED DATA:
 ${clinicalCtx}
 
-Write 2–3 concise, practical clinical paragraphs (no headings, no bullet points) covering education points for nursing staff and caregivers:
+Write 5–6 concise, specific, evidence-based bullet points (one line each, starting with "- ", NO paragraphs, NO sub-bullets, NO headings) for nursing staff and caregiver education, covering:
 - Feed preparation, tube positioning verification, and feed administration technique
 - Assessment of enteral feed tolerance (residuals, distension, bilious aspirates, escalation thresholds)${isELBW || isVLBW ? '\n- Human milk fortification rationale, technique, and timing (at ≥40–100 mL/kg/day)' : ''}
 - Breast milk expression frequency, correct storage, and handling hygiene
 - Blood glucose monitoring — targets (2.5–10 mmol/L), hypoglycaemia response
 - Kangaroo Mother Care — thermoregulation, milk supply promotion, neurodevelopmental benefit${isMBDP ? '\n- MBDP awareness — ALP/PO4 monitoring, Ca:P ratio in feeds, HMF necessity' : ''}
-Write as a clinician. No AI mention. No bullet points. No headings.`;
+
+Use professional clinical nutrition terminology. Each bullet must be specific and actionable. Do NOT mention AI. Do NOT use paragraphs or headings.`;
 
     /* ── Domain C ── */
     const cPrompt = `You are a senior neonatal dietitian writing the "Nutrition Counseling (C)" section of a Nutrition Care Process intervention plan for a preterm infant.
@@ -1899,12 +1979,13 @@ Write as a clinician. No AI mention. No bullet points. No headings.`;
 CALCULATED DATA:
 ${clinicalCtx}
 
-Write 2–3 paragraphs of supportive, professional counseling-style narrative (no headings, no bullet points) addressing:
+Write 5–6 concise, specific, evidence-based bullet points (one line each, starting with "- ", NO paragraphs, NO sub-bullets, NO headings) for supportive, family-centred counseling, covering:
 - Phase-appropriate expectations for feeding progression and growth (phase: ${phaseLabel}, weight gain target: ${isELBW ? '15–20 g/kg/day' : '20–30 g/day'})
 - Feeding tolerance — normalising the experience for families, when to worry vs. expected variability
 - Milk expression support and the long-term breastfeeding transition goal${isNEC ? '\n- Family communication during bowel rest — time-limited nature, re-introduction process' : ''}
 - Discharge preparation — growth monitoring plan, supplementation schedule, community follow-up
-Write in a reassuring but clinically rigorous tone. Do NOT mention AI. Do NOT use bullet points.`;
+
+Tone: reassuring but clinically rigorous. Each bullet must be specific and actionable. Use professional clinical nutrition terminology. Do NOT mention AI. Do NOT use paragraphs or headings.`;
 
     /* ── Domain RC ── */
     const rcPrompt = `You are a senior neonatal dietitian writing the "Coordination of Nutrition Care (RC)" section of a Nutrition Care Process intervention plan for a preterm infant.
@@ -1912,13 +1993,14 @@ Write in a reassuring but clinically rigorous tone. Do NOT mention AI. Do NOT us
 CALCULATED DATA:
 ${clinicalCtx}
 
-Write 2–3 paragraphs (no headings, no bullet points) covering multidisciplinary coordination:
+Write 5–6 concise, specific, evidence-based bullet points (one line each, starting with "- ", NO paragraphs, NO sub-bullets, NO headings) covering multidisciplinary coordination:
 - Neonatology: feeding route decisions, electrolyte prescribing, clinical escalation triggers
 - Nursing: bedside implementation, tolerance monitoring, handover communication requirements
 - Lactation: milk expression support, supply optimisation, transition to direct breastfeeding planning${isTPN ? '\n- Pharmacy: TPN admixture preparation, Ca-P compatibility, parenteral micronutrient review frequency' : ''}
 - Dietetics: review frequency (twice weekly for ${isELBW||isVLBW ? 'ELBW/VLBW' : 'LBW'}), Fenton 2013 growth chart tracking, cumulative deficit documentation
 - Biochemical monitoring schedule: electrolytes 3×/week; ALP + PO4 monthly from week 4 (BW <1500 g); daily weight; weekly length and HC
-Write with clinical authority. Do NOT mention AI. Do NOT use bullet points.`;
+
+Use professional clinical nutrition terminology. Each bullet must specify the responsible discipline and an actionable, measurable task. Do NOT mention AI. Do NOT use paragraphs or headings.`;
 
     /* ── Fire all 4 domain calls ── */
     const domains = [
