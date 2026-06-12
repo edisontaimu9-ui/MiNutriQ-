@@ -6036,6 +6036,250 @@ function calculate() {
       actionEl.innerHTML = `Initiate or optimise <strong>${routeLabel}</strong> to meet estimated energy and protein requirements for <em>${dxDisplay}</em>. Target ${Math.round(energy)} kcal/day and ${protein.toFixed(1)} g protein/day. Reassess within 48–72 hours or with significant clinical change.`;
     }
     // ── OasisAI — 4-domain NCP Intervention Generator ───────────────────────
+
+    // ── Offline / Fallback NCP Intervention Engine ───────────────────────────
+    // Generates evidence-based NCP interventions from clinical context when
+    // OasisAI is unavailable or the network request fails.
+    // Returns { nd, e, c, rc } as '\n'-separated bullet strings.
+    function _generateOfflineFallbackInterventions(ctx) {
+      const {
+        dx = 'general', dxLabel = 'General', route = 'oral',
+        energy = 0, protein = 0, protPerKg = '—', pGuideline = '',
+        bmi = 0, bmiCat = '', weight = 0, ibw = 0, age = '', sex = '',
+        isCritical = false, isRenal = false, isHepatic = false,
+        isSurgical = false, isCancer = false, isObesity = false,
+        isRefeeding = false, rfRiskLevel = '', isUnderweight = false,
+        tbsa = 0, icuPhase = '', giFunction = 'normal', pctIntakeVsReq = null,
+        labs = {}, P_label = '', P_code = '',
+      } = ctx;
+
+      const kcal   = Math.round(energy) || '—';
+      const prot   = protein ? protein.toFixed(1) : '—';
+      const ppkg   = protPerKg || '—';
+      const glFunc = giFunction === 'normal' ? 'intact' : giFunction;
+
+      // ── Shared helpers ──────────────────────────────────────────────────────
+      const hasLowPhos  = labs.phosphate  && labs.phosphate  < 0.8;
+      const hasLowK     = labs.potassium  && labs.potassium  < 3.5;
+      const hasLowMg    = labs.magnesium  && labs.magnesium  < 0.7;
+      const hasLowHb    = labs.haemoglobin && labs.haemoglobin < 10;
+      const hasHighGlu  = labs.glucose    && labs.glucose    > 10;
+      const hasLowNa    = labs.sodium     && labs.sodium     < 130;
+      const hasHighNa   = labs.sodium     && labs.sodium     > 145;
+      const hasLowAlb   = labs.albumin    && labs.albumin    < 30;
+      const poorIntake  = pctIntakeVsReq !== null && pctIntakeVsReq < 60;
+
+      // Route label
+      const routeMap = { oral: 'oral diet', enteral: 'enteral nutrition (tube feeding)', oral_ons: 'oral diet + ONS', parenteral: 'parenteral nutrition', pn: 'parenteral nutrition' };
+      const routeStr = routeMap[route] || route || 'oral diet';
+      const isEN     = route === 'enteral';
+      const isPN     = route === 'parenteral' || route === 'pn';
+      const isOral   = route === 'oral' || route === 'oral_ons';
+
+      // ── ND: Food / Nutrient Delivery ────────────────────────────────────────
+      const ndBullets = [];
+
+      // 1. Core feeding order — always present
+      if (isEN) {
+        ndBullets.push(`Initiate enteral nutrition via ${dx === 'burns' || isCritical ? 'NGT/NJT' : 'appropriate tube'} — target ${kcal} kcal/day and ${prot} g protein/day; advance to full rate over 24–48 h as tolerated.`);
+        ndBullets.push(`Select standard polymeric formula (1.0–1.5 kcal/mL); upgrade to high-protein formula (≥20% protein energy) if ${P_code.startsWith('NI-5') ? 'protein-energy malnutrition confirmed' : 'protein requirements not met with standard formula'}.`);
+        if (glFunc !== 'intact') ndBullets.push(`GI function: ${glFunc} — monitor gastric residual volumes q4h; hold feeds if GRV >250 mL × 2; consider post-pyloric placement if intolerance persists.`);
+      } else if (isPN) {
+        ndBullets.push(`Initiate PN: target ${kcal} kcal/day and ${prot} g protein/day; adjust macronutrient ratio to 50–60% CHO, 15–20% AA, 25–30% lipid (avoid excess dextrose — monitor BGL q6h).`);
+        ndBullets.push(`Transition to EN/oral route as soon as GI function restored — aim to reduce PN reliance within 5–7 days where clinically feasible.`);
+      } else {
+        ndBullets.push(`Prescribe ${routeStr}: target ${kcal} kcal/day and ${prot} g protein/day (${ppkg} g/kg IBW/day — basis: ${pGuideline || 'clinical guidelines'}).`);
+        if (route === 'oral_ons') ndBullets.push(`Supplement oral diet with high-energy / high-protein ONS (≥2 × 200 kcal/serving/day) — prescribe ≥400 kcal/day supplemental ONS and encourage between-meal use.`);
+      }
+
+      // 2. Diagnosis-specific ND adjustments
+      if (isRefeeding) {
+        const rfHigh = rfRiskLevel === 'HIGH';
+        ndBullets.push(`Refeeding protocol (${rfRiskLevel || 'MODERATE'} risk): commence at ${rfHigh ? '5–10' : '10–15'} kcal/kg/day; increase by 200–400 kcal every 24–48 h only if electrolytes stable. DO NOT advance if phosphate <0.6 mmol/L.`);
+        ndBullets.push(`Thiamine (B1) replacement BEFORE commencing feeds: ${rfHigh ? 'IV 200–300 mg' : 'oral/IV 100 mg'} once daily × 10 days — prevents Wernicke encephalopathy.`);
+        if (hasLowPhos) ndBullets.push(`Phosphate IV replacement indicated (current: ${labs.phosphate} mmol/L, target ≥0.8 mmol/L) — hold / pause nutrition advancement until phosphate corrected.`);
+        if (hasLowK)   ndBullets.push(`Potassium replacement required (${labs.potassium} mmol/L) before / during refeeding — monitor q6h during initial phase.`);
+        if (hasLowMg)  ndBullets.push(`Magnesium replacement required (${labs.magnesium} mmol/L) — IV or oral MgSO₄ per pharmacy protocol.`);
+      } else if (isRenal) {
+        ndBullets.push(`Renal-adjusted diet: restrict dietary potassium to 1500–2000 mg/day, phosphorus to 800–1000 mg/day, sodium to <2 g/day; fluid restriction per renal team orders (typically 1.0–1.5 L/day on HD).`);
+        if (isEN) ndBullets.push(`Select renal-specific EN formula (lower potassium, phosphorus, fluid-dense ≥2.0 kcal/mL) — e.g. Nepro HP or equivalent; adjust volume to fluid allowance.`);
+        if (labs.egfr && labs.egfr < 30) ndBullets.push(`eGFR ${labs.egfr} mL/min/1.73m² — avoid phosphate-containing supplements; consult nephrology before starting micronutrient supplementation.`);
+      } else if (isHepatic) {
+        ndBullets.push(`Hepatic diet: avoid protein restriction unless overt hepatic encephalopathy (grade ≥2) — maintain protein at ${prot} g/day; prefer BCAA-enriched formula or BCAA supplement (0.2–0.4 g/kg/day) if encephalopathy present.`);
+        ndBullets.push(`Small, frequent meals (4–6/day) + late-evening snack (200 kcal CHO-rich, e.g. banana + oats) — prevents overnight catabolism; critical in cirrhosis (ESPEN 2019).`);
+        ndBullets.push(`Restrict sodium to 1.5–2 g/day if ascites present; avoid fluid restriction unless Na <125 mmol/L; monitor for zinc / B-vitamin deficiencies (supplement empirically in cirrhosis).`);
+      } else if (isCritical) {
+        const phase = icuPhase || 'acute';
+        if (phase === 'early') {
+          ndBullets.push(`ICU acute/early phase: initiate trophic/permissive underfeeding — commence EN at 10–20 kcal/kg/day within 24–48 h of ICU admission (ESPEN Critical Care 2023). Do NOT overfeed — avoid early full-dose nutrition.`);
+        } else if (phase === 'late') {
+          ndBullets.push(`ICU rehabilitation/late phase: advance to full energy target ${kcal} kcal/day and ${prot} g protein/day — optimise via EN, supplement PN only if persistent EN deficit >3 days.`);
+        } else {
+          ndBullets.push(`Critical illness: advance to target ${kcal} kcal/day (${Math.round(energy / (weight || 70))} kcal/kg) and ${prot} g protein/day — re-evaluate energy method with indirect calorimetry if available.`);
+        }
+        if (hasHighGlu) ndBullets.push(`Hyperglycaemia (BGL ${labs.glucose} mmol/L) — target BGL 6–10 mmol/L per ICU protocol; reduce dextrose load if on PN; monitor q2–4h; escalate insulin infusion per protocol.`);
+      } else if (isCancer) {
+        ndBullets.push(`Cancer / cachexia: target ${kcal} kcal/day and ${prot} g protein/day — prioritise protein preservation; supplement with ONS ≥ 2 × daily if oral intake <75% of requirements.`);
+        ndBullets.push(`Omega-3 fatty acids (EPA 2 g/day) via fish oil or omega-3 enriched ONS — attenuates cancer cachexia and inflammatory response (ESPEN Oncology 2021).`);
+        if (poorIntake) ndBullets.push(`Current intake ${pctIntakeVsReq}% of requirements — escalate nutrition support: consider appetite stimulant (megestrol/dexamethasone) in discussion with oncology; refer for enteral nutrition if PO <60% persists >3 days.`);
+      } else if (isSurgical) {
+        ndBullets.push(`Post-surgical nutrition: initiate oral sips / clear liquids within 4–6 h post-operatively; advance to full texture diet within 24–48 h if bowel sounds present and no anastomotic concerns.`);
+        ndBullets.push(`Immunonutrition (arginine + omega-3 + glutamine) in major GI surgery if available — consider pre- and post-operative supplementation per ESPEN/ERAS protocols.`);
+        if (isEN) ndBullets.push(`Early post-op EN if oral route inadequate — commence at 20–25 mL/h and advance; reduces infectious complications and hospital LOS (ERAS Society Guidelines 2023).`);
+      } else if (isObesity && !isCritical) {
+        ndBullets.push(`Hypocaloric high-protein diet: target ${kcal} kcal/day (energy deficit ~500–750 kcal/day vs. TDEE); protein ${prot} g/day (≥1.2 g/kg IBW) to preserve lean mass during weight loss.`);
+        ndBullets.push(`Restrict ultra-processed foods, SSBs, and energy-dense snacks; emphasise whole grains, lean protein, legumes, non-starchy vegetables; limit total fat to 25–35% of energy.`);
+      } else if (tbsa > 0) {
+        ndBullets.push(`Burns (${tbsa}% TBSA): initiate early EN ≤6 h post-injury; target ${kcal} kcal/day using Curreri or Ireton-Jones formula; protein ${prot} g/day (1.5–2.0 g/kg) — obligatory loss through wounds.`);
+        ndBullets.push(`High-dose micronutrients for burns: vitamin C 1–3 g/day, zinc 40 mg/day, copper 4–6 mg/day × 14–21 days — antioxidant support for wound healing (Singer et al. 2019).`);
+      } else {
+        // General / other
+        if (poorIntake) {
+          ndBullets.push(`Current oral intake estimated at ${pctIntakeVsReq}% of requirements — food fortification strategies: add butter/oil/full-fat dairy/nut pastes to meals; serve frequent small portions q2–3h.`);
+        } else {
+          ndBullets.push(`Optimise dietary intake to meet prescribed targets: ${kcal} kcal/day and ${prot} g protein/day via regular meals + snacks; advise on locally available high-energy and high-protein foods.`);
+        }
+        ndBullets.push(`If oral intake remains <75% of requirements for ≥3 days despite food fortification, escalate nutrition support to ONS (≥400 kcal/day) or enteral nutrition.`);
+      }
+
+      // 3. Lab-driven additions (universal)
+      if (hasLowHb && !isRefeeding) ndBullets.push(`Low Hb ${labs.haemoglobin} g/dL — assess iron/B12/folate status; consider oral iron supplementation (ferrous sulphate 200 mg TDS with vitamin C) pending cause; dietary iron counselling.`);
+      if (hasHighGlu && !isCritical) ndBullets.push(`Elevated fasting glucose ${labs.glucose} mmol/L — prescribe carbohydrate-controlled diet (CHO 45–60 g/meal, low GI); avoid SSBs and refined sugars; monitor BGL QID.`);
+
+      // ── E: Nutrition Education ───────────────────────────────────────────────
+      const eBullets = [];
+
+      if (isRenal) {
+        eBullets.push(`Educate on renal diet principles: phosphorus restriction (avoid processed cheese, colas, nuts in excess), potassium restriction (limit banana, orange, potato — choose apples, cabbage, rice), sodium restriction.`);
+        eBullets.push(`Fluid management education: demonstrate measuring fluid intake; discuss high-fluid foods (soups, ice cream, fruits count toward allowance); provide pictorial fluid diary for self-monitoring.`);
+        eBullets.push(`Label reading — identify 'hidden' phosphorus (phosphoric acid additives in cola/processed foods absorb ≈90%, vs. 50% from natural sources) — explain why additive phosphorus is more dangerous.`);
+      } else if (isHepatic) {
+        eBullets.push(`Educate on cirrhosis nutritional needs: explain why protein restriction is no longer routinely recommended; discuss high-protein snack ideas (eggs, Greek yoghurt, legumes) appropriate for the patient's food culture.`);
+        eBullets.push(`Late-evening snack education: explain physiological rationale (shortened overnight fast prevents catabolism); provide practical snack options — e.g. nsima with groundnut flour, soya porridge, or Pronutro if available.`);
+        eBullets.push(`Alcohol education: complete abstinence is essential in alcoholic liver disease — provide brief motivational advice; refer to alcohol cessation support programme.`);
+      } else if (isCancer) {
+        eBullets.push(`Educate on managing cancer treatment side effects: nausea (cold/room-temperature foods, avoid strong odours), mucositis (soft moist foods, avoid acidic/spicy), altered taste (marinate meats, try flavour enhancers, metallic taste → use plastic cutlery).`);
+        eBullets.push(`High-calorie, high-protein food choices accessible in Malawi: groundnuts, soya pieces (Topsoy), Maheu fortified drink, eggs, milk, beans — provide practical portion guidance.`);
+        eBullets.push(`Explain rationale for nutritional support during oncology treatment: adequate intake supports treatment tolerance, immune function, and quality of life — not a luxury but a clinical priority.`);
+      } else if (isSurgical) {
+        eBullets.push(`Post-surgical diet progression: explain clear liquids → soft diet → regular diet stages; advise to report pain, nausea, or distension immediately — these indicate the need to step back in the progression.`);
+        eBullets.push(`Protein and wound healing: explain why ${prot} g/day protein is essential for surgical recovery (collagen synthesis, immune function); identify practical high-protein foods (eggs, fish, beans, soya, dairy).`);
+        eBullets.push(`Supplement adherence: if ONS/supplements prescribed, explain the importance of completing the full course rather than substituting for meals.`);
+      } else if (isObesity) {
+        eBullets.push(`Educate on energy balance: use simplified plate model (½ non-starchy vegetables, ¼ lean protein, ¼ whole grains); explain energy-dense vs. nutrient-dense food choices using locally available foods.`);
+        eBullets.push(`Food labelling and portion awareness: identify hidden sugars (e.g. ONGA mchuzi mix, tomato sauces) and excess fats; demonstrate portion sizes using hands/household measures (no food scale needed).`);
+        eBullets.push(`Explain metabolic benefits of even modest weight loss (5–10%): improved BP, BGL, lipids, joint pain — emphasise that small sustained changes outperform extreme restriction.`);
+      } else if (isRefeeding) {
+        eBullets.push(`Explain refeeding syndrome to patient and family: describe why rapid nutrition increases are dangerous after prolonged starvation; reassure that the careful reintroduction plan is designed for safety.`);
+        eBullets.push(`Electrolyte awareness: explain symptoms of low phosphate/potassium/magnesium (muscle weakness, palpitations, confusion) — instruct patient to report any of these immediately.`);
+        eBullets.push(`Gradual diet progression after hospital discharge: advise small, frequent, nutrient-dense meals; avoid the temptation to 'catch up' rapidly after feeling better.`);
+      } else if (dx === 'diabetes_t2' || dx === 'diabetes_t1' || dx === 'pregnancy_gest_dm') {
+        eBullets.push(`Carbohydrate distribution education: target consistent 45–60 g CHO per main meal; identify low-GI staples (sorghum nsima, cassava, sweet potato vs. refined maize) and explain glycaemic differences.`);
+        eBullets.push(`Dietary fibre: ≥14 g/1000 kcal/day from whole grains, legumes, vegetables — slows glucose absorption; demonstrate practical daily meal plan using locally available foods.`);
+        eBullets.push(`Self-monitoring link to diet: educate on how to use BGL readings to identify meals causing spikes; show how to adjust food choices based on 2-hour post-meal BGL target (<8 mmol/L).`);
+      } else if (dx === 'hypertension' || dx === 'heart_failure' || dx === 'cardiovascular') {
+        eBullets.push(`DASH diet principles: ↑ fruits, vegetables, whole grains, low-fat dairy; ↓ sodium (<2 g/day), red/processed meat, added sugars — demonstrate how to adapt DASH to Malawian food culture.`);
+        eBullets.push(`Sodium literacy: identify high-sodium foods common in Malawian diet (ONGA mchuzi mix, kapenta dried fish, processed snacks); demonstrate low-sodium cooking — use tomato, onion, garlic, herbs as flavour base.`);
+        eBullets.push(`Potassium education (hypertension): explain that potassium-rich foods (beans, pumpkin leaves, groundnuts, sweet potato, banana) support blood pressure control through natriuresis.`);
+      } else if (isCritical) {
+        eBullets.push(`ICU nutrition education (if patient is communicative): explain the purpose of tube feeding / IV nutrition; address anxiety and cultural concerns around artificial feeding.`);
+        eBullets.push(`Family / carer education: explain why the patient may not be eating by mouth; teach family appropriate snacks/foods to bring when oral intake resumes — discourage bringing inappropriate high-sugar or fasting foods.`);
+        eBullets.push(`Communicate expected nutrition trajectory: explain the transition from ICU feeding to oral diet and what milestones the team is watching for (swallow safety, GI function, extubation).`);
+      } else {
+        eBullets.push(`Educate on meeting prescribed energy and protein targets: identify practical high-protein, high-energy foods available locally (eggs, beans, groundnuts, soya, full-fat milk, kapenta, dried fish).`);
+        eBullets.push(`Meal frequency and distribution: encourage 3 main meals + 2–3 snacks daily; avoid prolonged gaps >4–5 h; distribute protein across meals (≥20 g/meal) for optimal synthesis.`);
+        eBullets.push(`Nutrition label awareness: if using packaged supplements or foods, demonstrate how to read and compare energy/protein content; reinforce daily supplementation schedule if prescribed.`);
+      }
+
+      // ── C: Nutrition Counseling ──────────────────────────────────────────────
+      const cBullets = [];
+
+      // Shared opening — always relevant
+      cBullets.push(`Explore barriers to meeting nutrition targets: physical (dysphagia, pain, fatigue, nausea), psychosocial (food insecurity, cultural beliefs, appetite loss), or disease-related (altered taste, malabsorption) — use motivational interviewing technique.`);
+
+      if (isObesity) {
+        cBullets.push(`Cognitive restructuring for weight management: challenge all-or-nothing thinking; set SMART goals (e.g. 'walk 20 min 3×/week for 4 weeks') rather than large outcome goals; celebrate non-scale victories.`);
+        cBullets.push(`Emotional eating and food environment counselling: assess triggers for overeating; discuss strategies — structured meal times, removing high-risk foods from home, mindful eating practices.`);
+      } else if (isCancer) {
+        cBullets.push(`Address psychosocial barriers to eating: cancer-related anorexia is physiological, not willpower — validate patient's experience; set small achievable intake goals to build confidence.`);
+        cBullets.push(`Shared goal-setting with patient and carer: agree on realistic daily intake targets; explore patient's food preferences and cultural food practices to improve dietary adherence during treatment.`);
+      } else if (isRenal) {
+        cBullets.push(`Renal diet adherence counselling: acknowledge the complexity and restrictiveness of the diet; use 'allowed, limit, avoid' framework rather than blanket restrictions to prevent unnecessary under-nutrition.`);
+        cBullets.push(`Support system engagement: involve family member or primary carer in counselling session — renal dietary restrictions require household cooperation (cooking methods, food purchasing).`);
+      } else if (isHepatic) {
+        cBullets.push(`Motivational counselling — alcohol: use FRAMES model (Feedback, Responsibility, Advice, Menu, Empathy, Self-efficacy); non-judgmental tone; explore patient's own reasons for change.`);
+        cBullets.push(`Appetite and fatigue management: hepatic patients often have early satiety (ascites) — counsel on small-volume, energy-dense meal strategies; address fatigue-related meal skipping.`);
+      } else if (isRefeeding) {
+        cBullets.push(`Address fear of eating / food avoidance after prolonged starvation: validate psychological difficulty; provide reassurance that the team's gradual reintroduction approach is safe.`);
+        cBullets.push(`Post-discharge food security counselling: assess ability to access adequate food at home; provide community resource information; develop a simple transitional meal plan with food-secure options.`);
+      } else if (isSurgical) {
+        cBullets.push(`Surgical recovery counselling: address anxiety about eating post-operatively; reinforce that early adequate nutrition accelerates healing and reduces complications — it is part of treatment, not a luxury.`);
+        cBullets.push(`Adherence to post-surgical diet protocol: discuss what to expect at each stage of diet progression; help patient set realistic expectations for appetite return and normal eating resumption.`);
+      } else if (isCritical) {
+        cBullets.push(`Counselling focus (when patient communicative): address fear of not eating normally; validate ICU nutrition experience; explain goal of protecting muscle mass and immune function during acute illness.`);
+        cBullets.push(`Post-ICU nutritional recovery counselling: many patients experience prolonged anorexia post-ICU — begin counselling on high-protein diet, gradual oral intake increase, and supplement use as part of rehabilitation planning.`);
+      } else {
+        cBullets.push(`Motivational counselling for diet adherence: explore the patient's own health goals and link dietary changes to those goals; use brief action planning — agree 1–2 specific dietary changes for the next week.`);
+        cBullets.push(`Address food insecurity or economic barriers: identify low-cost, locally accessible high-nutrient foods; connect with social work or community health worker if food access is a barrier.`);
+      }
+
+      // Universal closing for C
+      if (bmi < 18.5 || poorIntake || hasLowAlb) {
+        cBullets.push(`Appetite stimulation counselling: identify preferred foods; small flavour modifications to increase palatability; address early satiety — liquids before meals worsen; encourage calorie-dense first bites.`);
+      }
+      if (age && age > 65) {
+        cBullets.push(`Older adult considerations: address potential for functional decline, isolation, or cognitive changes affecting dietary intake; involve carer or family member; consider occupational therapy referral for meal preparation difficulties.`);
+      }
+
+      // ── RC: Coordination of Nutrition Care ──────────────────────────────────
+      const rcBullets = [];
+
+      // Core MDT communication — always include
+      rcBullets.push(`Document NCP goals, targets, and intervention plan in patient medical notes; communicate updated nutrition prescription to nursing staff for mealtime assistance, supplementation, and tube feeding administration.`);
+
+      if (isCritical || isEN || isPN) {
+        rcBullets.push(`Daily multidisciplinary round communication: liaise with medical officer/consultant regarding GI function, drug-nutrient interactions (propofol kcal, insulin, corticosteroids), and nutrition support progression; flag any tube displacement, GRV intolerance, or electrolyte abnormality.`);
+        rcBullets.push(`Pharmacy liaison: review medication-nutrient interactions — check for tube feed-drug incompatibilities; confirm timing of meds vs. EN holds; ensure thiamine and micronutrient supplementation charted.`);
+      }
+      if (isRenal) {
+        rcBullets.push(`Nephrology team coordination: confirm dietary prescriptions align with HD/PD schedule and fluid targets; communicate phosphate-binder timing with meals to pharmacy and nursing.`);
+        rcBullets.push(`Haemodialysis unit referral: coordinate dietitian-to-renal nurse handover; ensure dietary restrictions updated in HD unit records at each session.`);
+      }
+      if (isHepatic) {
+        rcBullets.push(`Hepatology/gastroenterology team coordination: communicate nutrition plan, BCAA use, and protein targets; flag any hepatic encephalopathy grade changes that necessitate protein protocol revision.`);
+        rcBullets.push(`Alcohol cessation referral: liaise with social work or addiction support services; ensure patient has a pathway to alcohol counselling before or at discharge.`);
+      }
+      if (isCancer) {
+        rcBullets.push(`Oncology team coordination: communicate patient's nutritional status, weight trajectory, and intake percentage to oncology at each chemotherapy/radiotherapy cycle review — poor nutrition status warrants treatment delay consideration.`);
+        rcBullets.push(`Palliative care coordination (if applicable): align nutrition goals with overall goals of care — ensure patient's wishes regarding artificial nutrition are documented and respected.`);
+      }
+      if (isSurgical) {
+        rcBullets.push(`Surgical team liaison: confirm diet progression orders post-operatively with surgeon; notify if oral intake <50% at 48 h post-op for early nutrition support escalation decision.`);
+        rcBullets.push(`Discharge planning — nutrition continuity: arrange outpatient dietitian follow-up within 2–4 weeks of discharge; document discharge nutrition plan in referral letter including targets, supplements, and red flags.`);
+      }
+      if (isRefeeding) {
+        rcBullets.push(`Electrolyte monitoring escalation pathway: communicate with prescribing team — daily electrolytes (phosphate, K, Mg, Na) during initial refeeding phase; ensure standing orders in place for replacement without delay.`);
+        rcBullets.push(`Thiamine administration co-ordination: confirm IV/oral thiamine is charted and being administered BEFORE nutrition commences; alert nurse in charge if thiamine was not given pre-feed.`);
+      }
+
+      // Universal discharge / follow-up
+      rcBullets.push(`Schedule dietitian follow-up: ${isCritical || isRefeeding || isEN ? 'daily inpatient review until nutrition targets achieved' : isRenal || isHepatic || isCancer ? 'weekly inpatient + outpatient appointment within 2–4 weeks of discharge' : 'review in 5–7 days inpatient or outpatient follow-up at 2–4 weeks'}.`);
+      rcBullets.push(`Community referral at discharge: notify community health worker / primary care of nutrition status and ongoing dietary needs; ensure patient has written diet plan in preferred language (Chichewa if applicable).`);
+
+      // ── Assemble output (max 4 bullets per domain for readability) ───────────
+      function joinBullets(arr) {
+        return arr.slice(0, 4).map(b => '• ' + b).join('\n');
+      }
+
+      return {
+        nd: joinBullets(ndBullets),
+        e:  joinBullets(eBullets),
+        c:  joinBullets(cBullets),
+        rc: joinBullets(rcBullets),
+      };
+    }
+    // ── End offline fallback engine ──────────────────────────────────────────
+
     (function _generateNCPInterventions() {
       const ndEl = document.getElementById('r-nd-statement');
       const eEl  = document.getElementById('r-e-statement');
@@ -6055,16 +6299,11 @@ function calculate() {
         document.head.appendChild(s);
       }
 
-      if (typeof window.OasisAI === 'undefined' || typeof window.OasisAI.generateInterventions !== 'function') {
-        const fallback = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(248,113,113,0.6)">Oasis AI unavailable — check connection.</span>`;
-        [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = fallback; });
-        return;
-      }
-
       const customDx  = (document.getElementById('other-specify-input')?.value || '').trim();
       const dxDisplay = (dx === 'other_specify' && customDx) ? customDx : dxLabel;
 
-      window.OasisAI.generateInterventions({
+      // Shared context object for both AI path and offline fallback
+      const _ctx = {
         dx, dxLabel: dxDisplay, route,
         energy, protein, protPerKg, pGuideline,
         bmi, bmiCat, weight, ibw,
@@ -6078,23 +6317,40 @@ function calculate() {
         labs,
         pesStatement:   `${P_label} (${P_code}) related to ${E}, as evidenced by ${sArr.join('; ')}.`,
         P_label, P_code, E_etiology: E,
-      }).then(function(result) {
-        function _renderBullets(text, accentColor) {
-          return text.split('\n').filter(l => l.trim()).map(line => {
-            const clean = line.replace(/^[•\-\*]\s*/, '');
-            return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;line-height:1.6">
+      };
+
+      function _renderBullets(text, accentColor) {
+        return text.split('\n').filter(l => l.trim()).map(line => {
+          const clean = line.replace(/^[•\-\*]\s*/, '');
+          return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;line-height:1.6">
               <span style="flex-shrink:0;color:${accentColor};font-size:10px;margin-top:2px">▸</span>
               <span>${clean}</span>
             </div>`;
-          }).join('');
-        }
+        }).join('');
+      }
+
+      function _renderOffline(result) {
+        // Subtle badge so clinician knows this is the static fallback
+        const badge = `<div style="font-family:var(--mono);font-size:8.5px;color:rgba(251,191,36,0.55);margin-bottom:6px;letter-spacing:0.4px">⚡ offline — evidence-based fallback</div>`;
+        ndEl.innerHTML = badge + _renderBullets(result.nd, '#1de9d4');
+        eEl.innerHTML  = badge + _renderBullets(result.e,  '#60a5fa');
+        cEl.innerHTML  = badge + _renderBullets(result.c,  '#a78bfa');
+        rcEl.innerHTML = badge + _renderBullets(result.rc, '#fb923c');
+      }
+
+      if (typeof window.OasisAI === 'undefined' || typeof window.OasisAI.generateInterventions !== 'function') {
+        _renderOffline(_generateOfflineFallbackInterventions(_ctx));
+        return;
+      }
+
+      window.OasisAI.generateInterventions(_ctx).then(function(result) {
         ndEl.innerHTML = _renderBullets(result.nd, '#1de9d4');
         eEl.innerHTML  = _renderBullets(result.e,  '#60a5fa');
         cEl.innerHTML  = _renderBullets(result.c,  '#a78bfa');
         rcEl.innerHTML = _renderBullets(result.rc, '#fb923c');
       }).catch(function(err) {
-        const errHTML = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(248,113,113,0.6)">Error: ${err.message || 'Failed to generate interventions.'}</span>`;
-        [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = errHTML; });
+        console.warn('[Oasis] AI intervention generation failed (' + (err.message || err) + ') — using offline fallback.');
+        _renderOffline(_generateOfflineFallbackInterventions(_ctx));
       });
     })();
 
