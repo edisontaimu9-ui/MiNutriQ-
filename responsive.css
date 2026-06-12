@@ -27,58 +27,6 @@
 
 
 /* ══════════════════════════════════════════════════════════════════
-   MOBILE — max-width: 47.9375em (<768px)
-   Single-column layout for Home Screen cards.
-   Cards span content width with proper margins; no stretching.
-   ══════════════════════════════════════════════════════════════════ */
-
-@media screen and (max-width: 47.9375em) {
-
-  /* ── Tools & Assistant: single column, full content width ─────── */
-  #hp-feature-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 0 16px !important;
-  }
-
-  #hp-feature-row .hp-feature-card {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* ── Information (hp-refs): single column, full content width ─── */
-  .hp-refs {
-    grid-template-columns: 1fr;
-    padding: 0 16px;
-    gap: 6px;
-  }
-
-  /* Ensure ref cards don't stretch awkwardly */
-  .hp-ref-card {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* ── Clinical Tools: 2-col on mobile (already 3-col base) ──────── */
-  .hp-tools-grid {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 16px;
-    gap: 8px;
-  }
-
-  /* ── Assess entry cards: keep them compact and readable ────────── */
-  .hp-assess-entry {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px 14px;
-  }
-}
-
-
-/* ══════════════════════════════════════════════════════════════════
    TABLET — min-width: 48em (≈768px)
    No structural change — bottom nav stays at the bottom.
    Goal: expand grids, restore multi-column forms, add breathing room.
@@ -209,54 +157,6 @@
   /* ── Tab top-bar ─────────────────────────────────────────────── */
   .tab-topbar       { padding: 12px 20px; }
   .tab-topbar-label { font-size: 14px; }
-}
-
-
-/* ══════════════════════════════════════════════════════════════════
-   TABLET ONLY — 48em–62em (768px–991px)
-   2-column grid for Tools & Assistant and Information cards.
-   Overrides the 3-col refs and 4-col tools set by the 48em block.
-   Equal card heights, consistent spacing. Desktop remains untouched.
-   ══════════════════════════════════════════════════════════════════ */
-
-@media screen and (min-width: 48em) and (max-width: 61.9375em) {
-
-  /* ── Tools & Assistant: 2-column responsive grid ─────────────── */
-  #hp-feature-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 0 20px !important;
-    align-items: stretch;
-  }
-
-  #hp-feature-row .hp-feature-card {
-    display: flex;
-    flex-direction: column;
-    padding: 0 !important;
-    margin-bottom: 0 !important;
-    min-width: 0;
-  }
-
-  /* Force assess entries to fill full card height */
-  #hp-feature-row .hp-feature-card .hp-assess-entry {
-    flex: 1;
-    height: 100%;
-    box-sizing: border-box;
-  }
-
-  /* ── Information (hp-refs): 2-column grid ─────────────────────── */
-  .hp-refs {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 20px;
-    gap: 10px;
-  }
-
-  /* Equal height ref cards within each row */
-  .hp-ref-card {
-    box-sizing: border-box;
-    align-self: stretch;
-  }
 }
 
 
