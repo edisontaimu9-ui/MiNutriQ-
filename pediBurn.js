@@ -459,10 +459,19 @@ function buildNeonateInterventionCard(P) {
         '</div>' +
         (extraHeader || '') +
         /* AI text target — shimmer + muted fallback while loading */
-        '<div id="' + id + '" style="padding:0 2px;font-family:var(--sans);font-size:12.5px;' +
-          'color:var(--text);line-height:1.88;transition:opacity 0.4s">' +
+        '<div id="' + id + '" style="padding:0 2px;font-family:var(--mono);font-size:11px;' +
+          'color:var(--text);line-height:1.72;transition:opacity 0.4s">' +
           shimmer +
-          '<p style="margin:0 0 8px;opacity:0.4">' + fallback + '</p>' +
+          '<div style="opacity:0.4">' +
+            fallback.split('<br>').filter(Boolean).map(function(line){
+              var cleaned = line.replace(/^[\u25b8\u2022\u2013\-\*]\s*/, '').trim();
+              return cleaned ?
+                '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;' +
+                'border-bottom:1px solid rgba(255,255,255,0.05)">' +
+                '<span style="flex-shrink:0;color:var(--blue);font-weight:700;margin-top:1px">\u25b8</span>' +
+                '<span>' + cleaned + '</span></div>' : '';
+            }).join('') +
+          '</div>' +
         '</div>' +
       '</div>'
     );
@@ -473,19 +482,156 @@ function buildNeonateInterventionCard(P) {
      remains visible on error; replaced by AI on success.
   ══════════════════════════════════════════════════════════════ */
   function fallbackND() {
-    if (isNEC)  return 'All enteral feeds are withheld pending clinical and radiological resolution of necrotising enterocolitis. IV dextrose maintains glucose homeostasis. Energy requirement ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day), protein ' + P.protG + ' g/day, and fluid ' + P.fluidML + ' mL/day are targets to restore once enteral access is re-established after a minimum 7\u201314 days of bowel rest and clinical resolution per Bell staging criteria.';
-    if (isHIE)  return 'During active therapeutic hypothermia (Day 1\u20133) enteral feeds are withheld and fluid is restricted to 40\u201360 mL/kg/day to limit cerebral oedema. IV dextrose provides primary energy and glucose substrate. Calculated energy requirement is ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day); protein target is ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day). EN is introduced cautiously post-rewarming when GI function is confirmed. Blood glucose monitoring q1\u20132h is mandatory.';
-    if (isMeta) return 'Standard breastmilk and formula are contraindicated in this infant\u2019s metabolic condition. Specialised formula is required immediately; metabolic and dietetic team review is urgent. Calculated energy requirement ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day) and protein ' + P.protG + ' g/day must be met via the appropriate substrate.';
-    return 'Feeding plan for this Day-' + P.ageDays + ' term neonate is ' + P.feedLabel.toLowerCase() + ', providing ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day) across ' + P.feedFreq + ' feeds/day' + (P.volPerFeed ? ' (' + P.volPerFeed + ' mL/feed)' : '') + '. Calculated energy ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg \xd7 ' + P.efMult.toFixed(2) + ' stress factor; IOM 2005), protein ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day). ' + P.feedPrimary + (P.clinAdj ? ' ' + P.clinAdj : '');
+    var bullets = [];
+
+    /* — Feeding route — */
+    if (isNEC) {
+      bullets.push('Withhold ALL enteral nutrition immediately (NPO) — bowel rest mandatory per Bell staging criteria.');
+      bullets.push('Maintain glucose homeostasis via IV dextrose (D10W at GIR 4–6 mg/kg/min); titrate to target BGL ≥2.6 mmol/L.');
+      bullets.push('Reinstate trophic enteral feeds (10–20 mL/kg/day) only after ≥7–14 days bowel rest, radiological clearance, and clinical resolution.');
+    } else if (isHIE) {
+      bullets.push('Withhold enteral feeds during active therapeutic hypothermia (Day 1–3); restrict total fluid to 40–60 mL/kg/day to mitigate cerebral oedema risk.');
+      bullets.push('Provide energy and glucose substrate via IV dextrose; monitor blood glucose q1–2h; target BGL 2.6–5.5 mmol/L.');
+      bullets.push('Introduce EN cautiously post-rewarming once GI function is confirmed; advance by 20 mL/kg/day as tolerated.');
+    } else if (isMeta) {
+      bullets.push('Discontinue standard breastmilk and formula immediately — standard substrate is contraindicated in this metabolic disorder.');
+      bullets.push('Initiate disease-specific specialised formula (galactose-free/phenylalanine-restricted as indicated); urgent metabolic dietetics review required.');
+      bullets.push('Calculated energy target: ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day); protein target: ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day) — to be delivered via appropriate substrate only.');
+    } else {
+      bullets.push('Feeding route: ' + P.feedLabel + ' — appropriate for Day-' + P.ageDays + ' term neonate at current clinical status (' + P.statusLabel + ').');
+      bullets.push(P.feedPrimary);
+      if (P.feedSecondary) bullets.push(P.feedSecondary);
+    }
+
+    /* — Energy, protein, fluid requirements — */
+    bullets.push('Energy requirement: ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg \xd7 stress factor ' + P.efMult.toFixed(2) + ') — IOM 2005.');
+    bullets.push('Protein requirement: ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day) — IOM 2005; increase to ≥3.0 g/kg/day in sepsis, NEC, or post-surgical conditions.');
+    bullets.push('Total fluid target: ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day) — AAP 2004 Day-' + P.ageDays + ' standard; advance Day 1 (60 mL/kg) → Day 14 (150 mL/kg) as tolerated.');
+    if (P.volPerFeed) {
+      bullets.push('Feed volume: ' + P.volPerFeed + ' mL/feed \xd7 ' + P.feedFreq + ' feeds/day (q3h schedule); adjust as lactation establishes or clinical condition changes.');
+    }
+
+    /* — Clinical adjustments — */
+    if (P.clinAdj) bullets.push('Condition-specific adjustment (' + P.diagLabel + '): ' + P.clinAdj);
+    if (P.excessLoss) {
+      bullets.push('\u26a0 Weight loss exceeds 10% threshold — initiate supplemental feeding: EBM via cup or syringe preferred before formula supplementation; document intake precisely and escalate to paediatrics.');
+    }
+
+    /* — Micronutrients — */
+    bullets.push('Vitamin K: administered at birth per national protocol (IM 1 mg preferred).');
+    bullets.push('Vitamin D: supplement 400 IU/day from birth in all breastfed neonates (AAP 2022).');
+    bullets.push('Blood glucose monitoring: target 2.6–5.5 mmol/L; recheck within 30 min of any feed or IV adjustment; threshold for IV D10W is BGL <2.6 mmol/L.');
+
+    return bullets.map(function(b){ return '\u25b8 ' + b; }).join('<br>');
   }
   function fallbackE() {
-    return 'Staff and caregiver education covers ' + (isNGT ? 'NGT position verification, residual volume assessment (hold if >50% of volume or bilious), and feed administration technique' : 'breastfeeding latch and effective milk transfer assessment, feed frequency guidance (\u22658 feeds/day), and supplemental feeding methods when intake is insufficient') + '. Recognition of adequate feeding indicators (\u22656 wet nappies/day after Day 3, appropriate stool transition) and escalation thresholds for weight loss >10% or blood glucose <2.6 mmol/L are addressed' + (isEBF ? ', alongside breast milk expression frequency and correct cold-chain storage' : '') + '.';
+    var bullets = [];
+
+    /* — Feed preparation and administration — */
+    if (isNGT) {
+      bullets.push('Verify NGT position before every feed: aspirate gastric contents and confirm pH ≤5.5 (or per local protocol); document confirmation.');
+      bullets.push('Withhold feed if gastric residual exceeds 50% of prescribed feed volume or if residual is bilious — escalate to medical team.');
+      bullets.push('Administer feeds with head elevated 30–45°; maintain position for ≥30 min post-feed to reduce aspiration risk.');
+      bullets.push('Flush NGT with 1–2 mL sterile water before and after feeds; check tube securement and skin integrity at each feed.');
+    } else if (isEBF) {
+      bullets.push('Assess breastfeeding latch at each feed: wide mouth, flanged lips, visible jaw movement, audible swallowing, and maternal comfort.');
+      bullets.push('Target ≥8 breastfeeds per 24 hours; feed on demand; avoid scheduled restrictions in the neonatal period.');
+      bullets.push('Teach breast milk expression: manual or electric pump every 2–3 hours (including once overnight) if direct feeding is not fully established.');
+      bullets.push('Correct EBM storage: refrigerate ≤4°C for up to 48 hours; freeze at −18°C for up to 90 days; label with date, time, and volume; warm to body temperature before use.');
+    } else {
+      bullets.push('Demonstrate correct formula preparation: accurate powder-to-water ratio, use of cooled boiled water, complete dissolution, and correct final temperature (body-warm ≤37°C).');
+      bullets.push('Sterilise all feeding equipment (bottles, teats, caps) before each use; do not microwave formula.');
+      bullets.push('Discard any unused formula within 1 hour of preparation or 24 hours if refrigerated.');
+    }
+
+    /* — Feeding tolerance and adequacy — */
+    bullets.push('Educate on adequate feeding indicators: ≥6 wet nappies/day after Day 3; meconium passage by Day 1–2; yellow transitional stools by Day 4–5; audible swallowing; infant contentment after feeds.');
+    bullets.push('Explain physiological weight loss: up to 10% of birth weight in Days 1–5 is normal; birth weight recovery expected by Day 10–14 (AAP 2012).');
+    if (P.excessLoss) {
+      bullets.push('\u26a0 Weight loss has exceeded 10% — educate family on the clinical plan for supplementation; reassure and frame as a supported, temporary intervention.');
+    }
+
+    /* — Blood glucose awareness — */
+    bullets.push('Blood glucose monitoring: target 2.6–5.5 mmol/L; alert nursing staff or paediatric team immediately if BGL <2.6 mmol/L or signs of hypoglycaemia (jitteriness, lethargy, poor colour) are observed.');
+
+    /* — Kangaroo Mother Care — */
+    bullets.push('Promote Kangaroo Mother Care (skin-to-skin): supports thermoregulation, stimulates milk supply, promotes bonding, and improves neurodevelopmental outcomes.');
+
+    /* — Condition-specific education — */
+    if (P.diag !== 'none') {
+      bullets.push('Condition-specific education — ' + P.diagLabel + ': inform family of feeding adjustments required, warning signs to escalate, and expected feeding trajectory throughout the clinical course.');
+    }
+    if (isMeta) {
+      bullets.push('URGENT: explain galactose/phenylalanine restriction to family — provide written materials and confirm understanding before discharge; standard breastmilk/formula is strictly contraindicated.');
+    }
+
+    return bullets.map(function(b){ return '\u25b8 ' + b; }).join('<br>');
   }
   function fallbackC() {
-    return 'Families are counselled that physiological weight loss up to 10% of birth weight is expected in the first 3\u20135 days; birth weight recovery by Day 10\u201314 is the target (AAP 2012). ' + (P.excessLoss ? 'This infant has exceeded the 10% threshold \u2014 supplementation and close monitoring are required. ' : '') + 'Feeding goals \u2014 ' + P.feedFreq + ' feeds/day totalling ' + P.fluidML + ' mL/day \u2014 and the rationale for the prescribed plan are explained in age-appropriate language. ' + (isEBF ? 'Breastfeeding families are reassured that milk supply responds to suckling stimulus; frequent feeding and Kangaroo Mother Care promote lactogenesis II.' : 'Formula preparation accuracy and responsive feeding technique are reviewed to ensure consistent caloric delivery.');
+    var bullets = [];
+
+    /* — Weight and growth expectations — */
+    bullets.push('Counsel family that physiological weight loss up to 10% of birth weight is expected in Days 1–5; birth weight recovery target is Day 10–14 (AAP 2012).');
+    if (P.excessLoss) {
+      bullets.push('\u26a0 Current weight loss (' + Math.abs(P.wtPctLoss).toFixed(1) + '%) exceeds the 10% threshold — explain clearly and compassionately why supplementation is required; frame as a supported, evidence-based clinical plan, not a parental failing.');
+    } else {
+      bullets.push('Reinforce positive feeding behaviour: current weight trajectory is within or approaching the physiological range — encourage continued feeding on demand.');
+    }
+
+    /* — Feeding volume and frequency — */
+    bullets.push('Communicate feeding goals: ' + P.feedFreq + ' feeds/day delivering ' + P.fluidML + ' mL/day total; explain how feed volumes increase as lactation establishes and the infant grows (Day 1: 60 mL/kg \u2192 Day 14: 150 mL/kg).');
+    if (isEBF) {
+      bullets.push('Breastfeeding support: normalise the early establishment process; explain that colostrum (Days 1–3) is low in volume but rich in immunological factors; frequent suckling drives transition to mature milk (lactogenesis II).');
+      bullets.push('Reassure that cluster feeding and night feeds are normal and serve to build milk supply; encourage skin-to-skin and Kangaroo Mother Care to promote lactation and bonding.');
+    } else {
+      bullets.push('Formula feeding guidance: review responsive feeding — recognise hunger cues (rooting, hand-to-mouth) and satiety cues (turning away, relaxed hands); do not force feeds.');
+      bullets.push('Confirm formula preparation accuracy and reinforce consistent caloric delivery; adjust volumes weekly as infant weight increases.');
+    }
+
+    /* — Condition-specific counseling — */
+    if (P.diag !== 'none') {
+      bullets.push('Family communication re: ' + P.diagLabel + ' — set realistic expectations for the feeding journey; explain what changes families will observe during the clinical course; help distinguish expected variation from warning signs requiring escalation.');
+    }
+
+    /* — Discharge planning — */
+    bullets.push('Discharge preparation: confirm growth monitoring schedule (weekly weights for first 4 weeks); prescribe vitamin D 400 IU/day if breastfed (AAP 2022); arrange community dietetics or GP follow-up; provide written feeding plan.');
+    bullets.push('Identify psychosocial risk factors affecting feeding (maternal anxiety, socioeconomic barriers, lack of support network) — refer to social work or community lactation support as appropriate.');
+
+    return bullets.map(function(b){ return '\u25b8 ' + b; }).join('<br>');
   }
   function fallbackRC() {
-    return 'Paediatrics/Neonatology: feeding route decisions, clinical complication management, and IV supplementation prescription. Nursing: bedside feed implementation, daily weight, blood glucose monitoring, feed tolerance documentation, and handover. Lactation: breastfeeding support, milk expression guidance, and supply optimisation' + (isMeta ? '. Metabolic Dietetics: URGENT \u2014 specialised formula and dietary restriction education' : '. Dietetics: nutrition assessment review, feed advancement monitoring, and discharge nutrition planning') + '. Biochemical surveillance: daily weight; urine and stool output; blood glucose monitoring (q1\u20132h if hypoglycaemia risk); escalate to paediatrics for weight loss >10%, glucose instability, or clinical deterioration.';
+    var bullets = [];
+
+    /* — Paediatrics / Neonatology — */
+    bullets.push('Paediatrics/Neonatology: determine and document feeding route; prescribe IV dextrose or PN components if EN is contraindicated; manage ' + (P.diag !== 'none' ? P.diagLabel : 'emerging clinical complications') + '; authorise escalation of nutrition prescription at each clinical review.');
+
+    /* — Nursing — */
+    bullets.push('Nursing: implement prescribed feeding plan (' + P.feedLabel + ') at bedside; document weight daily; record feed frequency, volume intake, gastric residuals (if NGT), and urine/stool output at each shift; monitor blood glucose per schedule and act on results immediately.');
+    bullets.push('Nursing handover: include feeding tolerance observations, weight trend, and any escalation events in every shift handover communication.');
+
+    /* — Lactation — */
+    if (isEBF) {
+      bullets.push('Lactation consultant: provide milk expression guidance (frequency, technique, storage), direct breastfeeding assessment and latch optimisation, cup-feeding technique if supplementation is needed, and plan for transition to direct breastfeeding at discharge.');
+    } else {
+      bullets.push('Lactation consultant: support transition to direct breastfeeding at discharge if formula was initiated for clinical reasons; advise on milk expression to preserve supply during any period of formula use.');
+    }
+
+    /* — Dietetics — */
+    if (isMeta) {
+      bullets.push('Metabolic Dietetics — URGENT referral: specialised formula prescription, dietary restriction education, and family counseling cannot be delayed; metabolic crisis risk is immediate if standard feeds are not stopped.');
+    } else {
+      bullets.push('Dietetics: review nutrition care plan at every clinical encounter; monitor feed volume advancement and growth trajectory on WHO 2006 standards; prepare discharge nutrition plan including community follow-up instructions and vitamin D supplementation prescription.');
+    }
+
+    /* — Biochemical and monitoring schedule — */
+    bullets.push('Biochemical and clinical monitoring schedule:');
+    bullets.push('  \u2013 Daily weight: target birth weight recovery by Day 10–14; flag if loss >10% or trajectory not reversing.');
+    bullets.push('  \u2013 Urine output: ≥6 wet nappies/day after Day 3.');
+    bullets.push('  \u2013 Stool output: meconium expected Day 1–2; yellow transitional stools by Day 4–5.');
+    bullets.push('  \u2013 Blood glucose: monitor as clinically indicated; target 2.6–5.5 mmol/L; q1–2h if high-risk (HIE, hypoglycaemia, IUGR, SGA, IDM).');
+    bullets.push('  \u2013 Escalation triggers: weight loss >10%, persistent glucose instability, clinical deterioration, or failure to regain birth weight by Day 14 — escalate to paediatrics immediately.');
+
+    return bullets.map(function(b){ return '\u25b8 ' + b; }).join('<br>');
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -532,19 +678,19 @@ function buildNeonateInterventionCard(P) {
       '<div class="card-body" style="padding:18px 18px 14px">' +
 
         domainShell(ndId, 'ND', 'Food and/or Nutrient Delivery',
-          'Feeding route &amp; rationale \xb7 Volume &amp; frequency \xb7 Fluid management \xb7 Clinical adjustments \xb7 Monitoring plan',
+          'NI-2 \xb7 Feeding route \xb7 Energy \xb7 Protein \xb7 Fluid targets \xb7 Enteral/parenteral advancement \xb7 Condition-specific adjustments',
           '\ud83e\udecb', '#29e9d4', '41,233,212', fallbackND(), reqRow) +
 
         domainShell(eId, 'E', 'Nutrition Education',
-          'Feed preparation \xb7 Tolerance monitoring \xb7 Breast milk expression \xb7 BGL awareness \xb7 Caregiver guidance',
+          'NI-4 \xb7 Staff &amp; caregiver education \xb7 Feed preparation \xb7 Breastfeeding support \xb7 BGL awareness \xb7 Tolerance recognition',
           '\ud83d\udcda', '#34d399', '52,211,153', fallbackE()) +
 
         domainShell(cId, 'C', 'Nutrition Counseling',
-          'Feeding progression expectations \xb7 Growth targets \xb7 Family support \xb7 Discharge planning',
+          'NI-4 \xb7 Family counseling \xb7 Growth expectations \xb7 Feeding goals \xb7 Discharge readiness \xb7 Psychosocial support',
           '\ud83d\udcac', '#f59e0b', '245,158,11', fallbackC()) +
 
         domainShell(rcId, 'RC', 'Coordination of Nutrition Care',
-          'MDT roles \xb7 Paediatrics \xb7 Nursing \xb7 Lactation \xb7 Dietetics \xb7 Biochemical monitoring',
+          'NI-5 \xb7 MDT referrals \xb7 Paediatrics \xb7 Nursing \xb7 Lactation \xb7 Dietetics \xb7 Biochemical surveillance',
           '\ud83d\udd17', '#a78bfa', '167,139,250', fallbackRC()) +
 
         /* ── References ── */
@@ -612,10 +758,21 @@ function buildNeonateInterventionCard(P) {
     function _applyDomain(domId, text) {
       var el = document.getElementById(domId);
       if (!el) return;
-      var paras = text.split(/\n\n+/).map(function(p){ return p.trim(); }).filter(Boolean);
-      el.innerHTML = '<div class="nic-domain-text">' +
-        paras.map(function(p){ return '<p style="margin:0 0 10px;line-height:1.88">' + p + '</p>'; }).join('') +
-      '</div>';
+      // Parse lines: lines starting with ▸ / - / • / * are bullets; blank lines are separators
+      var lines = text.split(/\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+      var html = '<div class="nic-domain-text">';
+      lines.forEach(function(line) {
+        // Strip leading bullet markers to normalise
+        var cleaned = line.replace(/^[\u25b8\u2022\u2013\-\*]\s*/, '').trim();
+        if (!cleaned) return;
+        html += '<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;' +
+          'border-bottom:1px solid rgba(255,255,255,0.05);font-family:var(--mono);' +
+          'font-size:11px;color:var(--text);line-height:1.72">' +
+          '<span style="flex-shrink:0;color:var(--blue);font-weight:700;margin-top:1px">\u25b8</span>' +
+          '<span>' + cleaned + '</span></div>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
     }
 
     function _applyError(domId) {
@@ -629,71 +786,116 @@ function buildNeonateInterventionCard(P) {
 
     /* ── ND prompt ── */
     var ndPrompt =
-      'You are a senior neonatal dietitian writing the "Food and/or Nutrient Delivery (ND)" section of a Nutrition Care Process intervention plan for a TERM NEONATE (0\u201328 days old). ' +
-      'This section must be comprehensive \u2014 it encompasses feeding route rationale, volume and advancement strategy, fluid management, clinical adjustments, and monitoring guidance.\n\n' +
+      'You are a senior neonatal dietitian writing the "Food and/or Nutrient Delivery (ND)" section of a Nutrition Care Process intervention plan for a TERM NEONATE (0–28 days old).\n\n' +
       'CALCULATED DATA:\n' + ctx + '\n\n' +
-      'Write 4\u20135 substantial clinical paragraphs (no headings, no bullet points, no numbering) covering ALL of the following seamlessly:\n\n' +
-      'PARAGRAPH 1 \u2014 FEEDING ROUTE SELECTION & RATIONALE: Explain precisely WHY the selected feeding mode (' + P.feedLabel + ') is appropriate for this Day-' + P.ageDays + ' term neonate. Integrate the clinical justification based on age, current weight (' + P.wtG + ' g; ' + Math.abs(P.wtPctLoss).toFixed(1) + '% ' + (P.wtDelta < 0 ? 'loss' : 'gain') + ' from birth weight), clinical status (' + P.statusLabel + '), and diagnosis (' + (P.diag !== 'none' ? P.diagLabel : 'none') + '). ' +
-      (isCritical ? 'Clearly address why enteral feeds are contraindicated and what IV substrate is sustaining the infant metabolically.' :
-       isMeta ? 'Address the immediate requirement for specialised formula and why standard feeds are contraindicated.' :
-       isNGT ? 'Explain when NGT is indicated, how position is verified, and what tolerance markers should trigger feed advancement.' :
-       'Explain how ' + P.feedLabel.toLowerCase() + ' meets the nutritional and developmental needs of this neonate and why this route is appropriate now.') + '\n\n' +
-      'PARAGRAPH 2 \u2014 VOLUME, FREQUENCY & PROGRESSION: Describe how the total fluid target of ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day; AAP 2004 Day-' + P.ageDays + ' standard) should be achieved. ' +
-      (P.volPerFeed ? 'Address the ' + P.feedFreq + ' feeds/day structure delivering ' + P.volPerFeed + ' mL per feed. ' : '') +
-      'Contextualise the fluid progression across the neonatal period (Day 1: 60 mL/kg \u2192 Day 14: 150 mL/kg). ' +
-      'Explain how energy delivery (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg \xd7 ' + P.efMult.toFixed(2) + ' stress factor) and protein delivery (' + P.baseProtFact.toFixed(1) + ' g/kg/day) are met via ' + P.feedLabel.toLowerCase() + '. ' +
-      (P.excessLoss ? 'Specifically address the >10% weight loss scenario \u2014 describe supplemental feeding options (EBM via cup or NGT before formula) and escalation criteria.' :
-       isCritical ? 'Describe the minimum bowel rest duration, clinical/radiological criteria for enteral re-introduction, and the initial trophic volume approach.' : '') + '\n\n' +
-      'PARAGRAPH 3 \u2014 FLUID & GLUCOSE MANAGEMENT: Address the total fluid requirement (' + P.fluidML + ' mL/day = ' + P.fluidBase + ' mL/kg/day). ' +
-      (P.diag === 'hie' ? 'Explicitly address fluid restriction to 40\u201360 mL/kg/day during therapeutic hypothermia and the physiological rationale for limiting volume in the context of cerebral oedema risk. Address the post-rewarming fluid liberalisation protocol.' :
-       P.diag === 'chd_cyanotic' ? 'Address the fluid restriction to 100\u2013130 mL/kg/day in cyanotic CHD and the requirement for calorie-dense feeds (24 kcal/oz) to deliver adequate energy within this volume constraint.' :
-       'Explain how fluid targets advance day by day in the neonatal period (Day 1\u201314) and how oral feeding volumes track this progression as lactation is established.') +
-      ' Address blood glucose monitoring \u2014 target 2.6\u20135.5 mmol/L, monitoring frequency (q1\u20132h in high-risk scenarios), and intervention threshold (IV D10W 2 mL/kg for BGL <2.6 mmol/L). ' +
-      (P.diag === 'hypoglycaemia' ? 'Address the active hypoglycaemia management protocol: GIR 6\u20138 mg/kg/min, recheck 30 min post-adjustment, and transition timeline to enteral nutrition once glucose is stable.' : '') + '\n\n' +
-      'PARAGRAPH 4 \u2014 CLINICAL ADJUSTMENTS & CONDITION-SPECIFIC GUIDANCE: ' +
-      (P.diag !== 'none' ? 'Integrate the clinical adjustments required by ' + P.diagLabel + ' into the nutrition prescription. Address specifically how this diagnosis modifies energy (stress factor \xd7' + P.efMult.toFixed(2) + '), protein, fluid, or feeding route targets. Address what clinical markers should trigger reassessment of the nutrition plan.' :
-       'This is a well neonate \u2014 address physiological weight loss (normal up to 10%), the expected trajectory to birth weight recovery by Day 10\u201314, and the feeding practices that support this outcome.') +
-      ' Address micronutrient considerations: vitamin K given at birth, vitamin D supplementation (400 IU/day from birth in breastfed infants), and iron status in the neonatal period.\n\n' +
-      'PARAGRAPH 5 \u2014 MONITORING & ESCALATION: Detail the feeding and nutritional monitoring schedule. Daily weight targeting birth weight recovery by Day 10\u201314 (flag if loss >10% or trajectory is not reversing). Feed frequency and intake documentation. Urine output (\u22656 wet nappies/day after Day 3). Stool output (meconium by Day 1\u20132; transitional stools by Day 4\u20135). Blood glucose monitoring schedule. Growth tracking on WHO 2006 standards. Escalation criteria to paediatrics \u2014 weight loss >10%, persistent hypoglycaemia, clinical signs of dehydration, or clinical deterioration.\n\n' +
-      'Write as a clinician \u2014 precise, authoritative, evidence-based. Do NOT use bullet points. Do NOT use headings. Do NOT say "in conclusion". Do NOT mention AI.';
+      'OUTPUT FORMAT REQUIREMENTS (MANDATORY):\n' +
+      '- Use BULLET POINTS ONLY. Every intervention must be a single, separate bullet point.\n' +
+      '- Each bullet starts with a ▸ symbol (or plain hyphen).\n' +
+      '- Do NOT write paragraphs. Do NOT use headers or bold labels.\n' +
+      '- Each bullet must be concise (1–2 sentences), specific, measurable, and evidence-based.\n' +
+      '- Do NOT mention AI. Do NOT say "in conclusion".\n\n' +
+      'REQUIRED CONTENT — include a bullet for each area below:\n' +
+      '1. Feeding route rationale: why ' + P.feedLabel + ' is appropriate for this Day-' + P.ageDays + ' term neonate given weight (' + P.wtG + ' g; ' + Math.abs(P.wtPctLoss).toFixed(1) + '% ' + (P.wtDelta < 0 ? 'loss' : 'gain') + '), clinical status (' + P.statusLabel + '), and diagnosis (' + (P.diag !== 'none' ? P.diagLabel : 'none') + ').' +
+      (isCritical ? ' Explicitly state enteral feeds are contraindicated and what IV substrate is sustaining the infant.' :
+       isMeta ? ' State that standard feeds are contraindicated and why specialised formula is required immediately.' : '') + '\n' +
+      '2. Energy prescription: ' + P.energyKcal + ' kcal/day (' + energyKgStr + ' kcal/kg/day; base ' + P.baseEnergyFact + ' kcal/kg × ' + P.efMult.toFixed(2) + ' stress factor; IOM 2005) — state clinical justification.\n' +
+      '3. Protein prescription: ' + P.protG + ' g/day (' + P.baseProtFact.toFixed(1) + ' g/kg/day; IOM 2005) — state when to increase to ≥3.0 g/kg/day.\n' +
+      '4. Fluid management: total ' + P.fluidML + ' mL/day (' + P.fluidBase + ' mL/kg/day; AAP 2004 Day-' + P.ageDays + '); reference the Day 1–14 progressive fluid advancement schedule.' +
+      (P.diag === 'hie' ? ' Address fluid restriction to 40–60 mL/kg/day during therapeutic hypothermia.' :
+       P.diag === 'chd_cyanotic' ? ' Address fluid restriction to 100–130 mL/kg/day and requirement for 24 kcal/oz feeds.' : '') + '\n' +
+      (P.volPerFeed ? '5. Feed schedule: ' + P.volPerFeed + ' mL/feed × ' + P.feedFreq + ' feeds/day (q3h); advancement criteria.\n' : '') +
+      '6. Blood glucose monitoring: target 2.6–5.5 mmol/L; monitoring frequency; threshold for IV D10W intervention.' +
+      (P.diag === 'hypoglycaemia' ? ' Address active management: GIR 6–8 mg/kg/min, recheck 30 min post-adjustment.' : '') + '\n' +
+      (P.excessLoss ? '7. Management of weight loss >10%: supplemental EBM (cup/syringe) before formula; escalation criteria to paediatrics.\n' : '') +
+      (P.clinAdj ? '8. Condition-specific adjustment (' + P.diagLabel + '): ' + P.clinAdj + '\n' : '') +
+      '9. Micronutrient delivery: vitamin K at birth; vitamin D 400 IU/day from birth (breastfed infants, AAP 2022); iron status assessment in neonatal period.\n' +
+      '10. Monitoring and escalation: daily weight (target birth weight recovery Day 10–14); urine output (≥6 wet nappies/day after Day 3); stool output (meconium Day 1–2; transitional stools Day 4–5); escalation triggers (weight loss >10%, glucose instability, clinical deterioration).';
 
     /* ── E prompt ── */
     var ePrompt =
       'You are a senior neonatal dietitian writing the "Nutrition Education (E)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
       'CALCULATED DATA:\n' + ctx + '\n\n' +
-      'Write 2\u20133 concise, practical clinical paragraphs (no headings, no bullet points) covering education for nursing staff and caregivers:\n' +
-      '- ' + (isNGT ? 'NGT position verification (aspirate + pH confirmation before each feed), residual volume assessment (withhold if residual >50% of feed volume or bilious), feed administration technique at 30\u201345\xb0 elevation, and post-feed position' : 'Breastfeeding latch and effective milk transfer assessment, feeding frequency guidance (target \u22658 feeds/day for breastfed neonates), and signs of adequate feeding (audible swallowing, contentment, satiation cues)') + '\n' +
-      '- ' + (isEBF ? 'Breast milk expression frequency (every 2\u20133 hours including at night), correct storage (\u22644\xb0C for 24\u201348h; freeze \u226490 days), labelling, and handling hygiene for expressed breast milk' : 'Formula preparation \u2014 correct powder-to-water ratio, sterilisation of equipment, and safe feed temperature') + '\n' +
-      (P.excessLoss ? '- Supplementary feeding options when weight loss exceeds 10%: EBM via cup or syringe before formula supplementation is considered \u2014 technique, volume per supplementary feed, and documentation requirements\n' : '') +
-      '- Recognition of physiological weight loss (normal up to 10%) versus pathological loss requiring intervention; adequate feeding indicators (\u22656 wet nappies/day after Day 3, transitional stools by Day 4\u20135)\n' +
-      '- Blood glucose monitoring: target 2.6\u20135.5 mmol/L; when to alert the paediatric team; management of hypoglycaemic episode at the bedside\n' +
-      '- Kangaroo Mother Care: thermoregulation benefits, promotion of milk supply, bonding, and neurodevelopmental outcomes\n' +
-      (P.diag !== 'none' ? '- Condition-specific education for ' + P.diagLabel + ': key family awareness points, feeding adjustments required, and warning signs to escalate\n' : '') +
-      'Write as a clinician. No AI mention. No bullet points. No headings.';
+      'OUTPUT FORMAT REQUIREMENTS (MANDATORY):\n' +
+      '- Use BULLET POINTS ONLY. Every intervention must be a single, separate bullet point.\n' +
+      '- Each bullet starts with ▸ or a plain hyphen.\n' +
+      '- Do NOT write paragraphs. Do NOT use headers or bold labels.\n' +
+      '- Each bullet must be concise (1–2 sentences), actionable, and patient-centred.\n' +
+      '- Do NOT mention AI. Do NOT say "in conclusion".\n\n' +
+      'REQUIRED CONTENT — include a bullet for each area below:\n' +
+      (isNGT ?
+        '1. NGT position verification: aspirate confirmation + pH ≤5.5 before every feed; documentation requirements.\n' +
+        '2. Gastric residual assessment: withhold if residual >50% of feed volume or bilious; escalation protocol.\n' +
+        '3. Feed administration technique: head elevation 30–45°; post-feed positioning; flushing protocol.\n'
+      : isEBF ?
+        '1. Breastfeeding latch assessment: signs of effective attachment (wide gape, flanged lips, audible swallowing, maternal comfort).\n' +
+        '2. Feeding frequency guidance: target ≥8 breastfeeds/24 hours; feed on demand; avoid time restrictions.\n' +
+        '3. Breast milk expression: technique and frequency (every 2–3 hours including overnight); manual vs electric pump selection.\n' +
+        '4. EBM storage: cold chain (≤4°C ≤48h; −18°C ≤90 days); labelling with date/time/volume; safe warming technique.\n'
+      :
+        '1. Formula preparation: correct powder-to-water ratio; use of cooled boiled water; final temperature (≤37°C).\n' +
+        '2. Equipment sterilisation: sterilise all bottles, teats, and caps before each use; no microwave heating.\n' +
+        '3. Formula storage: discard unused formula within 1 hour of preparation or 24 hours if refrigerated.\n'
+      ) +
+      (P.excessLoss ? '- Supplementary feeding when weight loss >10%: EBM via cup or syringe preferred before formula; technique, volume, and documentation requirements.\n' : '') +
+      '- Adequate feeding indicators: ≥6 wet nappies/day after Day 3; meconium by Day 1–2; yellow transitional stools Day 4–5; contentment and audible swallowing.\n' +
+      '- Physiological weight loss: up to 10% of birth weight in Days 1–5 is normal; birth weight recovery expected by Day 10–14 (AAP 2012).\n' +
+      '- Blood glucose awareness: target 2.6–5.5 mmol/L; signs of hypoglycaemia (jitteriness, lethargy, poor colour); when to alert the paediatric team.\n' +
+      '- Kangaroo Mother Care: thermoregulation, milk supply stimulation, bonding, and neurodevelopmental benefits.\n' +
+      (P.diag !== 'none' ? '- Condition-specific education for ' + P.diagLabel + ': key family awareness points, required feeding adjustments, and warning signs to escalate.\n' : '') +
+      (isMeta ? '- URGENT: galactose/phenylalanine dietary restriction — provide written materials; confirm family understanding before discharge; standard feeds are strictly contraindicated.\n' : '');
 
     /* ── C prompt ── */
     var cPrompt =
       'You are a senior neonatal dietitian writing the "Nutrition Counseling (C)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
       'CALCULATED DATA:\n' + ctx + '\n\n' +
-      'Write 2\u20133 paragraphs of supportive, professional counseling-style narrative (no headings, no bullet points) addressing:\n' +
-      '- Phase-appropriate expectations: physiological weight loss up to 10% of birth weight is normal in the first 3\u20135 days of life; birth weight recovery by Day 10\u201314 is the target (AAP 2012). ' +
-      (P.excessLoss ? 'This infant has exceeded the 10% threshold \u2014 communicate clearly and compassionately what supplementation is required and why; frame this as a supported clinical plan rather than a failing.' : 'Current weight trajectory is within or approaching normal range \u2014 reinforce positive feeding behaviour and parental confidence.') + '\n' +
-      '- Feeding volume and frequency expectations as the infant grows through the neonatal period and how breastmilk or formula volume will increase in line with the fluid target (current target ' + P.fluidML + ' mL/day)\n' +
-      '- ' + (isEBF ? 'Breastfeeding support: normalising the early feeding establishment process; colostrum availability and importance in the first 1\u20133 days; the role of feeding frequency in stimulating and sustaining milk supply; reassurance that small volumes in Days 1\u20132 are physiologically appropriate; importance of Kangaroo Mother Care and skin-to-skin for supply and bonding' : 'Formula feeding: preparation accuracy, responsive feeding recognising hunger and satiety cues, and how to adjust volumes as the infant grows') + '\n' +
-      '- ' + (P.diag !== 'none' ? 'Family communication regarding ' + P.diagLabel + ': setting realistic expectations for the feeding journey, what changes families will observe during the clinical course, and distinguishing expected variation from concerning changes requiring escalation' : 'Discharge preparation: growth monitoring plan, vitamin D supplementation schedule (400 IU/day if breastfed), and community dietetic or GP follow-up referral') + '\n' +
-      'Write in a reassuring but clinically rigorous tone. Do NOT mention AI. Do NOT use bullet points.';
+      'OUTPUT FORMAT REQUIREMENTS (MANDATORY):\n' +
+      '- Use BULLET POINTS ONLY. Every intervention must be a single, separate bullet point.\n' +
+      '- Each bullet starts with ▸ or a plain hyphen.\n' +
+      '- Do NOT write paragraphs. Do NOT use headers or bold labels.\n' +
+      '- Each bullet must be concise (1–2 sentences), patient-centred, and supportive in tone.\n' +
+      '- Do NOT mention AI. Do NOT say "in conclusion".\n\n' +
+      'REQUIRED CONTENT — include a bullet for each area below:\n' +
+      '1. Weight and growth expectations: physiological weight loss up to 10% in Days 1–5 is normal; birth weight recovery target Day 10–14 (AAP 2012).\n' +
+      (P.excessLoss ?
+        '2. Weight loss >10% intervention: communicate clearly and compassionately that supplementation is required; frame as a supported clinical plan, not a parental failing.\n' :
+        '2. Reinforce positive trajectory: current weight pattern is within or approaching the physiological range — reinforce parental confidence.\n') +
+      '3. Feeding volume and frequency goals: ' + P.feedFreq + ' feeds/day delivering ' + P.fluidML + ' mL/day; explain progressive fluid advancement across the neonatal period (Day 1 → Day 14).\n' +
+      (isEBF ?
+        '4. Breastfeeding establishment: normalise the early process; explain colostrum\'s immunological value; emphasise that frequent suckling drives lactogenesis II.\n' +
+        '5. Cluster feeding and night feeds: explain these are normal and supply-building behaviours; encourage skin-to-skin and Kangaroo Mother Care.\n'
+      :
+        '4. Formula feeding — responsive feeding technique: recognise hunger cues (rooting, hand-to-mouth) and satiety cues (turning away, relaxed hands); never force feeds.\n' +
+        '5. Volume adjustment: confirm formula preparation accuracy; advise incremental volume increases in line with weekly weight gain.\n'
+      ) +
+      (P.diag !== 'none' ?
+        '6. Condition-specific family communication — ' + P.diagLabel + ': set realistic expectations for the feeding journey; explain observable changes during the clinical course; distinguish expected variation from warning signs requiring escalation.\n'
+      : '') +
+      '- Discharge preparation: confirm weekly weight monitoring plan for first 4 weeks; prescribe vitamin D 400 IU/day (breastfed; AAP 2022); arrange community dietetics or GP follow-up; provide written feeding plan.\n' +
+      '- Psychosocial screening: identify maternal anxiety, socioeconomic barriers, or lack of support network affecting feeding; refer to social work or community lactation support as appropriate.\n';
 
     /* ── RC prompt ── */
     var rcPrompt =
       'You are a senior neonatal dietitian writing the "Coordination of Nutrition Care (RC)" section of a Nutrition Care Process intervention plan for a TERM NEONATE.\n\n' +
       'CALCULATED DATA:\n' + ctx + '\n\n' +
-      'Write 2\u20133 paragraphs (no headings, no bullet points) covering multidisciplinary coordination:\n' +
-      '- Paediatrics/Neonatology: feeding route decisions, management of ' + (P.diag !== 'none' ? P.diagLabel : 'any emerging clinical complications') + ', prescription of IV dextrose supplementation if required, and escalation of nutrition concerns\n' +
-      '- Nursing: bedside feed implementation (' + P.feedLabel + '), intake and weight documentation, blood glucose monitoring, feeding tolerance observations, and handover communication protocol\n' +
-      '- Lactation: breastfeeding support' + (isEBF ? ' (milk expression guidance, supply optimisation, cup-feeding technique, direct breastfeeding transition planning)' : ' (transition to direct breastfeeding at discharge if formula-fed for clinical reasons)') + '\n' +
-      (isMeta ? '- Metabolic team and Dietetics: URGENT referral \u2014 specialised formula prescription and dietary restriction education cannot be delayed; metabolic crisis risk if not acted on immediately\n' : '- Dietetics: nutrition care plan review at each clinical encounter, feed volume advancement monitoring, growth trajectory on WHO 2006 standards, discharge nutrition plan preparation\n') +
-      '- Biochemical and clinical monitoring schedule: daily weight (target birth weight recovery by Day 10\u201314); urine output (\u22656 wet nappies/day after Day 3); stool output (meconium by Day 1\u20132; transitional stools by Day 4\u20135); blood glucose as indicated; escalation triggers to paediatrics: weight loss >10%, persistent glucose instability, or clinical deterioration\n' +
-      'Write with clinical authority. Do NOT mention AI. Do NOT use bullet points.';
+      'OUTPUT FORMAT REQUIREMENTS (MANDATORY):\n' +
+      '- Use BULLET POINTS ONLY. Every intervention must be a single, separate bullet point.\n' +
+      '- Each bullet starts with ▸ or a plain hyphen.\n' +
+      '- Do NOT write paragraphs. Do NOT use headers or bold labels.\n' +
+      '- Each bullet must be concise (1–2 sentences), action-oriented, and assigned to a specific MDT role.\n' +
+      '- Do NOT mention AI. Do NOT say "in conclusion".\n\n' +
+      'REQUIRED CONTENT — include a bullet for each MDT role and monitoring area below:\n' +
+      '1. Paediatrics/Neonatology: feeding route decisions; prescribe IV dextrose or PN if EN contraindicated; manage ' + (P.diag !== 'none' ? P.diagLabel : 'emerging complications') + '; authorise nutrition prescription changes at each clinical review.\n' +
+      '2. Nursing: implement ' + P.feedLabel + ' at bedside; document daily weight, feed frequency, volume intake, urine/stool output, and gastric residuals (if NGT); monitor blood glucose per schedule; include feeding tolerance in every shift handover.\n' +
+      '3. Lactation consultant: ' + (isEBF ? 'provide milk expression guidance (frequency, technique, storage); assess latch and milk transfer; teach cup-feeding supplementation technique; plan direct breastfeeding transition at discharge.' : 'support potential transition to direct breastfeeding at discharge; advise on milk expression to preserve supply if formula used for clinical reasons.') + '\n' +
+      (isMeta ?
+        '4. Metabolic Dietetics — URGENT: specialised formula prescription and dietary restriction education cannot be delayed; metabolic crisis risk if standard feeds are not immediately discontinued.\n'
+      :
+        '4. Dietetics: review NCP at every clinical encounter; monitor feed advancement and growth on WHO 2006 standards; prepare discharge nutrition plan with community follow-up and vitamin D prescription.\n'
+      ) +
+      '5. Biochemical monitoring — daily weight: target birth weight recovery Day 10–14; flag if >10% loss or trajectory not reversing.\n' +
+      '6. Biochemical monitoring — urine output: ≥6 wet nappies/day after Day 3; stool output: meconium Day 1–2, yellow transitional stools Day 4–5.\n' +
+      '7. Biochemical monitoring — blood glucose: target 2.6–5.5 mmol/L; monitor q1–2h if high-risk (HIE, hypoglycaemia, IUGR, SGA, IDM); threshold for IV D10W is BGL <2.6 mmol/L.\n' +
+      '8. Escalation triggers: weight loss >10%, persistent glucose instability, failure to regain birth weight by Day 14, or clinical deterioration — escalate to paediatrics immediately.\n';
 
     /* ── Fire all 4 domain AI calls ── */
     var domains = [
