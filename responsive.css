@@ -486,6 +486,22 @@
   #settings-drawer { width: 480px; right: -500px; }
   #settings-drawer.open { right: 0; }
 
+  /* ── Feature row: Recipe / Assessment / Oasis AI — one row on desktop ── */
+  #hp-feature-row {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: stretch;
+  }
+  #hp-feature-row .hp-feature-card {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  #hp-feature-row .hp-assess-entry {
+    height: 100%;
+    box-sizing: border-box;
+  }
+
   /* Sub-module topbar */
   .tab-topbar       { padding: 13px 24px; }
   .tab-topbar-label { font-size: 14px; }

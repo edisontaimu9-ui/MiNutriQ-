@@ -2503,8 +2503,9 @@ var photoCropper = (function () {
   </div>
 
   <!-- ── RECIPE TOOLS ── -->
-  <div class="hp-section-title" style="margin-top:24px">Recipe Tools</div>
-  <div style="padding:0 16px;margin-bottom:4px">
+  <div class="hp-section-title" style="margin-top:24px">Tools &amp; Assistant</div>
+  <div id="hp-feature-row" style="padding:0 16px;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="switchTab('recipe')" role="button" tabindex="0"
       aria-label="Open Recipe Calculator"
       onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('recipe')"
@@ -2533,11 +2534,10 @@ var photoCropper = (function () {
         </svg>
       </div>
     </div>
-  </div>
+  </div><!-- /.hp-feature-card recipe -->
 
   <!-- ── ASSESSMENT TOOLS ── -->
-  <div class="hp-section-title" style="margin-top:24px">Assessment Tools</div>
-  <div style="padding:0 16px;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="switchTab('assessments')" role="button" tabindex="0" aria-label="Open Assessment Tools">
       <div class="hp-assess-icon-wrap">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2558,11 +2558,10 @@ var photoCropper = (function () {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
-  </div>
-
+  </div><!-- /.hp-feature-card assessment -->
 
   <!-- ── OASIS AI CARD ── -->
-  <div style="padding:0 16px;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="openOasisAIPanel()" role="button" tabindex="0" aria-label="Open Oasis AI Assistant" onkeydown="if(event.key==='Enter'||event.key===' ')openOasisAIPanel()">
       <div class="hp-assess-icon-wrap" style="background:#08111f;border-color:rgba(29,233,212,0.2);overflow:hidden">
         <svg width="28" height="28" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -2592,7 +2591,8 @@ var photoCropper = (function () {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
-  </div>
+  </div><!-- /.hp-feature-card oasis-ai -->
+  </div><!-- /#hp-feature-row -->
 
   <!-- ── QUICK ACCESS ── -->
   <div class="hp-section-title" style="margin-top:24px">Information</div>
