@@ -887,6 +887,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── BOTTOM NAV SCROLL FADE INDICATORS ────────────────────────
 window._bnavUpdateFades = function() {
+  // Fade indicators only needed on mobile (horizontal scroll nav)
+  if (window.matchMedia('(min-width: 62em)').matches) return;
   const nav = document.getElementById('bottom-nav-scroll');
   const fadeL = document.getElementById('bnav-fade-left');
   const fadeR = document.getElementById('bnav-fade-right');
@@ -1688,25 +1690,28 @@ function switchTab(tab) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
-  // Activate matching bottom-nav tab + scroll it into view
+  // Activate matching bottom-nav tab + scroll it into view (mobile only)
+  const _isDesktop = window.matchMedia('(min-width: 62em)').matches;
   document.querySelectorAll('.bottom-nav .tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) {
       t.classList.add('active');
-      // Scroll active tab into view smoothly
-      try {
-        const nav = document.getElementById('bottom-nav-scroll');
-        if (nav) {
-          const tabLeft = t.offsetLeft;
-          const tabWidth = t.offsetWidth;
-          const navWidth = nav.offsetWidth;
-          const scrollTarget = tabLeft - (navWidth / 2) + (tabWidth / 2);
-          nav.scrollTo({ left: scrollTarget, behavior: 'smooth' });
-        }
-      } catch(e) {}
+      // Horizontal scroll only needed on mobile — sidebar layout handles desktop
+      if (!_isDesktop) {
+        try {
+          const nav = document.getElementById('bottom-nav-scroll');
+          if (nav) {
+            const tabLeft = t.offsetLeft;
+            const tabWidth = t.offsetWidth;
+            const navWidth = nav.offsetWidth;
+            const scrollTarget = tabLeft - (navWidth / 2) + (tabWidth / 2);
+            nav.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+          }
+        } catch(e) {}
+      }
     }
   });
-  // Update fade indicators after scroll settles
-  try { _bnavUpdateFades(); } catch(e) {}
+  // Update fade indicators after scroll settles (mobile only)
+  if (!_isDesktop) { try { _bnavUpdateFades(); } catch(e) {} }
 
   const el = document.getElementById('tab-' + tab);
   if (el) el.classList.add('active');
