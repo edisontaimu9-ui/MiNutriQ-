@@ -2639,76 +2639,127 @@ var photoCropper = (function () {
 
   <!-- ── FOOTER ── -->
   <div class="hp-footer">
-    <!-- Social icon row -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px">
 
-      <!-- Email -->
-      <a href="mailto:supportoasiscnst@gmail.com" title="Email" target="_blank" rel="noopener" aria-label="Email"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.20);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(29,233,212,0.18)';this.style.borderColor='rgba(29,233,212,0.50)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(29,233,212,0.08)';this.style.borderColor='rgba(29,233,212,0.20)';this.style.transform='translateY(0)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1de9d4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      </a>
+    <!-- ① Brand identity row -->
+    <div class="hpf-brand">
+      <div class="hpf-brand-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      </div>
+      <div>
+        <div class="hpf-brand-name">Oasis CNST</div>
+        <div class="hpf-brand-tagline">Evidence-based clinical nutrition support for Malawi.</div>
+      </div>
+    </div>
 
-      <!-- WhatsApp -->
-      <a href="https://wa.me/265881752084" title="WhatsApp" target="_blank" rel="noopener" aria-label="WhatsApp"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.20);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(37,211,102,0.18)';this.style.borderColor='rgba(37,211,102,0.50)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(37,211,102,0.08)';this.style.borderColor='rgba(37,211,102,0.20)';this.style.transform='translateY(0)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      </a>
+    <!-- ② Link columns -->
+    <div class="hpf-links-grid">
 
-      <!-- LinkedIn -->
-      <a href="https://www.linkedin.com/in/edison-taimu-a37415367?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" title="LinkedIn" target="_blank" rel="noopener" aria-label="LinkedIn"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(10,102,194,0.08);border:1px solid rgba(10,102,194,0.22);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(10,102,194,0.18)';this.style.borderColor='rgba(10,102,194,0.55)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(10,102,194,0.08)';this.style.borderColor='rgba(10,102,194,0.22)';this.style.transform='translateY(0)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-      </a>
+      <div class="hpf-col">
+        <div class="hpf-col-heading">Platform</div>
+        <button type="button" class="hpf-link" onclick="openUserGuide()">User Guide</button>
+        <button type="button" class="hpf-link" onclick="window.pwaInstall?window.pwaInstall():showToast('Install option available in browser address bar','info')">Install App</button>
+        <button type="button" class="hpf-link" onclick="openAbout()">About Oasis</button>
+      </div>
 
-      <!-- X / Twitter -->
-      <a href="https://x.com/edisontaimu" title="X (Twitter)" target="_blank" rel="noopener" aria-label="X Twitter"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.35)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.12)';this.style.transform='translateY(0)'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#e7e9ea" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      </a>
+      <div class="hpf-col">
+        <div class="hpf-col-heading">Legal</div>
+        <button type="button" class="hpf-link" onclick="openLegalModal('terms')">Terms of Use</button>
+        <button type="button" class="hpf-link" onclick="openLegalModal('privacy')">Privacy Policy</button>
+      </div>
 
-      <!-- Facebook -->
-      <a href="https://www.facebook.com/Edison.Taimu" title="Facebook" target="_blank" rel="noopener" aria-label="Facebook"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(24,119,242,0.08);border:1px solid rgba(24,119,242,0.20);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(24,119,242,0.18)';this.style.borderColor='rgba(24,119,242,0.50)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(24,119,242,0.08)';this.style.borderColor='rgba(24,119,242,0.20)';this.style.transform='translateY(0)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-      </a>
-
-      <!-- GitHub -->
-      <a href="https://github.com/edisontaimu9-ui" title="GitHub" target="_blank" rel="noopener" aria-label="GitHub"
-        style="width:36px;height:36px;border-radius:10px;background:rgba(240,246,252,0.05);border:1px solid rgba(240,246,252,0.12);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .15s;-webkit-tap-highlight-color:transparent"
-        onmouseover="this.style.background='rgba(240,246,252,0.12)';this.style.borderColor='rgba(240,246,252,0.35)';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='rgba(240,246,252,0.05)';this.style.borderColor='rgba(240,246,252,0.12)';this.style.transform='translateY(0)'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9d1d9" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-      </a>
+      <div class="hpf-col">
+        <div class="hpf-col-heading">Support</div>
+        <a href="mailto:supportoasiscnst@gmail.com" class="hpf-link">Contact Us</a>
+        <a href="https://wa.me/265881752084" target="_blank" rel="noopener" class="hpf-link">WhatsApp</a>
+      </div>
 
     </div>
 
-    <!-- Divider -->
-    <div style="height:1px;background:rgba(255,255,255,0.06);margin:0 0 12px"></div>
+    <!-- ③ Connect / social icons — 3-column grid -->
+    <div class="hpf-connect-section">
+      <div class="hp-footer-connect-label">Connect</div>
+      <div class="hpf-social-grid">
 
-    Oasis · Clinical Nutrition Decision Support System<br>
-    &copy; 2026 All Rights Reserved<br>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:6px">
-      <button type="button" onclick="openLegalModal('terms')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Terms</button>
-      <span style="opacity:.4">·</span>
-      <button type="button" onclick="openLegalModal('privacy')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Privacy Policy</button>
-      <span style="opacity:.4">·</span>
-      <button type="button" onclick="openUserGuide()" style="display:inline-flex;align-items:center;gap:4px;background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.25);color:var(--teal);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.8px;cursor:pointer;padding:5px 10px;border-radius:6px;opacity:.9;transition:all .15s"
-        onmouseover="this.style.background='rgba(29,233,212,0.14)';this.style.borderColor='rgba(29,233,212,0.5)';this.style.opacity='1'"
-        onmouseout="this.style.background='rgba(29,233,212,0.07)';this.style.borderColor='rgba(29,233,212,0.25)';this.style.opacity='.9'">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        USER GUIDE
-      </button>
+        <!-- Email -->
+        <div class="hpf-social-col">
+          <a href="mailto:supportoasiscnst@gmail.com" title="Email" target="_blank" rel="noopener" aria-label="Email"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.20)"
+            onmouseover="this.style.background='rgba(29,233,212,0.18)';this.style.borderColor='rgba(29,233,212,0.50)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(29,233,212,0.08)';this.style.borderColor='rgba(29,233,212,0.20)';this.style.transform='translateY(0)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1de9d4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </a>
+          <span class="hpf-social-label">Email</span>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="hpf-social-col">
+          <a href="https://wa.me/265881752084" title="WhatsApp" target="_blank" rel="noopener" aria-label="WhatsApp"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.20)"
+            onmouseover="this.style.background='rgba(37,211,102,0.18)';this.style.borderColor='rgba(37,211,102,0.50)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(37,211,102,0.08)';this.style.borderColor='rgba(37,211,102,0.20)';this.style.transform='translateY(0)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+          <span class="hpf-social-label">WhatsApp</span>
+        </div>
+
+        <!-- LinkedIn -->
+        <div class="hpf-social-col">
+          <a href="https://www.linkedin.com/in/edison-taimu-a37415367?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" title="LinkedIn" target="_blank" rel="noopener" aria-label="LinkedIn"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(10,102,194,0.08);border:1px solid rgba(10,102,194,0.22)"
+            onmouseover="this.style.background='rgba(10,102,194,0.18)';this.style.borderColor='rgba(10,102,194,0.55)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(10,102,194,0.08)';this.style.borderColor='rgba(10,102,194,0.22)';this.style.transform='translateY(0)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <span class="hpf-social-label">LinkedIn</span>
+        </div>
+
+        <!-- X / Twitter -->
+        <div class="hpf-social-col">
+          <a href="https://x.com/edisontaimu" title="X (Twitter)" target="_blank" rel="noopener" aria-label="X Twitter"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12)"
+            onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.35)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.12)';this.style.transform='translateY(0)'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#e7e9ea" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <span class="hpf-social-label">X / Twitter</span>
+        </div>
+
+        <!-- Facebook -->
+        <div class="hpf-social-col">
+          <a href="https://www.facebook.com/Edison.Taimu" title="Facebook" target="_blank" rel="noopener" aria-label="Facebook"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(24,119,242,0.08);border:1px solid rgba(24,119,242,0.20)"
+            onmouseover="this.style.background='rgba(24,119,242,0.18)';this.style.borderColor='rgba(24,119,242,0.50)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(24,119,242,0.08)';this.style.borderColor='rgba(24,119,242,0.20)';this.style.transform='translateY(0)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <span class="hpf-social-label">Facebook</span>
+        </div>
+
+        <!-- GitHub -->
+        <div class="hpf-social-col">
+          <a href="https://github.com/edisontaimu9-ui" title="GitHub" target="_blank" rel="noopener" aria-label="GitHub"
+            class="hpf-social-icon-wrap"
+            style="background:rgba(240,246,252,0.05);border:1px solid rgba(240,246,252,0.12)"
+            onmouseover="this.style.background='rgba(240,246,252,0.12)';this.style.borderColor='rgba(240,246,252,0.35)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.background='rgba(240,246,252,0.05)';this.style.borderColor='rgba(240,246,252,0.12)';this.style.transform='translateY(0)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9d1d9" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </a>
+          <span class="hpf-social-label">GitHub</span>
+        </div>
+
+      </div>
     </div>
+
+    <!-- ④ Bottom copyright bar -->
+    <div class="hpf-copyright">
+      &copy; 2026 Oasis CNST. All rights reserved.
+    </div>
+
   </div>
 
 </div><!-- /tab-home -->
@@ -10224,6 +10275,14 @@ function ntClear(scopeId, resultIds) {
   </div>
 
 </div><!-- /tab-nfpe -->
+
+<!-- ════════════════════════════════════════════════════════════
+     GLOBAL PAGE FOOTER — always the last element in the page
+     ════════════════════════════════════════════════════════════ -->
+<footer id="page-footer" role="contentinfo">
+  <span class="page-footer-text">&copy; 2026 All Rights Reserved</span>
+</footer>
+<!-- ════════════════════════════════════════════════════════════ -->
 
 <!-- ═══════════════════════════════════════════════════════════════════════
      LIVE FOOD SEARCH — Floating left-side drawer (standalone, global)
