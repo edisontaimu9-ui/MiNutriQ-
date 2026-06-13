@@ -1875,19 +1875,100 @@ var photoCropper = (function () {
       <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 0">
 
         <!-- Contact -->
-        <div style="padding:14px 16px;background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden">
+        <div style="background:var(--surface2);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-md);position:relative;overflow:hidden">
           <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue))"></div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px">CONTACT THE DEVELOPER</span>
+          <div style="padding:14px 16px 10px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px">CONNECT WITH THE DEVELOPER</span>
+            </div>
+            <div style="font-family:var(--sans);font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:12px">
+              Reach out via any channel below — for support, collaboration, or just to say hi.
+            </div>
           </div>
-          <div style="font-family:var(--sans);font-size:12px;color:var(--text);line-height:1.75;margin-bottom:12px;padding:10px 12px;background:rgba(29,233,212,0.05);border-left:2px solid var(--teal);border-radius:0 var(--r-sm) var(--r-sm) 0">
-            <strong style="color:var(--teal)">Love using Oasis?</strong> Your donations keep the lights on and the updates coming. Drop an email — every bit of support is deeply appreciated.
-          </div>
-          <a href="mailto:edisontaimu9@gmail.com" style="display:flex;align-items:center;gap:10px;background:rgba(2,6,23,0.7);border:1px solid rgba(29,233,212,0.22);border-radius:var(--r-sm);padding:10px 12px;text-decoration:none;box-sizing:border-box;width:100%;overflow:hidden" onmouseover="this.style.borderColor='rgba(29,233,212,0.5)'" onmouseout="this.style.borderColor='rgba(29,233,212,0.22)'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">edisontaimu9@gmail.com</span>
-          </a>
+
+          <!-- Social grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(29,233,212,0.08);border-top:1px solid rgba(29,233,212,0.10)">
+
+            <!-- Email -->
+            <a href="mailto:supportoasiscnst@gmail.com" title="Email" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(29,233,212,0.06)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(29,233,212,0.10);border:1px solid rgba(29,233,212,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1de9d4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#1de9d4;letter-spacing:.8px;margin-bottom:1px">EMAIL</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">supportoasiscnst@gmail.com</div>
+              </div>
+            </a>
+
+            <!-- WhatsApp -->
+            <a href="https://wa.me/265881752084" title="WhatsApp" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(37,211,102,0.06)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(37,211,102,0.10);border:1px solid rgba(37,211,102,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#25D366;letter-spacing:.8px;margin-bottom:1px">WHATSAPP</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">+265 881 752 084</div>
+              </div>
+            </a>
+
+            <!-- LinkedIn -->
+            <a href="https://www.linkedin.com/in/edison-taimu-a37415367?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" title="LinkedIn" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(10,102,194,0.1)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(10,102,194,0.12);border:1px solid rgba(10,102,194,0.28);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#0A66C2;letter-spacing:.8px;margin-bottom:1px">LINKEDIN</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Edison Taimu</div>
+              </div>
+            </a>
+
+            <!-- GitHub -->
+            <a href="https://github.com/edisontaimu9-ui" title="GitHub" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(240,246,252,0.06)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(240,246,252,0.07);border:1px solid rgba(240,246,252,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e6edf3" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#e6edf3;letter-spacing:.8px;margin-bottom:1px">GITHUB</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">edisontaimu9-ui</div>
+              </div>
+            </a>
+
+            <!-- X / Twitter -->
+            <a href="https://x.com/edisontaimu" title="X (Twitter)" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:1px">X / TWITTER</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@edisontaimu</div>
+              </div>
+            </a>
+
+            <!-- Facebook -->
+            <a href="https://www.facebook.com/Edison.Taimu" title="Facebook" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface2);text-decoration:none;transition:background .15s;-webkit-tap-highlight-color:transparent"
+              onmouseover="this.style.background='rgba(24,119,242,0.08)'" onmouseout="this.style.background='var(--surface2)'">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(24,119,242,0.10);border:1px solid rgba(24,119,242,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              </span>
+              <div style="overflow:hidden;min-width:0">
+                <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:#1877F2;letter-spacing:.8px;margin-bottom:1px">FACEBOOK</div>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Edison Taimu</div>
+              </div>
+            </a>
+
+          </div><!-- /social grid -->
         </div>
 
         <!-- Feedback -->
@@ -2702,9 +2783,18 @@ var photoCropper = (function () {
   <div class="hp-footer">
     Oasis · Clinical Nutrition Decision Support System<br>
     &copy; 2026 All Rights Reserved<br>
-    <button type="button" onclick="openLegalModal('terms')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Terms</button>
-    &nbsp;&middot;&nbsp;
-    <button type="button" onclick="openLegalModal('privacy')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Privacy Policy</button>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <button type="button" onclick="openLegalModal('terms')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Terms</button>
+      <span style="opacity:.4">·</span>
+      <button type="button" onclick="openLegalModal('privacy')" style="background:none;border:none;color:var(--teal);font-family:var(--mono);font-size:9px;cursor:pointer;padding:0;text-decoration:underline;opacity:.85">Privacy Policy</button>
+      <span style="opacity:.4">·</span>
+      <button type="button" onclick="openUserGuide()" style="display:inline-flex;align-items:center;gap:4px;background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.25);color:var(--teal);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.8px;cursor:pointer;padding:5px 10px;border-radius:6px;opacity:.9;transition:all .15s"
+        onmouseover="this.style.background='rgba(29,233,212,0.14)';this.style.borderColor='rgba(29,233,212,0.5)';this.style.opacity='1'"
+        onmouseout="this.style.background='rgba(29,233,212,0.07)';this.style.borderColor='rgba(29,233,212,0.25)';this.style.opacity='.9'">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        USER GUIDE
+      </button>
+    </div>
   </div>
 
 </div><!-- /tab-home -->
@@ -12545,6 +12635,436 @@ function ntClear(scopeId, resultIds) {
   }
 </script>
 <!-- ════════════ END BUY ME A SNACK FAB ════════════ -->
+
+<!-- ════════════ USER GUIDE MODAL ════════════ -->
+<div id="userguide-overlay" role="dialog" aria-modal="true" aria-label="Oasis User Guide" style="
+  display:none;position:fixed;inset:0;z-index:9995;
+  background:rgba(2,6,23,0.80);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  overflow-y:auto;overscroll-behavior:contain;
+">
+  <div style="min-height:100%;display:flex;align-items:flex-end;justify-content:center">
+    <div style="
+      width:100%;max-width:680px;
+      background:var(--bg,#020617);
+      border-radius:20px 20px 0 0;
+      border-top:2px solid rgba(29,233,212,0.20);
+      padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);
+      position:relative;
+      animation:ugPanelUp .30s cubic-bezier(.22,.68,0,1.2);
+      max-height:92vh;
+      display:flex;
+      flex-direction:column;
+    ">
+      <!-- Header bar -->
+      <div style="
+        padding:14px 16px 12px;
+        display:flex;align-items:center;justify-content:space-between;
+        border-bottom:1px solid rgba(29,233,212,0.10);
+        flex-shrink:0;
+        background:var(--surface,#0b1526);
+        border-radius:20px 20px 0 0;
+        position:sticky;top:0;z-index:10;
+      ">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(29,233,212,0.10);border:1px solid rgba(29,233,212,0.25);display:flex;align-items:center;justify-content:center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1de9d4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div>
+            <div style="font-family:var(--cond,'Syne',sans-serif);font-size:14px;font-weight:800;color:#1de9d4;letter-spacing:0.5px;line-height:1.2">User Guide</div>
+            <div style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:8.5px;color:var(--text-muted,#64748b);letter-spacing:.8px">OASIS CNST · 18 MODULES</div>
+          </div>
+        </div>
+        <button onclick="closeUserGuide()" aria-label="Close User Guide" style="
+          background:rgba(248,113,113,0.08);
+          border:1px solid rgba(248,113,113,0.28);
+          cursor:pointer;padding:7px 14px;border-radius:8px;
+          color:rgba(248,113,113,0.80);
+          font-family:var(--mono,'JetBrains Mono',monospace);
+          font-size:9px;font-weight:700;letter-spacing:1px;line-height:1;
+          min-width:64px;min-height:32px;
+          transition:all .15s;
+        "
+        onmouseover="this.style.background='rgba(248,113,113,0.18)';this.style.color='rgba(248,113,113,1)'"
+        onmouseout="this.style.background='rgba(248,113,113,0.08)';this.style.color='rgba(248,113,113,0.80)'"
+        >✕ CLOSE</button>
+      </div>
+
+      <!-- Scrollable content -->
+      <div style="overflow-y:auto;flex:1;padding:0 16px 8px;overscroll-behavior:contain">
+
+        <!-- TOC pill strip -->
+        <div style="padding:14px 0 10px">
+          <div style="font-family:var(--mono,'JetBrains Mono',monospace);font-size:8px;font-weight:700;color:var(--text-muted,#64748b);letter-spacing:1.5px;margin-bottom:8px">QUICK JUMP</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <button onclick="ugScrollTo('ug-home')" class="ug-pill">Home</button>
+            <button onclick="ugScrollTo('ug-adult')" class="ug-pill">Adult Calc</button>
+            <button onclick="ugScrollTo('ug-pedi')" class="ug-pill">Pediatric</button>
+            <button onclick="ugScrollTo('ug-en')" class="ug-pill">Enteral</button>
+            <button onclick="ugScrollTo('ug-anthro')" class="ug-pill">Anthropometry</button>
+            <button onclick="ugScrollTo('ug-pn')" class="ug-pill">Parenteral</button>
+            <button onclick="ugScrollTo('ug-screen')" class="ug-pill">Screening</button>
+            <button onclick="ugScrollTo('ug-dni')" class="ug-pill">DNI</button>
+            <button onclick="ugScrollTo('ug-nfpe')" class="ug-pill">NFPE</button>
+            <button onclick="ugScrollTo('ug-meal')" class="ug-pill">Meal Planner</button>
+            <button onclick="ugScrollTo('ug-recall')" class="ug-pill">24-h Recall</button>
+            <button onclick="ugScrollTo('ug-recipe')" class="ug-pill">Recipe Calc</button>
+            <button onclick="ugScrollTo('ug-assess')" class="ug-pill">SGA/MNA/PG-SGA</button>
+            <button onclick="ugScrollTo('ug-fooddb')" class="ug-pill">Food DB</button>
+            <button onclick="ugScrollTo('ug-history')" class="ug-pill">History</button>
+            <button onclick="ugScrollTo('ug-ref')" class="ug-pill">Reference</button>
+            <button onclick="ugScrollTo('ug-lib')" class="ug-pill">Library</button>
+            <button onclick="ugScrollTo('ug-ai')" class="ug-pill">Oasis AI</button>
+          </div>
+        </div>
+
+        <div style="height:1px;background:rgba(29,233,212,0.08);margin:0 0 16px"></div>
+
+        <!-- ── 1. HOME ── -->
+        <div id="ug-home" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">01</span>Home</div>
+          <p class="ug-body">The Home screen is your dashboard and launchpad. At the top is a quick food search bar (with barcode scanning) that checks the Malawi FCT, UCT Exchange Lists, and USDA FoodData Central in sequence.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Section</th><th>What's inside</th></tr></thead><tbody>
+              <tr><td>Recent Activity</td><td>Your last calculations and saved records, with quick-resume links</td></tr>
+              <tr><td>Clinical Tools</td><td>NFPE, Meal Planner, and 24-Hour Dietary Recall</td></tr>
+              <tr><td>Tools & Assistant</td><td>Recipe Calculator, Assessment Tools (SGA, MNA, PG-SGA), and Oasis AI</td></tr>
+              <tr><td>Information</td><td>Food Database, History, and Reference (guideline library)</td></tr>
+              <tr><td>From the Developer</td><td>A short note from the app's creator</td></tr>
+            </tbody></table>
+          </div>
+          <div class="ug-tip">Use Home as your starting point whenever you're unsure where a tool lives — almost every module is one tap away.</div>
+        </div>
+
+        <!-- ── 2. ADULT ── -->
+        <div id="ug-adult" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">02</span>Adult Nutrition Calculator</div>
+          <p class="ug-body">The core clinical engine, organized in ADIME format (Assessment → Diagnosis → Intervention → Monitoring).</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Input Card</th><th>Fields</th></tr></thead><tbody>
+              <tr><td>Patient</td><td>Name/ID, age, sex, condition/diagnosis, ward/unit</td></tr>
+              <tr><td>Anthropometrics</td><td>Height, weight, admit weight, UBW, EDW, MUAC, waist, oedema grade</td></tr>
+              <tr><td>Lab Values</td><td>Hb, WBC, electrolytes, renal/liver function, albumin, pre-albumin, HbA1c, lipids</td></tr>
+              <tr><td>Clinical & Metabolic</td><td>Ventilation, renal/hepatic status, energy method, ICU phase, stress factor, feeding route</td></tr>
+              <tr><td>GLIM 2019</td><td>Phenotypic and etiologic criteria; refeeding-risk checkboxes</td></tr>
+            </tbody></table>
+          </div>
+          <p class="ug-body">Outputs include BMI, IBW/AdjBW, colour-coded lab interpretation, auto-generated PES statements, energy/protein/fluid targets, and a five-domain monitoring plan. You can Save to History, export CSV, generate a PDF report, or print a clinical note.</p>
+        </div>
+
+        <!-- ── 3. PEDIATRIC ── -->
+        <div id="ug-pedi" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">03</span>Pediatric Nutrition</div>
+          <p class="ug-body">Tap <strong>Pediatric</strong> and choose one of seven population groups: Preterm, Neonate, Infant 0–6 m, Infant 6–24 m, Child 2–5 yr, Child 5–10 yr, or Adolescent 10–17 yr.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Feature</th><th>Details</th></tr></thead><tbody>
+              <tr><td>Diagnosis hints</td><td>Condition-specific guidance (RDS, NEC, SAM/MAM, HIV/TB, and more)</td></tr>
+              <tr><td>Growth charts</td><td>WHO 2006/2007 and Fenton 2013 preterm charts</td></tr>
+              <tr><td>CMAM protocol</td><td>SAM detection triggers full WHO Phase 1/2 guidance</td></tr>
+              <tr><td>Refeeding screening</td><td>Risk screening and transition feeding schedules</td></tr>
+              <tr><td>Pediatric burns</td><td>Galveston/Curreri Jr/Parkland Pediatric/Holliday-Segar</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ── 4. ENTERAL ── -->
+        <div id="ug-en" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">04</span>Enteral Nutrition</div>
+          <p class="ug-body">Follows a 12-step clinical workflow with three switchable modes.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Mode</th><th>Description</th></tr></thead><tbody>
+              <tr><td>Commercial Formula</td><td>Auto-selects from Fresenius Kabi/Nutricia database; continuous/cyclic/bolus delivery modes</td></tr>
+              <tr><td>Low-Resource (Malawi)</td><td>Hospital formula from milk, Likuni Phala, oil, sugar with Standard/High-Energy/High-Protein presets</td></tr>
+              <tr><td>Blenderized Feed</td><td>Tube-feed recipe from local Malawian foods with preset recipes and clinical warnings</td></tr>
+            </tbody></table>
+          </div>
+          <div class="ug-tip">All three modes can sync requirements from the Adult or Pediatric calculator. Results can be saved, printed, or exported as PDF.</div>
+        </div>
+
+        <!-- ── 5. ANTHROPOMETRY ── -->
+        <div id="ug-anthro" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">05</span>Anthropometry</div>
+          <p class="ug-body">Indirect estimation when direct measurement isn't possible — bedbound, amputee, or critically ill patients.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Method</th><th>Reference</th></tr></thead><tbody>
+              <tr><td>Height — Knee Height</td><td>Lee & Nieman; sex/age/ethnicity-adjusted</td></tr>
+              <tr><td>Height — Demi-Span</td><td>Gibson 2005</td></tr>
+              <tr><td>Height — Ulna Length</td><td>BAPEN/Elia 2003</td></tr>
+              <tr><td>Weight — KH + MAC</td><td>Ages 6–80</td></tr>
+              <tr><td>Amputation-adjusted BW</td><td>8-segment correction table</td></tr>
+              <tr><td>Obesity-adjusted BW</td><td>Glynn (25% lean) or Barak (50% lean)</td></tr>
+              <tr><td>Nitrogen balance</td><td>From 24 h urine volume and urinary urea</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ── 6. PARENTERAL ── -->
+        <div id="ug-pn" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">06</span>Parenteral Nutrition (PN)</div>
+          <p class="ug-body">Custom TPN calculator. Sync weight/energy/protein from the Adult or Pediatric calculator, then configure population (Adult/Pediatric), formulation (3-in-1 or 2-in-1), and route (Central or Peripheral). Output includes full macronutrient breakdown, GIR with colour-coded safety thresholds, closest matching commercial bags (Kabiven, NuTRIflex, Clinimix), and a monitoring checklist.</p>
+        </div>
+
+        <!-- ── 7. SCREENING ── -->
+        <div id="ug-screen" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">07</span>Nutrition Screening</div>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Tool</th><th>Population</th></tr></thead><tbody>
+              <tr><td>MUST</td><td>Adults</td></tr>
+              <tr><td>MNA-SF</td><td>Geriatric (≥ 65 yr)</td></tr>
+              <tr><td>STAMP</td><td>Pediatric</td></tr>
+              <tr><td>STRONGkids</td><td>Pediatric</td></tr>
+            </tbody></table>
+          </div>
+          <p class="ug-body">Each tool produces a risk category (Low / Medium / High) with recommended follow-up actions. Results save to history.</p>
+        </div>
+
+        <!-- ── 8. DNI ── -->
+        <div id="ug-dni" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">08</span>Drug–Nutrient Interactions (DNI)</div>
+          <p class="ug-body">Searchable database for drug-nutrient interactions. Search by drug name, brand, drug class, or nutrient/food keyword. Quick-search tags available (warfarin, grapefruit, vitamin B12, enteral nutrition). Sources: Krause & Mahan 16th ed., The Essential Pocket Guide for Clinical Nutrition, and LPI/OSU Micronutrient Information Center.</p>
+        </div>
+
+        <!-- ── 9. NFPE ── -->
+        <div id="ug-nfpe" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">09</span>Nutrition-Focused Physical Exam (NFPE)</div>
+          <p class="ug-body">Structured head-to-toe exam with guidance prompts for fat loss, muscle wasting, and micronutrient deficiency signs. Findings feed directly into GLIM phenotypic criteria on the Adult Calculator and are saved to history.</p>
+        </div>
+
+        <!-- ── 10. MEAL PLANNER ── -->
+        <div id="ug-meal" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">10</span>Meal Planner (Oral / ONS / Mixed)</div>
+          <p class="ug-body">Builds a 24-hour meal plan using UCT 2014 Exchange Lists. Set a calorie target (or sync from a calculator), choose a distribution pattern, and the planner allocates exchanges across meals. Foods for each exchange can be swapped from the built-in list. Output is a printable meal plan card with exchange counts and gram weights per meal.</p>
+        </div>
+
+        <!-- ── 11. RECALL ── -->
+        <div id="ug-recall" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">11</span>24-Hour Dietary Recall</div>
+          <p class="ug-body">Structured tool capturing a patient's dietary intake over the prior 24 hours. Add items meal by meal (Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack); each item is looked up in the food database with a portion field. Running nutrition totals update live. Export the completed recall as PDF or clear it to start a new one.</p>
+        </div>
+
+        <!-- ── 12. RECIPE CALC ── -->
+        <div id="ug-recipe" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">12</span>Recipe Calculator</div>
+          <p class="ug-body">Three-step tool for calculating the nutritional content of any recipe.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Step</th><th>What to do</th></tr></thead><tbody>
+              <tr><td>1 — Recipe Details</td><td>Enter name, servings, and a scale factor (×)</td></tr>
+              <tr><td>2 — Ingredients</td><td>Add rows from Malawi FCT or Open Food Facts; live totals shown</td></tr>
+              <tr><td>3 — Weight Calculation</td><td>Enter initial and final weight (g) to compute yield % after cooking</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ── 13. ASSESSMENT TOOLS ── -->
+        <div id="ug-assess" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">13</span>Assessment Tools (SGA, MNA-Full, PG-SGA)</div>
+          <p class="ug-body">All three tools run entirely on-device — no patient data is transmitted. Each includes full reference citations at the bottom for clinical documentation.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Tool</th><th>Focus</th></tr></thead><tbody>
+              <tr><td>SGA</td><td>Clinician-rated: intake, weight history, GI symptoms, functional capacity, physical exam</td></tr>
+              <tr><td>MNA (Full)</td><td>18-item tool for adults ≥ 65 years; Part 1 Screening + Part 2 Assessment</td></tr>
+              <tr><td>PG-SGA</td><td>Oncology-focused scored tool; patient-reported (Boxes 1–4) + clinician-assessed sections</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ── 14. FOOD DB ── -->
+        <div id="ug-fooddb" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">14</span>Food Database</div>
+          <p class="ug-body">Reached via Home → Information → Food Database. Four sub-tabs:</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Tab</th><th>Contents</th></tr></thead><tbody>
+              <tr><td>Malawi FCT</td><td>Core FCT plus extended entries; sortable, per-100g or per-measure view; export CSV/PDF</td></tr>
+              <tr><td>UCT Exchange</td><td>UCT 2014 Exchange Lists; searchable and sortable with macros per exchange</td></tr>
+              <tr><td>Formula</td><td>Enteral formula database; filterable by route, energy density, protein, fibre, condition</td></tr>
+              <tr><td>Packaged Foods</td><td>Community-contributed barcoded products via Firestore with offline caching</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ── 15. HISTORY ── -->
+        <div id="ug-history" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">15</span>History (Saved Records)</div>
+          <p class="ug-body">Every Save action across the app creates a timestamped entry here — label, module, and a text snapshot. Records are capped at 50 entries. Sources: Adult/Pediatric calculations, Enteral/PN prescriptions, Meal Plans, Recipe Calculator outputs, NFPE assessments, and screening/assessment results. From History you can review records, export full history as JSON or CSV, or clear all saved history.</p>
+        </div>
+
+        <!-- ── 16. REFERENCE ── -->
+        <div id="ug-ref" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">16</span>Reference (Guideline Library)</div>
+          <p class="ug-body">Over 38 peer-reviewed sources organized by clinical area (ICU/Critical Care, Renal, Hepatic, Refeeding Syndrome, Pancreatitis, Burns, Malnutrition/GLIM, Cardiac, HIV/AIDS, Oncology, and more).</p>
+        </div>
+
+        <!-- ── 17. LIBRARY ── -->
+        <div id="ug-lib" class="ug-section">
+          <div class="ug-section-head"><span class="ug-num">17</span>Resource Library</div>
+          <p class="ug-body">A document repository for clinical and academic materials. Upload PDFs, DOCX files, images, or external links (max 25 MB) with title, description, category, tags, and source. Uploads enter a Pending state and are reviewed by an admin. Approved resources support bookmarks, sharing, APA 7th / Vancouver citations, and in-app viewing with pinch/zoom.</p>
+        </div>
+
+        <!-- ── 18. AI ── -->
+        <div id="ug-ai" class="ug-section" style="margin-bottom:0">
+          <div class="ug-section-head"><span class="ug-num">18</span>Oasis AI Assistant</div>
+          <p class="ug-body">Built-in AI assistant (Beta) that is eNCPT-informed, ASPEN/ESPEN/AND-aligned, and grounded in Oasis's own knowledge bases. It also reads your current calculator inputs so it can reason about the patient you're actively working on.</p>
+          <div class="ug-table-wrap">
+            <table class="ug-table"><thead><tr><th>Task</th><th>Notes</th></tr></thead><tbody>
+              <tr><td>PES statement generation</td><td>Drafts or refines PES; auto-refines on Adult Calculator with re-refine button</td></tr>
+              <tr><td>ADIME notes</td><td>Helps draft full Assessment-Diagnosis-Intervention-Monitoring documentation</td></tr>
+              <tr><td>Patient summaries</td><td>Generates a clinical summary from the current case</td></tr>
+              <tr><td>General clinical chat</td><td>Plain-language answers grounded in the app's reference material</td></tr>
+            </tbody></table>
+          </div>
+          <div class="ug-tip">If the AI is temporarily unavailable, Oasis falls back to its built-in offline logic engines so core functionality still works without an internet connection.</div>
+        </div>
+
+      </div><!-- /scrollable content -->
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes ugPanelUp {
+  from { transform:translateY(60px); opacity:0; }
+  to   { transform:translateY(0);    opacity:1; }
+}
+.ug-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(29,233,212,0.07);
+}
+.ug-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--cond,'Syne',sans-serif);
+  font-size: 14px;
+  font-weight: 800;
+  color: #f0f4f8;
+  letter-spacing: 0.3px;
+  margin-bottom: 9px;
+  line-height: 1.2;
+}
+.ug-num {
+  font-family: var(--mono,'JetBrains Mono',monospace);
+  font-size: 9px;
+  font-weight: 700;
+  color: #1de9d4;
+  background: rgba(29,233,212,0.10);
+  border: 1px solid rgba(29,233,212,0.25);
+  border-radius: 5px;
+  padding: 3px 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.ug-body {
+  font-family: var(--sans,'Outfit',sans-serif);
+  font-size: 12.5px;
+  color: var(--text-dim,#c8d6e5);
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+.ug-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(29,233,212,0.10);
+}
+.ug-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sans,'Outfit',sans-serif);
+  font-size: 11.5px;
+}
+.ug-table thead tr {
+  background: rgba(29,233,212,0.07);
+}
+.ug-table th {
+  font-family: var(--mono,'JetBrains Mono',monospace);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #1de9d4;
+  letter-spacing: 0.8px;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(29,233,212,0.12);
+}
+.ug-table td {
+  padding: 8px 10px;
+  color: var(--text-dim,#c8d6e5);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.ug-table tr:last-child td { border-bottom: none; }
+.ug-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+.ug-table td:first-child {
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+.ug-tip {
+  background: rgba(29,233,212,0.05);
+  border-left: 2px solid #1de9d4;
+  border-radius: 0 6px 6px 0;
+  padding: 9px 12px;
+  font-family: var(--sans,'Outfit',sans-serif);
+  font-size: 11.5px;
+  color: var(--text-dim,#c8d6e5);
+  line-height: 1.6;
+}
+.ug-pill {
+  font-family: var(--mono,'JetBrains Mono',monospace);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--text-dim,#c8d6e5);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ug-pill:hover, .ug-pill:active {
+  background: rgba(29,233,212,0.10);
+  border-color: rgba(29,233,212,0.35);
+  color: #1de9d4;
+}
+</style>
+
+<script>
+function openUserGuide() {
+  var ov = document.getElementById('userguide-overlay');
+  if (!ov) return;
+  ov.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeUserGuide() {
+  var ov = document.getElementById('userguide-overlay');
+  if (!ov) return;
+  ov.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function ugScrollTo(id) {
+  var el = document.getElementById(id);
+  var scrollContainer = el && el.closest('[style*="overflow-y:auto"]');
+  if (el && scrollContainer) {
+    var top = el.offsetTop - scrollContainer.offsetTop - 16;
+    scrollContainer.scrollTo({ top: top, behavior: 'smooth' });
+  }
+}
+(function() {
+  var ov = document.getElementById('userguide-overlay');
+  if (!ov) return;
+  ov.addEventListener('click', function(e) {
+    if (e.target === ov) closeUserGuide();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && ov.style.display !== 'none') closeUserGuide();
+  });
+})();
+</script>
+<!-- ════════════ END USER GUIDE MODAL ════════════ -->
+
 
 <script src="responsive.js" defer></script>
 </body>
