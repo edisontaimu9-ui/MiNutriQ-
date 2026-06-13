@@ -5108,3 +5108,273 @@ body.theme-light .hp-assess-entry:hover { background: #f8fafc; }
   margin-bottom: 10px;
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   HOME SCREEN — PODA ANIMATED-BORDER SEARCH  (uiverse.io)
+   ══════════════════════════════════════════════════════════ */
+
+/* Grid backdrop */
+.hp-grid {
+  height: 340px;
+  width: 340px;
+  background-image:
+    linear-gradient(to right, #0f0f10 1px, transparent 1px),
+    linear-gradient(to bottom, #0f0f10 1px, transparent 1px);
+  background-size: 1rem 1rem;
+  background-position: center center;
+  position: absolute;
+  z-index: -1;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+/* Shared decorative layers */
+.poda-white,
+.poda-border,
+.poda-darkBorderBg,
+.poda-glow {
+  max-height: 70px;
+  max-width: 330px;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  overflow: hidden;
+  z-index: -1;
+  border-radius: 12px;
+  filter: blur(3px);
+}
+
+/* Main wrapper */
+#poda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* Input field */
+.poda-input {
+  background-color: #010201;
+  border: none;
+  width: 316px;
+  height: 56px;
+  border-radius: 10px;
+  color: white;
+  padding-inline: 59px;
+  font-size: 14px;
+  font-family: var(--mono, monospace);
+  letter-spacing: .01em;
+}
+.poda-input::placeholder { color: #c0b9c0; }
+.poda-input:focus        { outline: none; }
+
+/* Input mask (fades right edge when unfocused) */
+#poda-main:focus-within > #poda-input-mask { display: none; }
+#poda-input-mask {
+  pointer-events: none;
+  width: 100px;
+  height: 20px;
+  position: absolute;
+  background: linear-gradient(90deg, transparent, black);
+  top: 18px;
+  left: 70px;
+}
+
+/* Pink accent glow (left edge) */
+#poda-pink-mask {
+  pointer-events: none;
+  width: 30px;
+  height: 20px;
+  position: absolute;
+  background: #cf30aa;
+  top: 10px;
+  left: 5px;
+  filter: blur(20px);
+  opacity: 0.8;
+  transition: all 2s;
+}
+#poda-main:hover > #poda-pink-mask { opacity: 0; }
+
+/* White shimmer ring */
+.poda-white {
+  max-height: 63px;
+  max-width: 322px;
+  border-radius: 10px;
+  filter: blur(2px);
+}
+.poda-white::before {
+  content: "";
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(83deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  filter: brightness(1.4);
+  background-image: conic-gradient(
+    rgba(0,0,0,0) 0%, #a099d8, rgba(0,0,0,0) 8%,
+    rgba(0,0,0,0) 50%, #dfa2da, rgba(0,0,0,0) 58%
+  );
+  transition: all 2s;
+}
+
+/* Colored border ring */
+.poda-border {
+  max-height: 59px;
+  max-width: 318px;
+  border-radius: 11px;
+  filter: blur(0.5px);
+}
+.poda-border::before {
+  content: "";
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(70deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  filter: brightness(1.3);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-image: conic-gradient(
+    #1c191c, #402fb5 5%, #1c191c 14%,
+    #1c191c 50%, #cf30aa 60%, #1c191c 64%
+  );
+  transition: all 2s;
+}
+
+/* Dark outer border */
+.poda-darkBorderBg {
+  max-height: 65px;
+  max-width: 328px;
+}
+.poda-darkBorderBg::before {
+  content: "";
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(82deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-image: conic-gradient(
+    rgba(0,0,0,0), #18116a, rgba(0,0,0,0) 10%,
+    rgba(0,0,0,0) 50%, #6e1b60, rgba(0,0,0,0) 60%
+  );
+  transition: all 2s;
+}
+
+/* Hover — spin the rings */
+#poda:hover > .poda-darkBorderBg::before { transform: translate(-50%,-50%) rotate(-98deg); }
+#poda:hover > .poda-glow::before         { transform: translate(-50%,-50%) rotate(-120deg); }
+#poda:hover > .poda-white::before        { transform: translate(-50%,-50%) rotate(-97deg); }
+#poda:hover > .poda-border::before       { transform: translate(-50%,-50%) rotate(-110deg); }
+
+/* Focus — slow full rotation */
+#poda:focus-within > .poda-darkBorderBg::before { transform: translate(-50%,-50%) rotate(442deg); transition: all 4s; }
+#poda:focus-within > .poda-glow::before         { transform: translate(-50%,-50%) rotate(420deg); transition: all 4s; }
+#poda:focus-within > .poda-white::before        { transform: translate(-50%,-50%) rotate(443deg); transition: all 4s; }
+#poda:focus-within > .poda-border::before       { transform: translate(-50%,-50%) rotate(430deg); transition: all 4s; }
+
+/* Outer glow halo */
+.poda-glow {
+  overflow: hidden;
+  filter: blur(30px);
+  opacity: 0.4;
+  max-height: 130px;
+  max-width: 370px;
+}
+.poda-glow::before {
+  content: "";
+  z-index: -2;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(60deg);
+  position: absolute;
+  width: 999px; height: 999px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-image: conic-gradient(
+    #000, #402fb5 5%, #000 38%,
+    #000 50%, #cf30aa 60%, #000 87%
+  );
+  transition: all 2s;
+}
+
+/* Inner container */
+#poda-main { position: relative; }
+
+/* Search icon (left) */
+#poda-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 16px;
+  z-index: 2;
+  transition: opacity .15s;
+}
+#poda-search-icon:hover { opacity: .75; }
+
+/* Barcode / filter icon (right) */
+#poda-filter-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  max-height: 40px;
+  max-width: 38px;
+  height: 100%;
+  width: 100%;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #161329, black, #1d1b4b);
+  border: 1px solid transparent;
+  transition: opacity .15s;
+}
+#poda-filter-icon:hover { opacity: .75; }
+
+/* Animated border around filter icon */
+.poda-filterBorder {
+  height: 42px;
+  width: 40px;
+  position: absolute;
+  overflow: hidden;
+  top: 7px;
+  right: 7px;
+  border-radius: 10px;
+}
+.poda-filterBorder::before {
+  content: "";
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  position: absolute;
+  width: 600px; height: 600px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  filter: brightness(1.35);
+  background-image: conic-gradient(
+    rgba(0,0,0,0), #3d3a4f, rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 50%, #3d3a4f, rgba(0,0,0,0) 100%
+  );
+  animation: poda-rotate 4s linear infinite;
+}
+
+@keyframes poda-rotate {
+  100% { transform: translate(-50%, -50%) rotate(450deg); }
+}
+
+/* ── Mobile sizing ── */
+@media (max-width: 400px) {
+  .poda-input               { width: 280px; font-size: 13px; }
+  .poda-white               { max-width: 286px; }
+  .poda-border              { max-width: 282px; }
+  .poda-darkBorderBg        { max-width: 292px; }
+  .poda-white,
+  .poda-border,
+  .poda-darkBorderBg,
+  .poda-glow                { max-width: 294px; }
+  .poda-glow                { max-width: 334px; }
+}
