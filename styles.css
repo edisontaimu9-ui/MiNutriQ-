@@ -511,7 +511,7 @@
 .hp-sub {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--text-dim);
+  color: rgba(255,255,255,0.78);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   margin-bottom: 28px;
@@ -562,7 +562,7 @@
 .hp-stat-lbl {
   font-family: var(--mono);
   font-size: 8.5px;
-  color: var(--text-dim);
+  color: var(--text);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -573,7 +573,7 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 2.5px;
-  color: var(--text-muted);
+  color: var(--teal);
   text-transform: uppercase;
   margin-bottom: 12px;
   padding: 0 20px;
@@ -626,13 +626,13 @@
 .hp-recent-meta {
   font-family: var(--mono);
   font-size: 9px;
-  color: var(--text-dim);
+  color: var(--text);
   margin-top: 2px;
 }
 .hp-recent-time {
   font-family: var(--mono);
   font-size: 8.5px;
-  color: var(--text-muted);
+  color: var(--text-dim);
   flex-shrink: 0;
 }
 
@@ -666,7 +666,7 @@
 .hp-ref-desc {
   font-family: var(--mono);
   font-size: 8px;
-  color: var(--text-dim);
+  color: var(--text);
   line-height: 1.5;
 }
 
@@ -718,7 +718,7 @@
 .hp-tool-desc {
   font-family: var(--mono);
   font-size: 7.5px;
-  color: var(--text-dim);
+  color: var(--text);
   line-height: 1.45;
 }
 
@@ -1897,6 +1897,7 @@ body:not(.ob-authed) .tab-content {
 .tab .nt-icon {
   width: 14px; height: 14px;
   color: currentColor;
+  opacity: 1;
 }
 /* Sidebar nav icons */
 .nav-icon .nt-icon {
@@ -1963,7 +1964,7 @@ body:not(.ob-authed) .tab-content {
   --text:          #f0f4f8;   /* body text              */
   --text-dim:      #c8d6e5;   /* secondary / labels     */
   --text-bright:   #ffffff;   /* headings / values      */
-  --text-muted:    #94a3b8;   /* placeholders           */
+  --text-muted:    #a8b8cc;   /* placeholders           */
 
   /* ── Semantic aliases ── */
   --text-primary:    var(--text-bright);
@@ -1977,7 +1978,7 @@ body:not(.ob-authed) .tab-content {
   --input-text:      var(--text-bright);
   --input-border:    #1e293b;
   --input-focus:     rgba(29,233,212,0.45);
-  --tab-inactive:    var(--text-dim);
+  --tab-inactive:    rgba(255,255,255,0.87);
   --tab-active:      var(--teal);
   --btn-secondary-bg:    rgba(15,23,42,0.8);
   --btn-secondary-text:  var(--text-dim);
@@ -2054,20 +2055,20 @@ body {
 /* Section dividers and reference text */
 .card-header .card-title { color: var(--text-bright) !important; }
 /* Tab labels */
-.tab-label { color: var(--text-dim); }
+.tab-label { color: var(--tab-inactive); }
 .tab-label.active, [data-tab].active .tab-label { color: var(--tab-active) !important; }
 /* Recent activity meta */
-.hp-recent-meta { color: var(--text-dim) !important; }
+.hp-recent-meta { color: var(--text) !important; }
 .hp-recent-diag { color: var(--text-bright) !important; }
 /* Stat labels on home */
-.hp-stat-lbl { color: var(--text-dim) !important; }
+.hp-stat-lbl { color: var(--text) !important; }
 /* Section titles */
-.hp-section-title { color: var(--text-dim) !important; }
+.hp-section-title { color: var(--teal) !important; }
 /* Footer */
 .hp-footer { color: var(--text-muted) !important; }
 /* Ref card descriptions */
 .hp-ref-name { color: var(--text-bright) !important; }
-.hp-ref-desc { color: var(--text-dim) !important; }
+.hp-ref-desc { color: var(--text) !important; }
 /* Pedi metric labels */
 .pedi-mc-label { color: var(--text-dim) !important; }
 .pedi-mc-sub   { color: var(--text-dim) !important; }
@@ -2081,7 +2082,7 @@ body {
 /* PWA banner */
 .pwa-banner-sub { color: var(--text-dim) !important; }
 /* Home hero sub */
-.hp-sub { color: var(--text-dim) !important; }
+.hp-sub { color: rgba(255,255,255,0.78) !important; }
 /* Home tagline */
 .hp-tagline { color: var(--text-bright) !important; }
 
@@ -2651,7 +2652,7 @@ header {
 .tab {
   font-family: var(--mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 11px 8px 12px;
