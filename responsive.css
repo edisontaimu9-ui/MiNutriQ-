@@ -560,7 +560,31 @@
 
 
 /* ══════════════════════════════════════════════════════════════════
-   PRINT — undo desktop grid, hide sidebar
+   HP-FOOTER responsive overrides
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ≥ 400 px — give the link grid all three columns */
+@media screen and (min-width: 25em) {
+  .hpf-links-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Desktop — left-align brand, widen padding */
+@media screen and (min-width: 62em) {
+  .hp-footer {
+    padding: 40px 32px 0;
+  }
+  #page-footer {
+    grid-column: 2;
+    grid-row: auto;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 32px;
+  }
+}
+
+
    ══════════════════════════════════════════════════════════════════ */
 
 @media print {
