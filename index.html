@@ -2345,13 +2345,13 @@ var photoCropper = (function () {
   </div>
 
   <!-- ── HERO ── -->
-  <div class="hp-hero" data-sr="fade-up">
+  <div class="hp-hero">
     <div class="hp-tagline">Oasis<br><em>Precision Nutrition. Clinical Excellence.</em></div>
     <div class="hp-sub">Data-Driven. Evidence-Based.</div>
   </div>
 
   <!-- ── USER PROFILE CARD ── -->
-  <div id="hp-profile-card-wrap" data-sr="fade-up" data-sr-delay="80"></div>
+  <div id="hp-profile-card-wrap"></div>
 
   <!-- ── PWA INSTALL BANNER (shown when installable, hidden once installed or dismissed) ── -->
   <div id="pwa-install-banner" role="region" aria-label="Install Oasis">
@@ -2368,15 +2368,15 @@ var photoCropper = (function () {
 
   <!-- ── QUICK STATS ── -->
   <div class="hp-stats">
-    <div class="hp-stat" data-sr="zoom-in" data-sr-delay="0">
+    <div class="hp-stat">
       <div class="hp-stat-val" id="hp-calc-count">0</div>
       <div class="hp-stat-lbl">Calculations</div>
     </div>
-    <div class="hp-stat" data-sr="zoom-in" data-sr-delay="90">
+    <div class="hp-stat">
       <div class="hp-stat-val" id="hp-saved-count">0</div>
       <div class="hp-stat-lbl">Saved Records</div>
     </div>
-    <div class="hp-stat" data-sr="zoom-in" data-sr-delay="180">
+    <div class="hp-stat">
       <div class="hp-stat-val" id="hp-module-count">11</div>
       <div class="hp-stat-lbl">Modules</div>
     </div>
@@ -2384,17 +2384,17 @@ var photoCropper = (function () {
 
 
   <!-- ── RECENT ACTIVITY ── -->
-  <div class="hp-section-title" data-sr="fade-right">Recent Activity</div>
-  <div class="hp-recent" data-sr="fade-up" data-sr-delay="70">
+  <div class="hp-section-title">Recent Activity</div>
+  <div class="hp-recent">
     <div id="hp-recent-list" class="hp-recent-list"></div>
   </div>
 
   <!-- ── CLINICAL TOOLS ── -->
-  <div class="hp-section-title" data-sr="fade-right">Clinical Tools</div>
+  <div class="hp-section-title">Clinical Tools</div>
   <div class="hp-tools-grid">
 
     <!-- NFPE -->
-    <div class="hp-tool-card hp-tool-nfpe" data-sr="fade-up" data-sr-delay="0" onclick="switchTab('nfpe')" role="button" tabindex="0" aria-label="Open NFPE">
+    <div class="hp-tool-card hp-tool-nfpe" onclick="switchTab('nfpe')" role="button" tabindex="0" aria-label="Open NFPE">
       <div class="hp-tool-icon-wrap hp-tool-icon-nfpe">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="8" r="3"/>
@@ -2408,7 +2408,7 @@ var photoCropper = (function () {
     </div>
 
     <!-- Meal Planner -->
-    <div class="hp-tool-card hp-tool-meal" data-sr="fade-up" data-sr-delay="90" onclick="switchTab('mealplan')" role="button" tabindex="0" aria-label="Open Meal Planner">
+    <div class="hp-tool-card hp-tool-meal" onclick="switchTab('mealplan')" role="button" tabindex="0" aria-label="Open Meal Planner">
       <div class="hp-tool-icon-wrap hp-tool-icon-meal">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="12" cy="14" r="8" stroke="currentColor" stroke-width="1.5"/>
@@ -2425,7 +2425,7 @@ var photoCropper = (function () {
     </div>
 
     <!-- 24hr Recall -->
-    <div class="hp-tool-card hp-tool-recall" data-sr="fade-up" data-sr-delay="180" onclick="switchTab('recall')" role="button" tabindex="0" aria-label="Open 24-Hour Dietary Recall">
+    <div class="hp-tool-card hp-tool-recall" onclick="switchTab('recall')" role="button" tabindex="0" aria-label="Open 24-Hour Dietary Recall">
       <div class="hp-tool-icon-wrap hp-tool-icon-recall">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="12" cy="13" r="7" stroke="currentColor" stroke-width="1.5"/>
@@ -2442,9 +2442,9 @@ var photoCropper = (function () {
   </div>
 
   <!-- ── RECIPE TOOLS ── -->
-  <div class="hp-section-title" style="margin-top:24px" data-sr="fade-right">Tools &amp; Assistant</div>
+  <div class="hp-section-title" style="margin-top:24px">Tools &amp; Assistant</div>
   <div id="hp-feature-row" style="padding:0 16px;margin-bottom:4px">
-  <div class="hp-feature-card" data-sr="fade-up" data-sr-delay="0" style="padding:0;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="switchTab('recipe')" role="button" tabindex="0"
       aria-label="Open Recipe Calculator"
       onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('recipe')"
@@ -2476,7 +2476,7 @@ var photoCropper = (function () {
   </div><!-- /.hp-feature-card recipe -->
 
   <!-- ── ASSESSMENT TOOLS ── -->
-  <div class="hp-feature-card" data-sr="fade-up" data-sr-delay="90" style="padding:0;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="switchTab('assessments')" role="button" tabindex="0" aria-label="Open Assessment Tools">
       <div class="hp-assess-icon-wrap">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2500,7 +2500,7 @@ var photoCropper = (function () {
   </div><!-- /.hp-feature-card assessment -->
 
   <!-- ── OASIS AI CARD ── -->
-  <div class="hp-feature-card" data-sr="fade-up" data-sr-delay="180" style="padding:0;margin-bottom:4px">
+  <div class="hp-feature-card" style="padding:0;margin-bottom:4px">
     <div class="hp-assess-entry" onclick="openOasisAIPanel()" role="button" tabindex="0" aria-label="Open Oasis AI Assistant" onkeydown="if(event.key==='Enter'||event.key===' ')openOasisAIPanel()">
       <div class="hp-assess-icon-wrap" style="background:#08111f;border-color:rgba(29,233,212,0.2);overflow:hidden">
         <svg width="28" height="28" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -2534,9 +2534,9 @@ var photoCropper = (function () {
   </div><!-- /#hp-feature-row -->
 
   <!-- ── QUICK ACCESS ── -->
-  <div class="hp-section-title" style="margin-top:24px" data-sr="fade-right">Information</div>
+  <div class="hp-section-title" style="margin-top:24px">Information</div>
   <div class="hp-refs">
-    <div class="hp-ref-card" data-sr="fade-up" data-sr-delay="0" onclick="switchTab('database')">
+    <div class="hp-ref-card" onclick="switchTab('database')">
       <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
   <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
 </defs>
@@ -2551,7 +2551,7 @@ var photoCropper = (function () {
 </svg></span>
       <div><div class="hp-ref-name">Food Database</div><div class="hp-ref-desc">Malawi FCT + local foods</div></div>
     </div>
-    <div class="hp-ref-card" data-sr="fade-up" data-sr-delay="90" onclick="switchTab('history')">
+    <div class="hp-ref-card" onclick="switchTab('history')">
       <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
   <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
 </defs>
@@ -2567,7 +2567,7 @@ var photoCropper = (function () {
 </svg></span>
       <div><div class="hp-ref-name">History</div><div class="hp-ref-desc">Saved patient records</div></div>
     </div>
-    <div class="hp-ref-card" data-sr="fade-up" data-sr-delay="180" onclick="switchTab('reference')">
+    <div class="hp-ref-card" onclick="switchTab('reference')">
       <span class="hp-ref-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="nt-icon" aria-hidden="true"><defs>
   <filter id="ni-glow"><feGaussianBlur stdDeviation="0.8" result="b"/><feComposite in="b" in2="SourceGraphic" operator="over"/></filter>
 </defs>
@@ -2587,8 +2587,8 @@ var photoCropper = (function () {
   </div>
 
   <!-- ── FROM THE DEVELOPER ── -->
-  <div class="hp-section-title" style="margin-top:28px" data-sr="fade-right">From the Developer</div>
-  <div data-sr="fade-up" data-sr-delay="60" style="
+  <div class="hp-section-title" style="margin-top:28px">From the Developer</div>
+  <div style="
     margin: 0 16px 24px;
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -2610,7 +2610,7 @@ var photoCropper = (function () {
   </div>
 
   <!-- ── PHOTO SLIDESHOW ── -->
-  <div id="hp-slideshow" data-sr="fade-up" aria-label="Photos">
+  <div id="hp-slideshow" aria-label="Photos">
     <div id="hp-slides-track">
       <div class="hp-slide active">
         <img src="assets/Slide-1.jpg" alt="Photo 1" loading="lazy">
@@ -2644,7 +2644,7 @@ var photoCropper = (function () {
   <!-- ── END PHOTO SLIDESHOW ── -->
 
   <!-- ── FOOTER ── -->
-  <div class="hp-footer" data-sr="fade-up">
+  <div class="hp-footer">
 
     <!-- ① Brand identity row -->
     <div class="hpf-brand">
@@ -13284,77 +13284,5 @@ document.addEventListener('keydown', function(e){
 
 
 <script src="responsive.js" defer></script>
-
-<!-- ════════════════════════════════════════════════════════════
-     SCROLL REVEAL  —  Viewport-entry animations for Homescreen
-     Lightweight IntersectionObserver; no external library.
-     Each element fires once, then observer is detached.
-     ════════════════════════════════════════════════════════════ -->
-<script>
-(function () {
-  'use strict';
-
-  /* Skip entirely if the browser doesn't support IntersectionObserver
-     (very old WebViews) — elements stay visible via prefers-reduced-motion
-     fallback in CSS or simply via opacity:0 not being applied yet.       */
-  if (!('IntersectionObserver' in window)) {
-    // Make everything visible immediately on unsupported browsers
-    document.querySelectorAll('[data-sr]').forEach(function (el) {
-      el.classList.add('sr-visible');
-    });
-    return;
-  }
-
-  /* ── Honour prefers-reduced-motion at the JS level too ── */
-  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function initScrollReveal() {
-    var homeTab = document.getElementById('tab-home');
-    if (!homeTab) return;
-
-    var targets = homeTab.querySelectorAll('[data-sr]');
-    if (!targets.length) return;
-
-    /* Apply stagger delays from data-sr-delay attributes */
-    targets.forEach(function (el) {
-      var delay = el.dataset.srDelay;
-      if (delay) el.style.setProperty('--sr-delay', delay + 'ms');
-      /* If reduced-motion, reveal immediately — CSS handles the rest */
-      if (prefersReduced) el.classList.add('sr-visible');
-    });
-
-    if (prefersReduced) return; /* CSS already shows everything */
-
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('sr-visible');
-            observer.unobserve(entry.target); /* trigger once */
-          }
-        });
-      },
-      {
-        /* Fire when 12 % of the element is inside the viewport.
-           -24px bottom rootMargin gives a small buffer so elements
-           just below the fold animate in slightly before being
-           fully visible, keeping the reveal feeling smooth.      */
-        threshold:   0.12,
-        rootMargin: '0px 0px -24px 0px'
-      }
-    );
-
-    targets.forEach(function (el) { observer.observe(el); });
-  }
-
-  /* Initialise after DOM is ready */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrollReveal);
-  } else {
-    /* DOMContentLoaded already fired (script is deferred) */
-    initScrollReveal();
-  }
-})();
-</script>
 </body>
 </html>
