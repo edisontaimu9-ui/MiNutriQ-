@@ -477,6 +477,18 @@
 }
 
 /* Hero */
+/* ── Hero page-load fade-in ── */
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hp-hero {
   position: relative;
   padding: 48px 24px 36px;
@@ -500,6 +512,7 @@
   color: var(--text-bright);
   line-height: 1.15;
   margin-bottom: 10px;
+  animation: hero-fade-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hp-tagline em {
   font-style: normal;
@@ -515,6 +528,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   margin-bottom: 28px;
+  animation: hero-fade-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
 .hp-cta {
   display: inline-flex;
@@ -5121,6 +5135,10 @@ body.theme-light .hp-assess-entry:hover { background: #f8fafc; }
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+  }
+  .hp-tagline,
+  .hp-sub {
+    animation: none !important;
   }
 }
 
