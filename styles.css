@@ -5076,26 +5076,6 @@ body.theme-light .hp-assess-entry:hover { background: #f8fafc; }
 }
 /* ══════════════════════════════════════════════════════════ */
 
-/* ══════════════════════════════════════════════════════════
-   GLOBAL PAGE FOOTER
-   Always rendered below all tab content.
-   ══════════════════════════════════════════════════════════ */
-#page-footer {
-  width: 100%;
-  padding: 14px 20px calc(14px + var(--sab, 0px));
-  text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  box-sizing: border-box;
-}
-.page-footer-text {
-  font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-size: 9px;
-  color: var(--text-muted, #6b7a8d);
-  letter-spacing: 0.6px;
-  line-height: 1.6;
-  user-select: none;
-}
-
 /* ── "Connect" label above social icons in hp-footer ── */
 .hp-footer-connect-label {
   font-family: var(--mono, 'JetBrains Mono', monospace);
