@@ -461,36 +461,19 @@ const appState = {
     const _isRealUpdate     = !!_lastSwVer && _lastSwVer !== APP_VERSION;
     let _reloadOnController = false;
 
-    // ── Update banner helpers ───────────────────────────────────────────
+    // ── Update notification helpers (replaces old update banner) ──────
     function _showUpdateBar(waitingWorker) {
-      const existing = document.getElementById('sw-update-bar');
-      if (existing) return;
-      try {
-        if (localStorage.getItem(_SW_DISMISSED_KEY) === APP_VERSION) return;
-      } catch(e) {}
-
-      const bar = document.createElement('div');
-      bar.id = 'sw-update-bar';
-      bar.setAttribute('role', 'alert');
-      bar.innerHTML =
-        '<span class="sw-update-icon">⬆</span>' +
-        '<span class="sw-update-text"><strong>Oasis updated</strong> — reload to apply</span>' +
-        '<button class="sw-update-reload" id="_sw-reload-btn">Reload</button>' +
-        '<button class="sw-update-dismiss" id="_sw-dismiss-btn" aria-label="Dismiss">✕</button>';
-      document.body.appendChild(bar);
-
-      document.getElementById('_sw-reload-btn').addEventListener('click', function () {
-        bar.remove();
-        try { localStorage.removeItem(_SW_DISMISSED_KEY); } catch(e) {}
-        _reloadOnController = true;
-        waitingWorker.postMessage('skipWaiting');
-      });
-
-      document.getElementById('_sw-dismiss-btn').addEventListener('click', function () {
-        try { localStorage.setItem(_SW_DISMISSED_KEY, APP_VERSION); } catch(e) {}
-        bar.remove();
-        waitingWorker.postMessage('skipWaiting');
-      });
+      // Push into the in-app notification system instead of a top banner
+      if (window._notifPushUpdate) {
+        window._notifPushUpdate('v' + APP_VERSION);
+      } else {
+        // Fallback: queue until notification system is ready
+        document.addEventListener('DOMContentLoaded', function() {
+          if (window._notifPushUpdate) window._notifPushUpdate('v' + APP_VERSION);
+        });
+      }
+      // Auto-apply new SW (no disruptive banner)
+      waitingWorker.postMessage('skipWaiting');
     }
 
     // ── Register /sw.js with version query param ────────────────────────
