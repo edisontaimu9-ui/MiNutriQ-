@@ -461,25 +461,19 @@ const appState = {
     const _isRealUpdate     = !!_lastSwVer && _lastSwVer !== APP_VERSION;
     let _reloadOnController = false;
 
-    // ── Update banner helpers ───────────────────────────────────────────
-    // ── SW update helper — routes into bell notification, no banner ────
+    // ── Update notification helpers (replaces old update banner) ──────
     function _showUpdateBar(waitingWorker) {
-      // Silently apply the new SW and notify via the in-app bell
-      waitingWorker.postMessage('skipWaiting');
-      var _push = function() {
-        if (window._notifPushUpdate) {
-          window._notifPushUpdate(APP_VERSION, 'A new version has been applied.');
-        }
-      };
+      // Push into the in-app notification system instead of a top banner
       if (window._notifPushUpdate) {
-        _push();
-      } else if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _push);
+        window._notifPushUpdate('v' + APP_VERSION);
       } else {
-        setTimeout(_push, 800);
+        // Fallback: queue until notification system is ready
+        document.addEventListener('DOMContentLoaded', function() {
+          if (window._notifPushUpdate) window._notifPushUpdate('v' + APP_VERSION);
+        });
       }
-    }
-
+      // Auto-apply new SW (no disruptive banner)
+      waitingWorker.postMessage('skipWaiting');
     }
 
     // ── Register /sw.js with version query param ────────────────────────
@@ -1423,8 +1417,35 @@ function _initUpdateWatcher() {
       if (localStorage.getItem(_DISMISSED_KEY) === String(payload.version)) return;
     } catch(e) {}
     _bannerShown = true;
-    _showNTPUpdateBanner(payload.version, payload.notes || '');
     console.log('[Oasis] Update signal received:', payload.version, 'via', payload._channel || '?');
+
+    // Route into the in-app notification system (bell icon) instead of
+    // the intrusive top banner.  Mirror the same ready-check pattern used
+    // by the SW update path so this works whether the DOM is ready or not.
+    const _pushUpdateNotif = function() {
+      if (window.notifPush) {
+        const notes = payload.notes && payload.notes !== '—'
+          ? payload.notes.slice(0, 120)
+          : 'A new version is available. Reload to apply the latest update.';
+        window.notifPush({
+          id:      'app-update-' + payload.version,
+          type:    'update',
+          title:   'Oasis v' + payload.version + ' available',
+          message: notes,
+          time:    Date.now(),
+          read:    false,
+        });
+      } else if (window._notifPushUpdate) {
+        // Fallback to SW-style helper if notifPush isn't ready yet
+        window._notifPushUpdate(payload.version);
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _pushUpdateNotif, { once: true });
+    } else {
+      _pushUpdateNotif();
+    }
   }
 
   // ── Channel A: Firestore onSnapshot ────────────────────────────────
@@ -1537,102 +1558,7 @@ function _fetchDeveloperProfile() {
   }
 }
 
-/**
- * Show a dismissable update banner at the top of the screen.
- * Styled to match Oasis's dark clinical theme.
- * The banner injects itself into the DOM — no HTML scaffolding needed.
- *
- * @param {string} version  - new version string, e.g. "1.2.5"
- * @param {string} notes    - release notes text (shown as subtitle)
- */
-function _showNTPUpdateBanner(version, notes) {
-  // Route into in-app notification bell — no disruptive top banner
-  var _push = function() {
-    if (window._notifPushUpdate) {
-      window._notifPushUpdate(version, notes);
-    }
-  };
-  if (window._notifPushUpdate) {
-    _push();
-  } else if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _push);
-  } else {
-    setTimeout(_push, 800);
-  }
-}
-function _showNTPUpdateBanner_UNUSED(version, notes) {
-  if (document.getElementById('ntp-update-banner')) return;
-  const _DISMISSED_KEY = 'nt-update-dismissed-ver';
 
-  const banner = document.createElement('div');
-  banner.id = 'ntp-update-banner';
-  banner.style.cssText = `
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 999998;
-    background: linear-gradient(135deg, rgba(0,245,228,0.10) 0%, rgba(59,130,246,0.10) 100%);
-    border-bottom: 1.5px solid rgba(29,233,212,0.45);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 10px 16px 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: #e8f4ff;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.35);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-  `;
-
-  const safeNotes = notes && notes !== '—' ? ` — ${notes.slice(0, 120)}` : '';
-
-  banner.innerHTML = `
-    <span style="font-size:16px;line-height:1"></span>
-    <div style="flex:1;line-height:1.5">
-      <strong style="color:var(--teal,#1de9d4)">Update v${version} available</strong>
-      <span style="color:rgba(200,216,240,0.75)">${safeNotes}</span>
-    </div>
-    <button
-      onclick="window.location.reload(true)"
-      style="
-        padding: 5px 14px;
-        background: rgba(29,233,212,0.18);
-        border: 1px solid rgba(29,233,212,0.5);
-        border-radius: 5px;
-        color: var(--teal,#1de9d4);
-        font-family: inherit;
-        font-size: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        letter-spacing: 0.05em;
-      "
-    >↻ RELOAD NOW</button>
-    <button
-      id="_ntp-dismiss-btn"
-      style="
-        padding: 5px 8px;
-        background: transparent;
-        border: none;
-        color: rgba(200,216,240,0.5);
-        font-size: 14px;
-        cursor: pointer;
-        line-height: 1;
-      "
-      title="Dismiss"
-    >✕</button>
-  `;
-
-  document.body.prepend(banner);
-
-  // Dismiss: remember this version so banner stays gone across reloads.
-  // Clears automatically when admin pushes a newer version (different string).
-  document.getElementById('_ntp-dismiss-btn').addEventListener('click', function () {
-    try { localStorage.setItem(_DISMISSED_KEY, String(version)); } catch(e) {}
-    banner.remove();
-  });
-}
 
 // Alias so the old call-site works regardless of mode
 function initOfflineMode() {
