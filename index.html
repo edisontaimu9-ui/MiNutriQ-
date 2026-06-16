@@ -13323,9 +13323,14 @@ document.addEventListener('keydown', function(e){
       <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-bright,#f0f4f8)">NOTIFICATIONS</span>
       <span id="notif-panel-count" style="display:none;font-family:var(--mono);font-size:8px;font-weight:700;background:#ef4444;color:#fff;border-radius:99px;padding:2px 6px;letter-spacing:0"></span>
     </div>
-    <button onclick="notifMarkAllRead()" id="notif-mark-all-btn"
-      style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:var(--teal,#1de9d4);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8;transition:opacity .15s"
-      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">MARK ALL READ</button>
+    <div style="display:flex;gap:4px">
+      <button onclick="notifMarkAllRead()" id="notif-mark-all-btn"
+        style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:var(--teal,#1de9d4);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8;transition:opacity .15s"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">MARK ALL READ</button>
+      <button onclick="notifClearAll()" id="notif-clear-all-btn"
+        style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:rgba(248,113,113,0.8);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8;transition:opacity .15s"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">CLEAR ALL</button>
+    </div>
   </div>
 
   <!-- Notification list -->
@@ -13378,6 +13383,21 @@ document.addEventListener('keydown', function(e){
   width:7px;height:7px;border-radius:50%;background:#ef4444;
   flex-shrink:0;margin-top:4px;
 }
+.notif-item-actions {
+  display:flex;flex-direction:column;gap:3px;flex-shrink:0;
+  opacity:0;transition:opacity .15s;
+}
+.notif-item:hover .notif-item-actions { opacity:1; }
+.notif-action-btn {
+  background:none;border:none;cursor:pointer;
+  width:22px;height:22px;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;line-height:1;
+  color:rgba(148,163,184,0.6);
+  transition:background .12s,color .12s;
+}
+.notif-action-btn:hover { background:rgba(255,255,255,0.08);color:var(--teal,#1de9d4); }
+.notif-action-dismiss:hover { background:rgba(248,113,113,0.12);color:#f87171; }
 </style>
 
 <script>
@@ -13387,34 +13407,6 @@ document.addEventListener('keydown', function(e){
 
   var NOTIF_KEY = 'oasis-notifications';
   var _panelOpen = false;
-
-  // ── Built-in notifications (app updates + in-app) ──────────────
-  var _builtIn = [
-    {
-      id: 'update-1.2.9',
-      type: 'update',
-      title: 'Oasis v1.2.9 — Now Live',
-      message: 'Stability improvements, refined offline caching, and UI polish across the Clinical Modules.',
-      time: Date.now() - 1000 * 60 * 5,
-      read: false
-    },
-    {
-      id: 'tip-drug-nutrient',
-      type: 'tip',
-      title: 'New: Drug-Nutrient Interaction Checker',
-      message: 'Quickly screen for clinically significant drug-nutrient interactions. Find it under the DNI module.',
-      time: Date.now() - 1000 * 60 * 60 * 3,
-      read: false
-    },
-    {
-      id: 'tip-meal-planner',
-      type: 'feature',
-      title: 'Meal Planner Enhancements',
-      message: 'The Meal Planner now supports per-meal micronutrient breakdown and PDF export.',
-      time: Date.now() - 1000 * 60 * 60 * 24,
-      read: false
-    }
-  ];
 
   // ── Storage helpers ────────────────────────────────────────────
   function _load() {
@@ -13427,29 +13419,32 @@ document.addEventListener('keydown', function(e){
     try { localStorage.setItem(NOTIF_KEY, JSON.stringify(list)); } catch(e) {}
   }
   function _getList() {
-    var stored = _load();
-    if (!stored) {
-      _save(_builtIn);
-      return _builtIn.slice();
-    }
-    // Merge any new built-ins not yet in storage
-    var ids = stored.map(function(n){ return n.id; });
-    var merged = stored.slice();
-    _builtIn.forEach(function(b) {
-      if (ids.indexOf(b.id) === -1) merged.unshift(b);
-    });
-    return merged;
+    return _load() || [];
   }
 
-  // ── Push a new notification (called by SW update handler) ──────
+  // ── Push a new notification ────────────────────────────────────
   window.notifPush = function(notif) {
     var list = _getList();
-    // Deduplicate by id
     var existing = list.findIndex(function(n){ return n.id === notif.id; });
     if (existing === -1) {
       list.unshift(notif);
       _save(list);
     }
+    _renderPanel();
+    _updateBadge();
+  };
+
+  // ── Dismiss (delete) a single notification ─────────────────────
+  function _dismiss(id) {
+    var list = _getList().filter(function(n){ return n.id !== id; });
+    _save(list);
+    _renderPanel();
+    _updateBadge();
+  }
+
+  // ── Clear all notifications ────────────────────────────────────
+  window.notifClearAll = function() {
+    _save([]);
     _renderPanel();
     _updateBadge();
   };
@@ -13522,7 +13517,7 @@ document.addEventListener('keydown', function(e){
     el.style.display = 'flex';
     if (empty) empty.style.display = 'none';
 
-    list.forEach(function(n, idx) {
+    list.forEach(function(n) {
       var div = document.createElement('div');
       div.className = 'notif-item' + (n.read ? '' : ' unread');
       div.innerHTML =
@@ -13532,10 +13527,22 @@ document.addEventListener('keydown', function(e){
           '<div class="notif-item-msg">' + _esc(n.message) + '</div>' +
           '<div class="notif-item-time">' + _relTime(n.time) + '</div>' +
         '</div>' +
-        (n.read ? '' : '<div class="notif-unread-dot"></div>');
+        '<div class="notif-item-actions">' +
+          (!n.read ? '<button class="notif-action-btn" title="Mark as read" aria-label="Mark as read">&#10003;</button>' : '') +
+          '<button class="notif-action-btn notif-action-dismiss" title="Dismiss" aria-label="Dismiss">&times;</button>' +
+        '</div>';
 
-      div.addEventListener('click', function() {
-        _markRead(n.id);
+      if (!n.read) {
+        var readBtn = div.querySelector('.notif-action-btn:first-child');
+        if (readBtn) readBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          _markRead(n.id);
+        });
+      }
+      var dismissBtn = div.querySelector('.notif-action-dismiss');
+      if (dismissBtn) dismissBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        _dismiss(n.id);
       });
       el.appendChild(div);
     });
@@ -13576,8 +13583,6 @@ document.addEventListener('keydown', function(e){
     panel.style.display    = 'flex';
     backdrop.style.display = 'block';
     _panelOpen = true;
-    // Mark all as read after 1.5s viewing
-    setTimeout(function(){ window.notifMarkAllRead(); }, 1500);
   };
   window.closeNotifPanel = function() {
     var panel    = document.getElementById('notif-panel');
