@@ -461,19 +461,25 @@ const appState = {
     const _isRealUpdate     = !!_lastSwVer && _lastSwVer !== APP_VERSION;
     let _reloadOnController = false;
 
-    // ── Update notification helpers (replaces old update banner) ──────
+    // ── Update banner helpers ───────────────────────────────────────────
+    // ── SW update helper — routes into bell notification, no banner ────
     function _showUpdateBar(waitingWorker) {
-      // Push into the in-app notification system instead of a top banner
-      if (window._notifPushUpdate) {
-        window._notifPushUpdate('v' + APP_VERSION);
-      } else {
-        // Fallback: queue until notification system is ready
-        document.addEventListener('DOMContentLoaded', function() {
-          if (window._notifPushUpdate) window._notifPushUpdate('v' + APP_VERSION);
-        });
-      }
-      // Auto-apply new SW (no disruptive banner)
+      // Silently apply the new SW and notify via the in-app bell
       waitingWorker.postMessage('skipWaiting');
+      var _push = function() {
+        if (window._notifPushUpdate) {
+          window._notifPushUpdate(APP_VERSION, 'A new version has been applied.');
+        }
+      };
+      if (window._notifPushUpdate) {
+        _push();
+      } else if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _push);
+      } else {
+        setTimeout(_push, 800);
+      }
+    }
+
     }
 
     // ── Register /sw.js with version query param ────────────────────────
@@ -1540,9 +1546,22 @@ function _fetchDeveloperProfile() {
  * @param {string} notes    - release notes text (shown as subtitle)
  */
 function _showNTPUpdateBanner(version, notes) {
-  // Avoid duplicate banners
+  // Route into in-app notification bell — no disruptive top banner
+  var _push = function() {
+    if (window._notifPushUpdate) {
+      window._notifPushUpdate(version, notes);
+    }
+  };
+  if (window._notifPushUpdate) {
+    _push();
+  } else if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _push);
+  } else {
+    setTimeout(_push, 800);
+  }
+}
+function _showNTPUpdateBanner_UNUSED(version, notes) {
   if (document.getElementById('ntp-update-banner')) return;
-
   const _DISMISSED_KEY = 'nt-update-dismissed-ver';
 
   const banner = document.createElement('div');

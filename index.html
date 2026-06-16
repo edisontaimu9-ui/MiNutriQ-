@@ -473,17 +473,21 @@
 
     <!-- ── Bell Notification Button ── -->
     <div style="position:relative;flex-shrink:0">
-      <button id="notif-bell-btn" onclick="toggleNotifPanel(event)" aria-label="Notifications" aria-haspopup="true"
-        style="background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-dim,#8892a0);display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s;position:relative"
+      <button id="notif-bell-btn" onclick="toggleNotifPanel(event)" aria-label="Notifications"
+        style="background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text-dim,#8892a0);
+               display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s"
         onmouseover="this.style.background='rgba(255,255,255,0.07)';this.style.color='var(--text-bright,#f0f4f8)'"
         onmouseout="this.style.background='none';this.style.color='var(--text-dim,#8892a0)'">
-        <!-- Lucide Bell (inline SVG matching lucide spec) -->
-        <svg id="notif-bell-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        <!-- Red badge counter -->
-        <span id="notif-badge" style="display:none;position:absolute;top:3px;right:3px;min-width:16px;height:16px;background:#ef4444;border-radius:99px;font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center;padding:0 4px;box-sizing:border-box;border:2px solid var(--bg,#020617)"></span>
+        <span id="notif-badge"
+          style="display:none;position:absolute;top:2px;right:2px;min-width:16px;height:16px;
+                 background:#ef4444;border-radius:99px;font-family:var(--mono);font-size:9px;
+                 font-weight:700;color:#fff;line-height:16px;text-align:center;padding:0 4px;
+                 box-sizing:border-box;border:2px solid var(--bg,#020617)"></span>
       </button>
     </div>
 
@@ -13300,270 +13304,313 @@ document.addEventListener('keydown', function(e){
 
 
 <!-- ════════════════════════════════════════════════════════════
-     NOTIFICATION PANEL
+     IN-APP NOTIFICATION PANEL  (Firebase-backed)
+     Reads from Firestore:  notifications/{docId}
+     Fields: title, message, type, createdAt, [version, notes]
      ════════════════════════════════════════════════════════════ -->
-<div id="notif-backdrop" onclick="closeNotifPanel()" style="display:none;position:fixed;inset:0;z-index:9998"></div>
 
+<!-- Backdrop (click-away to close) -->
+<div id="notif-backdrop" onclick="closeNotifPanel()"
+  style="display:none;position:fixed;inset:0;z-index:9998"></div>
+
+<!-- Panel -->
 <div id="notif-panel" role="dialog" aria-modal="true" aria-label="Notifications"
-  style="display:none;position:fixed;top:56px;right:12px;width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 80px);
-         background:var(--surface1,#0d1628);border:1px solid rgba(29,233,212,0.22);border-radius:14px;
-         box-shadow:0 20px 60px rgba(0,0,0,0.7);z-index:9999;overflow:hidden;
-         display:none;flex-direction:column;
-         animation:notif-panel-in .25s cubic-bezier(.22,1,.36,1)">
+  style="display:none;position:fixed;top:58px;right:12px;
+         width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 82px);
+         background:var(--surface1,#0d1628);border:1px solid rgba(29,233,212,0.22);
+         border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.72);
+         z-index:9999;overflow:hidden;flex-direction:column">
 
-  <!-- Top accent line -->
+  <!-- Top accent bar -->
   <div style="height:3px;background:linear-gradient(90deg,var(--teal,#1de9d4),var(--blue,#60a5fa));flex-shrink:0"></div>
 
   <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;flex-shrink:0">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)">
     <div style="display:flex;align-items:center;gap:8px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal,#1de9d4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
       <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-bright,#f0f4f8)">NOTIFICATIONS</span>
-      <span id="notif-panel-count" style="display:none;font-family:var(--mono);font-size:8px;font-weight:700;background:#ef4444;color:#fff;border-radius:99px;padding:2px 6px;letter-spacing:0"></span>
+      <span id="notif-panel-count"
+        style="display:none;font-family:var(--mono);font-size:8px;font-weight:700;
+               background:#ef4444;color:#fff;border-radius:99px;padding:2px 6px"></span>
     </div>
-    <button onclick="notifMarkAllRead()" id="notif-mark-all-btn"
-      style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:var(--teal,#1de9d4);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;opacity:0.8;transition:opacity .15s"
+    <button onclick="notifMarkAllRead()"
+      style="font-family:var(--mono);font-size:8px;letter-spacing:0.8px;color:var(--teal,#1de9d4);
+             background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;
+             opacity:0.8;transition:opacity .15s"
       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">MARK ALL READ</button>
   </div>
 
-  <!-- Notification list -->
-  <div id="notif-list" style="overflow-y:auto;flex:1;padding:0 10px 12px;display:flex;flex-direction:column;gap:6px">
-    <!-- populated by JS -->
-  </div>
+  <!-- Scrollable list -->
+  <div id="notif-list"
+    style="overflow-y:auto;flex:1;padding:8px 10px 12px;display:flex;flex-direction:column;gap:5px;min-height:60px"></div>
 
   <!-- Empty state -->
-  <div id="notif-empty" style="display:none;padding:32px 16px;text-align:center">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted,#4a5568)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  <div id="notif-empty" style="display:none;padding:36px 16px;text-align:center;flex-shrink:0">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted,#4a5568)"
+         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
     </svg>
     <div style="font-family:var(--sans);font-size:12px;color:var(--text-muted,#4a5568)">All caught up!</div>
+  </div>
+
+  <!-- Loading state -->
+  <div id="notif-loading" style="padding:28px 16px;text-align:center;flex-shrink:0">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted,#4a5568);letter-spacing:1px;animation:pulse 1.4s ease-in-out infinite">LOADING…</div>
   </div>
 </div>
 
 <style>
 @keyframes notif-panel-in {
-  from { opacity:0; transform: translateY(-10px) scale(.97); }
-  to   { opacity:1; transform: none; }
+  from { opacity:0; transform:translateY(-8px) scale(.98); }
+  to   { opacity:1; transform:none; }
 }
 .notif-item {
-  display:flex;align-items:flex-start;gap:10px;padding:11px 12px;
+  display:flex;align-items:flex-start;gap:10px;padding:10px 11px;
   border-radius:9px;border:1px solid transparent;
-  transition:background .15s,border-color .15s;cursor:default;position:relative;
+  transition:background .15s;cursor:default;position:relative;
 }
 .notif-item.unread {
   background:rgba(29,233,212,0.05);
-  border-color:rgba(29,233,212,0.12);
+  border-color:rgba(29,233,212,0.13);
 }
 .notif-item:hover { background:rgba(255,255,255,0.04); }
-.notif-item-icon {
+.notif-icon-wrap {
   width:32px;height:32px;border-radius:8px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
 }
-.notif-item-body { flex:1;min-width:0; }
-.notif-item-title {
+.notif-body  { flex:1;min-width:0; }
+.notif-title {
   font-family:var(--sans);font-size:12.5px;font-weight:700;
-  color:var(--text-bright,#f0f4f8);line-height:1.4;
+  color:var(--text-bright,#f0f4f8);line-height:1.35;
 }
-.notif-item-msg {
+.notif-msg   {
   font-family:var(--sans);font-size:11.5px;color:var(--text,#c8d3e0);
   line-height:1.55;margin-top:2px;
 }
-.notif-item-time {
-  font-family:var(--mono);font-size:8.5px;color:var(--text-muted,#4a5568);
-  margin-top:4px;
+.notif-time  {
+  font-family:var(--mono);font-size:8.5px;color:var(--text-muted,#4a5568);margin-top:5px;
 }
-.notif-unread-dot {
+.notif-dot   {
   width:7px;height:7px;border-radius:50%;background:#ef4444;
-  flex-shrink:0;margin-top:4px;
+  flex-shrink:0;margin-top:5px;
 }
 </style>
 
 <script>
-/* ── Notification System ──────────────────────────────────────── */
-(function() {
+/* ═══════════════════════════════════════════════════════════════
+   OASIS — In-App Notification System
+   Storage : Firestore  →  notifications/{docId}
+             RTDB        →  /notifications/{pushId}   (real-time)
+   Read keys: id, title, message, type, createdAt, [version, notes]
+   Local read-state kept in localStorage (per-device).
+   ═══════════════════════════════════════════════════════════════ */
+(function () {
   'use strict';
 
-  var NOTIF_KEY = 'oasis-notifications';
-  var _panelOpen = false;
+  var READ_KEY    = 'oasis-notif-read';   // localStorage key → Set of read ids
+  var _panelOpen  = false;
+  var _notifCache = [];                   // in-memory mirror of Firestore list
+  var _firestoreUnsub = null;
 
-  // ── Built-in notifications (app updates + in-app) ──────────────
-  var _builtIn = [
-    {
-      id: 'update-1.2.9',
-      type: 'update',
-      title: 'Oasis v1.2.9 — Now Live',
-      message: 'Stability improvements, refined offline caching, and UI polish across the Clinical Modules.',
-      time: Date.now() - 1000 * 60 * 5,
-      read: false
-    },
-    {
-      id: 'tip-drug-nutrient',
-      type: 'tip',
-      title: 'New: Drug-Nutrient Interaction Checker',
-      message: 'Quickly screen for clinically significant drug-nutrient interactions. Find it under the DNI module.',
-      time: Date.now() - 1000 * 60 * 60 * 3,
-      read: false
-    },
-    {
-      id: 'tip-meal-planner',
-      type: 'feature',
-      title: 'Meal Planner Enhancements',
-      message: 'The Meal Planner now supports per-meal micronutrient breakdown and PDF export.',
-      time: Date.now() - 1000 * 60 * 60 * 24,
-      read: false
-    }
-  ];
-
-  // ── Storage helpers ────────────────────────────────────────────
-  function _load() {
-    try {
-      var raw = localStorage.getItem(NOTIF_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch(e) { return null; }
+  /* ── Read-state helpers (localStorage) ─────────────────────── */
+  function _readSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]')); }
+    catch(e) { return new Set(); }
   }
-  function _save(list) {
-    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(list)); } catch(e) {}
+  function _saveReadSet(s) {
+    try { localStorage.setItem(READ_KEY, JSON.stringify([].concat(Array.from(s)))); } catch(e) {}
   }
-  function _getList() {
-    var stored = _load();
-    if (!stored) {
-      _save(_builtIn);
-      return _builtIn.slice();
-    }
-    // Merge any new built-ins not yet in storage
-    var ids = stored.map(function(n){ return n.id; });
-    var merged = stored.slice();
-    _builtIn.forEach(function(b) {
-      if (ids.indexOf(b.id) === -1) merged.unshift(b);
-    });
-    return merged;
+  function _markIdRead(id) {
+    var s = _readSet(); s.add(String(id)); _saveReadSet(s);
   }
+  function _isRead(id) { return _readSet().has(String(id)); }
 
-  // ── Push a new notification (called by SW update handler) ──────
-  window.notifPush = function(notif) {
-    var list = _getList();
-    // Deduplicate by id
-    var existing = list.findIndex(function(n){ return n.id === notif.id; });
-    if (existing === -1) {
-      list.unshift(notif);
-      _save(list);
-    }
-    _renderPanel();
-    _updateBadge();
-  };
-
-  // ── Count unread ───────────────────────────────────────────────
-  function _unreadCount() {
-    return _getList().filter(function(n){ return !n.read; }).length;
-  }
-
-  // ── Update red badge ───────────────────────────────────────────
+  /* ── Badge ──────────────────────────────────────────────────── */
   function _updateBadge() {
-    var badge = document.getElementById('notif-badge');
-    var panelCount = document.getElementById('notif-panel-count');
-    if (!badge) return;
-    var c = _unreadCount();
-    if (c > 0) {
-      badge.textContent = c > 9 ? '9+' : String(c);
-      badge.style.display = 'block';
-      if (panelCount) { panelCount.textContent = c; panelCount.style.display = 'inline'; }
-    } else {
-      badge.style.display = 'none';
-      if (panelCount) panelCount.style.display = 'none';
+    var unread = _notifCache.filter(function(n){ return !_isRead(n.id); }).length;
+    var badge  = document.getElementById('notif-badge');
+    var count  = document.getElementById('notif-panel-count');
+    if (badge) {
+      badge.style.display = unread > 0 ? 'block' : 'none';
+      badge.textContent   = unread > 9 ? '9+' : String(unread);
+    }
+    if (count) {
+      count.style.display = unread > 0 ? 'inline' : 'none';
+      count.textContent   = unread > 9 ? '9+' : String(unread);
     }
   }
 
-  // ── Format relative time ───────────────────────────────────────
+  /* ── Relative timestamp ─────────────────────────────────────── */
   function _relTime(ts) {
-    var diff = Date.now() - ts;
-    var mins  = Math.floor(diff / 60000);
-    var hours = Math.floor(diff / 3600000);
-    var days  = Math.floor(diff / 86400000);
-    if (mins  <  1)  return 'Just now';
-    if (mins  < 60)  return mins  + 'm ago';
-    if (hours < 24)  return hours + 'h ago';
-    if (days  <  7)  return days  + 'd ago';
-    return new Date(ts).toLocaleDateString();
+    if (!ts) return '';
+    var ms   = (ts.toMillis ? ts.toMillis() : Number(ts));
+    var diff = Date.now() - ms;
+    var m = Math.floor(diff/60000), h = Math.floor(diff/3600000), d = Math.floor(diff/86400000);
+    if (m  <  1) return 'Just now';
+    if (m  < 60) return m + 'm ago';
+    if (h  < 24) return h + 'h ago';
+    if (d  <  7) return d + 'd ago';
+    return new Date(ms).toLocaleDateString();
   }
 
-  // ── Icon per type ──────────────────────────────────────────────
-  function _iconHtml(type) {
-    var configs = {
-      update: { bg:'rgba(29,233,212,0.12)', border:'rgba(29,233,212,0.3)', color:'var(--teal,#1de9d4)',
-        svg:'<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>' },
-      tip:    { bg:'rgba(240,180,41,0.12)', border:'rgba(240,180,41,0.3)', color:'var(--amber,#f0b429)',
-        svg:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' },
-      feature:{ bg:'rgba(96,165,250,0.12)', border:'rgba(96,165,250,0.3)', color:'var(--blue,#60a5fa)',
-        svg:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
-      alert:  { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.3)', color:'var(--error,#f87171)',
-        svg:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' }
-    };
-    var cfg = configs[type] || configs.tip;
-    return '<div class="notif-item-icon" style="background:' + cfg.bg + ';border:1px solid ' + cfg.border + '">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="' + cfg.color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-      cfg.svg + '</svg></div>';
+  /* ── Icon per notification type ─────────────────────────────── */
+  var _ICONS = {
+    update:  { bg:'rgba(29,233,212,0.12)', border:'rgba(29,233,212,0.28)', color:'var(--teal,#1de9d4)',
+      path:'<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>' },
+    feature: { bg:'rgba(96,165,250,0.12)', border:'rgba(96,165,250,0.28)', color:'var(--blue,#60a5fa)',
+      path:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+    tip:     { bg:'rgba(240,180,41,0.12)', border:'rgba(240,180,41,0.28)', color:'var(--amber,#f0b429)',
+      path:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' },
+    alert:   { bg:'rgba(248,113,113,0.12)', border:'rgba(248,113,113,0.28)', color:'var(--error,#f87171)',
+      path:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' }
+  };
+  function _icon(type) {
+    var cfg = _ICONS[type] || _ICONS.tip;
+    return '<div class="notif-icon-wrap" style="background:' + cfg.bg + ';border:1px solid ' + cfg.border + '">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="' + cfg.color +
+      '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + cfg.path + '</svg></div>';
   }
 
-  // ── Render notification list ───────────────────────────────────
-  function _renderPanel() {
-    var list = _getList();
-    var el = document.getElementById('notif-list');
-    var empty = document.getElementById('notif-empty');
-    if (!el) return;
+  /* ── Render list ────────────────────────────────────────────── */
+  function _render() {
+    var list    = document.getElementById('notif-list');
+    var empty   = document.getElementById('notif-empty');
+    var loading = document.getElementById('notif-loading');
+    if (!list) return;
 
-    el.innerHTML = '';
-    if (list.length === 0) {
-      el.style.display = 'none';
-      if (empty) empty.style.display = 'block';
+    if (loading) loading.style.display = 'none';
+
+    if (_notifCache.length === 0) {
+      list.style.display  = 'none';
+      if (empty) { empty.style.display = 'block'; }
       return;
     }
-    el.style.display = 'flex';
+    list.style.display  = 'flex';
     if (empty) empty.style.display = 'none';
 
-    list.forEach(function(n, idx) {
-      var div = document.createElement('div');
-      div.className = 'notif-item' + (n.read ? '' : ' unread');
+    list.innerHTML = '';
+    _notifCache.forEach(function(n) {
+      var read = _isRead(n.id);
+      var div  = document.createElement('div');
+      div.className = 'notif-item' + (read ? '' : ' unread');
       div.innerHTML =
-        _iconHtml(n.type) +
-        '<div class="notif-item-body">' +
-          '<div class="notif-item-title">' + _esc(n.title) + '</div>' +
-          '<div class="notif-item-msg">' + _esc(n.message) + '</div>' +
-          '<div class="notif-item-time">' + _relTime(n.time) + '</div>' +
+        _icon(n.type || 'tip') +
+        '<div class="notif-body">' +
+          '<div class="notif-title">' + _esc(n.title || '') + '</div>' +
+          '<div class="notif-msg">'   + _esc(n.message || n.notes || '') + '</div>' +
+          '<div class="notif-time">'  + _relTime(n.createdAt) + '</div>' +
         '</div>' +
-        (n.read ? '' : '<div class="notif-unread-dot"></div>');
+        (read ? '' : '<div class="notif-dot"></div>');
 
       div.addEventListener('click', function() {
-        _markRead(n.id);
+        _markIdRead(n.id);
+        div.classList.remove('unread');
+        var dot = div.querySelector('.notif-dot');
+        if (dot) dot.remove();
+        _updateBadge();
       });
-      el.appendChild(div);
+      list.appendChild(div);
     });
-  }
-
-  function _esc(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  // ── Mark single notification read ─────────────────────────────
-  function _markRead(id) {
-    var list = _getList();
-    list.forEach(function(n){ if (n.id === id) n.read = true; });
-    _save(list);
-    _renderPanel();
     _updateBadge();
   }
 
-  // ── Mark all read ─────────────────────────────────────────────
+  function _esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ── Subscribe to Firestore  notifications collection ───────── */
+  function _subscribe() {
+    if (!window.db) return;   // Firestore not yet initialised — retry via _onDbReady
+    try {
+      _firestoreUnsub = window.db
+        .collection('notifications')
+        .orderBy('createdAt', 'desc')
+        .limit(30)
+        .onSnapshot(function(snap) {
+          _notifCache = [];
+          snap.forEach(function(doc) {
+            var d = doc.data();
+            _notifCache.push({
+              id:        doc.id,
+              title:     d.title    || d.version && ('Oasis v' + d.version) || 'Notification',
+              message:   d.message  || d.notes   || '',
+              type:      d.type     || 'tip',
+              createdAt: d.createdAt || null
+            });
+          });
+          _render();
+          _updateBadge();
+        }, function(err) {
+          console.warn('[Oasis Notif] Firestore listener error:', err);
+        });
+
+      // Track for cleanup
+      if (!window._ntUnsubs) window._ntUnsubs = [];
+      window._ntUnsubs.push(_firestoreUnsub);
+    } catch(e) {
+      console.warn('[Oasis Notif] subscribe error:', e);
+    }
+  }
+
+  /* ── Also subscribe RTDB /notifications for instant delivery ── */
+  function _subscribeRTDB() {
+    if (!window.rtdb) return;
+    try {
+      window.rtdb.ref('/notifications').orderByChild('createdAt').limitToLast(10)
+        .on('child_added', function(snap) {
+          var d = snap.val();
+          if (!d) return;
+          var id = snap.key;
+          // Avoid duplicates already in Firestore cache
+          if (_notifCache.find(function(n){ return n.id === id; })) return;
+          _notifCache.unshift({
+            id:        id,
+            title:     d.title   || (d.version && 'Oasis v' + d.version) || 'Notification',
+            message:   d.message || d.notes || '',
+            type:      d.type    || 'update',
+            createdAt: d.createdAt || null
+          });
+          _render();
+          _updateBadge();
+        });
+    } catch(e) {
+      console.warn('[Oasis Notif] RTDB subscribe error:', e);
+    }
+  }
+
+  /* ── Public: mark all as read ───────────────────────────────── */
   window.notifMarkAllRead = function() {
-    var list = _getList();
-    list.forEach(function(n){ n.read = true; });
-    _save(list);
-    _renderPanel();
+    var s = _readSet();
+    _notifCache.forEach(function(n){ s.add(String(n.id)); });
+    _saveReadSet(s);
+    _render();
+  };
+
+  /* ── Public: push a transient notification (e.g. from SW) ───── */
+  window.notifPush = function(n) {
+    // Avoid duplicate
+    if (_notifCache.find(function(x){ return x.id === n.id; })) return;
+    _notifCache.unshift(n);
+    _render();
     _updateBadge();
   };
 
-  // ── Toggle panel ───────────────────────────────────────────────
+  /* ── Used by _showNTPUpdateBanner replacement ────────────────── */
+  window._notifPushUpdate = function(version, notes) {
+    window.notifPush({
+      id:        'sw-update-' + version,
+      type:      'update',
+      title:     'Oasis v' + version + ' — Update available',
+      message:   notes ? notes.slice(0, 140) : 'Reload the app to apply the latest update.',
+      createdAt: { toMillis: function(){ return Date.now(); } }
+    });
+  };
+
+  /* ── Panel open/close ───────────────────────────────────────── */
   window.toggleNotifPanel = function(e) {
     if (e) e.stopPropagation();
     _panelOpen ? closeNotifPanel() : openNotifPanel();
@@ -13572,12 +13619,13 @@ document.addEventListener('keydown', function(e){
     var panel    = document.getElementById('notif-panel');
     var backdrop = document.getElementById('notif-backdrop');
     if (!panel) return;
-    _renderPanel();
     panel.style.display    = 'flex';
+    panel.style.animation  = 'notif-panel-in .22s cubic-bezier(.22,1,.36,1)';
     backdrop.style.display = 'block';
     _panelOpen = true;
-    // Mark all as read after 1.5s viewing
-    setTimeout(function(){ window.notifMarkAllRead(); }, 1500);
+    _render();
+    // Auto mark-all-read after 2 s viewing
+    setTimeout(function(){ if (_panelOpen) window.notifMarkAllRead(); }, 2000);
   };
   window.closeNotifPanel = function() {
     var panel    = document.getElementById('notif-panel');
@@ -13587,32 +13635,40 @@ document.addEventListener('keydown', function(e){
     _panelOpen = false;
   };
 
-  // ── Init on DOM ready ──────────────────────────────────────────
+  /* ── Init — wait for Firestore (db may initialise after this script) */
   function _init() {
     _updateBadge();
-    // Close on Escape
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && _panelOpen) closeNotifPanel();
     });
+
+    // Try to subscribe now; if db not ready, poll until it is
+    if (window.db) {
+      _subscribe();
+      _subscribeRTDB();
+    } else {
+      var _tries = 0;
+      var _poll  = setInterval(function() {
+        _tries++;
+        if (window.db) {
+          clearInterval(_poll);
+          _subscribe();
+          _subscribeRTDB();
+        } else if (_tries > 40) {
+          clearInterval(_poll);       // give up after ~20 s
+          var loading = document.getElementById('notif-loading');
+          if (loading) loading.style.display = 'none';
+          _render();                  // show empty state
+        }
+      }, 500);
+    }
   }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _init);
   } else {
     _init();
   }
-
-  // ── Expose push for external use (e.g. SW update) ─────────────
-  window._notifPushUpdate = function(version) {
-    window.notifPush({
-      id:      'sw-update-' + version,
-      type:    'update',
-      title:   'Oasis ' + version + ' — Ready to apply',
-      message: 'A new version is available. Reload to apply the latest update.',
-      time:    Date.now(),
-      read:    false
-    });
-  };
-
 })();
 </script>
 <!-- ════════════ END NOTIFICATION PANEL ════════════ -->
