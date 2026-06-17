@@ -1664,21 +1664,152 @@ function renderHomePage() {
   // Recent activity list
   const list = document.getElementById('hp-recent-list');
   if (list) {
-    const recent = history.slice().reverse().slice(0, 5);
+    // history is stored oldest-first; reverse to get newest first, take top 5
+    const allHistory = DataService.get('history') || [];
+    const recent = allHistory.slice().reverse().slice(0, 5);
+    // We need the real index in the original (non-reversed) array for resume/load
+    const totalLen = allHistory.length;
+
     if (recent.length === 0) {
       list.innerHTML = '<div style="color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:8px 0">No calculations yet.</div>';
     } else {
-      list.innerHTML = recent.map(entry => {
-        const diag = (entry.diagnosis || 'General').replace(/_/g, ' ');
-        const meta = [
-          entry.age    ? entry.age + 'y'      : '',
-          entry.weight ? entry.weight + 'kg'  : '',
-          entry.energy ? entry.energy + 'kcal': ''
-        ].filter(Boolean).join(' · ');
-        const ts = entry.savedAt ? (entry.savedAt.split(',')[0] || entry.savedAt) : '';
-        return `<div style="background:var(--surface2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:10px;display:flex;justify-content:space-between;align-items:center">
-          <span><span style="color:var(--teal);font-weight:700">${diag}</span>${meta ? ' <span style="color:var(--text-dim)">· ' + meta + '</span>' : ''}</span>
-          ${ts ? '<span style="color:var(--text-dim);font-size:9px">' + ts + '</span>' : ''}
+      // Module → display label + tab mapping
+      const MODULE_META = {
+        'enteral':      { label: 'Enteral Feeding',        tab: 'enteral',    icon: '🍼' },
+        'mealplan':     { label: 'Meal Plan',              tab: 'mealplan',   icon: '🥗' },
+        'low-resource': { label: 'Low-Resource Formula',   tab: 'enteral',    icon: '🧪' },
+        'blenderized':  { label: 'Blenderized Tube Feed',  tab: 'enteral',    icon: '🫙' },
+        'parenteral':   { label: 'Parenteral Nutrition',   tab: 'parenteral', icon: '💉' },
+        'pedi':         { label: 'Paediatric Nutrition',   tab: 'pedi',       icon: '👶' },
+        'burns':        { label: 'Burns Nutrition',        tab: 'calculator', icon: '🔥' },
+        'anthro':       { label: 'Anthropometry',          tab: 'anthro',     icon: '📏' },
+        'screening':    { label: 'Nutrition Screening',    tab: 'screen',     icon: '🔍' },
+        'dni':          { label: 'Drug-Nutrient Interactions', tab: 'dni',    icon: '💊' },
+        'adult':        { label: 'Adult Nutrition',        tab: 'calculator', icon: '🧮' },
+      };
+
+      // Human-readable diagnosis names
+      const DIAG_LABELS = {
+        general:       'General / ICU',
+        sepsis:        'Sepsis',
+        ards:          'ARDS',
+        burns:         'Burns',
+        trauma:        'Trauma',
+        pancreatitis:  'Pancreatitis',
+        cancer_solid:  'Cancer (Solid)',
+        renal:         'Renal Disease',
+        liver:         'Liver Disease',
+        cardiac:       'Cardiac',
+        dm1:           'Type 1 Diabetes',
+        dm2:           'Type 2 Diabetes',
+        obesity:       'Obesity',
+        malnutrition:  'Malnutrition',
+        copd:          'COPD',
+        stroke:        'Stroke',
+        hiv:           'HIV / AIDS',
+        surgery:       'Post-Surgery',
+        gi:            'GI Disorder',
+        constipation:  'Constipation',
+        ibd:           'IBD',
+        celiac:        'Celiac Disease',
+        ascvd:         'CVD / ASCVD',
+        hypertension:  'Hypertension',
+        dyslipidemia:  'Dyslipidaemia',
+        hyperTG:       'Hypertriglyceridaemia',
+        metabolic:     'Metabolic Syndrome',
+        cvd_high_risk: 'High CVD Risk',
+        cvd_mod_risk:  'Moderate CVD Risk',
+      };
+
+      list.innerHTML = recent.map((entry, i) => {
+        // Real index in the original history array (DataService stores oldest-first)
+        const realIdx = totalLen - 1 - i;
+
+        // Determine display name
+        let activityName, activityIcon, resumeTab;
+        if (entry.label) {
+          // Module-type entries (enteral, mealplan, blenderized, etc.) have .label
+          activityName = entry.label;
+          const mm = MODULE_META[entry.module] || {};
+          activityIcon = mm.icon || '📋';
+          resumeTab    = mm.tab  || 'history';
+        } else {
+          // Adult / pedi calculator entries — use diagnosis
+          const diagKey  = (entry.diagnosis || '').toLowerCase();
+          const diagName = DIAG_LABELS[entry.diagnosis] || DIAG_LABELS[diagKey]
+                        || (entry.diagnosis || 'General').replace(/_/g, ' ')
+                           .replace(/\b\w/g, c => c.toUpperCase());
+          const modMeta  = MODULE_META[entry.module] || MODULE_META['adult'];
+          activityIcon   = modMeta.icon;
+          resumeTab      = modMeta.tab || 'calculator';
+          // Build name: e.g. "Adult — Sepsis" or "Paediatric — Burns"
+          const moduleLabel = modMeta.label || 'Adult Nutrition';
+          activityName = moduleLabel + (diagName ? ' — ' + diagName : '');
+        }
+
+        // Snapshot / sub-info line
+        let subInfo = '';
+        if (entry.snapshot) {
+          subInfo = entry.snapshot;
+        } else {
+          const parts = [
+            entry.patientName || entry.patientId ? '👤 ' + (entry.patientName || entry.patientId) : '',
+            entry.age    ? entry.age + ' y'      : '',
+            entry.weight ? entry.weight + ' kg'  : '',
+            entry.energy ? entry.energy + ' kcal': '',
+          ].filter(Boolean);
+          subInfo = parts.join(' · ');
+        }
+
+        // Date — show only date part (no time) to keep it compact
+        const ts = entry.savedAt
+          ? (entry.savedAt.includes(',') ? entry.savedAt.split(',')[0] : entry.savedAt.split(' ')[0])
+          : '';
+
+        // Resume action: for adult calc entries use loadHistoryItem; for others switch tab
+        const resumeCall = (resumeTab === 'calculator' && !entry.module)
+          ? `loadHistoryItem(${realIdx})`
+          : (resumeTab === 'calculator' && entry.module === 'adult')
+            ? `loadHistoryItem(${realIdx})`
+            : `switchTab('${resumeTab}')`;
+
+        return `<div style="
+            background:var(--surface2);
+            border-radius:8px;
+            padding:10px 12px;
+            font-family:var(--mono);
+            font-size:10px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            border-left:3px solid var(--teal);
+          ">
+          <span style="font-size:16px;flex-shrink:0">${activityIcon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="color:var(--teal);font-weight:700;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${activityName}
+            </div>
+            ${subInfo ? `<div style="color:var(--text-dim);font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subInfo}</div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            ${ts ? `<span style="color:var(--text-dim);font-size:9px">${ts}</span>` : ''}
+            <button
+              onclick="${resumeCall}"
+              style="
+                background:rgba(29,233,212,0.12);
+                border:1px solid rgba(29,233,212,0.35);
+                color:var(--teal);
+                border-radius:5px;
+                padding:3px 8px;
+                font-family:var(--mono);
+                font-size:9px;
+                font-weight:700;
+                letter-spacing:0.5px;
+                cursor:pointer;
+                white-space:nowrap;
+              "
+            >↗ Resume</button>
+          </div>
         </div>`;
       }).join('');
     }
