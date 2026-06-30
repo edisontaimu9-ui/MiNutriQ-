@@ -24,6 +24,7 @@
   const GROQ_API_URL  = 'https://api.groq.com/openai/v1/chat/completions';
   const GROQ_MODEL    = 'llama-3.3-70b-versatile';
   const MAX_TOKENS    = 900;
+  const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
 
   // API key: set via window.GROQ_API_KEY (from Appwrite Function)
   // Waits up to 5 seconds for the key to be loaded before giving up
@@ -1089,6 +1090,28 @@ Keep it under 200 words. Use professional clinical language.`;
       }
     }
 
+    // Auto-inject RAG context from Chakudya API (semantic search over
+    // Malawi FCT, exchange lists, renal foods, enteral formulas)
+    let ragContextInjected = false;
+    try {
+      const ragRes = await fetch(RAG_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: userMessage, context: 'clinical', top_k: 5 }),
+      });
+      if (ragRes.ok) {
+        const ragData = await ragRes.json();
+        const chunks  = ragData?.data || ragData?.chunks || [];
+        if (chunks.length > 0) {
+          const ragText = chunks.map(c => c.content).join('\n');
+          systemPrompt += `\n\nRELEVANT CLINICAL NUTRITION DATA (Chakudya Knowledge Base — Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas):\n${ragText}\n\nUse this data to ground your answer in real, locally-verified Malawian nutrition information where relevant.`;
+          ragContextInjected = true;
+        }
+      }
+    } catch (_ragErr) {
+      // RAG failure is non-fatal — Oasis AI continues without it
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-8), // keep last 8 turns for context
@@ -1104,6 +1127,7 @@ Keep it under 200 words. Use professional clinical language.`;
       dniContextInjected:     _DNIDB.detectQuery(userMessage),
       refContextInjected:     _RefDBProxy.detectQuery(userMessage),
       enteralContextInjected,
+      ragContextInjected,
     };
   }
 

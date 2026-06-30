@@ -95,7 +95,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -2929,6 +2929,35 @@ var photoCropper = (function () {
     </div>
 
   </div>
+
+  <!-- ── PYRAMID FOOTER ── -->
+  <div class="hp-pyramid-footer" role="contentinfo" aria-label="Oasis CNST footer" data-sr="fade-up">
+
+    <!-- Tier 1 — widest band -->
+    <div class="hpyf-tier hpyf-t1">
+      <span class="hpyf-text hpyf-app-name">OASIS CNST</span>
+      <div class="hpyf-divider" aria-hidden="true"></div>
+    </div>
+
+    <!-- Tier 2 -->
+    <div class="hpyf-tier hpyf-t2">
+      <span class="hpyf-text hpyf-tagline">Smart Nutrition Care System</span>
+      <div class="hpyf-divider" aria-hidden="true"></div>
+    </div>
+
+    <!-- Tier 3 -->
+    <div class="hpyf-tier hpyf-t3">
+      <span class="hpyf-text hpyf-audience">Designed for Dietitians &amp; Students</span>
+      <div class="hpyf-divider" aria-hidden="true"></div>
+    </div>
+
+    <!-- Tier 4 — narrowest point -->
+    <div class="hpyf-tier hpyf-t4">
+      <span class="hpyf-text hpyf-copy">&copy; 2026 All Rights Reserved</span>
+    </div>
+
+  </div>
+  <!-- ── END PYRAMID FOOTER ── -->
 
 </div><!-- /tab-home -->
 
@@ -7120,6 +7149,7 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
     <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
+    <button onclick="dbSwitchTab('renal')"    id="dbtab-renal"    class="dbtab-btn">Renal Exchange</button>
   </div>
 
   <!-- ════════════════════ PANEL 1: FOOD DB ════════════════════ -->
@@ -7559,8 +7589,160 @@ var photoCropper = (function () {
     <div id="pkg-pagination" style="display:flex;justify-content:center;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border)"></div>
   </div>
 
-  <div class="dev-footer">Packaged Foods · Firestore sync · Offline-first IndexedDB cache</div>
+  <div class="dev-footer">Packaged Foods · Chakudya API · Offline cache</div>
   </div><!-- end dbpanel-packaged -->
+
+  <!-- ════════════════════ PANEL 5: RENAL EXCHANGE ════════════════════ -->
+  <div id="dbpanel-renal" style="display:none">
+
+  <!-- Search & Filter bar -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;align-items:end;flex-wrap:wrap">
+      <div class="field-group">
+        <label class="lbl">Search Food</label>
+        <input type="text" class="inp" id="rn-search" placeholder="Type food name…" oninput="rnRender()" style="font-size:14px">
+      </div>
+      <div class="field-group">
+        <label class="lbl">Exchange Group</label>
+        <select class="sel" id="rn-group" onchange="rnRender()">
+          <option value="">All Groups</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Potassium</label>
+        <select class="sel" id="rn-k" onchange="rnRender()">
+          <option value="">Any</option>
+          <option value="Low Potassium">Low K⁺</option>
+          <option value="Moderate Potassium">Moderate K⁺</option>
+          <option value="High Potassium">High K⁺</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Sodium</label>
+        <select class="sel" id="rn-na" onchange="rnRender()">
+          <option value="">Any</option>
+          <option value="Low Sodium">Low Na⁺</option>
+          <option value="High Sodium">High Na⁺</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-top:10px">
+      <div class="field-group">
+        <label class="lbl">Phosphorus</label>
+        <select class="sel" id="rn-po4" onchange="rnRender()">
+          <option value="">Any</option>
+          <option value="Low Phosphorus">Low PO₄</option>
+          <option value="High Phosphorus">High PO₄</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Restricted</label>
+        <select class="sel" id="rn-restricted" onchange="rnRender()">
+          <option value="">All</option>
+          <option value="false">✓ Allowed</option>
+          <option value="true">⚠ Restricted</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Sort by</label>
+        <select class="sel" id="rn-sort" onchange="rnRender()">
+          <option value="name">Name A–Z</option>
+          <option value="group">Exchange Group</option>
+          <option value="po4_desc">Highest Phosphorus</option>
+          <option value="k_desc">Highest Potassium</option>
+          <option value="na_desc">Highest Sodium</option>
+          <option value="kcal_desc">Highest Energy</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary stat cards -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--teal)" id="rn-stat-count">—</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">FOODS SHOWN</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber)" id="rn-stat-po4">—</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG PO₄ mg</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:#c084fc" id="rn-stat-k">—</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG K⁺ mg</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--blue)" id="rn-stat-na">—</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG Na⁺ mg</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--red)" id="rn-stat-restricted">—</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">RESTRICTED</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header" style="background:linear-gradient(90deg,rgba(251,113,133,.08),rgba(0,0,0,0))">
+      <div class="card-title" style="color:var(--red)">Renal Exchange Lists</div>
+      <div class="card-badge" id="rn-table-badge" style="border-color:rgba(251,113,133,.4);color:var(--red)">SA Renal Exchange 2012</div>
+    </div>
+    <div class="hscroll-table">
+      <table class="dtbl" id="rn-table">
+        <thead>
+          <tr>
+            <th style="min-width:180px">Food Name</th>
+            <th style="min-width:160px">Exchange Group</th>
+            <th>Serving</th>
+            <th style="color:var(--amber)">kcal</th>
+            <th style="color:var(--blue)">Protein (g)</th>
+            <th style="color:var(--amber)">PO₄ (mg)</th>
+            <th style="color:#c084fc">K⁺ (mg)</th>
+            <th style="color:var(--blue)">Na⁺ (mg)</th>
+            <th style="min-width:180px">Tags</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="rn-tbody"></tbody>
+      </table>
+    </div>
+    <div id="rn-no-results" style="display:none;text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">
+      No renal exchange foods match your filter. Try clearing some filters above.
+    </div>
+  </div>
+
+  <!-- Clinical guidance card -->
+  <div class="card" style="margin-bottom:14px;border-color:rgba(251,113,133,.25)">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--red)"> Renal Diet Key Targets</div>
+      <div class="card-badge">KDOQI 2020 · ESPEN Renal 2021</div>
+    </div>
+    <div class="card-body" style="padding:14px">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid rgba(251,113,133,.2)">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Electrolyte Targets</div>
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.8;color:var(--text)">
+            Phosphorus: <b style="color:var(--amber)">800–1000 mg/day</b><br>
+            Potassium: <b style="color:#c084fc">1500–2000 mg/day (HD)</b><br>
+            Sodium: <b style="color:var(--blue)">&lt; 2000 mg/day</b><br>
+            Fluid: <b style="color:var(--teal)">1.0–1.5 L/day (HD)</b>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;border:1px solid rgba(251,113,133,.2)">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Protein Targets</div>
+          <div style="font-family:var(--mono);font-size:10px;line-height:1.8;color:var(--text)">
+            CKD (non-dialysis): <b style="color:var(--blue)">0.6–0.8 g/kg IBW/day</b><br>
+            Haemodialysis: <b style="color:var(--blue)">1.0–1.2 g/kg DW/day</b><br>
+            Peritoneal dialysis: <b style="color:var(--blue)">1.2–1.5 g/kg DW/day</b><br>
+            CRRT / AKI: <b style="color:var(--blue)">1.5–1.7 g/kg/day</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dev-footer">Renal Exchange Data · Chakudya API · SA Renal Exchange Lists (RenalSmart / Stellenbosch 2012) · KDOQI 2020 · ESPEN Renal 2021</div>
+  </div><!-- end dbpanel-renal -->
 
   <!-- Packaged Foods Add/Edit Modal -->
   <div id="pkg-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9100;align-items:center;justify-content:center">
@@ -8878,7 +9060,7 @@ var photoCropper = (function () {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-remote-config-compat.js"></script>
-<script src="foodData.js"></script>
+<!-- foodData.js removed — replaced by chakudyaDB.js -->
 <script src="pediNutrition.js"></script>
 <script>
 /* ── pediSetPop safety net ─────────────────────────────────────────────
@@ -8909,8 +9091,9 @@ var photoCropper = (function () {
 })();
 </script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-<script src="regionalFCT.js"></script>
+<!-- regionalFCT.js removed — replaced by chakudyaDB.js -->
 <script src="foodSearch.js"></script>
+<script src="chakudyaDB.js"></script>
 <!-- ═══════════════════════════════════════════════════════════════════════
      NT_CustomFoods — Import FDC results into local DB (localStorage)
      Patches NTFoodSearch.searchLocal to prepend imported foods.

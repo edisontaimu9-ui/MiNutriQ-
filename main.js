@@ -7077,7 +7077,7 @@ const EXCHANGE_TYPES = {
 };
 
 
-const FCT_CATS = [...new Set(MALAWI_FCT.map(f=>f.cat))];
+let FCT_CATS = []; // populated async by chakudyaDB.js
 
 const MEAL_NAMES = ['Breakfast','Mid-morning Snack','Lunch','Afternoon Snack','Dinner','Evening Snack'];
 let recallData = {}; // { mealIndex: [{type, exchanges, label, kcal, pro, cho, fat, kj, mode}] }
@@ -9814,7 +9814,7 @@ const _dbGlobalResults = { items: [], active: false };
  * dbRender — Layered Food Search (Local → FDC → Open Food Facts)
  *
  * When the user types a query:
- *   1. Local MALAWI_FCT is searched immediately (sync, fuzzy via NTFoodSearch).
+ *   1. In-memory Chakudya data (loaded async by chakudyaDB.js) is filtered.
  *   2. If local returns results, the table updates instantly.
  *   3. If local returns nothing (or enrichment forced), async API layers fire.
  *   4. API results are merged and appended to the table with a source badge.
@@ -9833,28 +9833,12 @@ function dbRender() {
   // ── LOCAL FILTER — Malawi FCT only (UCT Exchange is a diabetic exchange
   //    system and is excluded from general search; it lives in its own tools) ──
   let foods;
-  if (search.length >= 2 && typeof NTFoodSearch !== 'undefined') {
-    // Use fuzzy/synonym-aware local search
-    const localMatches = NTFoodSearch.searchLocal(search, 80);
-    // Also apply category filter to those results
-    foods = localMatches
-      .map(r => r._raw ?? r)                    // unwrap to original FCT entry
-      .filter(f => !cat || f.cat === cat);
-    // Fall back to plain includes for any FCT foods not caught by fuzzy
-    const localIds = new Set(foods.map(f => f.id));
-    const extras = MALAWI_FCT.filter(f =>
-      (!cat || f.cat === cat) &&
-      !localIds.has(f.id) &&
-      f.name.toLowerCase().includes(searchN)
-    );
-    foods = [...foods, ...extras];
-  } else {
-    foods = MALAWI_FCT.filter(f => {
-      const nameMatch = !searchN || f.name.toLowerCase().includes(searchN);
-      const catMatch  = !cat     || f.cat === cat;
-      return nameMatch && catMatch;
-    });
-  }
+  // Filter in-memory Chakudya data (loaded async by chakudyaDB.js)
+  foods = MALAWI_FCT.filter(f => {
+    const nameMatch = !searchN || f.name.toLowerCase().includes(searchN);
+    const catMatch  = !cat     || f.cat === cat;
+    return nameMatch && catMatch;
+  });
 
   // Sort
   if (sort === 'name')     foods.sort((a,b) => a.name.localeCompare(b.name));
