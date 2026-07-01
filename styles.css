@@ -125,7 +125,7 @@
   border-top-color: var(--nts-teal);
   border-left-color: rgba(0,245,228,0.35);
   animation: nts-cw 1.9s linear infinite;
-  filter: drop-shadow(0 0 7px rgba(0,245,228,0.5));
+  box-shadow: 0 0 7px rgba(0,245,228,0.5);
 }
 .nts-ring-mid {
   position: absolute; inset: 6px; border-radius: 50%;
@@ -133,7 +133,7 @@
   border-bottom-color: var(--nts-blue);
   border-right-color: rgba(59,130,246,0.35);
   animation: nts-ccw 2.6s linear infinite;
-  filter: drop-shadow(0 0 6px rgba(59,130,246,0.45));
+  box-shadow: 0 0 6px rgba(59,130,246,0.45);
 }
 .nts-ring-inner {
   position: absolute; inset: 20px; border-radius: 50%;
