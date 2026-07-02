@@ -14,6 +14,7 @@
 //  All functions return Promises.
 //
 // eNCPT-informed, ASPEN/ESPEN/AND aligned prompts.
+// RAG-enhanced with ~6,100 clinical chunks from Chakudya Knowledge Base.
 // Token-optimized for low-latency clinical use.
 // ═══════════════════════════════════════════════════════════════
 
@@ -25,6 +26,9 @@
   const GROQ_MODEL    = 'llama-3.3-70b-versatile';
   const MAX_TOKENS    = 900;
   const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
+  // RAG Knowledge Base: ~6,100 chunks — ESPEN/ASPEN guidelines, Malawi CMAM 2016,
+  // Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas, Burns, Oncology,
+  // IBD, Dementia, TB, Cystic Fibrosis, Surgical/Parenteral Nutrition, and more.
 
   // API key: set via window.GROQ_API_KEY (from Appwrite Function)
   // Waits up to 5 seconds for the key to be loaded before giving up
@@ -608,6 +612,139 @@ Core principles:
     },
   };
 
+
+  // ════════════════════════════════════════════════════════════
+  // CHAKUDYA RAG KNOWLEDGE LAYER
+  // Semantic search over ~6,100 clinical nutrition chunks:
+  //   • Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas
+  //   • ESPEN Guidelines (Renal, Hepatology, Geriatrics, Neurology,
+  //     Pancreatitis, Liver Disease, Oncology, ICU, Cardiology, HPN,
+  //     IBD, Polymorbid, Ethical, Obesity/GI, Cancer malnutrition)
+  //   • ASPEN Guidelines (Obesity, Hospitalized Adults)
+  //   • Malawi CMAM Guidelines 2016
+  //   • Burns, Cystic Fibrosis, Dementia, TB, Intestinal Failure,
+  //     Surgical Nutrition, Parenteral Nutrition, Protein & Aging
+  // ════════════════════════════════════════════════════════════
+  const _RAGLayer = {
+
+    // Source → readable label map for citation
+    _sourceLabels: {
+      malawi_fct:                    'Malawi FCT',
+      chakudya_foods:                'Chakudya Food Database',
+      exchange_lists:                'UCT Exchange Lists',
+      renal_foods:                   'Renal Foods Database',
+      enteral_formulas:              'Enteral Formulas Database',
+      malawi_cmam_2016:              'Malawi CMAM Guidelines 2016',
+      malawi_cmam_guidelines_dec2016:'Malawi CMAM Guidelines 2016',
+      espen_guidelines_on_enteral_nutrition_adult_renal_failure: 'ESPEN EN Renal Failure',
+      espen_guidelines_on_parenteral_nutrition_hepatology:       'ESPEN PN Hepatology',
+      espen_guideline_clinical_nutrition_and_hydration_in_geriatrics: 'ESPEN Geriatrics',
+      espen_guideline_on_clinical_nutrition_in_acute_and_chronic_pancreatitis: 'ESPEN Pancreatitis',
+      espen_guideline_on_clinical_nutrition_in_liver_disease:    'ESPEN Liver Disease',
+      espen_guideline_clinical_nutrition_in_neurology:           'ESPEN Neurology',
+      espen_guidelines_on_parenteral_nutrition_home_parenteral_nutrition_hpn_in_adult_patients: 'ESPEN HPN',
+      espen_guideline_on_ethical_aspects_of_artificial_nutrition_and_hydration: 'ESPEN Ethical Aspects',
+      espen_guidelines_on_nutritional_support_for_polymorbid_internal_medicine_patients: 'ESPEN Polymorbid',
+      european_guideline_on_obesity_care_in_patients_with_gastrointestinal_and_liver_diseases_joint_espen_ueg_guideline: 'ESPEN/UEG Obesity GI',
+      espen_expert_group_recommendations_for_action_against_cancer_related_malnutrition_1: 'ESPEN Cancer Malnutrition',
+      espen_guidelines_on_enteral_nutrition_wasting_in_hiv_and_other_chronic_infectious_diseases: 'ESPEN EN HIV/Wasting',
+      a_s_p_e_n_clinical_guidelines_nutrition_support_of_hospitalized_adult_patients_with_obesity: 'ASPEN Obesity Guidelines',
+      clinical_nutrition_in_inflammatory_bowel_disease: 'Clinical Nutrition in IBD',
+      inflammatory_bowel_disease:    'IBD Nutrition Guidelines',
+      intestinal_failure_in_adults:  'Intestinal Failure in Adults',
+      nutrition_in_cancer_patients:  'Nutrition in Cancer Patients',
+      nutrition_in_dementia:         'Nutrition in Dementia',
+      nutritional_care_and_support_for_patients_with_tuberculosis: 'Nutrition in TB',
+      nutrition_care_for_infants_children_and_adults_with_cystic_fibrosis: 'Cystic Fibrosis Nutrition',
+      major_burns:                   'Major Burns Nutrition',
+      enteral_nutrition_surgery_including_organ_transplantation: 'EN Surgery/Transplant',
+      enteral_nutrition_geriatrics:  'EN Geriatrics',
+      parenteral_nutrition_surgery:  'PN Surgery',
+      parenteral_nutrition_central_line_catheters: 'PN Central Line Catheters',
+      parenteral_nutrition_gastroenterogy: 'PN Gastroenterology',
+      protein_intake_and_exercise_for_optimal_muscle_function_with_aging: 'Protein & Aging',
+      definitions_and_terminologies_in_clinical_nutrition: 'Clinical Nutrition Definitions',
+      colonic_surgery:               'Colonic Surgery Nutrition',
+      elective_rectal_pelvic_surgery:'Rectal/Pelvic Surgery Nutrition',
+      nutrition_and_diabetes_guide:  'Diabetes Nutrition Guide',
+    },
+
+    _labelFor(source) {
+      if (!source) return 'Chakudya Knowledge Base';
+      return this._sourceLabels[source]
+        || source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    },
+
+    /**
+     * fetchContext(query, context, topK)
+     * Calls /rag/retrieve and returns a formatted prompt block.
+     * Returns empty string on failure (non-fatal).
+     */
+    async fetchContext(query, context = 'clinical', topK = 7) {
+      try {
+        const res = await fetch(RAG_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, context, top_k: topK }),
+        });
+        if (!res.ok) return '';
+        const data   = await res.json();
+        const chunks = data?.data || data?.chunks || [];
+        if (!chunks.length) return '';
+        return this.buildContext(chunks, query);
+      } catch (_) {
+        return '';
+      }
+    },
+
+    /**
+     * buildContext(chunks, query)
+     * Formats retrieved chunks into a structured, source-attributed
+     * prompt block for Groq injection.
+     */
+    buildContext(chunks, query = '') {
+      if (!chunks.length) return '';
+
+      // Group chunks by source for cleaner presentation
+      const bySource = {};
+      chunks.forEach(c => {
+        const src = c.source || 'unknown';
+        if (!bySource[src]) bySource[src] = [];
+        bySource[src].push(c.content);
+      });
+
+      const lines = [
+        '━━━ CHAKUDYA CLINICAL KNOWLEDGE BASE (RAG-Retrieved) ━━━',
+        `Query matched ${chunks.length} relevant chunks from Oasis knowledge base.`,
+        '',
+      ];
+
+      Object.entries(bySource).forEach(([src, contents]) => {
+        const label = this._labelFor(src);
+        lines.push(`▸ SOURCE: ${label}`);
+        contents.forEach(text => {
+          // Trim to keep tokens manageable; preserve clinical detail
+          const trimmed = text.length > 600 ? text.slice(0, 600) + '…' : text;
+          lines.push(`  ${trimmed}`);
+        });
+        lines.push('');
+      });
+
+      lines.push(
+        '━━━ END OF RAG CONTEXT ━━━',
+        '',
+        'INSTRUCTIONS FOR USING RAG CONTEXT:',
+        '• Ground your answer in the above retrieved content where relevant.',
+        '• Cite the source label when referencing specific guideline content (e.g. "Per ESPEN Liver Disease guidelines…").',
+        '• For Malawian food data, prioritize locally-verified values from Malawi FCT or Chakudya Food Database.',
+        '• If the retrieved content does not cover the query, supplement with your broader clinical training.',
+        '• Never contradict retrieved guideline content without clearly flagging the discrepancy.',
+      );
+
+      return lines.join('\n');
+    },
+  };
+
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
     const apiKey = await _waitForKey();
@@ -658,8 +795,16 @@ ETIOLOGY: [related to…]
 SIGNS/SYMPTOMS: [as evidenced by…]
 PES STATEMENT: [Full integrated PES in one sentence]`;
 
+    let pesSystem = BASE_SYSTEM;
+    try {
+      const ragCtx = await _RAGLayer.fetchContext(
+        `PES statement ${diagnosis} ${etiology} nutrition diagnosis`, 'clinical', 5
+      );
+      if (ragCtx) pesSystem += '\n\n' + ragCtx;
+    } catch (_) {}
+
     const response = await _groqChat([
-      { role: 'system', content: BASE_SYSTEM },
+      { role: 'system', content: pesSystem },
       { role: 'user',   content: userMsg }
     ]);
 
@@ -698,8 +843,16 @@ MONITORING & EVALUATION:
 
 Be specific, concise, and clinically relevant. Use eNCPT language.`;
 
+    let adimeSystem = BASE_SYSTEM;
+    try {
+      const ragCtx = await _RAGLayer.fetchContext(
+        `ADIME nutrition note ${diagnosis} ${assessment} intervention monitoring`, 'clinical', 5
+      );
+      if (ragCtx) adimeSystem += '\n\n' + ragCtx;
+    } catch (_) {}
+
     const response = await _groqChat([
-      { role: 'system', content: BASE_SYSTEM },
+      { role: 'system', content: adimeSystem },
       { role: 'user',   content: userMsg }
     ], 1000);
 
@@ -743,8 +896,15 @@ NUTRITION DIAGNOSES TO CONSIDER: [≤3 PES-aligned diagnoses]
 PRIORITY INTERVENTIONS: [≤3 concise interventions]
 MONITORING PARAMETERS: [≤3 key parameters]`;
 
+    let assessSystem = BASE_SYSTEM;
+    try {
+      const ragQuery = `nutrition assessment BMI ${bmi} energy ${energy} protein ${protein} ${clinical}`.trim();
+      const ragCtx = await _RAGLayer.fetchContext(ragQuery, 'clinical', 6);
+      if (ragCtx) assessSystem += '\n\n' + ragCtx;
+    } catch (_) {}
+
     const response = await _groqChat([
-      { role: 'system', content: BASE_SYSTEM },
+      { role: 'system', content: assessSystem },
       { role: 'user',   content: userMsg }
     ]);
 
@@ -781,8 +941,15 @@ FOLLOW-UP: [Key monitoring parameters]
 
 Keep it under 200 words. Use professional clinical language.`;
 
+    let summarySystem = BASE_SYSTEM;
+    try {
+      const summaryQuery = `patient nutrition summary ${JSON.stringify(patientData).slice(0, 200)}`;
+      const ragCtx = await _RAGLayer.fetchContext(summaryQuery, 'clinical', 4);
+      if (ragCtx) summarySystem += '\n\n' + ragCtx;
+    } catch (_) {}
+
     const response = await _groqChat([
-      { role: 'system', content: BASE_SYSTEM },
+      { role: 'system', content: summarySystem },
       { role: 'user',   content: userMsg }
     ], 700);
 
@@ -1090,23 +1257,17 @@ Keep it under 200 words. Use professional clinical language.`;
       }
     }
 
-    // Auto-inject RAG context from Chakudya API (semantic search over
-    // Malawi FCT, exchange lists, renal foods, enteral formulas)
+    // Auto-inject RAG context from Chakudya API Knowledge Base
+    // Sources: Malawi FCT · Exchange Lists · Renal Foods · Enteral Formulas ·
+    //          ESPEN Guidelines · ASPEN Guidelines · Malawi CMAM 2016 ·
+    //          Burns · Oncology · IBD · Dementia · TB · Cystic Fibrosis ·
+    //          Surgical Nutrition · Parenteral Nutrition · and more (~6,100 chunks)
     let ragContextInjected = false;
     try {
-      const ragRes = await fetch(RAG_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userMessage, context: 'clinical', top_k: 5 }),
-      });
-      if (ragRes.ok) {
-        const ragData = await ragRes.json();
-        const chunks  = ragData?.data || ragData?.chunks || [];
-        if (chunks.length > 0) {
-          const ragText = chunks.map(c => c.content).join('\n');
-          systemPrompt += `\n\nRELEVANT CLINICAL NUTRITION DATA (Chakudya Knowledge Base — Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas):\n${ragText}\n\nUse this data to ground your answer in real, locally-verified Malawian nutrition information where relevant.`;
-          ragContextInjected = true;
-        }
+      const ragCtx = await _RAGLayer.fetchContext(userMessage, 'clinical', 7);
+      if (ragCtx) {
+        systemPrompt += '\n\n' + ragCtx;
+        ragContextInjected = true;
       }
     } catch (_ragErr) {
       // RAG failure is non-fatal — Oasis AI continues without it
