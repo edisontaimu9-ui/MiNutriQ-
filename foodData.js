@@ -7583,24 +7583,24 @@ const BLEND_FOODS = [
 
 
 // ══════════════════════════════════════════════════════════════════════════════
-// PACKAGED FOODS — Firestore-backed, offline-first local DB
+// PACKAGED FOODS — Chakudya API-backed, offline-first local DB
 // ══════════════════════════════════════════════════════════════════════════════
 /**
  * PackagedFoodsDB
  * ─────────────────────────────────────────────────────────────────────────────
- * Manages a `packaged_foods` Firestore collection synced into IndexedDB for
- * offline-first access.  Integrates cleanly with the existing NTFoodSearch
- * layered pipeline as "Layer 0" (highest priority for packaged/branded foods).
+ * Reads/writes packaged (branded) foods against the public Chakudya API and
+ * caches results in IndexedDB for offline-first access. Integrates cleanly
+ * with the existing NTFoodSearch layered pipeline as "Layer 0" (highest
+ * priority for packaged/branded foods).
  *
  * Architecture
  * ┌──────────────────────┐
- * │  Firestore           │  packaged_foods collection (source of truth)
- * │  packaged_foods      │
- * └──────────┬───────────┘
- *            │  incremental sync (updatedAt-based)
+ * │  Chakudya API         │  GET  /packaged        (list / barcode lookup)
+ * │  (Cloudflare Worker)  │  POST /packaged/submit (public, rate-limited)
+ * └──────────┬────────────┘
+ *            │  periodic + on-demand sync
  * ┌──────────▼───────────┐
- * │  IndexedDB           │  oasis_packaged_foods_v1 store  (offline cache)
- * │  OasisPackagedFoods  │  keyed by document id
+ * │  IndexedDB           │  OasisPackagedFoods store (offline cache)
  * └──────────┬───────────┘
  *            │  instant <100 ms
  * ┌──────────▼───────────┐
@@ -7611,25 +7611,21 @@ const BLEND_FOODS = [
  * │  PackagedFoodsDB API │  search(), searchBarcode(), add(), sync()
  * └──────────────────────┘
  *
- * Firestore document shape
- * {
- *   id              : string        // auto or barcode-based doc ID
- *   productName     : string
- *   brand           : string
- *   barcode         : string        // EAN-13 / UPC-A (unique)
- *   nutrition: {
- *     energy_kcal   : number,
- *     protein_g     : number,
- *     fat_g         : number,
- *     carbs_g       : number,
- *     sugar_g       : number,
- *     fiber_g       : number,
- *     sodium_mg     : number,
- *   },
- *   servingSize     : number        // grams or ml
- *   createdAt       : Timestamp | string
- *   updatedAt       : Timestamp | string
- * }
+ * Chakudya API
+ * ─────────────────────────────────────────────────────────────────────────────
+ *   Base       : https://chakudya-api.edisontaimu9.workers.dev
+ *   GET  /packaged                 — query params: barcode, limit, offset
+ *   POST /packaged/submit          — public, rate-limited
+ *                                    requires: barcode, product_name
+ *                                    auto-tagged: status:"pending" server-side
+ *   PUT/PATCH/DELETE /packaged/:id — admin-only (not used by this client;
+ *                                    requires an admin bearer token which the
+ *                                    consumer app does not hold)
+ *
+ * User-submitted items land with status "pending" and only appear back in
+ * GET /packaged once an admin verifies them in the companion app — exactly
+ * like the old verified:false flow, just server-side now instead of Firestore.
+ * We keep the freshly-submitted item visible locally in the meantime.
  *
  * Author : Edison Taimu / Oasis
  * ─────────────────────────────────────────────────────────────────────────────
@@ -7639,12 +7635,19 @@ const BLEND_FOODS = [
   'use strict';
 
   // ── CONSTANTS ────────────────────────────────────────────────────────────────
-  const COLLECTION      = 'packaged_foods';
+  const API_BASE        = 'https://chakudya-api.edisontaimu9.workers.dev';
+  const PACKAGED_URL     = API_BASE + '/packaged';
+  const SUBMIT_URL       = API_BASE + '/packaged/submit';
+
   const IDB_DB_NAME     = 'OasisPackagedFoods';
   const IDB_STORE       = 'foods';
   const IDB_META_STORE  = 'meta';
-  const IDB_VERSION     = 2;
+  const IDB_VERSION     = 3;             // bumped: cache now sourced from Chakudya API, not Firestore
   const SYNC_DEBOUNCE   = 3000;          // ms to wait after coming online
+  const POLL_INTERVAL   = 15 * 60 * 1000; // re-poll GET /packaged every 15 min (no realtime push over REST)
+  const PAGE_SIZE       = 200;           // items per GET /packaged page during sync
+  const MAX_SYNC_PAGES  = 25;            // safety cap (≈5000 items) against runaway pagination
+  const FETCH_TIMEOUT   = 10000;         // ms
   const MAX_RESULTS     = 20;
   const FUZZY_THRESHOLD = 0.35;
 
@@ -7655,8 +7658,8 @@ const BLEND_FOODS = [
   let _docMap       = new Map();         // docId  → document
   let _ready        = false;
   let _syncTimer    = null;
-  let _unsubscribe  = null;              // Firestore onSnapshot detach fn
-  let _onSyncCallback = null;            // called after every live sync batch
+  let _pollTimer    = null;
+  let _onSyncCallback = null;            // called after every sync batch
 
   // Resolve/reject queue for callers that arrive before init completes
   let _readyPromise = null;
@@ -7721,55 +7724,103 @@ const BLEND_FOODS = [
     return Math.min(score, 1);
   }
 
-  /** Convert Firestore Timestamp / ISO string → JS Date */
-  function _toDate(v) {
+  /** Convert any timestamp-ish value → ISO string */
+  function _toIso(v) {
     if (!v) return null;
-    if (typeof v === 'string') return new Date(v);
-    if (v && typeof v.toDate === 'function') return v.toDate();          // Firestore Timestamp
-    if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+    if (typeof v === 'string') { const d = new Date(v); return isNaN(d) ? v : d.toISOString(); }
+    if (typeof v === 'number') return new Date(v).toISOString();
+    if (v && typeof v.toDate === 'function') return v.toDate().toISOString();      // Firestore Timestamp (legacy cache)
+    if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000).toISOString();
     return null;
   }
 
-  /** Serialise a Firestore doc for IDB storage (plain JSON) */
-  function _serialise(doc) {
-    const out = { ...doc };
-    if (out.createdAt) out.createdAt = _toDate(out.createdAt)?.toISOString() ?? null;
-    if (out.updatedAt) out.updatedAt = _toDate(out.updatedAt)?.toISOString() ?? null;
-    return out;
+  /**
+   * Normalise a raw Chakudya API record (or a locally-cached admin-schema doc)
+   * into the single internal shape the rest of this module works with:
+   *   { id, name, brand, barcode, servingSize, per100g:{kcal,kj,pro,cho,fat,fiber,sugar,sodium},
+   *     verified, status, submittedBy, updatedAt, source }
+   *
+   * The API's exact field casing is expected to be snake_case (product_name,
+   * energy_kcal, protein_g, carbs_g, fat_g, sugar_g, fiber_g, sodium_mg,
+   * serving_size) per the Chakudya README, but this bridge also accepts the
+   * admin schema (name/per100g) used previously so nothing already cached
+   * breaks, and it degrades gracefully if a field is simply absent.
+   */
+  function _normalizeApiDoc(raw) {
+    if (!raw) return null;
+    const n = raw.per100g || raw.nutrition || {};
+
+    const name = raw.product_name || raw.name || raw.productName || '';
+    if (!name) return null;
+
+    const barcode = String(raw.barcode || raw.ean || raw.upc || '').replace(/\D/g, '');
+
+    const kcal = raw.energy_kcal ?? raw.kcal ?? n.kcal ?? n.energy_kcal ?? null;
+    const kj   = raw.energy_kj   ?? raw.kj   ?? n.kj   ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null);
+
+    const status   = raw.status || (raw.verified === false ? 'pending' : null);
+    const verified = raw.verified ?? (status ? status === 'approved' || status === 'verified' : true);
+
+    const id = raw.id || raw._id || raw.uuid || barcode ||
+      `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    return {
+      id:           String(id),
+      name,
+      brand:        raw.brand || '',
+      barcode:      barcode || '',
+      category:     raw.category || 'Packaged',
+      country:      raw.country  || '',
+      per100g: {
+        kcal:   kcal,
+        kj:     kj,
+        pro:    raw.protein_g ?? raw.pro    ?? n.pro    ?? n.protein_g ?? null,
+        cho:    raw.carbs_g   ?? raw.cho    ?? n.cho    ?? n.carbs_g   ?? null,
+        fat:    raw.fat_g     ?? raw.fat    ?? n.fat    ?? n.fat_g     ?? null,
+        fiber:  raw.fiber_g   ?? raw.fiber  ?? n.fiber  ?? n.fiber_g   ?? null,
+        sugar:  raw.sugar_g   ?? raw.sugar  ?? n.sugar  ?? n.sugar_g   ?? null,
+        sodium: raw.sodium_mg ?? raw.sodium ?? n.sodium ?? n.sodium_mg ?? null,
+      },
+      servingSize:  raw.serving_size ?? raw.servingSize ?? 100,
+      servingLabel: raw.serving_label || raw.servingLabel || '',
+      image:        raw.image || raw.image_url || '',
+      status:       status || 'approved',
+      verified:     !!verified,
+      submittedBy:  raw.submitted_by || raw.submittedBy || '',
+      createdAt:    _toIso(raw.created_at || raw.createdAt) || new Date().toISOString(),
+      updatedAt:    _toIso(raw.updated_at || raw.updatedAt) || new Date().toISOString(),
+      source:       raw.source || 'chakudya',
+    };
   }
 
-  /** Normalise a stored doc into the unified food output shape.
-   *  Supports both admin schema  (name / per100g: { kcal, kj, pro, cho, fat, fiber, sugar, sodium })
-   *  and legacy schema           (productName / nutrition: { energy_kcal, protein_g, … }).
-   */
+  /** Normalise a stored doc into the unified food output shape used by the UI. */
   function _toFoodShape(doc) {
-    // ── field-name bridge ──────────────────────────────────────────────────────
-    const n    = doc.per100g || doc.nutrition || {};
-    const kcal = n.kcal   ?? n.energy_kcal ?? null;
-    const kj   = n.kj     ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null);
+    const n    = doc.per100g || {};
     return {
       id:              doc.id,
-      name:            doc.name        || doc.productName || null,
+      name:            doc.name        || null,
       brand:           doc.brand       || null,
       barcode:         doc.barcode     || null,
       cat:             doc.category    || 'Packaged',
       country:         doc.country     || null,
       verified:        doc.verified    ?? false,
+      status:          doc.status      || (doc.verified ? 'approved' : 'pending'),
       image:           doc.image       || null,
-      kcal,
-      kj,
-      pro:             n.pro     ?? n.protein_g  ?? null,
-      cho:             n.cho     ?? n.carbs_g    ?? null,
-      fat:             n.fat     ?? n.fat_g      ?? null,
-      sugar:           n.sugar   ?? n.sugar_g    ?? null,
-      fiber:           n.fiber   ?? n.fiber_g    ?? null,
-      sodium:          n.sodium  ?? n.sodium_mg  ?? null,
+      kcal:            n.kcal   ?? null,
+      kj:              n.kj     ?? null,
+      pro:             n.pro    ?? null,
+      cho:             n.cho    ?? null,
+      fat:             n.fat    ?? null,
+      sugar:           n.sugar  ?? null,
+      fiber:           n.fiber  ?? null,
+      sodium:          n.sodium ?? null,
       servingSize:     doc.servingSize  ?? null,
       servingLabel:    doc.servingLabel || null,
       sourceUsed:      'packaged',
-      dbSource:        'Oasis Packaged Foods',
+      dbSource:        'Chakudya Packaged Foods',
       confidenceScore: 1.0,
       lastUpdated:     doc.updatedAt   ?? null,
+      submittedBy:     doc.submittedBy || '',
       _raw:            doc,
     };
   }
@@ -7783,18 +7834,16 @@ const BLEND_FOODS = [
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
 
-        // Main food store — keyed by document id
-        if (!db.objectStoreNames.contains(IDB_STORE)) {
-          const store = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
-          store.createIndex('barcode',   'barcode', { unique: false });
-          store.createIndex('name',      'name',    { unique: false });
-          store.createIndex('updatedAt', 'updatedAt', { unique: false });
-        }
+        // Cache format changed (Chakudya API instead of Firestore) — start clean.
+        if (db.objectStoreNames.contains(IDB_STORE)) db.deleteObjectStore(IDB_STORE);
+        if (db.objectStoreNames.contains(IDB_META_STORE)) db.deleteObjectStore(IDB_META_STORE);
 
-        // Meta store — holds sync cursors
-        if (!db.objectStoreNames.contains(IDB_META_STORE)) {
-          db.createObjectStore(IDB_META_STORE, { keyPath: 'key' });
-        }
+        const store = db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+        store.createIndex('barcode',   'barcode',   { unique: false });
+        store.createIndex('name',      'name',      { unique: false });
+        store.createIndex('updatedAt', 'updatedAt', { unique: false });
+
+        db.createObjectStore(IDB_META_STORE, { keyPath: 'key' });
       };
 
       req.onsuccess  = (e) => resolve(e.target.result);
@@ -7854,29 +7903,14 @@ const BLEND_FOODS = [
     _tokenIndex.clear();
     _barcodeMap.clear();
     _docMap.clear();
-
-    for (const doc of docs) {
-      _docMap.set(doc.id, doc);
-
-      // Barcode index (exact)
-      if (doc.barcode) _barcodeMap.set(String(doc.barcode).trim(), doc.id);
-
-      // Token inverted index for name (admin schema) or productName (legacy)
-      const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
-      for (const field of fields) {
-        for (const token of _tokenize(field)) {
-          if (!_tokenIndex.has(token)) _tokenIndex.set(token, new Set());
-          _tokenIndex.get(token).add(doc.id);
-        }
-      }
-    }
+    for (const doc of docs) _indexDoc(doc);
   }
 
   /** Incremental index update for a single doc (add/update) */
   function _indexDoc(doc) {
     _docMap.set(doc.id, doc);
     if (doc.barcode) _barcodeMap.set(String(doc.barcode).trim(), doc.id);
-    const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
+    const fields = [doc.name, doc.brand].filter(Boolean);
     for (const field of fields) {
       for (const token of _tokenize(field)) {
         if (!_tokenIndex.has(token)) _tokenIndex.set(token, new Set());
@@ -7891,7 +7925,7 @@ const BLEND_FOODS = [
     if (!doc) return;
     _docMap.delete(id);
     if (doc.barcode) _barcodeMap.delete(String(doc.barcode).trim());
-    const fields = [doc.name || doc.productName, doc.brand].filter(Boolean);
+    const fields = [doc.name, doc.brand].filter(Boolean);
     for (const field of fields) {
       for (const token of _tokenize(field)) {
         const set = _tokenIndex.get(token);
@@ -7900,122 +7934,106 @@ const BLEND_FOODS = [
     }
   }
 
-  // ── FIRESTORE SYNC ───────────────────────────────────────────────────────────
+  // ── CHAKUDYA API — NETWORK HELPERS ───────────────────────────────────────────
 
-  function _getFirestore() {
-    if (typeof firebase !== 'undefined' && firebase.firestore) {
-      return firebase.firestore();
+  async function _apiFetch(url, opts = {}) {
+    const ctrl    = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer   = ctrl ? setTimeout(() => ctrl.abort(), FETCH_TIMEOUT) : null;
+    try {
+      const res = await fetch(url, { ...opts, signal: ctrl ? ctrl.signal : undefined });
+      const text = await res.text();
+      let json = null;
+      try { json = text ? JSON.parse(text) : null; } catch (_) { json = null; }
+      if (!res.ok) {
+        const msg = (json && (json.error || json.message)) || `HTTP ${res.status}`;
+        const err = new Error(msg);
+        err.status = res.status;
+        err.body   = json;
+        throw err;
+      }
+      return json;
+    } finally {
+      if (timer) clearTimeout(timer);
     }
-    return null;
   }
 
-  // ── FIRESTORE REAL-TIME LISTENER ─────────────────────────────────────────────
+  /** Pull the array of records out of whatever envelope Chakudya wraps them in. */
+  function _extractList(json) {
+    if (!json) return [];
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json.data)) return json.data;
+    if (json.data && Array.isArray(json.data.items)) return json.data.items;
+    if (Array.isArray(json.items))   return json.items;
+    if (Array.isArray(json.results)) return json.results;
+    if (json.data && typeof json.data === 'object') return [json.data]; // single record
+    return [];
+  }
 
   /**
-   * Attach an onSnapshot listener to `packaged_foods`.
-   * - First snapshot = full initial load (all docs arrive as 'added').
-   * - Subsequent snapshots = only changed docs (add / modify / remove).
-   * - Updates IDB + in-memory index and fires _onSyncCallback so the UI re-renders.
-   * Returns true if the listener was successfully attached.
+   * One page of GET /packaged.
+   * @returns {Promise<Array>} raw records (un-normalised)
    */
-  function _listenFirestore() {
-    const db = _getFirestore();
-    if (!db) return false;
-
-    // Detach any stale listener before creating a new one
-    if (_unsubscribe) { try { _unsubscribe(); } catch (_) {} _unsubscribe = null; }
-
-    try {
-      _unsubscribe = db.collection(COLLECTION)
-        .orderBy('updatedAt', 'asc')
-        .onSnapshot(
-          { includeMetadataChanges: false },
-          snap => {
-            if (!snap) return;
-            const toStore = [];
-
-            snap.docChanges().forEach(change => {
-              if (change.type === 'removed') {
-                _unindexDoc(change.doc.id);
-                _idbDelete(change.doc.id).catch(() => {});
-              } else {
-                const doc = _serialise({ ...change.doc.data(), id: change.doc.id });
-                toStore.push(doc);
-                _docMap.set(doc.id, doc);
-                _indexDoc(doc);
-              }
-            });
-
-            if (toStore.length) _idbPutBatch(toStore).catch(() => {});
-            _idbSetMeta('lastSync', new Date().toISOString()).catch(() => {});
-
-            if (typeof _onSyncCallback === 'function') {
-              try { _onSyncCallback(_docMap.size); } catch (_) {}
-            }
-
-            console.info(
-              `[PackagedFoodsDB] onSnapshot — ${snap.docChanges().length} change(s), ` +
-              `total in memory: ${_docMap.size}`
-            );
-          },
-          err => {
-            console.error('[PackagedFoodsDB] onSnapshot error:', err);
-            _unsubscribe = null;
-            // Reconnect after 5 s
-            clearTimeout(_syncTimer);
-            _syncTimer = setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 5000);
-          }
-        );
-
-      console.info('[PackagedFoodsDB] Real-time listener attached to packaged_foods');
-      return true;
-
-    } catch (err) {
-      console.error('[PackagedFoodsDB] Failed to attach listener:', err);
-      return false;
-    }
+  async function _fetchPackagedPage({ limit = PAGE_SIZE, offset = 0, barcode } = {}) {
+    const params = new URLSearchParams();
+    if (barcode) params.set('barcode', barcode);
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    const json = await _apiFetch(`${PACKAGED_URL}?${params.toString()}`);
+    return _extractList(json);
   }
 
-  /** One-shot incremental fetch — kept for the public sync() API / forced refresh */
-  async function _syncFromFirestore() {
-    const db = _getFirestore();
-    if (!db) {
-      console.warn('[PackagedFoodsDB] Firestore not available — skipping sync');
+  /** Full paginated sync of GET /packaged into IndexedDB + in-memory index. */
+  async function _syncFromAPI() {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      console.warn('[PackagedFoodsDB] Offline — skipping sync');
       return 0;
     }
     try {
-      const lastSync = await _idbGetMeta('lastSync');
-      let   colRef   = db.collection(COLLECTION);
-      if (lastSync) colRef = colRef.where('updatedAt', '>', new Date(lastSync));
-      const snap = await colRef.orderBy('updatedAt', 'asc').get();
-      if (snap.empty && lastSync) return 0;
-      const now   = new Date().toISOString();
+      let offset = 0;
+      let page   = 0;
+      let synced = 0;
       const batch = [];
-      snap.forEach(docSnap => {
-        const doc = _serialise({ ...docSnap.data(), id: docSnap.id });
-        batch.push(doc); _indexDoc(doc);
-      });
+
+      while (page < MAX_SYNC_PAGES) {
+        const raw = await _fetchPackagedPage({ limit: PAGE_SIZE, offset });
+        if (!raw.length) break;
+
+        for (const r of raw) {
+          const doc = _normalizeApiDoc(r);
+          if (doc) { batch.push(doc); synced++; }
+        }
+
+        if (raw.length < PAGE_SIZE) break; // last page
+        offset += PAGE_SIZE;
+        page++;
+      }
+
       if (batch.length) {
         await _idbPutBatch(batch);
-        for (const doc of batch) _docMap.set(doc.id, doc);
+        for (const doc of batch) _indexDoc(doc);
       }
-      await _idbSetMeta('lastSync', now);
+      await _idbSetMeta('lastSync', new Date().toISOString());
+
       if (typeof _onSyncCallback === 'function') {
         try { _onSyncCallback(_docMap.size); } catch (_) {}
       }
-      console.info(`[PackagedFoodsDB] One-shot sync — ${batch.length} doc(s)`);
-      return batch.length;
+      console.info(`[PackagedFoodsDB] Synced ${synced} doc(s) from Chakudya API`);
+      return synced;
     } catch (err) {
-      console.error('[PackagedFoodsDB] Firestore sync error:', err);
+      console.error('[PackagedFoodsDB] Chakudya sync error:', err);
       return 0;
     }
   }
 
-  /** Reattach listener when device comes back online */
+  function _startPolling() {
+    clearInterval(_pollTimer);
+    _pollTimer = setInterval(() => { _syncFromAPI(); }, POLL_INTERVAL);
+  }
+
   function _scheduleSyncIfOnline() {
     if (!navigator.onLine) return;
     clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, SYNC_DEBOUNCE);
+    _syncTimer = setTimeout(() => { _syncFromAPI(); }, SYNC_DEBOUNCE);
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────────
@@ -8032,18 +8050,9 @@ const BLEND_FOODS = [
 
       console.info(`[PackagedFoodsDB] Loaded ${stored.length} doc(s) from IndexedDB`);
 
-      // Try to attach real-time listener now.
-      // Usually fails here because firebase.initializeApp() in main.js hasn't run yet —
-      // main.js MUST call PackagedFoodsDB.listen() after Firebase init.
-      // The retry timers below are a safety net for any other timing edge-cases.
-      if (!_listenFirestore()) {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded',
-            () => { if (!_unsubscribe) _listenFirestore(); }, { once: true });
-        }
-        setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 3000);
-        setTimeout(() => { if (!_unsubscribe) _listenFirestore(); }, 8000);
-      }
+      // Kick off a fresh pull from the Chakudya API + start periodic polling.
+      _syncFromAPI();
+      _startPolling();
 
       window.addEventListener('online',  _scheduleSyncIfOnline);
       window.addEventListener('offline', () => clearTimeout(_syncTimer));
@@ -8054,9 +8063,7 @@ const BLEND_FOODS = [
     }
   }
 
-
-
-  // ── SEARCH ENGINE ────────────────────────────────────────────────────────────
+  // ── SEARCH ENGINE (local, in-memory — Chakudya has no full-text endpoint) ────
 
   /**
    * Instant local search across product name and brand.
@@ -8071,19 +8078,12 @@ const BLEND_FOODS = [
   function _searchByText(query, { limit = 10, threshold = FUZZY_THRESHOLD } = {}) {
     if (!query || !query.trim()) return [];
 
-    const qNorm   = _norm(query);
     const qTokens = _tokenize(query);
-
-    // Candidate set: union of IDs matching any query token in the inverted index
     const candidates = new Set();
 
-    // (a) token-index lookup — O(tokens × bucket_size)
     for (const tok of qTokens) {
-      // Exact token hit
       const exact = _tokenIndex.get(tok);
       if (exact) exact.forEach(id => candidates.add(id));
-
-      // Partial token prefix match (handles truncated queries like "maggi" → "maggis")
       for (const [idxTok, idSet] of _tokenIndex) {
         if (idxTok.startsWith(tok) || tok.startsWith(idxTok)) {
           idSet.forEach(id => candidates.add(id));
@@ -8091,17 +8091,15 @@ const BLEND_FOODS = [
       }
     }
 
-    // (b) If candidate set is tiny, broaden to all docs (handles heavy misspellings)
     const pool = candidates.size >= 1 ? candidates : new Set(_docMap.keys());
 
-    // Score and filter
     const scored = [];
     for (const id of pool) {
-      const doc   = _docMap.get(id);
+      const doc = _docMap.get(id);
       if (!doc) continue;
 
-      const nameScore  = _fuzzyScore(query, doc.name || doc.productName || '');
-      const brandScore = _fuzzyScore(query, doc.brand || '') * 0.7; // brand weighted lower
+      const nameScore  = _fuzzyScore(query, doc.name || '');
+      const brandScore = _fuzzyScore(query, doc.brand || '') * 0.7;
       const score      = Math.max(nameScore, brandScore);
 
       if (score >= threshold) scored.push({ doc, score });
@@ -8116,7 +8114,10 @@ const BLEND_FOODS = [
   }
 
   /**
-   * Barcode lookup — exact match first, then partial (prefix/suffix).
+   * Barcode lookup. Checks the local cache first (instant), then — if online
+   * and not found locally — asks the Chakudya API directly via
+   * GET /packaged?barcode=... so newly-approved items are still reachable
+   * before the next full sync.
    * @param {string} barcode
    * @returns {object|null}
    */
@@ -8124,17 +8125,16 @@ const BLEND_FOODS = [
     if (!barcode) return null;
     const bc = String(barcode).trim();
 
-    // Exact
     const exactId = _barcodeMap.get(bc);
     if (exactId) return _toFoodShape(_docMap.get(exactId));
 
-    // Partial fallback (handles leading zeros or check digit mismatches)
+    // Partial fallback (leading zeros / check-digit mismatches) against local cache
     for (const [storedBc, id] of _barcodeMap) {
       if (storedBc.includes(bc) || bc.includes(storedBc)) {
         const doc = _docMap.get(id);
         if (doc) {
           const out = _toFoodShape(doc);
-          out.confidenceScore = 0.85;   // slightly lower confidence for partial match
+          out.confidenceScore = 0.85;
           return out;
         }
       }
@@ -8142,98 +8142,149 @@ const BLEND_FOODS = [
     return null;
   }
 
+  /** Live network barcode lookup against the Chakudya API (async, used as a fallback). */
+  async function _searchByBarcodeRemote(barcode) {
+    if (!barcode || typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+    try {
+      const raw = await _fetchPackagedPage({ barcode: String(barcode).trim(), limit: 1 });
+      if (!raw.length) return null;
+      const doc = _normalizeApiDoc(raw[0]);
+      if (!doc) return null;
+      _idbPutBatch([doc]).catch(() => {});
+      _indexDoc(doc);
+      return _toFoodShape(doc);
+    } catch (err) {
+      console.warn('[PackagedFoodsDB] Remote barcode lookup failed:', err);
+      return null;
+    }
+  }
+
   // ── CRUD — WRITE OPERATIONS ──────────────────────────────────────────────────
 
   /**
-   * Add or update a packaged food document.
-   * Writes to Firestore (if online) and immediately updates local IDB + index.
+   * Submit a packaged food to the Chakudya API (POST /packaged/submit).
+   * Public + rate-limited on the API side — no auth required. New submissions
+   * come back tagged status:"pending" server-side and only surface in public
+   * GET /packaged once an admin verifies them; we keep the submission visible
+   * locally in the meantime.
    *
-   * @param {object} data   - Packaged food data. Accepts admin schema:
-   *                          { name, brand, barcode, category, country, per100g:{kcal,kj,pro,cho,fat,fiber,sugar,sodium},
-   *                            servingSize, servingLabel, image, verified }
-   *                          OR legacy schema: { productName, nutrition:{energy_kcal,protein_g,…}, … }
-   * @param {string} [id]   - Optional document ID; auto-generated if omitted.
-   * @returns {Promise<string>} The document ID
+   * If `id` refers to a doc that's already synced from the API (i.e. this is
+   * an edit rather than a fresh contribution), a PUT /packaged/:id is
+   * attempted first. That endpoint is admin-only on the Chakudya API, so
+   * unless this app is configured with an admin token (window.CHAKUDYA_ADMIN_KEY)
+   * it will fail with 401/403 — in which case we fall back to updating the
+   * local cache only, same resilience pattern as before.
+   *
+   * @param {object} data  - { name, brand, barcode, servingSize,
+   *                           per100g:{kcal,pro,cho,fat,fiber,sugar,sodium} }
+   *                          (also accepts legacy nutrition:{...} shape)
+   * @param {string} [id]  - Existing doc id (edit) or a barcode to use as id
+   * @returns {Promise<string>} the resulting document id
    */
   async function addFood(data, id) {
-    // Accept both `name` (admin schema) and `productName` (legacy)
     const productName = data.name || data.productName;
-    if (!productName) throw new Error('[PackagedFoodsDB] name/productName is required');
+    if (!productName) throw new Error('[PackagedFoodsDB] name is required');
 
-    const db      = _getFirestore();
-    const now     = new Date().toISOString();
-
-    // Read macros — accept both per100g flat fields and legacy nutrition object
     const src = data.per100g || data.nutrition || {};
     const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? null;
-    const kjVal   = data.kj   ?? src.kj   ?? (kcalVal != null ? +(kcalVal * 4.184).toFixed(0) : null);
+    const barcode = (data.barcode || '').replace(/\D/g, '') || '';
 
-    // Write using admin schema (source of truth for the shared collection)
+    // Payload uses Chakudya's documented snake_case field names.
     const payload = {
-      name:         productName,
-      nameLower:    productName.toLowerCase(),
-      brand:        data.brand        || '',
-      barcode:      (data.barcode || '').replace(/\D/g, '') || '',
-      category:     data.category     || 'Packaged',
-      country:      data.country      || '',
-      per100g: {
-        kcal:   kcalVal,
-        kj:     kjVal,
-        pro:    data.pro   ?? src.pro   ?? src.protein_g  ?? null,
-        cho:    data.cho   ?? src.cho   ?? src.carbs_g    ?? null,
-        fat:    data.fat   ?? src.fat   ?? src.fat_g      ?? null,
-        fiber:  data.fiber ?? src.fiber ?? src.fiber_g    ?? null,
-        sugar:  data.sugar ?? src.sugar ?? src.sugar_g    ?? null,
-        sodium: data.sodium?? src.sodium?? src.sodium_mg  ?? null,
-      },
-      servingSize:  data.servingSize  ?? 100,
-      servingLabel: data.servingLabel || '',
-      image:        data.image        || '',
-      verified:     data.verified     ?? false,
-      createdAt:    data.createdAt    || now,
-      updatedAt:    now,
+      product_name: productName,
+      brand:        data.brand || '',
+      barcode:      barcode,
+      serving_size: data.servingSize ?? 100,
+      energy_kcal:  kcalVal,
+      protein_g:    data.pro    ?? src.pro    ?? src.protein_g ?? null,
+      carbs_g:      data.cho    ?? src.cho    ?? src.carbs_g   ?? null,
+      fat_g:        data.fat    ?? src.fat    ?? src.fat_g     ?? null,
+      sugar_g:      data.sugar  ?? src.sugar  ?? src.sugar_g   ?? null,
+      fiber_g:      data.fiber  ?? src.fiber  ?? src.fiber_g   ?? null,
+      sodium_mg:    data.sodium ?? src.sodium ?? src.sodium_mg ?? null,
     };
+    if (data.submittedBy) payload.submitted_by = data.submittedBy;
 
+    const isEdit = !!(id && _docMap.has(id) && _docMap.get(id).source === 'chakudya');
     let docId = id;
+    let serverOk = false;
+    let serverRaw = null;
 
-    if (db && navigator.onLine) {
-      try {
-        const colRef = db.collection(COLLECTION);
-        if (docId) {
-          // Upsert with explicit ID
-          const docRef = colRef.doc(docId);
-          const snap   = await docRef.get();
-          if (!snap.exists) payload.createdAt = now;
-          await docRef.set(payload, { merge: true });
-        } else {
-          const ref = await colRef.add(payload);
-          docId     = ref.id;
+    try {
+      if (isEdit) {
+        // Admin-only on the API — will throw 401/403 without a configured token.
+        const headers = { 'Content-Type': 'application/json' };
+        if (global.CHAKUDYA_ADMIN_KEY) headers.Authorization = `Bearer ${global.CHAKUDYA_ADMIN_KEY}`;
+        const json = await _apiFetch(`${PACKAGED_URL}/${encodeURIComponent(id)}`, {
+          method: 'PATCH', headers, body: JSON.stringify(payload),
+        });
+        serverRaw = (json && (json.data || json)) || payload;
+        serverOk  = true;
+      } else {
+        if (!barcode) {
+          console.warn('[PackagedFoodsDB] Submitting without a barcode — Chakudya API documents barcode as required for /packaged/submit and may reject this.');
         }
-      } catch (err) {
-        console.warn('[PackagedFoodsDB] Firestore write failed (will save locally):', err);
-        if (!docId) docId = `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const json = await _apiFetch(SUBMIT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        serverRaw = (json && (json.data || json)) || payload;
+        serverOk  = true;
+        // Freshly submitted items are pending review until an admin verifies them.
+        if (!serverRaw.status) serverRaw.status = 'pending';
+        if (serverRaw.verified === undefined) serverRaw.verified = false;
       }
-    } else {
-      // Offline — generate a temporary local ID; will be reconciled on next sync
-      if (!docId) docId = `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    } catch (err) {
+      console.warn('[PackagedFoodsDB] Chakudya API write failed (saving locally only):', err);
     }
 
-    const doc = { ...payload, id: docId };
+    const doc = _normalizeApiDoc(serverRaw || payload) || {
+      id:          docId || barcode || `local_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      name:        productName,
+      brand:       payload.brand,
+      barcode:     barcode,
+      category:    'Packaged',
+      country:     '',
+      per100g:     { kcal: payload.energy_kcal, kj: null, pro: payload.protein_g, cho: payload.carbs_g,
+                     fat: payload.fat_g, fiber: payload.fiber_g, sugar: payload.sugar_g, sodium: payload.sodium_mg },
+      servingSize: payload.serving_size,
+      servingLabel: '',
+      image:       '',
+      status:      'pending',
+      verified:    false,
+      submittedBy: data.submittedBy || '',
+      createdAt:   new Date().toISOString(),
+      updatedAt:   new Date().toISOString(),
+      source:      serverOk ? 'chakudya' : 'local-pending',
+    };
+
+    if (!doc.id) doc.id = docId || barcode || `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    if (docId && doc.id !== docId && _docMap.has(docId)) _unindexDoc(docId); // replacing an edited local doc under a new id
+
     await _idbPutBatch([doc]);
     _indexDoc(doc);
 
-    return docId;
+    return doc.id;
   }
 
   /**
-   * Delete a packaged food document from Firestore + local IDB + index.
-   * @param {string} id  Document ID
+   * Delete a packaged food. The Chakudya API's DELETE /packaged/:id is
+   * admin-only; without an admin token this only removes the item from the
+   * local cache (mirrors the old "best-effort remote, always clean locally"
+   * behaviour).
+   * @param {string} id
    */
   async function deleteFood(id) {
-    const db = _getFirestore();
-    if (db && navigator.onLine) {
-      try { await db.collection(COLLECTION).doc(id).delete(); }
-      catch (err) { console.warn('[PackagedFoodsDB] Firestore delete failed:', err); }
+    try {
+      if (global.CHAKUDYA_ADMIN_KEY) {
+        await _apiFetch(`${PACKAGED_URL}/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${global.CHAKUDYA_ADMIN_KEY}` },
+        });
+      }
+    } catch (err) {
+      console.warn('[PackagedFoodsDB] Chakudya API delete failed (removing locally only):', err);
     }
     await _idbDelete(id);
     _unindexDoc(id);
@@ -8242,7 +8293,7 @@ const BLEND_FOODS = [
   // ── PAGINATED LISTING ────────────────────────────────────────────────────────
 
   /**
-   * Return a page of all packaged foods (for browsing/admin).
+   * Return a page of all locally-cached packaged foods (for browsing/admin).
    * @param {object} [opts]
    * @param {number} [opts.page=0]   - Zero-based page number
    * @param {number} [opts.size=20]  - Items per page
@@ -8266,7 +8317,6 @@ const BLEND_FOODS = [
   const PackagedFoodsDB = {
     /**
      * Ensure the DB is ready before calling other methods.
-     * Resolves true on success, false if init encountered a fatal error.
      * @returns {Promise<boolean>}
      */
     ready() {
@@ -8275,46 +8325,53 @@ const BLEND_FOODS = [
 
     /**
      * Search packaged foods by product name or brand (fuzzy, case-insensitive).
-     * Search is instant — purely in-memory, no Firestore queries at search time.
-     *
+     * Purely local/in-memory — the Chakudya API has no full-text search endpoint.
      * @param {string} query
      * @param {object} [opts]
-     * @param {number} [opts.limit=10]
-     * @param {number} [opts.threshold]  - Minimum fuzzy score (0–1, default 0.35)
-     * @returns {Array}  Sorted by relevance, shape compatible with NTFoodSearch results
+     * @returns {Array}
      */
     search(query, opts = {}) {
       return _searchByText(query, opts);
     },
 
     /**
-     * Look up a packaged food by barcode (EAN-13 / UPC-A).
-     * Exact match preferred; falls back to partial string match.
-     *
+     * Look up a packaged food by barcode. Checks the local cache first;
+     * if not found and online, use searchBarcodeAsync() to also try the
+     * live Chakudya API.
      * @param {string} barcode
-     * @returns {object|null}  Food object or null
+     * @returns {object|null}
      */
     searchBarcode(barcode) {
       return _searchByBarcode(barcode);
     },
 
     /**
-     * Add or update a packaged food.  Handles Firestore + IDB + index atomically.
-     * Writes using the admin schema so both apps share the same document shape.
-     *
-     * @param {object} data    - Admin schema: { name, brand, barcode, category, country,
-     *                           per100g:{kcal,kj,pro,cho,fat,fiber,sugar,sodium},
-     *                           servingSize, servingLabel, image, verified }
-     *                           Also accepts legacy: { productName, nutrition:{…} }
-     * @param {string} [id]    - Optional doc ID
-     * @returns {Promise<string>} Assigned document ID
+     * Same as searchBarcode() but falls through to a live
+     * GET /packaged?barcode=... call when the local cache misses.
+     * @param {string} barcode
+     * @returns {Promise<object|null>}
+     */
+    async searchBarcodeAsync(barcode) {
+      const local = _searchByBarcode(barcode);
+      if (local) return local;
+      return _searchByBarcodeRemote(barcode);
+    },
+
+    /**
+     * Submit or update a packaged food. New items go to
+     * POST /packaged/submit (public, rate-limited) and land as status:"pending"
+     * pending admin review. See addFood() doc-comment for edit-path caveats.
+     * @param {object} data
+     * @param {string} [id]
+     * @returns {Promise<string>} Assigned/used document ID
      */
     add(data, id) {
       return addFood(data, id);
     },
 
     /**
-     * Delete a packaged food by document ID.
+     * Delete a packaged food by document ID (local cache always; remote only
+     * if an admin token is configured — see deleteFood() doc-comment).
      * @param {string} id
      * @returns {Promise<void>}
      */
@@ -8323,17 +8380,20 @@ const BLEND_FOODS = [
     },
 
     /**
-     * Attach (or reattach) the real-time Firestore listener.
-     * Call this from main.js immediately after firebase.initializeApp().
-     * @returns {boolean} true if listener attached successfully
+     * Kept for API compatibility with existing callers (main.js calls this
+     * once after app boot). The Chakudya API is REST, not realtime, so this
+     * simply triggers an immediate sync + starts periodic polling rather
+     * than attaching a push listener.
+     * @returns {boolean} always true
      */
     listen() {
-      return _listenFirestore();
+      _syncFromAPI();
+      _startPolling();
+      return true;
     },
 
     /**
-     * Register a callback that fires after every live sync batch.
-     * Use this to trigger UI re-renders without polling.
+     * Register a callback that fires after every sync batch.
      * @param {function(count: number): void} cb
      */
     onSync(cb) {
@@ -8341,17 +8401,15 @@ const BLEND_FOODS = [
     },
 
     /**
-     * Force an immediate incremental one-shot fetch from Firestore.
-     * Under normal operation the real-time listener handles all updates.
-     * Only needed if the listener is unavailable (e.g. blocked by network policy).
+     * Force an immediate full paginated re-sync from GET /packaged.
      * @returns {Promise<number>} Number of documents synced
      */
     sync() {
-      return _syncFromFirestore();
+      return _syncFromAPI();
     },
 
     /**
-     * Browse all packaged foods with pagination.
+     * Browse all locally-cached packaged foods with pagination.
      * @param {{ page?: number, size?: number }} [opts]
      * @returns {{ items, total, page, pages }}
      */
@@ -8359,18 +8417,12 @@ const BLEND_FOODS = [
       return listFoods(opts);
     },
 
-    /**
-     * Total count of locally cached packaged foods.
-     * @returns {number}
-     */
+    /** Total count of locally cached packaged foods. @returns {number} */
     get count() {
       return _docMap.size;
     },
 
-    /**
-     * True once IndexedDB has loaded and the in-memory index is built.
-     * @returns {boolean}
-     */
+    /** True once IndexedDB has loaded and the in-memory index is built. @returns {boolean} */
     get isReady() {
       return _ready;
     },
@@ -8383,7 +8435,6 @@ const BLEND_FOODS = [
 
   // ── INTEGRATE WITH NTFoodSearch PIPELINE ────────────────────────────────────
   // When NTFoodSearch.searchBarcode is called, check PackagedFoodsDB first.
-  // This hook runs after NTFoodSearch loads (either already loaded or deferred).
   function _patchFoodSearch() {
     if (typeof global.NTFoodSearch === 'undefined') return false;
 
@@ -8398,13 +8449,11 @@ const BLEND_FOODS = [
       return orig ? orig(barcode) : null;
     };
 
-    // Also expose the packaged search alongside searchLocal
     const origLocal = global.NTFoodSearch.searchLocal;
     global.NTFoodSearch.searchLocal = function (query, limit = 10) {
       const packaged = _ready ? PackagedFoodsDB.search(query, { limit: 5 }) : [];
       const rest     = origLocal ? origLocal(query, limit) : [];
-      // Merge: packaged foods first, then deduplicate by id
-      const seen  = new Set(packaged.map(f => f.id));
+      const seen   = new Set(packaged.map(f => f.id));
       const merged = [...packaged, ...rest.filter(f => !seen.has(f.id))];
       return merged.slice(0, limit);
     };
@@ -8412,7 +8461,6 @@ const BLEND_FOODS = [
     return true;
   }
 
-  // Attempt to patch immediately; if NTFoodSearch isn't loaded yet, retry once DOM fires
   if (!_patchFoodSearch()) {
     document.addEventListener('DOMContentLoaded', _patchFoodSearch);
   }
