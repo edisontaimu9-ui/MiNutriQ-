@@ -1,18 +1,23 @@
-  var iconPNG48URL = window.iconPNG48URL;
-  var iconPNG72URL = window.iconPNG72URL;
-  var iconPNG96URL = window.iconPNG96URL;
-  var iconPNG128URL = window.iconPNG128URL;
-  var iconPNG144URL = window.iconPNG144URL;
-  var iconPNG152URL = window.iconPNG152URL;
-  var iconPNG192URL = window.iconPNG192URL;
-  var iconPNG384URL = window.iconPNG384URL;
-  var iconPNG512URL = window.iconPNG512URL;
+(function () {
+  'use strict';
+
+  // Icon PNGs are served as static files from /icons/.
+  // (Not read from window globals — nothing else in the app sets those.)
+  var iconPNG48URL  = '/icons/icon-48.png';
+  var iconPNG72URL  = '/icons/icon-72.png';
+  var iconPNG96URL  = '/icons/icon-96.png';
+  var iconPNG128URL = '/icons/icon-128.png';
+  var iconPNG144URL = '/icons/icon-144.png';
+  var iconPNG152URL = '/icons/icon-152.png';
+  var iconPNG192URL = '/icons/icon-192.png';
+  var iconPNG384URL = '/icons/icon-384.png';
+  var iconPNG512URL = '/icons/icon-512.png';
 
   // Wire up the apple-touch-icon link so iOS home-screen installs get an icon.
-  const appleIconEl = document.getElementById('pwa-apple-icon');
+  var appleIconEl = document.getElementById('pwa-apple-icon');
   if (appleIconEl) appleIconEl.href = iconPNG192URL; // PNG for iOS home-screen
 
-  const manifest = {
+  var manifest = {
     name: 'Oasis',
     short_name: 'Oasis',
     description: 'Clinical nutrition decision support tool — Adult, Pediatric, Enteral, Meal Planner. Works offline.',
@@ -56,5 +61,10 @@
       { label: 'Pediatric Assessment',       form_factor: 'narrow' },
     ],
   };
-  const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  document.getElementById('pwa-manifest').href = URL.createObjectURL(mBlob);
+
+  var manifestEl = document.getElementById('pwa-manifest');
+  if (manifestEl) {
+    var mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    manifestEl.href = URL.createObjectURL(mBlob);
+  }
+})();
