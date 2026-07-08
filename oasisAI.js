@@ -447,7 +447,7 @@ Core principles:
       offline:      'Fully offline-capable — no internet required after install',
       architecture: 'Single-file HTML with modular JavaScript; no build step required',
       backend:      'Firebase Firestore (project: nutri-track-pro-c11c5) with Firebase Auth and Firebase Hosting',
-      ai:           'Oasis AI Assistant powered by Groq API (LLaMA 3.3 70B)',
+      ai:           'Oasis AI Assistant powered by Oasis Clinical Intelligence',
       compatibility:'Runs on any modern browser; installable on Android, iOS, Windows, macOS, and Linux',
     },
 
@@ -1708,7 +1708,7 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     getAboutContext() { return _AboutDB.buildContext(); }, // ← direct context string access
   };
 
-  console.log('[OasisAI] Module loaded — Groq LLaMA 3.3 70B ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator access enabled');
+  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator access enabled');
 })();
 
 
@@ -2180,7 +2180,7 @@ Rules:
           </div>
           <div>
             <div class="oai-brand-name">Oasis AI Assistant</div>
-            <div class="oai-brand-sub">LLaMA 3.3 · 70B</div>
+            <div class="oai-brand-sub">Clinical Nutrition AI</div>
           </div>
         </div>
       </div>
@@ -2478,7 +2478,7 @@ Rules:
 #oai-messages {
   flex: 1; overflow-y: auto; padding: 12px 14px;
   display: flex; flex-direction: column; gap: 8px;
-  min-height: 260px; max-height: 380px;
+  min-height: 260px; max-height: 560px;
   scrollbar-width: thin; scrollbar-color: rgba(29,233,212,0.2) transparent;
 }
 #oai-messages::-webkit-scrollbar { width: 4px; }
@@ -2620,7 +2620,7 @@ Rules:
 
 /* ── Responsive tweaks for small screens ── */
 @media (max-width: 480px) {
-  #oai-messages { max-height: 320px; }
+  #oai-messages { max-height: 460px; }
   .oai-bubble { max-width: 95%; font-size: 12px; }
   #oai-sidebar { width: 88vw; }
   #oai-memory-panel { width: 92vw; }
