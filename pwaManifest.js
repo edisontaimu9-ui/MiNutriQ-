@@ -9,8 +9,10 @@
   var iconPNG512URL = window.iconPNG512URL;
 
   // Wire up the apple-touch-icon link so iOS home-screen installs get an icon.
+  // Uses the dedicated 180×180 apple-touch-icon.png (not a resized PWA icon) —
+  // matches Apple's recommended home-screen icon size exactly.
   const appleIconEl = document.getElementById('pwa-apple-icon');
-  if (appleIconEl) appleIconEl.href = iconPNG192URL; // PNG for iOS home-screen
+  if (appleIconEl) appleIconEl.href = '/icons/apple-touch-icon.png';
 
   const manifest = {
     name: 'Oasis',
