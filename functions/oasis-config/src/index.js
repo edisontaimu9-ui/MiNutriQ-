@@ -12,10 +12,12 @@ export default async function(context) {
   }
 
   const groqKey = process.env.GROQ_API_KEY || '';
-  log('Config keys requested — GROQ key length: ' + groqKey.length);
+  const openRouterKey = process.env.OPENROUTER_API_KEY || '';
+  log('Config keys requested — GROQ key length: ' + groqKey.length + ', OPENROUTER key length: ' + openRouterKey.length);
 
   return res.json({
     GROQ_API_KEY:              groqKey,
+    OPENROUTER_API_KEY:        openRouterKey,
     PUBMED_API_KEY:            process.env.PUBMED_API_KEY              || '',
     FRONTIERS_API_KEY:         process.env.FRONTIERS_API_KEY           || '',
     ELSEVIER_API_KEY:          process.env.ELSEVIER_API_KEY            || '',
