@@ -153,6 +153,12 @@
   width: 92%; height: 92%; object-fit: contain;
   display: block;
   margin-bottom: 8px; /* nudges logo up to optical centre */
+  filter: drop-shadow(0 0 10px rgba(0,245,228,0.4)) drop-shadow(0 0 24px rgba(59,130,246,0.22));
+  animation: nts-logo-float 3.4s ease-in-out infinite;
+}
+@keyframes nts-logo-float {
+  0%,100% { transform: translateY(0);   filter: drop-shadow(0 0 10px rgba(0,245,228,0.4))  drop-shadow(0 0 24px rgba(59,130,246,0.22)); }
+  50%     { transform: translateY(-3px); filter: drop-shadow(0 0 16px rgba(0,245,228,0.6)) drop-shadow(0 0 30px rgba(59,130,246,0.32)); }
 }
 
 /* ── 3. Loading dots ── */
@@ -2475,6 +2481,18 @@ header {
   position: relative;
   z-index: 1;
   filter: none;
+}
+/* Transparent logo mark — soft cyan/blue glow instead of a background card,
+   so it reads as native to the dark navbar rather than a pasted image. */
+.logo-icon img {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 6px rgba(29,233,212,0.35)) drop-shadow(0 0 14px rgba(63,169,245,0.15));
+  transition: filter .25s ease, transform .25s ease;
+}
+.logo:hover .logo-icon img {
+  filter: drop-shadow(0 0 10px rgba(29,233,212,0.6)) drop-shadow(0 0 22px rgba(63,169,245,0.35));
+  transform: scale(1.04);
 }
 
 /* Logo SVG keyframes */
