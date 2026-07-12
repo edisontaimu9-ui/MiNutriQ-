@@ -935,7 +935,7 @@ async function initFirebase() {
     // ── DEVELOPER PROFILE — sync avatar + role from Firestore ─────
     _fetchDeveloperProfile();
 
-    // ── PACKAGED FOODS — attach verified-only Firestore listener ──
+    // ── PACKAGED FOODS — sync from Chakudya API + start polling ──
     if (typeof PackagedFoodsDB !== 'undefined') {
       PackagedFoodsDB.listen();
       PackagedFoodsDB.onSync(() => {

@@ -7781,7 +7781,7 @@ const BLEND_FOODS = [
         sugar:  raw.sugar_g   ?? raw.sugar  ?? n.sugar  ?? n.sugar_g   ?? null,
         sodium: raw.sodium_mg ?? raw.sodium ?? n.sodium ?? n.sodium_mg ?? null,
       },
-      servingSize:  raw.serving_size ?? raw.servingSize ?? 100,
+      servingSize:  raw.serving_size_g ?? raw.serving_size ?? raw.servingSize ?? 100,
       servingLabel: raw.serving_label || raw.servingLabel || '',
       image:        raw.image || raw.image_url || '',
       status:       status || 'approved',
@@ -8189,21 +8189,25 @@ const BLEND_FOODS = [
     const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? null;
     const barcode = (data.barcode || '').replace(/\D/g, '') || '';
 
-    // Payload uses Chakudya's documented snake_case field names.
+    // Payload uses the exact snake_case column names of the `packaged_foods`
+    // Supabase table (id, product_name, brand, barcode, serving_size_g,
+    // energy_kcal, protein_g, carbs_g, fat_g, sugar_g, fiber_g, sodium_mg,
+    // status, submitted_at). No extra keys — PostgREST/Supabase reject
+    // inserts containing columns that don't exist on the table, which
+    // silently failed submissions here before this was caught.
     const payload = {
-      product_name: productName,
-      brand:        data.brand || '',
-      barcode:      barcode,
-      serving_size: data.servingSize ?? 100,
-      energy_kcal:  kcalVal,
-      protein_g:    data.pro    ?? src.pro    ?? src.protein_g ?? null,
-      carbs_g:      data.cho    ?? src.cho    ?? src.carbs_g   ?? null,
-      fat_g:        data.fat    ?? src.fat    ?? src.fat_g     ?? null,
-      sugar_g:      data.sugar  ?? src.sugar  ?? src.sugar_g   ?? null,
-      fiber_g:      data.fiber  ?? src.fiber  ?? src.fiber_g   ?? null,
-      sodium_mg:    data.sodium ?? src.sodium ?? src.sodium_mg ?? null,
+      product_name:   productName,
+      brand:          data.brand || '',
+      barcode:        barcode,
+      serving_size_g: data.servingSize ?? 100,
+      energy_kcal:    kcalVal,
+      protein_g:      data.pro    ?? src.pro    ?? src.protein_g ?? null,
+      carbs_g:        data.cho    ?? src.cho    ?? src.carbs_g   ?? null,
+      fat_g:          data.fat    ?? src.fat    ?? src.fat_g     ?? null,
+      sugar_g:        data.sugar  ?? src.sugar  ?? src.sugar_g   ?? null,
+      fiber_g:        data.fiber  ?? src.fiber  ?? src.fiber_g   ?? null,
+      sodium_mg:      data.sodium ?? src.sodium ?? src.sodium_mg ?? null,
     };
-    if (data.submittedBy) payload.submitted_by = data.submittedBy;
 
     const isEdit = !!(id && _docMap.has(id) && _docMap.get(id).source === 'chakudya');
     let docId = id;
@@ -8236,7 +8240,17 @@ const BLEND_FOODS = [
         if (serverRaw.verified === undefined) serverRaw.verified = false;
       }
     } catch (err) {
-      console.warn('[PackagedFoodsDB] Chakudya API write failed (saving locally only):', err);
+      // A response with a status code means the request reached the server
+      // and was rejected (validation error, rate limit, etc.) — retrying
+      // with the same payload will fail again, so surface it instead of
+      // silently pretending the submission succeeded.
+      if (err && err.status) {
+        console.error('[PackagedFoodsDB] Chakudya API rejected submission:', err.status, err.message);
+        throw err;
+      }
+      // No status = genuine network/offline failure — safe to queue locally
+      // and let it sync once connectivity returns.
+      console.warn('[PackagedFoodsDB] Network unavailable (saving locally only):', err);
     }
 
     const doc = _normalizeApiDoc(serverRaw || payload) || {
@@ -8248,7 +8262,7 @@ const BLEND_FOODS = [
       country:     '',
       per100g:     { kcal: payload.energy_kcal, kj: null, pro: payload.protein_g, cho: payload.carbs_g,
                      fat: payload.fat_g, fiber: payload.fiber_g, sugar: payload.sugar_g, sodium: payload.sodium_mg },
-      servingSize: payload.serving_size,
+      servingSize: payload.serving_size_g,
       servingLabel: '',
       image:       '',
       status:      'pending',
