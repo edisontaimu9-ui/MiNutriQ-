@@ -9917,10 +9917,11 @@ function dbExportCSV() {
 
 // ══════════════════════════════════════════════════════════════════
 // PKG — PACKAGED FOODS MODULE
-// Firestore `packaged_foods` collection · Offline-first IndexedDB cache
-// Only authenticated users can submit a food item. Submissions are
-// stored with verified=false and reviewed in the companion app.
-// Only verified items are synced to the public database.
+// Chakudya API (GET/POST /packaged) · in-memory index + IndexedDB cache,
+// built and kept fresh by PackagedFoodsDB / rebuildPackagedFoodIndex()
+// in foodData.js. No Firestore involved — anyone can submit a food item;
+// submissions land with status "pending" and are reviewed server-side.
+// Only approved items come back from GET /packaged.
 // ══════════════════════════════════════════════════════════════════
 
 let pkgInitialized = false;

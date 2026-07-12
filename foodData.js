@@ -7879,6 +7879,17 @@ const BLEND_FOODS = [
     });
   }
 
+  /** Wipe the entire foods store — used by rebuildPackagedFoodIndex() so the
+   *  cache never carries stale records that were deleted/renamed server-side. */
+  function _idbClearAll() {
+    return new Promise((resolve, reject) => {
+      const tx  = _idb.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror    = (e) => reject(e.target.error);
+    });
+  }
+
   function _idbGetMeta(key) {
     return new Promise((resolve, reject) => {
       const tx  = _idb.transaction(IDB_META_STORE, 'readonly');
@@ -7982,58 +7993,141 @@ const BLEND_FOODS = [
     return _extractList(json);
   }
 
-  /** Full paginated sync of GET /packaged into IndexedDB + in-memory index. */
-  async function _syncFromAPI() {
+  function _delay(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+  /**
+   * Fetch one page with retries (network hiccups only — HTTP error responses
+   * with a status code are not retried since they'll just fail the same way).
+   */
+  async function _fetchPageWithRetry(opts, retries = 2) {
+    let attempt = 0;
+    for (;;) {
+      try {
+        return await _fetchPackagedPage(opts);
+      } catch (err) {
+        if (err && err.status) throw err; // real API error — don't retry
+        attempt++;
+        if (attempt > retries) throw err;
+        await _delay(400 * attempt); // simple backoff: 400ms, 800ms…
+      }
+    }
+  }
+
+  /**
+   * Walk every page of GET /packaged from offset 0 until an empty/short page,
+   * gracefully surviving transient network failures on individual pages.
+   * @returns {Promise<Array>} every raw record across all pages
+   */
+  async function _fetchAllPackagedPages() {
+    let offset = 0;
+    let page   = 0;
+    const all  = [];
+
+    while (page < MAX_SYNC_PAGES) {
+      const raw = await _fetchPageWithRetry({ limit: PAGE_SIZE, offset });
+      if (!raw || !raw.length) break; // empty response — end of data
+
+      all.push(...raw);
+      if (raw.length < PAGE_SIZE) break; // short page — last page
+      offset += PAGE_SIZE;
+      page++;
+    }
+    return all;
+  }
+
+  /**
+   * De-duplicate raw API records before indexing:
+   *  - duplicate barcodes → keep the most recently updated record
+   *  - duplicate product names (when no barcode) → keep the most recently updated
+   * This keeps the in-memory index and IndexedDB cache free of the same
+   * product appearing twice under two different Chakudya row ids.
+   */
+  function _dedupeDocs(rawDocs) {
+    const byBarcode = new Map(); // barcode → doc
+    const byName    = new Map(); // normalised "name|brand" → doc
+    const kept      = [];
+
+    for (const raw of rawDocs) {
+      const doc = _normalizeApiDoc(raw);
+      if (!doc) continue;
+
+      const nameKey = `${_norm(doc.name)}|${_norm(doc.brand)}`;
+      const dupKey  = doc.barcode || null;
+      const existing = dupKey ? byBarcode.get(dupKey) : byName.get(nameKey);
+
+      if (existing) {
+        const isNewer = new Date(doc.updatedAt || 0) >= new Date(existing.updatedAt || 0);
+        if (!isNewer) continue; // keep the one already kept
+        const idx = kept.indexOf(existing);
+        if (idx >= 0) kept.splice(idx, 1);
+      }
+
+      if (dupKey) byBarcode.set(dupKey, doc);
+      byName.set(nameKey, doc);
+      kept.push(doc);
+    }
+    return kept;
+  }
+
+  /**
+   * Rebuild the entire packaged-food search index from the Chakudya API.
+   * This is the single source of truth: paginates through GET /packaged,
+   * de-dupes, replaces the IndexedDB cache and the in-memory index atomically
+   * so the index always reflects exactly what the API has. Safe to call
+   * on demand (e.g. a "refresh" button) or automatically at startup.
+   *
+   *   await rebuildPackagedFoodIndex();
+   *
+   * @returns {Promise<number>} number of unique packaged foods indexed
+   */
+  async function rebuildPackagedFoodIndex() {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      console.warn('[PackagedFoodsDB] Offline — skipping sync');
-      return 0;
+      console.warn('[PackagedFoodsDB] Offline — cannot rebuild from API, keeping existing cache');
+      return _docMap.size;
     }
     try {
-      let offset = 0;
-      let page   = 0;
-      let synced = 0;
-      const batch = [];
+      const rawDocs = await _fetchAllPackagedPages();
+      const docs    = _dedupeDocs(rawDocs);
 
-      while (page < MAX_SYNC_PAGES) {
-        const raw = await _fetchPackagedPage({ limit: PAGE_SIZE, offset });
-        if (!raw.length) break;
+      // Rebuild the in-memory index fresh so removed/renamed records don't linger.
+      _tokenIndex.clear();
+      _barcodeMap.clear();
+      _docMap.clear();
+      for (const doc of docs) _indexDoc(doc);
 
-        for (const r of raw) {
-          const doc = _normalizeApiDoc(r);
-          if (doc) { batch.push(doc); synced++; }
-        }
-
-        if (raw.length < PAGE_SIZE) break; // last page
-        offset += PAGE_SIZE;
-        page++;
-      }
-
-      if (batch.length) {
-        await _idbPutBatch(batch);
-        for (const doc of batch) _indexDoc(doc);
+      // Mirror the same fresh set into IndexedDB (clear then bulk-insert).
+      if (_idb) {
+        await _idbClearAll();
+        if (docs.length) await _idbPutBatch(docs);
       }
       await _idbSetMeta('lastSync', new Date().toISOString());
+
+      _ready = true;
+      _readyResolve(true);
 
       if (typeof _onSyncCallback === 'function') {
         try { _onSyncCallback(_docMap.size); } catch (_) {}
       }
-      console.info(`[PackagedFoodsDB] Synced ${synced} doc(s) from Chakudya API`);
-      return synced;
+      console.info(`[PackagedFoodsDB] Rebuilt index — ${docs.length} unique packaged food(s) from Chakudya API`);
+      return docs.length;
     } catch (err) {
-      console.error('[PackagedFoodsDB] Chakudya sync error:', err);
-      return 0;
+      console.error('[PackagedFoodsDB] rebuildPackagedFoodIndex failed:', err);
+      return _docMap.size; // keep serving whatever the index already has
     }
   }
 
+  // Back-compat internal alias — existing call sites below use this name.
+  const _syncFromAPI = rebuildPackagedFoodIndex;
+
   function _startPolling() {
     clearInterval(_pollTimer);
-    _pollTimer = setInterval(() => { _syncFromAPI(); }, POLL_INTERVAL);
+    _pollTimer = setInterval(() => { rebuildPackagedFoodIndex(); }, POLL_INTERVAL);
   }
 
   function _scheduleSyncIfOnline() {
     if (!navigator.onLine) return;
     clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(() => { _syncFromAPI(); }, SYNC_DEBOUNCE);
+    _syncTimer = setTimeout(() => { rebuildPackagedFoodIndex(); }, SYNC_DEBOUNCE);
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────────
@@ -8042,16 +8136,20 @@ const BLEND_FOODS = [
     try {
       _idb = await _openIDB();
 
-      // Serve cached data immediately so the UI isn't blank
+      // Serve any cached data immediately so the UI isn't blank while the
+      // full rebuild below is in flight (offline-first UX).
       const stored = await _idbGetAll();
-      _buildIndex(stored);
-      _ready = true;
-      _readyResolve(true);
+      if (stored.length) {
+        _buildIndex(stored);
+        _ready = true;
+        _readyResolve(true);
+        console.info(`[PackagedFoodsDB] Loaded ${stored.length} cached doc(s) from IndexedDB (rebuilding from API…)`);
+      }
 
-      console.info(`[PackagedFoodsDB] Loaded ${stored.length} doc(s) from IndexedDB`);
+      // Chakudya API is the source of truth — always rebuild from it at startup.
+      await rebuildPackagedFoodIndex();
 
-      // Kick off a fresh pull from the Chakudya API + start periodic polling.
-      _syncFromAPI();
+      if (!_ready) { _ready = true; _readyResolve(true); } // e.g. empty API + no cache
       _startPolling();
 
       window.addEventListener('online',  _scheduleSyncIfOnline);
@@ -8276,8 +8374,16 @@ const BLEND_FOODS = [
     if (!doc.id) doc.id = docId || barcode || `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     if (docId && doc.id !== docId && _docMap.has(docId)) _unindexDoc(docId); // replacing an edited local doc under a new id
 
+    // Guard against duplicate barcodes: if this barcode is already indexed
+    // under a different doc id, drop the stale entry so search doesn't
+    // surface the same product twice after a resubmission.
+    if (doc.barcode) {
+      const existingId = _barcodeMap.get(doc.barcode);
+      if (existingId && existingId !== doc.id) _unindexDoc(existingId);
+    }
+
     await _idbPutBatch([doc]);
-    _indexDoc(doc);
+    _indexDoc(doc); // new/updated product is searchable immediately, no restart needed
 
     return doc.id;
   }
@@ -8423,6 +8529,16 @@ const BLEND_FOODS = [
     },
 
     /**
+     * Rebuild the entire index on demand from the Chakudya API — identical
+     * to calling the global rebuildPackagedFoodIndex(), exposed here too for
+     * callers that prefer the PackagedFoodsDB.* namespace.
+     * @returns {Promise<number>} Number of unique packaged foods indexed
+     */
+    rebuild() {
+      return rebuildPackagedFoodIndex();
+    },
+
+    /**
      * Browse all locally-cached packaged foods with pagination.
      * @param {{ page?: number, size?: number }} [opts]
      * @returns {{ items, total, page, pages }}
@@ -8482,7 +8598,9 @@ const BLEND_FOODS = [
   // ── BOOT ─────────────────────────────────────────────────────────────────────
   _init().catch(err => console.error('[PackagedFoodsDB] Fatal init error:', err));
 
-  // Expose globally
+  // Expose globally — spec requires `await rebuildPackagedFoodIndex()` to be
+  // callable directly, in addition to PackagedFoodsDB.rebuild()/.sync().
+  global.rebuildPackagedFoodIndex = rebuildPackagedFoodIndex;
   global.PackagedFoodsDB = PackagedFoodsDB;
 
 })(typeof window !== 'undefined' ? window : this);
