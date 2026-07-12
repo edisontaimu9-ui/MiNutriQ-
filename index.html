@@ -2698,6 +2698,33 @@ var photoCropper = (function () {
       </div>
     </div>
   </div><!-- /.hp-feature-card oasis-ai -->
+
+  <!-- ── SUBMIT PACKAGED FOOD ── -->
+  <div class="hp-feature-card" data-sr="fade-up" data-sr-delay="240" style="padding:0;margin-bottom:4px">
+    <div class="hp-assess-entry" onclick="pkgOpenAddModal()" role="button" tabindex="0"
+      aria-label="Submit a missing packaged food item"
+      onkeydown="if(event.key==='Enter'||event.key===' ')pkgOpenAddModal()"
+      style="border-color:rgba(96,165,250,0.25)">
+      <div class="hp-assess-icon-wrap" style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.25);color:#60a5fa">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="12 22.08 12 12"/><line x1="12" y1="12" x2="3.27" y2="6.96"/>
+          <polyline points="21 6.96 12 12"/>
+        </svg>
+      </div>
+      <div class="hp-assess-body">
+        <div class="hp-assess-title" style="color:#60a5fa">Submit Food Item</div>
+        <div class="hp-assess-desc">Missing packaged food? Add it here</div>
+      </div>
+      <div class="hp-assess-meta">
+        <span class="hp-assess-live-badge" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;letter-spacing:0.8px">COMMUNITY</span>
+      </div>
+      <div class="hp-assess-arrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div><!-- /.hp-feature-card submit-food -->
   </div><!-- /#hp-feature-row -->
 
   <!-- ── QUICK ACCESS ── -->
@@ -7565,44 +7592,6 @@ var photoCropper = (function () {
   <div class="dev-footer">Packaged Foods · Firestore sync · Offline-first IndexedDB cache</div>
   </div><!-- end dbpanel-packaged -->
 
-  <!-- Packaged Foods Add/Edit Modal -->
-  <div id="pkg-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9100;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(540px,95vw);max-height:90vh;overflow-y:auto">
-      <div style="font-family:var(--cond);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:18px" id="pkg-modal-title">SUBMIT PACKAGED FOOD</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field-group" style="grid-column:1/-1">
-          <label class="lbl">Product Name *</label>
-          <input class="inp" id="pkg-f-name" placeholder="e.g. Milo, Lacto, Colcom Sausages">
-        </div>
-        <div class="field-group">
-          <label class="lbl">Brand</label>
-          <input class="inp" id="pkg-f-brand" placeholder="e.g. Nestlé, Clover">
-        </div>
-        <div class="field-group">
-          <label class="lbl">Barcode (EAN-13 / UPC)</label>
-          <input class="inp" id="pkg-f-barcode" placeholder="e.g. 6001068090166">
-        </div>
-        <div class="field-group" style="grid-column:1/-1">
-          <label class="lbl">Serving Size (g or ml)</label>
-          <input class="inp" type="number" id="pkg-f-serving" placeholder="100">
-        </div>
-      </div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
-        <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
-        <div class="field-group"><label class="lbl">Carbohydrates (g)</label><input class="inp" type="number" id="pkg-f-cho" placeholder="0" min="0"></div>
-        <div class="field-group"><label class="lbl">Fat (g)</label><input class="inp" type="number" id="pkg-f-fat" placeholder="0" min="0"></div>
-        <div class="field-group"><label class="lbl">Sugar (g)</label><input class="inp" type="number" id="pkg-f-sugar" placeholder="0" min="0"></div>
-        <div class="field-group"><label class="lbl">Fiber (g)</label><input class="inp" type="number" id="pkg-f-fiber" placeholder="0" min="0"></div>
-        <div class="field-group" style="grid-column:1/-1"><label class="lbl">Sodium (mg)</label><input class="inp" type="number" id="pkg-f-sodium" placeholder="0" min="0"></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-        <button onclick="pkgCloseModal()" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);background:transparent;border:1px solid var(--border);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">CANCEL</button>
-        <button onclick="pkgSaveModal()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">SUBMIT FOR REVIEW</button>
-      </div>
-    </div>
-  </div>
 
 </div>
 </div>
@@ -12782,6 +12771,54 @@ function ntClear(scopeId, resultIds) {
 </script>
 <!-- ════════════ END LEGAL MODAL ════════════ -->
 
+
+<!-- ════════════ PACKAGED FOODS SUBMIT/EDIT MODAL (global — reachable from any tab) ════════════ -->
+<div id="pkg-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9500;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(540px,95vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-family:var(--cond);font-size:16px;font-weight:700;letter-spacing:2px;color:var(--teal)" id="pkg-modal-title">SUBMIT PACKAGED FOOD</div>
+      <button onclick="pkgCloseModal()" aria-label="Close"
+        style="background:transparent;border:none;color:var(--text-dim);font-size:18px;line-height:1;cursor:pointer;padding:4px">&#x2715;</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:16px">
+      Missing a packaged product? Add it here — it'll be reviewed before appearing for everyone.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field-group" style="grid-column:1/-1">
+        <label class="lbl">Product Name *</label>
+        <input class="inp" id="pkg-f-name" placeholder="e.g. Milo, Lacto, Colcom Sausages">
+      </div>
+      <div class="field-group">
+        <label class="lbl">Brand</label>
+        <input class="inp" id="pkg-f-brand" placeholder="e.g. Nestlé, Clover">
+      </div>
+      <div class="field-group">
+        <label class="lbl">Barcode (EAN-13 / UPC)</label>
+        <input class="inp" id="pkg-f-barcode" placeholder="e.g. 6001068090166" inputmode="numeric">
+      </div>
+      <div class="field-group" style="grid-column:1/-1">
+        <label class="lbl">Serving Size (g or ml)</label>
+        <input class="inp" type="number" id="pkg-f-serving" placeholder="100" min="0">
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Carbohydrates (g)</label><input class="inp" type="number" id="pkg-f-cho" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Fat (g)</label><input class="inp" type="number" id="pkg-f-fat" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Sugar (g)</label><input class="inp" type="number" id="pkg-f-sugar" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Fiber (g)</label><input class="inp" type="number" id="pkg-f-fiber" placeholder="0" min="0"></div>
+      <div class="field-group" style="grid-column:1/-1"><label class="lbl">Sodium (mg)</label><input class="inp" type="number" id="pkg-f-sodium" placeholder="0" min="0"></div>
+    </div>
+    <div id="pkg-modal-error" style="display:none;margin-top:14px;font-family:var(--mono);font-size:10px;color:#f87171;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:9px 11px"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button onclick="pkgCloseModal()" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);background:transparent;border:1px solid var(--border);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">CANCEL</button>
+      <button onclick="pkgSaveModal()" style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:5px;padding:10px 20px;cursor:pointer;letter-spacing:.5px">SUBMIT FOR REVIEW</button>
+    </div>
+  </div>
+</div>
+<!-- ════════════ END PACKAGED FOODS SUBMIT/EDIT MODAL ════════════ -->
 
 <!-- ════════════ OASIS AI PANEL MODAL ════════════ -->
 <div id="oasis-ai-overlay" role="dialog" aria-modal="true" aria-label="Oasis AI Assistant" style="

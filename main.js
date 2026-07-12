@@ -10086,8 +10086,37 @@ function pkgOpenAddModal() {
   if (title) title.textContent = 'SUBMIT PACKAGED FOOD';
   ['name','brand','barcode','serving','kcal','pro','cho','fat','sugar','fiber','sodium']
     .forEach(f => { const el = document.getElementById('pkg-f-' + f); if (el) el.value = ''; });
+  const nameEl = document.getElementById('pkg-f-name');
+  if (nameEl) nameEl.style.borderColor = '';
+  const errEl = document.getElementById('pkg-modal-error');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
+}
+
+/**
+ * Open the SUBMIT PACKAGED FOOD modal pre-filled with any known fields
+ * (e.g. a barcode captured by the scanner). Any key matching
+ * name/brand/barcode/servingSize/kcal/pro/cho/fat/sugar/fiber/sodium
+ * in `data` is applied after the modal resets to a blank add form.
+ * @param {object} [data]
+ */
+function pkgOpenAddModalWithData(data = {}) {
+  pkgOpenAddModal();
+  const map = {
+    name: 'pkg-f-name', brand: 'pkg-f-brand', barcode: 'pkg-f-barcode',
+    servingSize: 'pkg-f-serving', kcal: 'pkg-f-kcal', pro: 'pkg-f-pro',
+    cho: 'pkg-f-cho', fat: 'pkg-f-fat', sugar: 'pkg-f-sugar',
+    fiber: 'pkg-f-fiber', sodium: 'pkg-f-sodium',
+  };
+  Object.keys(map).forEach(k => {
+    if (data[k] == null || data[k] === '') return;
+    const el = document.getElementById(map[k]);
+    if (el) el.value = data[k];
+  });
+  // Focus the first empty required field so the user can start typing.
+  const nameEl = document.getElementById('pkg-f-name');
+  if (nameEl && !nameEl.value) nameEl.focus();
 }
 
 function pkgOpenEditModal(id) {
@@ -10129,15 +10158,21 @@ function pkgCloseModal() {
 async function pkgSaveModal() {
   if (typeof PackagedFoodsDB === 'undefined') return;
 
+  const errEl = document.getElementById('pkg-modal-error');
+  const showError = msg => { if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } };
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
   // ── Auth guard: only signed-in users may submit ──────────────────
   try {
     const auth = typeof _getAuth === 'function' ? _getAuth() : null;
     if (!auth?.currentUser) {
-      showToast('Please sign in to submit a food item.', 'warn');
+      showError('Please sign in to submit a food item.');
+      showToast('Please sign in to submit a food item.', 'warning');
       return;
     }
   } catch(e) {
-    showToast('Please sign in to submit a food item.', 'warn');
+    showError('Please sign in to submit a food item.');
+    showToast('Please sign in to submit a food item.', 'warning');
     return;
   }
   // ────────────────────────────────────────────────────────────────
@@ -10149,6 +10184,7 @@ async function pkgSaveModal() {
   if (!name) {
     const el = document.getElementById('pkg-f-name');
     if (el) { el.style.borderColor = '#f87171'; el.focus(); }
+    showError('Product name is required.');
     return;
   }
   const nameEl = document.getElementById('pkg-f-name');
@@ -10195,7 +10231,7 @@ async function pkgSaveModal() {
     showToast(isEdit ? '✓ Packaged food updated' : '✓ Submitted — will appear once verified in the companion app', 'success');
   } catch (err) {
     console.error('[pkgSaveModal]', err);
-    alert('Save failed: ' + (err.message || String(err)));
+    showError('Save failed: ' + (err.message || String(err)));
   } finally {
     if (saveBtn) { saveBtn.textContent = 'SUBMIT FOR REVIEW'; saveBtn.disabled = false; }
   }
