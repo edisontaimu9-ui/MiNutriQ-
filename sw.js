@@ -205,6 +205,15 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Chakudya API — packaged foods (and any other) data must always be live.
+  // Network-only: never serve or store a cached snapshot here, or
+  // rebuildPackagedFoodIndex() silently keeps re-reading a stale response
+  // forever regardless of what the API actually returns now.
+  if (url.hostname.includes('chakudya-api')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
   // For navigation requests (page load), network-first → cache → offline fallback
   // Network-first ensures new deployments are always served, not stale cache.
   if (e.request.mode === 'navigate') {

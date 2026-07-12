@@ -10055,15 +10055,15 @@ async function pkgUpdateStats() {
 
   try {
     const syncTime = await new Promise((res, rej) => {
-      const req = indexedDB.open('OasisPackagedFoods', 1);
+      const req = indexedDB.open('OasisPackagedFoods'); // no version arg — avoids VersionError vs foodData.js's IDB_VERSION
       req.onerror = () => res(null);
       req.onsuccess = e => {
         const db = e.target.result;
-        if (!db.objectStoreNames.contains('meta')) { res(null); return; }
+        if (!db.objectStoreNames.contains('meta')) { db.close(); res(null); return; }
         const tx  = db.transaction('meta', 'readonly');
         const get = tx.objectStore('meta').get('lastSync');
-        get.onsuccess = () => res(get.result?.value ?? null);
-        get.onerror   = () => res(null);
+        get.onsuccess = () => { db.close(); res(get.result?.value ?? null); };
+        get.onerror   = () => { db.close(); res(null); };
       };
     });
     if (syncTime) {
