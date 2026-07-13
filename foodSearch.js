@@ -23,15 +23,14 @@
  *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
  *               ▶ Requires regionalFCT.js loaded before this script.
  *
- *   Layer 2   — USDA FoodData Central API
+ *   Layer 2   — Chakudya API  (_searchChakudyaLookup — replaces old direct
+ *               USDA FDC + Open Food Facts text search)
  *               ▶ Only reached when local data is absent/incomplete.
+ *               ▶ One GET /foods/lookup?q= call; the worker itself cascades
+ *                 through its own Malawi FCT / packaged-food tables → USDA
+ *                 FDC → Open Food Facts → FatSecret server-side, so the
+ *                 client makes a single request and holds no API keys.
  *               ▶ Fills missing nutritional fields; never overwrites local data.
- *
- *   Layer 3   — Open Food Facts Text Search  (_searchOFF, name-based)
- *               ▶ Last resort when local, regional, AND FDC all miss.
- *               ▶ Searches packaged/processed foods by product name via
- *                 OFF /cgi/search.pl endpoint.
- *               ▶ Returns OFF nutritional fields mapped to unified shape.
  *
  * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
  *
@@ -41,11 +40,12 @@
  *               ▶ Returns full Malawi FCT nutrition + measures on hit.
  *               ▶ barcodeSource: 'LocalDB' | confidenceScore 0.97 / 0.72
  *
- *   Layer B   — Open Food Facts v2 Barcode API  (_fetchOFFBarcode)
+ *   Layer B   — Chakudya API barcode lookup  (_fetchOFFBarcode)
  *               ▶ Only reached when Layer A has no match (online).
- *               ▶ Hits OFF /api/v2/product/{barcode}.json — exact product.
+ *               ▶ GET /foods/lookup?barcode= — cascades through Chakudya's
+ *                 packaged_foods table then Open Food Facts server-side.
  *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
- *               ▶ barcodeSource: 'OFF' | confidenceScore 0.82
+ *               ▶ barcodeSource: 'Chakudya' | confidenceScore 0.88
  *
  * ── QUERY NORMALISATION ──────────────────────────────────────────────────
  *   All queries are normalised before any search: lowercase → trim whitespace
@@ -69,15 +69,13 @@
  *     kcal, kj, pro, cho, fat,       // per 100 g
  *     measures[],                     // from local DB if available
  *     fiber, sodium, sugar, salt,     // extras from APIs if not in local
- *     sourceUsed,                     // 'local' | 'regional' | 'FDC' | 'OFF' | 'combined'
+ *     sourceUsed,                     // 'local' | 'regional' | 'chakudya' | 'combined'
  *     matchTier,                      // 'exact' | 'alias' | 'token' (local/regional only)
- *     barcodeSource,                  // 'LocalDB' | 'OFF'  (barcode pipeline only)
+ *     barcodeSource,                  // 'LocalDB' | 'Chakudya'  (barcode pipeline only)
  *     barcodeMatch,                   // 'exact' | 'prefix' | undefined
  *     confidenceScore,                // 0.0–1.0  (exact=1.00, alias=0.90, token=fuzzy score)
  *     lastUpdated,                    // ISO string if available
  *   }
- *
- * API keys are kept private — never logged or exposed in console output.
  *
  * Author : Edison Taimu / Oasis
  * ─────────────────────────────────────────────────────────────────────────────
@@ -86,10 +84,12 @@
 (function (global) {
   'use strict';
 
-  // ── PRIVATE API KEYS (not logged) ─────────────────────────────────────────
-  const _KEYS = Object.freeze({
-    fdc:    'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ',
-  });
+  // ── CHAKUDYA API ─────────────────────────────────────────────────────────
+  // Single source of truth for external food lookups (Layers 2+3 below).
+  // The worker itself cascades: its own Malawi FCT / packaged-food tables →
+  // USDA FDC → Open Food Facts → FatSecret — so the client no longer needs
+  // its own API keys or direct calls to any of those services.
+  const CHAKUDYA_BASE = 'https://chakudya-api.edisontaimu9.workers.dev';
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
   // Maps alternative / regional names → canonical local DB search term(s).
@@ -562,137 +562,93 @@
   // LAYER 2 — USDA FOODDATA CENTRAL
   // ══════════════════════════════════════════════════════════════════════════
 
-  async function _searchFDC(query) {
-    try {
-      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=3&api_key=${_KEYS.fdc}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const food = data?.foods?.[0];
-      if (!food) return null;
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 2 — CHAKUDYA API LOOKUP  (replaces old direct FDC + OFF text search)
+  //
+  // GET /foods/lookup?q=<name>  — single call, server-side cascade:
+  //   Chakudya's own Malawi FCT table → Chakudya's packaged_foods table →
+  //   USDA FDC → Open Food Facts → FatSecret (OAuth 1.0a). Returns ONE best
+  //   match with `data.source` telling us which tier it came from
+  //   ("local" | "local_packaged" | "usda_fdc" | "openfoodfacts" | "fatsecret").
+  //
+  // Response shape (confirmed against the live API):
+  //   local            → { id, food_name, category, measure, weight_g, kcal,
+  //                         kj, protein_g, carbs_g, fat_g, energy_kcal,
+  //                         barcode, source, external_id }
+  //   local_packaged   → { id, product_name, brand, barcode, serving_size_g,
+  //                         energy_kcal, protein_g, carbs_g, fat_g, sugar_g,
+  //                         fiber_g, sodium_mg, status, submitted_at, source }
+  //   external tiers   → field names not yet confirmed for every source, so
+  //                       this normaliser is deliberately defensive (checks
+  //                       several plausible key names per field) rather than
+  //                       assuming one exact shape.
+  // ══════════════════════════════════════════════════════════════════════════
 
-      const getNutrient = (id) => food.foodNutrients?.find(n => n.nutrientId === id)?.value ?? null;
-      return {
-        id:              'fdc_' + food.fdcId,
-        name:            food.description,
-        cat:             food.foodCategory || 'Global',
-        kcal:            getNutrient(1008) ?? getNutrient(2047),
-        kj:              getNutrient(1008) != null ? +(getNutrient(1008) * 4.184).toFixed(0) : null,
-        pro:             getNutrient(1003),
-        cho:             getNutrient(1005),
-        fat:             getNutrient(1004),
-        fiber:           getNutrient(1079),
-        sugar:           getNutrient(2000),
-        sodium:          getNutrient(1093),
-        measures:        null,
-        sourceUsed:      'FDC',
-        confidenceScore: 0.6,
-        lastUpdated:     food.publishedDate || null,
-      };
+  /** Per-source confidence — Chakudya's own curated tables outrank external cascade hits. */
+  const _CHAKUDYA_SOURCE_CONFIDENCE = {
+    local:           0.9,
+    local_packaged:  0.88,
+    usda_fdc:        0.6,
+    openfoodfacts:   0.62,
+    fatsecret:       0.58,
+  };
+
+  /** Normalise any /foods/lookup success response into the unified food-result shape. */
+  function _chakudyaLookupToUnified(json, fallbackName) {
+    if (!json || json.status !== 'success' || !json.data) return null;
+    const d   = json.data;
+    const src = json.source || d.source || 'chakudya';
+
+    const name = d.food_name || d.product_name || d.name || fallbackName;
+    const kcal = d.energy_kcal ?? d.kcal ?? null;
+
+    return {
+      id:              'chakudya_' + (d.id ?? d.barcode ?? _norm(name)),
+      name:            name,
+      brand:           d.brand ?? null,
+      cat:             d.category ?? 'Chakudya API',
+      kcal:            kcal,
+      kj:              d.kj ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null),
+      pro:             d.protein_g ?? d.pro    ?? null,
+      cho:             d.carbs_g   ?? d.cho    ?? null,
+      fat:             d.fat_g     ?? d.fat    ?? null,
+      fiber:           d.fiber_g   ?? d.fiber  ?? null,
+      sugar:           d.sugar_g   ?? d.sugar  ?? null,
+      sodium:          d.sodium_mg ?? d.sodium ?? null,
+      barcode:         d.barcode ?? null,
+      measures:        d.measure ? [{ label: d.measure, grams: d.weight_g ?? null }] : null,
+      sourceUsed:      'chakudya',
+      dbSource:        'Chakudya API (' + src + ')',
+      confidenceScore: _CHAKUDYA_SOURCE_CONFIDENCE[src] ?? 0.6,
+      lastUpdated:     d.submitted_at ?? null,
+    };
+  }
+
+  async function _searchChakudyaLookup(query) {
+    try {
+      const url = `${CHAKUDYA_BASE}/foods/lookup?q=${encodeURIComponent(query.trim())}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return _chakudyaLookupToUnified(json, query);
     } catch (_e) {
       return null;
     }
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 3 — OPEN FOOD FACTS TEXT SEARCH  (_searchOFF)
-  // Searched only when FDC also returns null. Uses the OFF /cgi/search.pl
-  // endpoint to find packaged foods by name. Offline → fails gracefully.
-  // NOTE: For barcode lookups use searchBarcode() / _fetchOFFBarcode (Layer B)
-  // which hits the OFF v2 /product/{barcode}.json endpoint instead.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Determine the manufacturer-declared basis unit for an Open Food Facts
-   * product: 'mL' for liquids, 'g' for everything else.
-   *
-   * OFF nutriment keys are always suffixed "_100g" for historical reasons —
-   * that suffix does NOT tell you the real unit. The actual unit lives in
-   * `nutrition_data_per` ("100g" | "100ml" | "serving") and, as a fallback
-   * signal, `product_quantity_unit` (parsed from the package "quantity"
-   * string, e.g. "330 ml" → "ml"). We never assume grams for a product the
-   * manufacturer measured in millilitres.
-   */
-  function _offUnit(p) {
-    if (!p) return 'g';
-    if (p.nutrition_data_per === '100ml') return 'mL';
-    const qu = (p.product_quantity_unit || '').toLowerCase();
-    if (qu === 'ml' || qu === 'cl' || qu === 'l') return 'mL';
-    return 'g';
-  }
-
-  async function _searchOFF(query) {
-    try {
-      const url = 'https://world.openfoodfacts.org/cgi/search.pl'
-        + '?search_terms=' + encodeURIComponent(query.trim())
-        + '&action=process&json=1&page_size=3'
-        + '&fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,'
-        + 'nutrition_data_per,product_quantity_unit,nutriments';
-
-      const res = await fetch(url, {
-        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-        headers: { 'Accept': 'application/json' },
-      });
-      if (!res.ok) return null;
-
-      const data = await res.json();
-      const products = data?.products;
-      if (!Array.isArray(products) || !products.length) return null;
-
-      // Pick the first product that has at least kcal data
-      const p = products.find(pr => {
-        const nm = pr.nutriments || {};
-        return nm['energy-kcal_100g'] != null || nm['energy_100g'] != null;
-      }) || products[0];
-
-      if (!p) return null;
-
-      const nm = p.nutriments || {};
-      const n  = (id) => {
-        const val = nm[id];
-        return (val !== undefined && val !== null && val !== '')
-          ? +parseFloat(val).toFixed(2)
-          : null;
-      };
-
-      const kcalDirect = n('energy-kcal_100g');
-      const kcalFromKj = nm['energy_100g'] != null
-        ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1)
-        : null;
-
-      const rawCat = (p.categories_tags?.[0] || p.food_groups_tags?.[0] || '');
-      const cat    = rawCat.replace(/^[a-z]{2}:/, '') || 'Open Food Facts';
-
-      return {
-        id:              'off_' + (p.code || _norm(p.product_name || query)),
-        name:            (p.product_name || p.product_name_en || '').trim() || query,
-        brand:           (p.brands || '').trim() || null,
-        cat:             cat,
-        kcal:            kcalDirect ?? kcalFromKj,
-        kj:              n('energy_100g'),
-        pro:             n('proteins_100g'),
-        cho:             n('carbohydrates_100g'),
-        fat:             n('fat_100g'),
-        fiber:           n('fiber_100g'),
-        sugar:           n('sugars_100g'),
-        sodium:          n('sodium_100g'),
-        unit:            _offUnit(p),   // 'g' or 'mL' — manufacturer's own basis, never forced
-        measures:        null,
-        sourceUsed:      'OFF',
-        confidenceScore: 0.65,
-        lastUpdated:     null,
-      };
-    } catch (_e) {
-      return null;
-    }
-  }
+  // Back-compat aliases — both old export keys now resolve through the same
+  // Chakudya call so nothing downstream that references NTFoodSearch._fdcSearch
+  // or NTFoodSearch._offSearch breaks; the split between "FDC" and "OFF" no
+  // longer exists client-side, it happens server-side inside Chakudya.
+  const _searchFDC = _searchChakudyaLookup;
+  const _searchOFF = _searchChakudyaLookup;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // BARCODE — OPEN FOOD FACTS (Layer B)
-  // Fetches a single product by barcode from the OFF v2 API.
+  // BARCODE — CHAKUDYA API (Layer B)
+  // Fetches a single product by barcode from GET /foods/lookup?barcode=.
+  // Server-side cascade: Chakudya's packaged_foods table → Open Food Facts.
   // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
   // instant even without a network connection.
-  // Distinct from _searchOFF (Layer 3, text-based) — this resolves exact codes.
   // ══════════════════════════════════════════════════════════════════════════
 
   const _BC_CACHE_KEY = 'oasis_bc_cache_v1';
@@ -733,7 +689,7 @@
   }
 
   /**
-   * Fetch a single product from Open Food Facts v2 API by barcode.
+   * Fetch a single product by barcode via Chakudya's /foods/lookup cascade.
    * Returns unified food object on success, null if not found, throws on error.
    * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
    * @returns {Promise<object|null>}
@@ -742,10 +698,7 @@
     const cached = _bcCacheGet(barcode);
     if (cached !== null) return cached;
 
-    const url = 'https://world.openfoodfacts.org/api/v2/product/'
-      + encodeURIComponent(barcode.trim())
-      + '.json?fields=product_name,product_name_en,brands,categories_tags,food_groups_tags,'
-      + 'nutrition_data_per,product_quantity_unit,nutriments';
+    const url = `${CHAKUDYA_BASE}/foods/lookup?barcode=${encodeURIComponent(barcode.trim())}`;
 
     let r;
     try {
@@ -755,54 +708,22 @@
       throw new Error('Network error: ' + (netErr.message || netErr));
     }
 
-    if (r.status === 404) return null;          // barcode unknown to OFF
-    if (!r.ok) throw new Error('Open Food Facts returned ' + r.status);
+    if (!r.ok) throw new Error('Chakudya API returned ' + r.status);
 
-    let d;
-    try { d = await r.json(); }
-    catch (_je) { throw new Error('Bad response from Open Food Facts'); }
+    let json;
+    try { json = await r.json(); }
+    catch (_je) { throw new Error('Bad response from Chakudya API'); }
 
-    if (d.status !== 1 || !d.product) return null;
+    // Worker responds {"status":"not_found",...} or {"status":"error",...}
+    // rather than an HTTP error code when a barcode has no match anywhere.
+    if (json.status === 'not_found' || json.status === 'error' || !json.data) return null;
 
-    const p  = d.product;
-    const nm = p.nutriments || {};
-    const n  = (id) => {
-      const val = nm[id];
-      return (val !== undefined && val !== null && val !== '')
-        ? +parseFloat(val).toFixed(2)
-        : null;
-    };
+    const result = _chakudyaLookupToUnified(json, barcode);
+    if (!result) return null;
 
-    const kcalDirect = n('energy-kcal_100g');
-    const kcalFromKj = nm['energy_100g'] != null
-      ? +(parseFloat(nm['energy_100g']) / 4.184).toFixed(1)
-      : null;
-
-    const result = {
-      id:              'off_' + barcode,
-      name:            (p.product_name || p.product_name_en || '').trim() || barcode,
-      brand:           (p.brands || '').trim() || null,
-      cat:             (p.categories_tags?.[0] || p.food_groups_tags?.[0] || 'Open Food Facts')
-                         .replace(/^[a-z]{2}:/, ''),
-      barcode,
-      barcodeSource:   'OFF',
-      barcodeMatch:    'exact',
-      kcal:            kcalDirect ?? kcalFromKj,
-      kj:              n('energy_100g'),
-      pro:             n('proteins_100g'),
-      cho:             n('carbohydrates_100g'),
-      fat:             n('fat_100g'),
-      fiber:           n('fiber_100g'),
-      sugar:           n('sugars_100g'),
-      sodium:          n('sodium_100g'),
-      salt:            n('salt_100g'),
-      unit:            _offUnit(p),   // 'g' or 'mL' — manufacturer's own basis, never forced
-      measures:        null,
-      sourceUsed:      'OFF',
-      confidenceScore: 0.82,
-      lastUpdated:     null,
-      _offProduct:     true,
-    };
+    result.barcode       = barcode;
+    result.barcodeSource = 'Chakudya';
+    result.barcodeMatch  = 'exact';
 
     _bcCacheSet(barcode, result);
     return result;
@@ -1012,25 +933,16 @@
       }
     }
 
-    // Layer 2 — FDC
-    const fdcResult = await _searchFDC(query);
+    // Layer 2 — Chakudya API
+    // One call covers what used to be two (direct FDC + direct OFF text
+    // search): the worker cascades through its own tables, then USDA FDC,
+    // Open Food Facts, and FatSecret server-side before replying.
+    const chakudyaResult = await _searchChakudyaLookup(query);
 
     if (!best) {
-      best = fdcResult;
-    } else if (fdcResult) {
-      best = _merge(best, fdcResult);
-    }
-
-    // Layer 3 — Open Food Facts text search
-    // Only reached when all local layers AND FDC returned nothing, or when
-    // the result still has missing macros after FDC enrichment.
-    if (!best || (best.kcal == null && best.pro == null)) {
-      const offResult = await _searchOFF(query);
-      if (!best) {
-        best = offResult;
-      } else if (offResult) {
-        best = _merge(best, offResult);
-      }
+      best = chakudyaResult;
+    } else if (chakudyaResult) {
+      best = _merge(best, chakudyaResult);
     }
 
     if (best) delete best._raw;
@@ -1097,15 +1009,16 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // PUBLIC BARCODE SEARCH — 2-layer OFF barcode resolution
+  // PUBLIC BARCODE SEARCH — 2-layer barcode resolution
   //
   //   Layer A — Local registry → MALAWI_FCT (instant, offline, full nutrition)
   //             Checked first; returns immediately on hit.
   //             barcodeSource: 'LocalDB' | confidenceScore 0.97 (exact) / 0.72 (prefix)
   //
-  //   Layer B — Open Food Facts v2 barcode API (online, 7-day localStorage cache)
-  //             Only reached when Layer A has no match.
-  //             barcodeSource: 'OFF'   | confidenceScore 0.82
+  //   Layer B — Chakudya API barcode lookup (online, 7-day localStorage cache)
+  //             Only reached when Layer A has no match. Server-side cascade
+  //             through Chakudya's packaged_foods table, then Open Food Facts.
+  //             barcodeSource: 'Chakudya' | confidenceScore 0.88 (packaged) / 0.62 (external)
   //
   // Returns a unified food object or null when both layers find nothing.
   // Throws on network error so the scanner UI can show a friendly message.
@@ -1115,7 +1028,7 @@
    * Resolve a scanned barcode to a food object.
    *
    * Layer A — Local registry (offline, instant, full Malawi FCT nutrition).
-   * Layer B — Open Food Facts v2 API (online, per-100g nutrients).
+   * Layer B — Chakudya API lookup (online, per-100g nutrients).
    *
    * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
    * @returns {Promise<object|null>}
@@ -1127,7 +1040,7 @@
     const localResult = _searchLocalBarcode(barcode);
     if (localResult) return localResult;
 
-    // ── Layer B: Open Food Facts v2 barcode API ───────────────────────────
+    // ── Layer B: Chakudya API barcode lookup ───────────────────────────────
     return await _fetchOFFBarcode(barcode);
   }
 
@@ -1141,9 +1054,9 @@
     _synonymMap:        SYNONYM_MAP,        // exposed for debugging only
     _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
     _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
-    _fdcSearch:         _searchFDC,         // public FDC-only search for explicit import UI
-    _offSearch:         _searchOFF,         // public OFF text-search (name-based, Layer 3)
-    _fetchOFFBarcode:   _fetchOFFBarcode,   // public OFF barcode fetch (Layer B) — for scanner UI
+    _fdcSearch:         _searchFDC,         // legacy key name — now aliases Chakudya lookup
+    _offSearch:         _searchOFF,         // legacy key name — now aliases Chakudya lookup
+    _fetchOFFBarcode:   _fetchOFFBarcode,   // public barcode fetch (Layer B, now via Chakudya) — for scanner UI
     _regionalSearch:    _searchRegional,    // direct regional FCT search
     filterByCountry:    filterByCountry,    // filter results by country code(s)
     getRegionalStats:   getRegionalStats,   // regional DB coverage summary
