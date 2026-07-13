@@ -23,8 +23,7 @@
  *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
  *               ▶ Requires regionalFCT.js loaded before this script.
  *
- *   Layer 2   — Chakudya API  (_searchChakudyaLookup — replaces old direct
- *               USDA FDC + Open Food Facts text search)
+ *   Layer 2   — Chakudya API  (_searchChakudyaLookup)
  *               ▶ Only reached when local data is absent/incomplete.
  *               ▶ One GET /foods/lookup?q= call; the worker itself cascades
  *                 through its own Malawi FCT / packaged-food tables → USDA
@@ -563,7 +562,7 @@
   // ══════════════════════════════════════════════════════════════════════════
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2 — CHAKUDYA API LOOKUP  (replaces old direct FDC + OFF text search)
+  // LAYER 2 — CHAKUDYA API LOOKUP
   //
   // GET /foods/lookup?q=<name>  — single call, server-side cascade:
   //   Chakudya's own Malawi FCT table → Chakudya's packaged_foods table →
@@ -838,7 +837,7 @@
 
   // ══════════════════════════════════════════════════════════════════════════
   // MERGE HELPER
-  // Priority: local > FDC > OFF — only fills null/missing fields
+  // Priority: local > regional > Chakudya API — only fills null/missing fields
   // ══════════════════════════════════════════════════════════════════════════
 
   function _merge(base, ext) {
