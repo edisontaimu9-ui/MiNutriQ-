@@ -10093,8 +10093,7 @@ function pkgOpenAddModal() {
   if (nameEl) nameEl.style.borderColor = '';
   const errEl = document.getElementById('pkg-modal-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
-  const scanStatusEl = document.getElementById('pkg-scan-status');
-  if (scanStatusEl) { scanStatusEl.style.display = 'none'; scanStatusEl.textContent = ''; }
+  pkgResetStagedScanPhotos();
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -10150,6 +10149,7 @@ function pkgOpenEditModal(id) {
   set('pkg-f-fiber',  n.fiber  ?? n.fiber_g);
   set('pkg-f-sodium', n.sodium ?? n.sodium_mg);
 
+  pkgResetStagedScanPhotos();
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -10158,6 +10158,7 @@ function pkgCloseModal() {
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'none';
   pkgEditingId = null;
+  pkgResetStagedScanPhotos();
 }
 
 async function pkgSaveModal() {
@@ -10242,12 +10243,15 @@ async function pkgSaveModal() {
   }
 }
 
-// ── Scan-a-label (photo → OCR/AI → auto-submit via /packaged/scan) ────
-// Secondary path alongside the manual form above — resizes the photo
-// client-side (phone camera photos are typically 8-15MB; the API caps
-// decoded images at ~6MB and doesn't need full resolution to read text),
-// then hands it straight to PackagedFoodsDB.scanLabel(), which submits it
-// for review server-side in one call (same as the manual SUBMIT FOR REVIEW
+// ── Scan-a-label (photo(s) → OCR/AI → submit via /packaged/scan) ────
+// Secondary path alongside the manual form above. Photos are staged locally
+// (thumbnail strip) so the user can add a nutrition-panel photo AND a
+// barcode photo — which are often on different faces of the package —
+// before submitting them together in one Groq vision call. Resizes each
+// photo client-side (phone camera photos are typically 8-15MB; the API caps
+// each decoded image at ~6MB and doesn't need full resolution to read text),
+// then hands the batch to PackagedFoodsDB.scanLabel(), which submits it for
+// review server-side in one call (same as the manual SUBMIT FOR REVIEW
 // button — there's no separate edit-before-commit step for scans).
 function _pkgResizeAndEncodeImage(file, maxDim = 1600, quality = 0.85) {
   return new Promise((resolve, reject) => {
@@ -10273,61 +10277,126 @@ function _pkgResizeAndEncodeImage(file, maxDim = 1600, quality = 0.85) {
   });
 }
 
-async function pkgHandleScanPhoto(inputEl) {
-  const file = inputEl?.files?.[0];
-  if (!file) return;
+const PKG_SCAN_MAX_PHOTOS = 5;
+let _pkgScanStagedPhotos = []; // array of "data:image/jpeg;base64,...." strings
 
+function _pkgScanSetStatus(msg, tone) {
   const statusEl = document.getElementById('pkg-scan-status');
-  const setStatus = (msg, tone) => {
-    if (!statusEl) return;
-    statusEl.style.display = 'block';
-    statusEl.textContent = msg;
-    const styles = {
-      info:    { color: '#60a5fa', background: 'rgba(96,165,250,.08)',  border: '1px solid rgba(96,165,250,.25)' },
-      success: { color: 'var(--green,#00e676)', background: 'rgba(0,230,118,.08)', border: '1px solid rgba(0,230,118,.25)' },
-      warn:    { color: '#fbbf24', background: 'rgba(251,191,36,.08)',  border: '1px solid rgba(251,191,36,.25)' },
-      error:   { color: '#f87171', background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.25)' },
-    }[tone || 'info'];
-    Object.assign(statusEl.style, styles);
-  };
+  if (!statusEl) return;
+  if (!msg) { statusEl.style.display = 'none'; statusEl.textContent = ''; return; }
+  statusEl.style.display = 'block';
+  statusEl.textContent = msg;
+  const styles = {
+    info:    { color: '#60a5fa', background: 'rgba(96,165,250,.08)',  border: '1px solid rgba(96,165,250,.25)' },
+    success: { color: 'var(--green,#00e676)', background: 'rgba(0,230,118,.08)', border: '1px solid rgba(0,230,118,.25)' },
+    warn:    { color: '#fbbf24', background: 'rgba(251,191,36,.08)',  border: '1px solid rgba(251,191,36,.25)' },
+    error:   { color: '#f87171', background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.25)' },
+  }[tone || 'info'];
+  Object.assign(statusEl.style, styles);
+}
+
+function pkgResetStagedScanPhotos() {
+  _pkgScanStagedPhotos = [];
+  _pkgRenderScanThumbs();
+  _pkgScanSetStatus(null);
+}
+
+function _pkgRenderScanThumbs() {
+  const wrap = document.getElementById('pkg-scan-thumbs');
+  const submitBtn = document.getElementById('pkg-scan-submit-btn');
+  if (!wrap || !submitBtn) return;
+
+  if (!_pkgScanStagedPhotos.length) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    submitBtn.style.display = 'none';
+    submitBtn.disabled = true;
+    return;
+  }
+
+  wrap.style.display = 'flex';
+  wrap.innerHTML = _pkgScanStagedPhotos.map((dataUrl, i) => `
+    <div style="position:relative;width:56px;height:56px">
+      <img src="${dataUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid rgba(96,165,250,.3)">
+      <button type="button" onclick="pkgRemoveStagedScanPhoto(${i})" aria-label="Remove photo"
+        style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#f87171;color:#0a1420;border:none;font-size:11px;line-height:1;cursor:pointer;font-weight:700">&#x2715;</button>
+    </div>
+  `).join('');
+
+  submitBtn.style.display = 'block';
+  submitBtn.disabled = false;
+  submitBtn.textContent = `SCAN ${_pkgScanStagedPhotos.length} PHOTO${_pkgScanStagedPhotos.length > 1 ? 'S' : ''}`;
+}
+
+function pkgRemoveStagedScanPhoto(index) {
+  _pkgScanStagedPhotos.splice(index, 1);
+  _pkgRenderScanThumbs();
+}
+
+async function pkgAddScanPhotos(inputEl) {
+  const files = Array.from(inputEl?.files || []);
+  if (!files.length) return;
+
+  const room = PKG_SCAN_MAX_PHOTOS - _pkgScanStagedPhotos.length;
+  if (room <= 0) {
+    _pkgScanSetStatus(`You can add up to ${PKG_SCAN_MAX_PHOTOS} photos.`, 'warn');
+    inputEl.value = '';
+    return;
+  }
+  const toAdd = files.slice(0, room);
+  if (files.length > toAdd.length) {
+    _pkgScanSetStatus(`Only added ${toAdd.length} — max ${PKG_SCAN_MAX_PHOTOS} photos per submission.`, 'warn');
+  }
+
+  try {
+    const encoded = await Promise.all(toAdd.map(f => _pkgResizeAndEncodeImage(f)));
+    _pkgScanStagedPhotos.push(...encoded);
+    _pkgRenderScanThumbs();
+  } catch (err) {
+    console.error('[pkgAddScanPhotos]', err);
+    _pkgScanSetStatus('Could not read one of those photos. Try again.', 'error');
+  } finally {
+    inputEl.value = ''; // allow re-selecting the same file(s)
+  }
+}
+
+async function pkgSubmitScanPhotos() {
+  if (!_pkgScanStagedPhotos.length) return;
 
   // Reuse the same sign-in gate as the manual submit path.
   try {
     const auth = typeof _getAuth === 'function' ? _getAuth() : null;
     if (!auth?.currentUser) {
-      setStatus('Please sign in to submit a food item.', 'warn');
-      inputEl.value = '';
+      _pkgScanSetStatus('Please sign in to submit a food item.', 'warn');
       return;
     }
   } catch (e) {
-    setStatus('Please sign in to submit a food item.', 'warn');
-    inputEl.value = '';
+    _pkgScanSetStatus('Please sign in to submit a food item.', 'warn');
     return;
   }
 
   if (typeof PackagedFoodsDB === 'undefined') {
-    setStatus('Packaged foods service is unavailable right now.', 'error');
-    inputEl.value = '';
+    _pkgScanSetStatus('Packaged foods service is unavailable right now.', 'error');
     return;
   }
 
-  const toggleButtons = (disabled) => {
+  const submitBtn = document.getElementById('pkg-scan-submit-btn');
+  const toggleInputs = (disabled) => {
     document.querySelectorAll('[onclick*="pkg-scan-camera-input"], [onclick*="pkg-scan-gallery-input"]')
       .forEach(btn => { btn.disabled = disabled; btn.style.opacity = disabled ? '0.5' : ''; btn.style.pointerEvents = disabled ? 'none' : ''; });
+    if (submitBtn) submitBtn.disabled = disabled;
   };
 
   try {
-    setStatus('Preparing photo…', 'info');
-    toggleButtons(true);
-    const dataUrl = await _pkgResizeAndEncodeImage(file);
-
-    setStatus('Reading label — this can take up to 15 seconds…', 'info');
+    toggleInputs(true);
+    const n = _pkgScanStagedPhotos.length;
+    _pkgScanSetStatus(`Reading ${n} photo${n > 1 ? 's' : ''} — this can take up to 15-20 seconds…`, 'info');
     const existingBarcode = (document.getElementById('pkg-f-barcode')?.value || '').trim();
-    const result = await PackagedFoodsDB.scanLabel(dataUrl, existingBarcode);
+    const result = await PackagedFoodsDB.scanLabel(_pkgScanStagedPhotos, existingBarcode);
 
     if (result?.status === 'success') {
       const lowConf = !!result.needs_review;
-      setStatus(lowConf
+      _pkgScanSetStatus(lowConf
         ? '✓ Submitted for review — scan confidence was low, an admin will double-check.'
         : '✓ Submitted for review. Thanks for contributing to Chakudya!', 'success');
       pkgRender();
@@ -10335,16 +10404,15 @@ async function pkgHandleScanPhoto(inputEl) {
       showToast(lowConf ? '✓ Submitted — low-confidence scan, will be double-checked' : '✓ Submitted from photo — will appear once verified', 'success');
       setTimeout(() => { pkgCloseModal(); }, 1400);
     } else if (result?.status === 'needs_retry') {
-      setStatus(result.message || 'Couldn\'t read that label clearly. Try again or fill in the fields manually.', 'warn');
+      _pkgScanSetStatus(result.message || 'Couldn\'t read a label clearly. Try clearer photos or fill in the fields manually.', 'warn');
     } else {
-      setStatus((result && result.message) || 'Scan failed. Try again or fill in the fields manually.', 'error');
+      _pkgScanSetStatus((result && result.message) || 'Scan failed. Try again or fill in the fields manually.', 'error');
     }
   } catch (err) {
-    console.error('[pkgHandleScanPhoto]', err);
-    setStatus('Scan failed: ' + (err.message || String(err)) + ' — try again or fill in manually.', 'error');
+    console.error('[pkgSubmitScanPhotos]', err);
+    _pkgScanSetStatus('Scan failed: ' + (err.message || String(err)) + ' — try again or fill in manually.', 'error');
   } finally {
-    toggleButtons(false);
-    inputEl.value = ''; // allow re-selecting the same file
+    toggleInputs(false);
   }
 }
 

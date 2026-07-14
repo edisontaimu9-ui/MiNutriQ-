@@ -8263,15 +8263,18 @@ const BLEND_FOODS = [
   // ── CRUD — WRITE OPERATIONS ──────────────────────────────────────────────────
 
   /**
-   * Submit a photo of a nutrition label to the Chakudya API's OCR/AI scan
-   * endpoint (POST /packaged/scan). The server reads the label, normalizes
-   * the values to per-100g/ml, and inserts the result directly as
-   * status:"pending" — same review queue as a manual submission. This does
-   * NOT go through addFood()/SUBMIT_URL; the scan endpoint handles both
-   * extraction and insertion server-side in one call.
+   * Submit one or more photos of a nutrition label to the Chakudya API's
+   * OCR/AI scan endpoint (POST /packaged/scan). Useful when the barcode and
+   * nutrition panel are on different faces of the package — send both
+   * photos in one call and the server combines what it reads across them.
+   * The server normalizes values to per-100g/ml and inserts the result
+   * directly as status:"pending" — same review queue as a manual submission.
+   * This does NOT go through addFood()/SUBMIT_URL; the scan endpoint handles
+   * both extraction and insertion server-side in one call.
    *
-   * @param {string} imageDataUrl - "data:image/jpeg;base64,...." (already
-   *   resized/compressed client-side — keep it well under ~6MB decoded)
+   * @param {string|string[]} images - one or more "data:image/jpeg;base64,...."
+   *   strings (already resized/compressed client-side — keep each well under
+   *   ~6MB decoded, ~15MB combined). Max 5 images; extras are dropped.
    * @param {string} [barcode] - optional barcode captured separately (e.g.
    *   from the barcode scanner on the same screen); takes priority over
    *   whatever the AI reads off the packaging
@@ -8279,9 +8282,10 @@ const BLEND_FOODS = [
    *   data? (the inserted row, on success), extracted? (raw AI read, on
    *   needs_retry), needs_review? (true if AI confidence was low) }
    */
-  async function _scanLabel(imageDataUrl, barcode) {
-    if (!imageDataUrl) throw new Error('[PackagedFoodsDB] image is required');
-    const body = { image: imageDataUrl };
+  async function _scanLabel(images, barcode) {
+    const list = (Array.isArray(images) ? images : [images]).filter(Boolean).slice(0, 5);
+    if (!list.length) throw new Error('[PackagedFoodsDB] at least one image is required');
+    const body = { images: list };
     if (barcode) body.barcode = String(barcode).replace(/\D/g, '');
 
     try {
@@ -8530,14 +8534,15 @@ const BLEND_FOODS = [
     },
 
     /**
-     * Submit a photo of a nutrition label — server-side OCR/AI reads it and
-     * inserts a status:"pending" row directly (POST /packaged/scan).
-     * @param {string} imageDataUrl - "data:image/jpeg;base64,...."
+     * Submit one or more photos of a nutrition label — server-side OCR/AI
+     * reads them (combined) and inserts a status:"pending" row directly
+     * (POST /packaged/scan).
+     * @param {string|string[]} images - one or up to 5 "data:image/jpeg;base64,...." strings
      * @param {string} [barcode] - optional, takes priority over AI-read barcode
      * @returns {Promise<object>} { status, message, data?, extracted?, needs_review? }
      */
-    scanLabel(imageDataUrl, barcode) {
-      return _scanLabel(imageDataUrl, barcode);
+    scanLabel(images, barcode) {
+      return _scanLabel(images, barcode);
     },
 
     /**

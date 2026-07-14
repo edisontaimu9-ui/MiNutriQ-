@@ -12787,7 +12787,7 @@ function ntClear(scopeId, resultIds) {
         <button type="button" onclick="document.getElementById('pkg-scan-camera-input').click()"
           style="flex:1;min-width:140px;font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Take Photo
+          Add Photo
         </button>
         <button type="button" onclick="document.getElementById('pkg-scan-gallery-input').click()"
           style="flex:1;min-width:140px;font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -12796,11 +12796,20 @@ function ntClear(scopeId, resultIds) {
         </button>
       </div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:8px;line-height:1.5">
-        Photograph the nutrition facts panel and we'll read it and submit it for review automatically — same review queue as typing it in below. Good lighting and a flat, in-focus label give the best results.
+        Add up to 5 photos of the SAME product — e.g. one of the nutrition panel and one of the barcode, if they're on different sides. Good lighting and a flat, in-focus label give the best results.
       </div>
+
+      <!-- Thumbnail strip for staged photos, hidden until at least one is added -->
+      <div id="pkg-scan-thumbs" style="display:none;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+
+      <button type="button" id="pkg-scan-submit-btn" onclick="pkgSubmitScanPhotos()" disabled
+        style="display:none;width:100%;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#0a1420;background:#60a5fa;border:none;border-radius:6px;padding:10px 12px;cursor:pointer;font-weight:700">
+        SCAN PHOTO(S)
+      </button>
+
       <div id="pkg-scan-status" style="display:none;font-family:var(--mono);font-size:9.5px;margin-top:9px;padding:8px 10px;border-radius:6px"></div>
-      <input type="file" id="pkg-scan-camera-input"  accept="image/*" capture="environment" style="display:none" onchange="pkgHandleScanPhoto(this)">
-      <input type="file" id="pkg-scan-gallery-input" accept="image/*" style="display:none" onchange="pkgHandleScanPhoto(this)">
+      <input type="file" id="pkg-scan-camera-input"  accept="image/*" capture="environment" style="display:none" onchange="pkgAddScanPhotos(this)">
+      <input type="file" id="pkg-scan-gallery-input" accept="image/*" multiple style="display:none" onchange="pkgAddScanPhotos(this)">
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
