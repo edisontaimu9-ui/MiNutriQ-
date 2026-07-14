@@ -10083,6 +10083,33 @@ async function pkgUpdateStats() {
 }
 
 // ── Add / Edit Modal ──────────────────────────────────────────────
+// ── Manual-entry nutrition basis: "100" (per 100g/ml, stored as-is) or
+// "serving" (user typed values as printed per-serving; we scale to per-100g/
+// ml before submitting, same normalization the OCR/scan path already does
+// server-side). Default "100" preserves prior behavior for anyone used to
+// doing the math themselves. ──────────────────────────────────────────────
+let pkgNutritionBasis = '100';
+
+function pkgSetNutritionBasis(basis) {
+  pkgNutritionBasis = (basis === 'serving') ? 'serving' : '100';
+  const btn100 = document.getElementById('pkg-basis-btn-100');
+  const btnServing = document.getElementById('pkg-basis-btn-serving');
+  const hint = document.getElementById('pkg-basis-hint');
+  const sectionLabel = document.getElementById('pkg-nutrition-basis-label');
+  const active   = { color: 'var(--teal)', background: 'rgba(29,233,212,.12)', border: '1px solid var(--teal)' };
+  const inactive = { color: 'var(--text-dim)', background: 'transparent', border: '1px solid var(--border)' };
+  if (btn100)     Object.assign(btn100.style,     pkgNutritionBasis === '100'     ? active : inactive);
+  if (btnServing) Object.assign(btnServing.style, pkgNutritionBasis === 'serving' ? active : inactive);
+  if (hint) hint.style.display = pkgNutritionBasis === 'serving' ? 'block' : 'none';
+  if (sectionLabel) sectionLabel.textContent = pkgNutritionBasis === 'serving' ? 'NUTRITION PER SERVING' : 'NUTRITION PER 100 g / ml';
+}
+
+/** Scales a per-serving value to per-100g/ml, rounded to 2dp. Null-safe. */
+function _pkgScaleToPer100(value, servingSize) {
+  if (value == null || !servingSize) return value;
+  return Math.round(value * (100 / servingSize) * 100) / 100;
+}
+
 function pkgOpenAddModal() {
   pkgEditingId = null;
   const title = document.getElementById('pkg-modal-title');
@@ -10094,6 +10121,7 @@ function pkgOpenAddModal() {
   const errEl = document.getElementById('pkg-modal-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   pkgResetStagedScanPhotos();
+  pkgSetNutritionBasis('100');
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -10150,6 +10178,7 @@ function pkgOpenEditModal(id) {
   set('pkg-f-sodium', n.sodium ?? n.sodium_mg);
 
   pkgResetStagedScanPhotos();
+  pkgSetNutritionBasis('100'); // stored values are always per-100g/ml already — no reconversion on edit
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -10196,6 +10225,22 @@ async function pkgSaveModal() {
   const nameEl = document.getElementById('pkg-f-name');
   if (nameEl) nameEl.style.borderColor = '';
 
+  const servingSize = g('pkg-f-serving') ?? 100;
+
+  // ── Per-serving → per-100g/ml normalization ──────────────────────
+  // Same math the OCR/scan endpoint already applies server-side, mirrored
+  // here so manually-typed values (which people often copy straight off a
+  // "per serving" label) land in the DB normalized the same way.
+  if (pkgNutritionBasis === 'serving') {
+    if (!servingSize || servingSize <= 0) {
+      const el = document.getElementById('pkg-f-serving');
+      if (el) { el.style.borderColor = '#f87171'; el.focus(); }
+      showError('Enter a serving size to convert per-serving values to per-100g/ml.');
+      return;
+    }
+  }
+  const scaleIfNeeded = (val) => pkgNutritionBasis === 'serving' ? _pkgScaleToPer100(val, servingSize) : val;
+
   // Get current user identity for attribution
   let submittedBy = '';
   try {
@@ -10204,20 +10249,21 @@ async function pkgSaveModal() {
     submittedBy   = profile?.name || profile?.email || auth?.currentUser?.email || '';
   } catch(e) {}
 
+  const scaledKcal = scaleIfNeeded(g('pkg-f-kcal'));
   const data = {
     name:        name,
     brand:       s('pkg-f-brand')  || '',
     barcode:     s('pkg-f-barcode').replace(/\D/g, '') || '',
-    servingSize: g('pkg-f-serving') ?? 100,
+    servingSize: servingSize,
     per100g: {
-      kcal:   g('pkg-f-kcal'),
-      kj:     (() => { const k = g('pkg-f-kcal'); return k != null ? +(k * 4.184).toFixed(0) : null; })(),
-      pro:    g('pkg-f-pro'),
-      cho:    g('pkg-f-cho'),
-      fat:    g('pkg-f-fat'),
-      sugar:  g('pkg-f-sugar'),
-      fiber:  g('pkg-f-fiber'),
-      sodium: g('pkg-f-sodium'),
+      kcal:   scaledKcal,
+      kj:     scaledKcal != null ? +(scaledKcal * 4.184).toFixed(0) : null,
+      pro:    scaleIfNeeded(g('pkg-f-pro')),
+      cho:    scaleIfNeeded(g('pkg-f-cho')),
+      fat:    scaleIfNeeded(g('pkg-f-fat')),
+      sugar:  scaleIfNeeded(g('pkg-f-sugar')),
+      fiber:  scaleIfNeeded(g('pkg-f-fiber')),
+      sodium: scaleIfNeeded(g('pkg-f-sodium')),
     },
     // Attribution — who submitted this entry
     submittedBy: submittedBy || '',

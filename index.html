@@ -116,7 +116,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.3.8';
+  const APP_VERSION = '1.3.9';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -12830,7 +12830,23 @@ function ntClear(scopeId, resultIds) {
         <input class="inp" type="number" id="pkg-f-serving" placeholder="100" min="0">
       </div>
     </div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
+    <div class="field-group" style="grid-column:1/-1;margin-top:14px">
+      <label class="lbl">Values below are entered per:</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="button" id="pkg-basis-btn-100" onclick="pkgSetNutritionBasis('100')"
+          style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.5px;border-radius:6px;padding:9px 10px;cursor:pointer;color:var(--teal);background:rgba(29,233,212,.12);border:1px solid var(--teal)">
+          100 g / ml
+        </button>
+        <button type="button" id="pkg-basis-btn-serving" onclick="pkgSetNutritionBasis('serving')"
+          style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.5px;border-radius:6px;padding:9px 10px;cursor:pointer;color:var(--text-dim);background:transparent;border:1px solid var(--border)">
+          Serving size (above)
+        </button>
+      </div>
+      <div id="pkg-basis-hint" style="display:none;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px;line-height:1.5">
+        We'll convert these to per-100g/ml automatically using the serving size you entered above.
+      </div>
+    </div>
+    <div id="pkg-nutrition-basis-label" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
       <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
