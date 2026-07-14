@@ -7090,11 +7090,11 @@ function renderRecallMeals() {
           </button>
         </div>
       </div>
-      <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA | USDA FDC -->
+      <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA | CHAKUDYA API (internal mode key stays 'fdc') -->
       <div style="display:flex;gap:0;margin-bottom:10px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content">
         <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:var(--amber);color:#000;cursor:pointer;letter-spacing:1px;font-weight:700" id="meal-${mi}-btn-fct">MALAWI FCT</button>
         <button onclick="setMealMode(${mi},'formula',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-formula">COMMERCIAL FORMULA</button>
-        <button onclick="setMealMode(${mi},'fdc',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fdc">🌐 USDA FDC</button>
+        <button onclick="setMealMode(${mi},'fdc',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fdc">🌐 Chakudya API</button>
       </div>
       <!-- FCT mode — default active -->
       <div id="meal-${mi}-fct-row" style="display:block;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(56,100,168,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
@@ -7205,12 +7205,12 @@ function renderRecallMeals() {
           </div>
         </div>
       </div>
-      <!-- USDA FDC Online Search mode -->
+      <!-- Chakudya API Online Search mode -->
       <div id="meal-${mi}-fdc-row" style="display:none;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(96,165,250,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
         <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.25),transparent)"></div>
-        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px">🌐 USDA FoodData Central — Live Search</div>
+        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px">🌐 Chakudya Nutrition Registry (CNR) — Live Search</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input class="field-inp" id="meal-${mi}-fdc-q" placeholder="Search USDA database (e.g. avocado, oatmeal)…"
+          <input class="field-inp" id="meal-${mi}-fdc-q" placeholder="Search Chakudya database (e.g. avocado, oatmeal)…"
             style="flex:1;font-size:11px"
             onkeydown="if(event.key==='Enter')recallFdcSearch(${mi})">
           <button onclick="recallFdcSearch(${mi})" style="font-family:var(--mono);font-size:9px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);letter-spacing:1px">SEARCH</button>
@@ -7532,8 +7532,7 @@ function removeRecallItem(mi, idx) {
   updateRecallTotals();
 }
 
-// ── USDA FDC SEARCH FOR RECALL ────────────────────────────────────────────
-const _FDC_KEY_RECALL = 'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ';
+// ── CHAKUDYA API SEARCH FOR RECALL ────────────────────────────────────────
 const _recallFdcCache = {};
 
 async function recallFdcSearch(mi) {
@@ -7543,34 +7542,37 @@ async function recallFdcSearch(mi) {
   if (!qEl || !resEl) return;
   const q = qEl.value.trim();
   if (!q) return;
-  stEl.textContent = `Searching USDA FDC for "${q}"…`;
+  stEl.textContent = `Searching Chakudya for "${q}"…`;
   resEl.innerHTML  = '';
 
   try {
     let foods = _recallFdcCache[q.toLowerCase()];
     if (!foods) {
-      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&api_key=${_FDC_KEY_RECALL}`;
+      const url = `https://chakudya-api.edisontaimu9.workers.dev/foods/lookup?q=${encodeURIComponent(q)}`;
       const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!r.ok) throw new Error('FDC ' + r.status);
-      const d = await r.json();
-      const n = id => d.foods?.[0]?.foodNutrients; // placeholder — mapped per food below
-      foods = (d.foods || []).slice(0, 6).map(f => {
-        const get = id => f.foodNutrients?.find(x => x.nutrientId === id)?.value ?? null;
-        const kcal = get(1008) ?? get(2047);
-        return {
-          name:  f.description,
-          cat:   f.foodCategory || 'USDA',
+      if (!r.ok) throw new Error('Chakudya ' + r.status);
+      const json = await r.json();
+      // /foods/lookup returns one best match, not a list — wrap it so the
+      // rest of this function (card rendering, add-to-recall) is unchanged.
+      if (json.status === 'success' && json.data) {
+        const d = json.data;
+        const kcal = d.energy_kcal ?? d.kcal ?? null;
+        foods = [{
+          name:   d.food_name || d.product_name || d.name || q,
+          cat:    d.category || 'Chakudya API',
           kcal,
-          kj:    kcal != null ? +(kcal * 4.184).toFixed(0) : null,
-          pro:   get(1003),
-          cho:   get(1005),
-          fat:   get(1004),
-          fiber: get(1079),
-          sugar: get(2000),
-          sodium: get(1093) != null ? +(get(1093) / 1000).toFixed(3) : null,
-          sourceUsed: 'FDC',
-        };
-      });
+          kj:     d.kj ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null),
+          pro:    d.protein_g ?? d.pro ?? null,
+          cho:    d.carbs_g   ?? d.cho ?? null,
+          fat:    d.fat_g     ?? d.fat ?? null,
+          fiber:  d.fiber_g   ?? d.fiber ?? null,
+          sugar:  d.sugar_g   ?? d.sugar ?? null,
+          sodium: (d.sodium_mg ?? d.sodium) != null ? +((d.sodium_mg ?? d.sodium) / 1000).toFixed(3) : null,
+          sourceUsed: 'chakudya',
+        }];
+      } else {
+        foods = [];
+      }
       _recallFdcCache[q.toLowerCase()] = foods;
     }
 
@@ -7586,7 +7588,7 @@ async function recallFdcSearch(mi) {
       foods.map((f, i) => _recallFdcCard(f, i, mi)).join('');
     window[`_recallFdcHits_${mi}`] = foods;
   } catch (err) {
-    stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
+    stEl.textContent = 'Chakudya search failed — check connection. (' + (err.message || err) + ')';
   }
 }
 
@@ -7614,7 +7616,7 @@ function _recallFdcCard(food, i, mi) {
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(food.name)}">${esc(food.name)}</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
       </div>
-      <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
+      <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">Chakudya API</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)">
       <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
@@ -7673,8 +7675,8 @@ window.addRecallFdcFood = function(mi, i) {
   const f = g / 100;
   const item = {
     mode:     'fct',
-    label:    `${food.name} — ${g}g (USDA FDC)`,
-    source:   'FDC',
+    label:    `${food.name} — ${g}g (Chakudya API)`,
+    source:   'chakudya',
     baseKcal: food.kcal, basePro: food.pro, baseCho: food.cho, baseFat: food.fat, baseKj: food.kj,
     kcal: food.kcal != null ? Math.round(food.kcal * f) : 0,
     pro:  food.pro  != null ? parseFloat((food.pro  * f).toFixed(1)) : 0,
@@ -7711,10 +7713,10 @@ function renderMealItems(mi) {
   let mealKcal = 0;
   container.innerHTML = items.map((item, idx) => {
     let kcal, pro, colorDot, typeLabel;
-    if (item.source === 'FDC') {
+    if (item.source === 'chakudya') {
       kcal = item.kcal ?? 0;
       pro  = item.pro  ?? 0;
-      colorDot = '#60a5fa'; typeLabel = 'USDA FDC';
+      colorDot = '#60a5fa'; typeLabel = 'CNR';
     } else if (item.mode === 'fct') {
       kcal = Math.round(item.baseKcal * item.qty);
       pro  = parseFloat((item.basePro  * item.qty).toFixed(1));
@@ -7738,14 +7740,14 @@ function renderMealItems(mi) {
     }
     mealKcal += kcal;
     const qty     = item.qty || 1;
-    const isFdc   = item.source === 'FDC';
+    const isFdc   = item.source === 'chakudya';
     const qtyCtrl = isFdc
       ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);white-space:nowrap">fixed g</span>`
       : `<button onclick="adjRecallQty(${mi},${idx},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
         <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:22px;text-align:center">${qty}</span>
         <button onclick="adjRecallQty(${mi},${idx},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">+</button>`;
     const fdcBadge = isFdc
-      ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);flex-shrink:0;white-space:nowrap">USDA</span>`
+      ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);flex-shrink:0;white-space:nowrap">CNR</span>`
       : '';
     return `<div class="recall-item-row" id="rrow-${mi}-${idx}">
       <div style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
@@ -7776,7 +7778,7 @@ function updateRecallTotals() {
   const exchangeCounts = {};
   Object.keys(recallData).forEach(mi => {
     (recallData[mi]||[]).forEach(item => {
-      if (item.source === 'FDC') {
+      if (item.source === 'chakudya') {
         totKcal += item.kcal  || 0;
         totKj   += item.kj   || 0;
         totCho  += item.cho  || 0;
@@ -8367,7 +8369,7 @@ function renderMpMeals() {
   MP_MEAL_NAMES.forEach((mname, mi) => {
     const items = mpData[mi] || [];
     const mealKcal = items.reduce((s, i) => {
-      if (i.source === 'FDC') return s + (i.kcal || 0);
+      if (i.source === 'chakudya') return s + (i.kcal || 0);
       return s + Math.round((i.baseKcal||i.kcal||0)*(i.qty||1));
     }, 0);
     const div = document.createElement('div');
@@ -8383,12 +8385,12 @@ function renderMpMeals() {
         ${items.length === 0
           ? '<div style="color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:6px 0">No items added yet</div>'
           : items.map((item, ii) => {
-              const isFdc  = item.source === 'FDC';
+              const isFdc  = item.source === 'chakudya';
               const q      = item.qty || 1;
               const kcal   = isFdc ? (item.kcal || 0) : Math.round((item.baseKcal||item.kcal||0) * q);
               const pro    = isFdc ? (item.pro  || 0) : parseFloat(((item.basePro||item.pro||0) * q).toFixed(1));
               const badge  = isFdc
-                ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);white-space:nowrap;flex-shrink:0">USDA</span>`
+                ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);white-space:nowrap;flex-shrink:0">CNR</span>`
                 : '';
               const qtyCtrl = isFdc
                 ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);min-width:76px;text-align:center">fixed g</span>`
@@ -9749,7 +9751,7 @@ function dbGetPer100(food) {
 const _dbGlobalResults = { items: [], active: false };
 
 /**
- * dbRender — Layered Food Search (Local → FDC → Open Food Facts)
+ * dbRender — Layered Food Search (Local → Chakudya API)
  *
  * When the user types a query:
  *   1. In-memory Chakudya data (loaded async by chakudyaDB.js) is filtered.
@@ -15080,13 +15082,13 @@ function _dbRenderGlobalResult(food) {
 
   const sourceColors = {
     local:         'var(--teal)',
-    FDC:           'var(--blue)',
-    OFF: '#84cc16',
+    regional:      'var(--amber)',
+    chakudya:      'var(--blue)',
     combined:      'var(--green)',
   };
   const srcColor  = sourceColors[food.sourceUsed] || 'var(--text-dim)';
   const srcLabel  = {
-    local:'Local DB', FDC:'USDA FDC', OFF:'Open Food Facts', combined:'Combined'
+    local:'Local DB', regional:'Regional FCT', chakudya:'Chakudya (CNR)', combined:'Combined'
   }[food.sourceUsed] || food.sourceUsed;
 
   const confidence = Math.round((food.confidenceScore ?? 0) * 100);
@@ -15158,7 +15160,7 @@ function _dbShowGlobalLoading(query) {
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
          Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
-        <div style="margin-top:6px;font-size:9px">FoodData Central · Open Food Facts</div>
+        <div style="margin-top:6px;font-size:9px">Chakudya Nutrition Registry (CNR)</div>
       </div>
     </div>`;
   const noRes = document.getElementById('db-no-results');
@@ -15167,7 +15169,7 @@ function _dbShowGlobalLoading(query) {
 
 /**
  * Debounced global search — fires 600ms after user stops typing.
- * Uses NTFoodSearch layered retrieval (FDC → Open Food Facts).
+ * Uses NTFoodSearch layered retrieval (local → Chakudya API).
  */
 function _dbGlobalSearch(query) {
   clearTimeout(_GS_debounceTimer);

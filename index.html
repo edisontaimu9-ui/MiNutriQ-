@@ -98,7 +98,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://api.nal.usda.gov https://world.openfoodfacts.org https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -116,7 +116,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.3.4';
+  const APP_VERSION = '1.3.6';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -149,6 +149,58 @@
 </script>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SPLASH SCREEN — Oasis (Splash B)
+     Rendered immediately by CSS — visible before any JS runs.
+     Dismissed by #nt-splash-dismiss script at end of <body>.
+     ═══════════════════════════════════════════════════════════ -->
+<div id="nt-splash" role="status" aria-label="Oasis loading" aria-live="polite">
+
+  <!-- 1. App name -->
+  <div class="nts-name">
+    Oasis
+  </div>
+
+  <!-- 2. Logo + animated rings -->
+  <div class="nts-ring-wrap">
+    <div class="nts-halo"></div>
+    <div class="nts-ring-static"></div>
+    <div class="nts-ring-outer"></div>
+    <div class="nts-ring-mid"></div>
+    <div class="nts-ring-inner"></div>
+    <div class="nts-logo-circle">
+      <img src="/icons/logo-transparent.png" width="118" height="118" alt="Oasis" style="object-fit:contain;display:block">
+    </div>
+  </div>
+
+  <!-- 3. Loading dots -->
+  <div class="nts-dots" aria-hidden="true">
+    <div class="nts-dot"></div>
+    <div class="nts-dot"></div>
+    <div class="nts-dot"></div>
+    <div class="nts-dot"></div>
+    <div class="nts-dot"></div>
+    <div class="nts-dot"></div>
+  </div>
+
+  <!-- 4. Subtitle -->
+  <div class="nts-sub">Clinical Nutrition Decision Support Tool</div>
+
+  <!-- 5. Welcome -->
+  <div class="nts-welcome" aria-label="Welcome">
+    <span>W</span><span>E</span><span>L</span><span>C</span><span>O</span><span>M</span><span>E</span>
+  </div>
+
+  <!-- 6. Attribution -->
+  <div class="nts-by">By Edison Taimu</div>
+
+  <!-- 7. Glow line -->
+  <div class="nts-line" aria-hidden="true"></div>
+
+</div>
+<!-- /SPLASH -->
+
 
 <!-- ══ USER IDENTITY ONBOARDING ══════════════════════════════ -->
 <div id="ob-overlay">
@@ -2326,7 +2378,7 @@ var photoCropper = (function () {
           <div style="font-family:var(--mono);font-size:9.5px;margin-bottom:8px;padding:8px 10px;
                       border-radius:8px;background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.2);
                       color:rgba(251,146,60,.85)">
-            &#9888; Product not found in local DB, Open Food Facts or GS1 registry.
+            &#9888; Product not found in local DB, Chakudya API or GS1 registry.
           </div>
           <!-- Search by name -->
           <button onclick="hpBarcodeManualFallback()"
@@ -5723,12 +5775,12 @@ var photoCropper = (function () {
     </div>
   </div>
 
-  <!-- USDA FDC Online Search for Meal Planner -->
+  <!-- Chakudya API Online Search for Meal Planner -->
   <div class="card" style="margin-bottom:18px;border-color:rgba(96,165,250,0.2)">
     <div class="card-header" style="cursor:pointer" onclick="mpFdcToggle()">
       <div class="card-title" style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
-        🌐 Search USDA FoodData Central
+        <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">Chakudya API</span>
+        🌐 Search Chakudya Nutrition Registry (CNR)
         <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);font-weight:400">— food not in local database?</span>
       </div>
       <span id="mp-fdc-chevron" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto;transition:transform .2s">▼</span>
@@ -5736,7 +5788,7 @@ var photoCropper = (function () {
     <div id="mp-fdc-panel" style="display:none">
       <div class="card-body">
         <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:10px;line-height:1.6">
-          Search the USDA database for any food not found in the Malawi FCT or UCT Exchange List.
+          Search Chakudya's food database (Malawi FCT + packaged foods + external cascade) for any food not found in the local Malawi FCT or UCT Exchange List.
           Results are per 100 g — set your gram amount, choose a meal slot, then ADD.
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -8850,8 +8902,8 @@ var photoCropper = (function () {
 </script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <!-- regionalFCT.js removed — replaced by chakudyaDB.js -->
-<script src="foodData.js?v=1.3.4"></script>
-<script src="foodSearch.js?v=1.3.4"></script>
+<script src="foodData.js?v=1.3.6"></script>
+<script src="foodSearch.js?v=1.3.6"></script>
 <!-- ═══════════════════════════════════════════════════════════════════════
      NT_CustomFoods — Import FDC results into local DB (localStorage)
      Patches NTFoodSearch.searchLocal to prepend imported foods.
@@ -8872,7 +8924,7 @@ var photoCropper = (function () {
     try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_){}
   }
 
-  /** Convert a live FDC result card object → MALAWI_FCT-compatible entry */
+  /** Convert a live Chakudya API result card object → MALAWI_FCT-compatible entry */
   function _toFCT(food){
     // per-100g macros already on the object
     const kcal100 = +(food.kcal||0);
@@ -8882,10 +8934,10 @@ var photoCropper = (function () {
     const kj100   = food.kj ? +(food.kj) : +(kcal100*4.184).toFixed(0);
     return {
       id:   'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-      cat:  'Imported / FDC',
+      cat:  'Imported / Chakudya',
       name: food.name,
       importedAt: new Date().toISOString(),
-      source: 'USDA FoodData Central',
+      source: 'Chakudya Nutrition Registry',
       // Three standard measures at 100g, 50g, 200g
       measures:[
         {
@@ -9035,18 +9087,17 @@ var photoCropper = (function () {
 })();
 </script>
 
-<script src="main.js?v=1.3.4"></script>
+<script src="main.js?v=1.3.6"></script>
 <script src="pwaManifest.js"></script>
 
 <script>
 /* ════════════════════════════════════════════════════════════
-   MEAL PLANNER — USDA FDC ONLINE SEARCH
+   MEAL PLANNER — CHAKUDYA API ONLINE SEARCH
    Handles mpFdcToggle, mpFdcSearch, mpFdcRecalc, addMpFdcFood
    ════════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
 
-  const _FDC_KEY_MP = 'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ';
   let _mpFdcResults = [];
   let _mpFdcOpen    = false;
 
@@ -9065,32 +9116,36 @@ var photoCropper = (function () {
     const resEl = document.getElementById('mp-fdc-results');
     if (!qEl || !resEl) return;
     const q = qEl.value.trim(); if (!q) return;
-    stEl.textContent = `Searching USDA FDC for "${q}"…`;
+    stEl.textContent = `Searching Chakudya for "${q}"…`;
     resEl.innerHTML  = '';
     _mpFdcResults    = [];
 
     try {
-      const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6&api_key=${_FDC_KEY_MP}`;
+      const url = `https://chakudya-api.edisontaimu9.workers.dev/foods/lookup?q=${encodeURIComponent(q)}`;
       const r   = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!r.ok) throw new Error('FDC ' + r.status);
-      const d = await r.json();
-      _mpFdcResults = (d.foods || []).slice(0, 6).map(f => {
-        const get  = id => f.foodNutrients?.find(x => x.nutrientId === id)?.value ?? null;
-        const kcal = get(1008) ?? get(2047);
-        return {
-          name:  f.description,
-          cat:   f.foodCategory || 'USDA',
+      if (!r.ok) throw new Error('Chakudya ' + r.status);
+      const json = await r.json();
+      // /foods/lookup returns one best match, not a list — wrap it so the
+      // rest of this function (card rendering, add-to-plan) is unchanged.
+      if (json.status === 'success' && json.data) {
+        const d = json.data;
+        const kcal = d.energy_kcal ?? d.kcal ?? null;
+        _mpFdcResults = [{
+          name:   d.food_name || d.product_name || d.name || q,
+          cat:    d.category || 'Chakudya API',
           kcal,
-          kj:    kcal != null ? +(kcal * 4.184).toFixed(0) : null,
-          pro:   get(1003),
-          cho:   get(1005),
-          fat:   get(1004),
-          fiber: get(1079),
-          sugar: get(2000),
-          sodium: get(1093) != null ? +(get(1093) / 1000).toFixed(3) : null,
-          sourceUsed: 'FDC',
-        };
-      });
+          kj:     d.kj ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null),
+          pro:    d.protein_g ?? d.pro ?? null,
+          cho:    d.carbs_g   ?? d.cho ?? null,
+          fat:    d.fat_g     ?? d.fat ?? null,
+          fiber:  d.fiber_g   ?? d.fiber ?? null,
+          sugar:  d.sugar_g   ?? d.sugar ?? null,
+          sodium: (d.sodium_mg ?? d.sodium) != null ? +((d.sodium_mg ?? d.sodium) / 1000).toFixed(3) : null,
+          sourceUsed: 'chakudya',
+        }];
+      } else {
+        _mpFdcResults = [];
+      }
 
       if (!_mpFdcResults.length){
         stEl.textContent = 'No results — try a different spelling.';
@@ -9103,7 +9158,7 @@ var photoCropper = (function () {
         `</div>` +
         _mpFdcResults.map((f, i) => _mpFdcCard(f, i)).join('');
     } catch(err){
-      stEl.textContent = 'FDC search failed — check connection. (' + (err.message || err) + ')';
+      stEl.textContent = 'Chakudya search failed — check connection. (' + (err.message || err) + ')';
     }
   };
 
@@ -9131,7 +9186,7 @@ var photoCropper = (function () {
           <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);line-height:1.3;overflow-wrap:break-word;word-break:break-word;white-space:normal" title="${esc(food.name)}">${esc(food.name)}</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
         </div>
-        <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">USDA FDC</span>
+        <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">Chakudya API</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)">
         <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
@@ -9201,11 +9256,11 @@ var photoCropper = (function () {
     if (typeof mpData === 'undefined') { console.error('mpData not ready'); return; }
     if (!mpData[mi]) mpData[mi] = [];
     mpData[mi].push({
-      desc:     `${food.name} — ${g}g (USDA FDC)`,
+      desc:     `${food.name} — ${g}g (Chakudya API)`,
       name:     food.name,
       portion:  `${g} g`,
       qty:      1,
-      source:   'FDC',
+      source:   'chakudya',
       baseKcal, basePro, baseCho, baseFat, baseKj,
       kcal: Math.round(baseKcal * f),
       pro:  parseFloat((basePro  * f).toFixed(1)),
@@ -9259,6 +9314,358 @@ var photoCropper = (function () {
 </script>
 
 <!-- (Service worker registration is handled by the inline blob:URL block above) -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     SPLASH SCREEN — DISMISS + iOS STARTUP IMAGES
+     Placed at end-of-body so all app HTML is already parsed.
+     ═══════════════════════════════════════════════════════════ -->
+<script id="nt-splash-dismiss">
+(function () {
+  'use strict';
+
+  // Sync splash version text with APP_DISPLAY_VERSION — single source of truth
+  (function() {
+    var el = document.getElementById('nts-version-text');
+    if (el && typeof APP_DISPLAY_VERSION !== 'undefined') {
+      el.textContent = 'Version ' + APP_DISPLAY_VERSION;
+    }
+  })();
+
+  var SPLASH_ID    = 'nt-splash';
+  var MAX_SHOW_MS  = 4000;  // safety valve — dismiss even if load stalls
+  var _startTime   = Date.now();
+  var _dismissed   = false;
+
+  // ── Standalone / home-screen launch splash ───────────────────────────
+  // Android 12+ shows a native OS splash BEFORE our HTML paints, using
+  // manifest background_color (#020617) and the 512x512 maskable icon.
+  //
+  // When launched as an installed PWA (standalone), the OS splash already
+  // handled branding.  Showing the HTML splash on top creates a visible
+  // double-splash.  Fix: skip the HTML splash entirely in standalone by
+  // setting MIN_SHOW_MS = 0 — the shared #020617 background keeps the
+  // OS-to-app transition seamless without a second branded screen.
+  //
+  // In a regular browser tab there is no OS splash, so keep 900 ms so
+  // the branded HTML splash is visible before the app content renders.
+  var _isStandalone = (function () {
+    try {
+      // PWA installed to home-screen (Android / iOS)
+      if (window.matchMedia('(display-mode: standalone)').matches) return true;
+      if (window.navigator.standalone === true) return true;
+      // Capacitor / Cordova WebView — URL starts with content:// or capacitor://
+      // Android launches the native splash before the WebView paints, so the
+      // HTML splash would be a visible second splash in this context too.
+      var proto = (window.location.protocol || '').toLowerCase();
+      if (proto === 'capacitor:' || proto === 'content:' || proto === 'ionic:') return true;
+      // Also catch file:// used by some Capacitor builds
+      if (proto === 'file:') return true;
+      return false;
+    } catch (e) { return false; }
+  })();
+
+  // 0 ms when the OS/WebView already showed a native launch screen (standalone
+  // PWA, Capacitor APK, etc.) — avoids a visible second HTML splash.
+  // 900 ms in a plain browser tab where no native splash ran.
+  var MIN_SHOW_MS = _isStandalone ? 0 : 900;
+
+  function dismissSplash() {
+    if (_dismissed) return;
+    _dismissed = true;
+    var el = document.getElementById(SPLASH_ID);
+    if (!el) return;
+    var elapsed = Date.now() - _startTime;
+    var delay   = Math.max(0, MIN_SHOW_MS - elapsed);
+    setTimeout(function () {
+      el.classList.add('splash-out');
+      // Remove from DOM after transition so it can't be tabbed into
+      setTimeout(function () {
+        el.remove();
+
+      }, 500);
+    }, delay);
+  }
+
+  // Primary trigger: interactive — DOM ready, scripts run
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    dismissSplash();
+  } else {
+    document.addEventListener('DOMContentLoaded', dismissSplash);
+  }
+
+  // Secondary trigger: full load (images, SW, etc.)
+  window.addEventListener('load', dismissSplash);
+
+  // Safety valve: always dismiss after MAX_SHOW_MS
+  setTimeout(dismissSplash, MAX_SHOW_MS);
+
+  // ── iOS apple-touch-startup-image ────────────────────────────
+  // Chrome/Firefox on Android + desktop Chrome use the manifest's
+  // background_color + icons automatically; iOS Safari needs explicit
+  // <link rel="apple-touch-startup-image"> with canvas-generated images.
+  (function injectIOSStartupImages() {
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (!isIOS) return;
+
+    // iOS startup images must match the device's logical screen exactly.
+    // We generate ONE image sized to the current screen and inject it.
+    // For the best result we also inject a generic fallback without a
+    // media query (picked up when no exact match is found).
+
+    var BG      = '#020617';
+    var ACCENT  = '#1de9d4';
+    var GREEN   = '#34d399';
+    var AMBER   = '#f0b429';
+    var PURPLE  = '#a78bfa';
+    var BLUE    = '#60a5fa';
+
+    /**
+     * Draw the Oasis splash onto a canvas and return a blob: URL.
+     * @param {number} w  canvas width  (physical pixels)
+     * @param {number} h  canvas height (physical pixels)
+     * @returns {Promise<string>} blob URL
+     */
+    function renderSplash(w, h) {
+      return new Promise(function (resolve, reject) {
+        try {
+          var cvs = document.createElement('canvas');
+          cvs.width  = w;
+          cvs.height = h;
+          var ctx = cvs.getContext('2d');
+          if (!ctx) { reject(new Error('no 2d context')); return; }
+
+          // ── Background ────────────────────────────────────────
+          ctx.fillStyle = BG;
+          ctx.fillRect(0, 0, w, h);
+
+          // Soft radial glow top-left
+          var g1 = ctx.createRadialGradient(w*0.3, h*0.25, 0, w*0.3, h*0.25, w*0.5);
+          g1.addColorStop(0, 'rgba(29,233,212,0.07)');
+          g1.addColorStop(1, 'transparent');
+          ctx.fillStyle = g1;
+          ctx.fillRect(0, 0, w, h);
+
+          // Soft radial glow bottom-right
+          var g2 = ctx.createRadialGradient(w*0.72, h*0.75, 0, w*0.72, h*0.75, w*0.45);
+          g2.addColorStop(0, 'rgba(96,165,250,0.06)');
+          g2.addColorStop(1, 'transparent');
+          ctx.fillStyle = g2;
+          ctx.fillRect(0, 0, w, h);
+
+          // ── Logo ring + icon ──────────────────────────────────
+          var cx  = w / 2;
+          var cy  = h / 2 - h * 0.06;  // slightly above centre
+          var R   = Math.min(w, h) * 0.13;   // outer ring radius
+          var lw  = Math.max(3, R * 0.1);    // ring line-width
+
+          // Outer colour ring (arc segments — matches icon)
+          var segs = [
+            { start: -Math.PI/2,            end: -Math.PI/2 + Math.PI*0.55, color: ACCENT  },
+            { start: -Math.PI/2 + Math.PI*0.55, end: -Math.PI/2 + Math.PI,     color: GREEN   },
+            { start: -Math.PI/2 + Math.PI,  end: -Math.PI/2 + Math.PI*1.4, color: AMBER   },
+            { start: -Math.PI/2 + Math.PI*1.4, end: -Math.PI/2 + Math.PI*1.8, color: PURPLE  },
+            { start: -Math.PI/2 + Math.PI*1.8, end: -Math.PI/2 + Math.PI*2,   color: ACCENT, opacity: 0.35 },
+          ];
+          segs.forEach(function (s) {
+            ctx.save();
+            ctx.globalAlpha = s.opacity || 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, R, s.start, s.end);
+            ctx.strokeStyle = s.color;
+            ctx.lineWidth   = lw;
+            ctx.lineCap     = 'round';
+            ctx.stroke();
+            ctx.restore();
+          });
+
+          // Inner dark circle
+          ctx.beginPath();
+          ctx.arc(cx, cy, R - lw * 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = '#0a1628';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(29,233,212,0.12)';
+          ctx.lineWidth   = 1;
+          ctx.stroke();
+
+          // ECG waveform inside circle (simplified polyline)
+          var waveW = (R - lw * 2.2) * 1.7;
+          var waveH = (R - lw * 2.2) * 0.55;
+          var pts = [
+            [0.00, 0.00], [0.14, 0.00], [0.20,-0.52], [0.30, 0.52],
+            [0.40,-0.96], [0.50, 0.00], [0.62, 0.00], [0.68,-0.36],
+            [0.74, 0.00], [0.82, 0.00], [0.88,-0.52], [0.96, 0.00], [1.00, 0.00],
+          ];
+          var ox = cx - waveW / 2;
+          var oy = cy;
+          ctx.beginPath();
+          pts.forEach(function (p, i) {
+            var x = ox + p[0] * waveW;
+            var y = oy + p[1] * waveH;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = ACCENT;
+          ctx.lineWidth   = Math.max(2, lw * 0.65);
+          ctx.lineCap     = 'round';
+          ctx.lineJoin    = 'round';
+          ctx.stroke();
+
+          // Centre dot
+          ctx.beginPath();
+          ctx.arc(cx, cy, lw * 0.9, 0, Math.PI * 2);
+          ctx.fillStyle = ACCENT;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(cx, cy, lw * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+
+          // ── App name ──────────────────────────────────────────
+          var nameY   = cy + R + h * 0.055;
+          var nameSz  = Math.max(24, Math.min(48, h * 0.042));
+          ctx.font    = '800 ' + nameSz + 'px -apple-system, "Helvetica Neue", sans-serif';
+          ctx.textAlign   = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle   = '#f0f6ff';
+          ctx.fillText('Oasis', cx, nameY);
+
+          // Sub-title
+          var subY  = nameY + nameSz * 0.95;
+          var subSz = Math.max(11, nameSz * 0.42);
+          ctx.font      = '400 ' + subSz + 'px ui-monospace, "SF Mono", monospace';
+          ctx.fillStyle = 'rgba(148,174,208,0.65)';
+          ctx.fillText('CLINICAL NUTRITION CALCULATOR', cx, subY);
+
+          // ── Progress bar ──────────────────────────────────────
+          var barW = Math.min(w * 0.38, 260);
+          var barH = Math.max(2, h * 0.0025);
+          var barX = cx - barW / 2;
+          var barY = subY + subSz * 1.9;
+          // Track
+          ctx.fillStyle = 'rgba(29,233,212,0.12)';
+          _roundRect(ctx, barX, barY, barW, barH, barH / 2);
+          ctx.fill();
+          // Fill (70%)
+          var gBar = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+          gBar.addColorStop(0,   ACCENT);
+          gBar.addColorStop(1,   BLUE);
+          ctx.fillStyle = gBar;
+          _roundRect(ctx, barX, barY, barW * 0.7, barH, barH / 2);
+          ctx.fill();
+
+          // ── Version footer ────────────────────────────────────
+          var footY = h * 0.91;
+          var footSz = Math.max(10, h * 0.012);
+          ctx.font      = '400 ' + footSz + 'px ui-monospace, "SF Mono", monospace';
+          ctx.fillStyle = 'rgba(100,130,165,0.45)';
+          ctx.fillText('BY EDISON TAIMU · KUHES', cx, footY);
+
+          // Convert to blob
+          cvs.toBlob(function (blob) {
+            if (!blob) { reject(new Error('toBlob failed')); return; }
+            resolve(URL.createObjectURL(blob));
+          }, 'image/png');
+
+        } catch (err) { reject(err); }
+      });
+    }
+
+    /** Polyfill-style roundRect for older Safari */
+    function _roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x,     y + h, x,     y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x,     y,     x + r, y);
+      ctx.closePath();
+    }
+
+    /**
+     * Inject a <link rel="apple-touch-startup-image"> into <head>.
+     * @param {string} href   blob URL of the image
+     * @param {string} [media] optional CSS media query
+     */
+    function injectLink(href, media) {
+      var link = document.createElement('link');
+      link.rel  = 'apple-touch-startup-image';
+      link.href = href;
+      if (media) link.media = media;
+      document.head.appendChild(link);
+    }
+
+    // Common iOS device physical resolutions (portrait, @2x/@3x)
+    var DEVICES = [
+      // iPhone 16 Pro Max / 15 Pro Max
+      { w: 1320, h: 2868, media: '(device-width:440px) and (device-height:956px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone 16 Pro / 15 Pro
+      { w: 1206, h: 2622, media: '(device-width:402px) and (device-height:874px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone 16 / 15 / 14
+      { w: 1179, h: 2556, media: '(device-width:393px) and (device-height:852px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone 16 Plus / 15 Plus / 14 Plus
+      { w: 1290, h: 2796, media: '(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone 13 / 14 (older)
+      { w: 1170, h: 2532, media: '(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone 13 mini
+      { w: 1080, h: 2340, media: '(device-width:360px) and (device-height:780px) and (-webkit-device-pixel-ratio:3)' },
+      // iPhone SE 3rd gen / 8
+      { w: 750,  h: 1334, media: '(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)' },
+      // iPhone SE 1st gen
+      { w: 640,  h: 1136, media: '(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2)' },
+      // iPad Pro 12.9"
+      { w: 2048, h: 2732, media: '(device-width:1024px) and (device-height:1366px) and (-webkit-device-pixel-ratio:2)' },
+      // iPad Pro 11" / iPad Air
+      { w: 1668, h: 2388, media: '(device-width:834px) and (device-height:1194px) and (-webkit-device-pixel-ratio:2)' },
+      // iPad 10th gen
+      { w: 1640, h: 2360, media: '(device-width:820px) and (device-height:1180px) and (-webkit-device-pixel-ratio:2)' },
+      // iPad mini 6
+      { w: 1488, h: 2266, media: '(device-width:744px) and (device-height:1133px) and (-webkit-device-pixel-ratio:2)' },
+      // iPad 9th gen
+      { w: 1536, h: 2048, media: '(device-width:768px) and (device-height:1024px) and (-webkit-device-pixel-ratio:2)' },
+    ];
+
+    // Determine which device entry matches best, then generate for that
+    // size + a generic fallback for screen dimensions we don't know.
+    var dpr    = window.devicePixelRatio || 1;
+    var sw     = window.screen.width  * dpr;
+    var sh     = window.screen.height * dpr;
+    // Normalise to portrait
+    var pw = Math.min(sw, sh);
+    var ph = Math.max(sw, sh);
+
+    var matched = null;
+    var bestDiff = Infinity;
+    DEVICES.forEach(function (d) {
+      var diff = Math.abs(d.w - pw) + Math.abs(d.h - ph);
+      if (diff < bestDiff) { bestDiff = diff; matched = d; }
+    });
+
+    // Generate matched device image (with media query — shown on exact device)
+    // + a generic portrait image (no media query — fallback for unlisted devices).
+    var tasks = [];
+    if (matched && bestDiff < 200) {
+      tasks.push({ w: matched.w, h: matched.h, media: matched.media });
+    }
+    // Generic fallback at actual screen resolution (no media query)
+    tasks.push({ w: pw, h: ph, media: null });
+
+    // Run sequentially to avoid memory spikes
+    tasks.reduce(function (chain, task) {
+      return chain.then(function () {
+        return renderSplash(task.w, task.h).then(function (url) {
+          injectLink(url, task.media);
+        });
+      });
+    }, Promise.resolve()).catch(function (e) {
+      console.warn('[Oasis] iOS startup image generation failed:', e);
+    });
+  })();
+
+})();
+</script>
 
 <script src="cde.js"></script>
 
@@ -10120,7 +10527,7 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ═══════════════════════════════════════════════════════════════════════
      LIVE FOOD SEARCH — Floating left-side drawer (standalone, global)
-     Powered by USDA FoodData Central · accessible from any tab
+     Powered by Chakudya Nutrition Registry (CNR) · accessible from any tab
      ═══════════════════════════════════════════════════════════════════ -->
 
 <!-- lfs-fab, lfs-backdrop, lfs-drawer removed — search is now inline on tab-home -->
@@ -10168,8 +10575,8 @@ function ntClear(scopeId, resultIds) {
 /* ════════════════════════════════════════════════════════════
    HOME INLINE FOOD SEARCH
    Priority: Packaged Foods → Malawi FCT → Formula/Enteral
-             (ENTERAL_DB, per 100 mL) → USDA FDC (online fallback)
-   Local results are instant & offline; FDC fills the gaps.
+             (ENTERAL_DB, per 100 mL) → Chakudya API (online fallback)
+   Local results are instant & offline; Chakudya fills the gaps.
    ════════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
@@ -10184,9 +10591,8 @@ function ntClear(scopeId, resultIds) {
     UCT:            { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     'UCT Exchange': { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     formula:        { label:'Formula / Enteral', color:'#f0b429', bg:'rgba(240,180,41,.10)', border:'rgba(240,180,41,.30)' },
-    FDC:            { label:'USDA FDC',      color:'#60a5fa', bg:'rgba(96,165,250,.10)',  border:'rgba(96,165,250,.30)'  },
-    combined:       { label:'FCT+FDC',       color:'#34d399', bg:'rgba(52,211,153,.10)',  border:'rgba(52,211,153,.30)'  },
-    OFF:            { label:'Open Food Facts', color:'#84cc16', bg:'rgba(132,204,22,.10)', border:'rgba(132,204,22,.30)'  },
+    chakudya:       { label:'Chakudya (CNR)', color:'#60a5fa', bg:'rgba(96,165,250,.10)',  border:'rgba(96,165,250,.30)'  },
+    combined:       { label:'FCT+Chakudya',  color:'#34d399', bg:'rgba(52,211,153,.10)',  border:'rgba(52,211,153,.30)'  },
     custom:         { label:'Imported',      color:'#f0b429', bg:'rgba(240,180,41,.10)',  border:'rgba(240,180,41,.30)'  },
   };
 
@@ -10544,7 +10950,7 @@ function ntClear(scopeId, resultIds) {
       let fdcHits = [];
       const offlineCount = packagedHits.length + localHits.length + enteralHits.length;
       if (offlineCount < 3) {
-        _hpSt(`Found ${offlineCount} local · checking USDA FDC…`, true);
+        _hpSt(`Found ${offlineCount} local · checking Chakudya…`, true);
         try {
           fdcHits = await _lfsFDC(q);   // returns array of up to 6 FDC foods
         } catch(_e) { /* FDC offline — that's fine */ }
@@ -10602,7 +11008,7 @@ function ntClear(scopeId, resultIds) {
       }
       if (fdcCards.length) {
         const offset = packagedCards.length + localCards.length + formulaCards.length;
-        html += _divider('USDA FoodData Central', fdcCards.length);
+        html += _divider('Chakudya API', fdcCards.length);
         html += fdcCards.map((f, i) => _hpCard(f, offset + i)).join('');
       }
 
@@ -10715,7 +11121,7 @@ function ntClear(scopeId, resultIds) {
 </script>
 
 <!-- ══════════════════════════════════════════════════════
-     BARCODE SCANNER — Open Food Facts integration
+     BARCODE SCANNER — Chakudya API integration
      ══════════════════════════════════════════════════ -->
 <script>
 (function(){
@@ -10765,13 +11171,13 @@ function ntClear(scopeId, resultIds) {
   // _fetchWithTimeout and _fetchOFF have been moved to foodSearch.js.
   // NTFoodSearch.searchBarcode() now handles both layers (LocalDB + OFF).
 
-  /* ── helpers to detect incomplete OFF product identity ── */
+  /* ── helpers to detect incomplete Chakudya product identity ── */
   function _offIdentityMissing(off) {
     if (!off) return true;
     // Missing or placeholder name (fallback was the barcode itself)
     if (!off.name || off.name === off.barcode) return true;
     // Missing both brand and category
-    if (!off.brand && (!off.cat || off.cat === 'Open Food Facts')) return true;
+    if (!off.brand && (!off.cat || off.cat === 'Chakudya API')) return true;
     return false;
   }
 
@@ -10784,7 +11190,7 @@ function ntClear(scopeId, resultIds) {
     return null;
   }
 
-  /* ── merge GS1 metadata into an OFF result (identity fields only) ── */
+  /* ── merge GS1 metadata into a Chakudya result (identity fields only) ── */
   function _mergeGS1(off, gs1) {
     if (!gs1) return off;
     const out = { ...off };
@@ -10793,7 +11199,7 @@ function ntClear(scopeId, resultIds) {
     // Fill brand if missing
     if (!out.brand && gs1.brand) out.brand = gs1.brand;
     // Fill category if generic
-    if ((!out.cat || out.cat === 'Open Food Facts') && gs1.category) out.cat = gs1.category;
+    if ((!out.cat || out.cat === 'Chakudya API') && gs1.category) out.cat = gs1.category;
     // Fill image if missing
     if (!out.image && gs1.image) out.image = gs1.image;
     // Mark GS1 verified
@@ -10804,6 +11210,7 @@ function ntClear(scopeId, resultIds) {
 
   /* ── map OFF result into hp-search result format ── */
   function _offToHpResult(offFood) {
+    const isLocal = offFood.barcodeSource === 'LocalDB';
     return {
       name:           offFood.brand ? offFood.name + (offFood.brand ? ' (' + offFood.brand + ')' : '') : offFood.name,
       cat:            offFood.cat,
@@ -10815,9 +11222,9 @@ function ntClear(scopeId, resultIds) {
       fiber:          offFood.fiber,
       sugar:          offFood.sugar,
       sodium:         offFood.sodium,
-      sourceUsed:     offFood.sourceUsed || 'OFF',
+      sourceUsed:     offFood.sourceUsed || 'chakudya',
       confidenceScore: offFood.confidenceScore || 0.82,
-      _section:       'off',
+      _section:       isLocal ? 'local' : 'chakudya',
       _barcode:       offFood.barcode,
       _gs1Verified:   offFood.gs1Verified || false,
       _gtin:          offFood.gtin || null,
@@ -10840,8 +11247,8 @@ function ntClear(scopeId, resultIds) {
       // ── Layers A + B: delegated to NTFoodSearch.searchBarcode() ──────────
       // Layer A — Local barcode registry (Malawi FCT): offline, instant.
       //           Returns immediately for known barcodes (barcodeSource 'LocalDB').
-      // Layer B — Open Food Facts v2 API: online, 7-day localStorage cache.
-      //           Only reached when Layer A misses (barcodeSource 'OFF').
+      // Layer B — Chakudya API lookup: online, 7-day localStorage cache.
+      //           Only reached when Layer A misses (barcodeSource 'Chakudya').
       // Both layers return a unified food object; we just read barcodeSource
       // to choose the right status message.
       let offFood = null;
@@ -10855,21 +11262,21 @@ function ntClear(scopeId, resultIds) {
               : 'Found in local database ✓',
               false);
           } else {
-            // OFF result — already normalised by foodSearch.js
-            _bcSt('Found on Open Food Facts ✓', false);
+            // Chakudya result — already normalised by foodSearch.js
+            _bcSt('Found via Chakudya API ✓', false);
           }
         }
       }
 
       // ── Layer 2: GS1 Digital Link — identity/metadata only ───────────────
-      // Query GS1 if OFF returned nothing, or if product identity is incomplete
+      // Query GS1 if Chakudya returned nothing, or if product identity is incomplete
       // (blank name, missing brand + category). GS1 is NOT a nutrition source.
       if (!offFood || _offIdentityMissing(offFood)) {
         _bcSt('Checking GS1 registry…', true);
         const gs1Data = await _fetchGS1(code);
         if (gs1Data) {
           if (!offFood) {
-            // OFF found nothing — build a skeleton from GS1 identity
+            // Chakudya found nothing — build a skeleton from GS1 identity
             offFood = {
               name:            gs1Data.name,
               brand:           gs1Data.brand,
@@ -10893,7 +11300,7 @@ function ntClear(scopeId, resultIds) {
       }
 
       if (!offFood) {
-        _bcSt('Product not found in local DB, Open Food Facts, or GS1 registry.', false);
+        _bcSt('Product not found in local DB, Chakudya API, or GS1 registry.', false);
         _bcNotFound(true);
         // allow rescan after 3 s
         setTimeout(() => { _lastCode = null; _scanning = true; _bcSt('Point camera at a barcode…', false); _bcNotFound(false); }, 4000);
@@ -10958,11 +11365,8 @@ function ntClear(scopeId, resultIds) {
     if (spEl)  spEl.style.display = 'block';
     resEl.style.maxHeight = '0';
 
-    // OFF source badge colours
-    const OFF_BADGE = { label:'Open Food Facts', color:'#4ade80', bg:'rgba(74,222,128,.10)', border:'rgba(74,222,128,.30)' };
-
     // Reuse the private hpSearch rendering machinery via the global
-    // by injecting OFF result into _hpResults via a temporary hook
+    // by injecting the Chakudya result into _hpResults via a temporary hook
     let combined = [_offToHpResult(offFood)];
 
     // Also pull local search results for richer context
@@ -11446,7 +11850,7 @@ function ntClear(scopeId, resultIds) {
       const offBadge = `<span style="font-family:var(--mono);font-size:8px;font-weight:700;
         letter-spacing:.06em;padding:2px 7px;border-radius:100px;
         color:#4ade80;background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.30);
-        white-space:nowrap;flex-shrink:0">Open Food Facts</span>`;
+        white-space:nowrap;flex-shrink:0">Chakudya (CNR)</span>`;
 
       const gs1Badge = `<span style="font-family:var(--mono);font-size:8px;font-weight:700;
         letter-spacing:.06em;padding:2px 7px;border-radius:100px;
@@ -11482,7 +11886,7 @@ function ntClear(scopeId, resultIds) {
         const sourceBadge = isOFF ? offBadge
           : food._section === 'local'
             ? `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#1de9d4;background:rgba(29,233,212,.10);border:1px solid rgba(29,233,212,.30);white-space:nowrap;flex-shrink:0">Malawi FCT</span>`
-            : `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#60a5fa;background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.30);white-space:nowrap;flex-shrink:0">USDA FDC</span>`;
+            : `<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 7px;border-radius:100px;color:#60a5fa;background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.30);white-space:nowrap;flex-shrink:0">Chakudya API</span>`;
         const badge = isGs1
           ? sourceBadge + ' ' + gs1Badge
           : sourceBadge;
@@ -11583,7 +11987,7 @@ function ntClear(scopeId, resultIds) {
 
       let html = '';
       if (offCards.length) {
-        html += _divider('Open Food Facts · Barcode Scan', offCards.length);
+        html += _divider('Chakudya (CNR) · Barcode Scan', offCards.length);
         html += offCards.map((f, i) => simpleCard(f, i)).join('');
       }
       if (localCards.length) {
@@ -11593,7 +11997,7 @@ function ntClear(scopeId, resultIds) {
       }
       if (fdcCards.length) {
         const offset = offCards.length + localCards.length;
-        html += _divider('USDA FoodData Central', fdcCards.length);
+        html += _divider('Chakudya API', fdcCards.length);
         html += fdcCards.map((f, i) => simpleCard(f, offset + i)).join('');
       }
 
@@ -11680,27 +12084,24 @@ function ntClear(scopeId, resultIds) {
     if(s) s.style.display=spin?'inline-block':'none';
   }
 
-  /* ── FDC fetch (reuses _K from mpLiveSearch scope via NT_CustomFoods) ── */
-  const _FDC_KEY = 'GLO1YbLvrZomZCBqe8FgQtXlaujpRB20acobHSFQ';
+  /* ── Chakudya fetch — single best match, wrapped as a 1-item array so all
+     three callers of this function (defined below) keep working unchanged ── */
   async function _lfsFDC(q){
-    const base=`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=6`;
-    let r;
-    try{ r=await fetch(base+`&api_key=${_FDC_KEY}`,{signal:AbortSignal.timeout(8000)}); }
-    catch(_e){ r=await fetch(base+'&api_key=DEMO_KEY',{signal:AbortSignal.timeout(8000)}); }
-    if(!r.ok) throw new Error('FDC '+r.status);
-    const d=await r.json();
-    return (d.foods||[]).slice(0,6).map(f=>{
-      const n=id=>f.foodNutrients?.find(x=>x.nutrientId===id)?.value??null;
-      const kcal=n(1008)??n(2047);
-      return {
-        name:f.description, cat:f.foodCategory||'USDA',
-        kcal, kj:kcal!=null?+(kcal*4.184).toFixed(0):null,
-        pro:n(1003), cho:n(1005), fat:n(1004),
-        fiber:n(1079), sugar:n(2000),
-        sodium:n(1093)!=null?+(n(1093)/1000).toFixed(3):null,
-        src:'fdc', conf:82, pub:f.publishedDate||null,
-      };
-    });
+    const url=`https://chakudya-api.edisontaimu9.workers.dev/foods/lookup?q=${encodeURIComponent(q)}`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) throw new Error('Chakudya '+r.status);
+    const json=await r.json();
+    if(json.status!=='success'||!json.data) return [];
+    const d=json.data;
+    const kcal=d.energy_kcal??d.kcal??null;
+    return [{
+      name:d.food_name||d.product_name||d.name||q, cat:d.category||'Chakudya API',
+      kcal, kj:kcal!=null?+(kcal*4.184).toFixed(0):null,
+      pro:d.protein_g??d.pro??null, cho:d.carbs_g??d.cho??null, fat:d.fat_g??d.fat??null,
+      fiber:d.fiber_g??d.fiber??null, sugar:d.sugar_g??d.sugar??null,
+      sodium:(d.sodium_mg??d.sodium)!=null?+((d.sodium_mg??d.sodium)/1000).toFixed(3):null,
+      src:'chakudya', conf:82, pub:d.submitted_at||null,
+    }];
   }
 
   /* ── helpers ── */
@@ -11733,7 +12134,7 @@ function ntClear(scopeId, resultIds) {
         <span style="font-family:var(--mono);font-size:8.5px;font-weight:600;
                      padding:2px 8px;border-radius:100px;white-space:nowrap;flex-shrink:0;
                      background:rgba(47,143,255,.1);color:#4da8ff;
-                     border:1px solid rgba(47,143,255,.2)">USDA FDC</span>
+                     border:1px solid rgba(47,143,255,.2)">Chakudya API</span>
       </div>
       <div class="lfs-macros">
         <div class="lfs-mc"><span class="lfs-mv" style="color:var(--teal)"   id="lfsv_${idx}_kcal">${_fmt(kcal,0)}</span><span class="lfs-ml">kcal</span></div>
@@ -12253,7 +12654,7 @@ function ntClear(scopeId, resultIds) {
         <p style="margin:0 0 10px">— Interruption, suspension, or discontinuation of Platform services for any reason.</p>
 
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">8. THIRD-PARTY SERVICES</p>
-        <p style="margin:0 0 10px">The Platform integrates with third-party services including <strong>Firebase</strong> (Google LLC) for authentication and data management, the <strong>USDA FoodData Central API</strong> for nutritional reference data, and <strong>Open Food Facts</strong> for supplementary food data. Use of these services is subject to the respective third parties' terms of service and privacy policies. The developers of Oasis CNST are not responsible for the practices, availability, or data handling of third-party service providers.</p>
+        <p style="margin:0 0 10px">The Platform integrates with third-party services including <strong>Firebase</strong> (Google LLC) for authentication and data management, and the <strong>Chakudya Nutrition Registry (CNR) API</strong> for nutritional reference data — including Malawi food composition, packaged foods, and supplementary external food databases. Use of these services is subject to the respective third parties' terms of service and privacy policies. The developers of Oasis CNST are not responsible for the practices, availability, or data handling of third-party service providers.</p>
 
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">9. ACCOUNT SUSPENSION AND TERMINATION</p>
         <p style="margin:0 0 6px">The Platform developers reserve the right to suspend or permanently terminate any account, at their sole discretion and without prior notice, in circumstances including but not limited to:</p>
@@ -12301,8 +12702,7 @@ function ntClear(scopeId, resultIds) {
         <p style="color:var(--teal);font-weight:700;margin:16px 0 6px;letter-spacing:.03em">6. THIRD-PARTY SERVICE PROVIDERS</p>
         <p style="margin:0 0 6px">The Platform integrates with the following third-party services. Each provider operates under its own privacy policy, and users are encouraged to review those policies independently:</p>
         <p style="margin:0 0 4px">— <strong>Firebase / Google LLC</strong> — Authentication, Firestore database, and cloud infrastructure. Subject to Google's Privacy Policy and Firebase Terms of Service.</p>
-        <p style="margin:0 0 4px">— <strong>USDA FoodData Central API</strong> — Provides nutritional composition data for food search functionality. No personal data is transmitted with queries.</p>
-        <p style="margin:0 0 4px">— <strong>Open Food Facts</strong> — Supplementary food data retrieval. No personally identifiable information is included in API requests.</p>
+        <p style="margin:0 0 4px">— <strong>Chakudya Nutrition Registry (CNR) API</strong> — Provides nutritional composition data for food search functionality (Malawi FCT, packaged foods, and supplementary external food databases). No personal or patient data is transmitted with queries.</p>
         <p style="margin:0 0 10px">— <strong>Frontiers in Research Search API</strong> — Powers library search for open-access research articles via the Frontiers Search API V1. No personal or patient data is transmitted with search queries.</p>
         <p style="margin:0 0 10px">— <strong>Elsevier APIs (Scopus &amp; ScienceDirect)</strong> — Powers library search for peer-reviewed journal articles and abstracts via the Elsevier Scopus Search API and ScienceDirect Search API. Search queries (keywords only) are transmitted to Elsevier servers. No personal or patient data is included in API requests. Subject to Elsevier's API Terms of Service and Privacy Policy.</p>
         <p style="margin:0 0 10px">We select third-party providers with regard for data security and appropriateness for a healthcare technology context. We are not responsible for the data practices of third-party service providers beyond the scope of our integration.</p>
@@ -12666,7 +13066,7 @@ function ntClear(scopeId, resultIds) {
         <!-- ── 1. HOME ── -->
         <div id="ug-home" class="ug-section">
           <div class="ug-section-head"><span class="ug-num">01</span>Home</div>
-          <p class="ug-body">The Home screen is your dashboard and launchpad. At the top is a quick food search bar (with barcode scanning) that checks the Malawi FCT, UCT Exchange Lists, and USDA FoodData Central in sequence.</p>
+          <p class="ug-body">The Home screen is your dashboard and launchpad. At the top is a quick food search bar (with barcode scanning) that checks the Malawi FCT, UCT Exchange Lists, and Chakudya API in sequence.</p>
           <div class="ug-table-wrap">
             <table class="ug-table"><thead><tr><th>Section</th><th>What's inside</th></tr></thead><tbody>
               <tr><td>Recent Activity</td><td>Your last calculations and saved records, with quick-resume links</td></tr>
@@ -12792,7 +13192,7 @@ function ntClear(scopeId, resultIds) {
           <div class="ug-table-wrap">
             <table class="ug-table"><thead><tr><th>Step</th><th>What to do</th></tr></thead><tbody>
               <tr><td>1 — Recipe Details</td><td>Enter name, servings, and a scale factor (×)</td></tr>
-              <tr><td>2 — Ingredients</td><td>Add rows from Malawi FCT or Open Food Facts; live totals shown</td></tr>
+              <tr><td>2 — Ingredients</td><td>Add rows from Malawi FCT or Chakudya API; live totals shown</td></tr>
               <tr><td>3 — Weight Calculation</td><td>Enter initial and final weight (g) to compute yield % after cooking</td></tr>
             </tbody></table>
           </div>
