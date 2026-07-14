@@ -7638,6 +7638,7 @@ const BLEND_FOODS = [
   const API_BASE        = 'https://chakudya-api.edisontaimu9.workers.dev';
   const PACKAGED_URL     = API_BASE + '/packaged';
   const SUBMIT_URL       = API_BASE + '/packaged/submit';
+  const SCAN_URL         = API_BASE + '/packaged/scan';
 
   const IDB_DB_NAME     = 'OasisPackagedFoods';
   const IDB_STORE       = 'foods';
@@ -7648,6 +7649,7 @@ const BLEND_FOODS = [
   const PAGE_SIZE       = 200;           // items per GET /packaged page during sync
   const MAX_SYNC_PAGES  = 25;            // safety cap (≈5000 items) against runaway pagination
   const FETCH_TIMEOUT   = 10000;         // ms
+  const SCAN_FETCH_TIMEOUT = 30000;      // ms — vision OCR + a ~6MB upload runs well past the normal 10s budget
   const MAX_RESULTS     = 20;
   const FUZZY_THRESHOLD = 0.35;
 
@@ -7948,8 +7950,9 @@ const BLEND_FOODS = [
   // ── CHAKUDYA API — NETWORK HELPERS ───────────────────────────────────────────
 
   async function _apiFetch(url, opts = {}) {
+    const timeoutMs = opts.timeoutMs || FETCH_TIMEOUT;
     const ctrl    = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer   = ctrl ? setTimeout(() => ctrl.abort(), FETCH_TIMEOUT) : null;
+    const timer   = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
     try {
       const res = await fetch(url, { ...opts, signal: ctrl ? ctrl.signal : undefined });
       const text = await res.text();
@@ -8260,6 +8263,55 @@ const BLEND_FOODS = [
   // ── CRUD — WRITE OPERATIONS ──────────────────────────────────────────────────
 
   /**
+   * Submit a photo of a nutrition label to the Chakudya API's OCR/AI scan
+   * endpoint (POST /packaged/scan). The server reads the label, normalizes
+   * the values to per-100g/ml, and inserts the result directly as
+   * status:"pending" — same review queue as a manual submission. This does
+   * NOT go through addFood()/SUBMIT_URL; the scan endpoint handles both
+   * extraction and insertion server-side in one call.
+   *
+   * @param {string} imageDataUrl - "data:image/jpeg;base64,...." (already
+   *   resized/compressed client-side — keep it well under ~6MB decoded)
+   * @param {string} [barcode] - optional barcode captured separately (e.g.
+   *   from the barcode scanner on the same screen); takes priority over
+   *   whatever the AI reads off the packaging
+   * @returns {Promise<object>} { status: "success"|"needs_retry", message,
+   *   data? (the inserted row, on success), extracted? (raw AI read, on
+   *   needs_retry), needs_review? (true if AI confidence was low) }
+   */
+  async function _scanLabel(imageDataUrl, barcode) {
+    if (!imageDataUrl) throw new Error('[PackagedFoodsDB] image is required');
+    const body = { image: imageDataUrl };
+    if (barcode) body.barcode = String(barcode).replace(/\D/g, '');
+
+    try {
+      const json = await _apiFetch(SCAN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        timeoutMs: SCAN_FETCH_TIMEOUT,
+      });
+      // On success, drop the freshly-inserted row into the local cache
+      // immediately so it shows up in "my submissions" style views without
+      // waiting for the next poll cycle — same pattern addFood() follows.
+      if (json && json.status === 'success' && json.data) {
+        const doc = _normalizeApiDoc(json.data);
+        if (doc && doc.id) {
+          _indexDoc(doc);
+          _idbPutBatch([doc]).catch(() => {});
+        }
+      }
+      return json;
+    } catch (err) {
+      // err.status present = request reached the server (needs_retry, rate
+      // limit, validation error) — surface the structured body if we have
+      // one so the caller can show the actual message rather than "HTTP 422".
+      if (err && err.status && err.body) return err.body;
+      throw err;
+    }
+  }
+
+  /**
    * Submit a packaged food to the Chakudya API (POST /packaged/submit).
    * Public + rate-limited on the API side — no auth required. New submissions
    * come back tagged status:"pending" server-side and only surface in public
@@ -8475,6 +8527,17 @@ const BLEND_FOODS = [
       const local = _searchByBarcode(barcode);
       if (local) return local;
       return _searchByBarcodeRemote(barcode);
+    },
+
+    /**
+     * Submit a photo of a nutrition label — server-side OCR/AI reads it and
+     * inserts a status:"pending" row directly (POST /packaged/scan).
+     * @param {string} imageDataUrl - "data:image/jpeg;base64,...."
+     * @param {string} [barcode] - optional, takes priority over AI-read barcode
+     * @returns {Promise<object>} { status, message, data?, extracted?, needs_review? }
+     */
+    scanLabel(imageDataUrl, barcode) {
+      return _scanLabel(imageDataUrl, barcode);
     },
 
     /**

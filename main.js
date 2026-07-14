@@ -10093,6 +10093,8 @@ function pkgOpenAddModal() {
   if (nameEl) nameEl.style.borderColor = '';
   const errEl = document.getElementById('pkg-modal-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  const scanStatusEl = document.getElementById('pkg-scan-status');
+  if (scanStatusEl) { scanStatusEl.style.display = 'none'; scanStatusEl.textContent = ''; }
   const overlay = document.getElementById('pkg-modal-overlay');
   if (overlay) overlay.style.display = 'flex';
 }
@@ -10237,6 +10239,112 @@ async function pkgSaveModal() {
     showError('Save failed: ' + (err.message || String(err)));
   } finally {
     if (saveBtn) { saveBtn.textContent = 'SUBMIT FOR REVIEW'; saveBtn.disabled = false; }
+  }
+}
+
+// ── Scan-a-label (photo → OCR/AI → auto-submit via /packaged/scan) ────
+// Secondary path alongside the manual form above — resizes the photo
+// client-side (phone camera photos are typically 8-15MB; the API caps
+// decoded images at ~6MB and doesn't need full resolution to read text),
+// then hands it straight to PackagedFoodsDB.scanLabel(), which submits it
+// for review server-side in one call (same as the manual SUBMIT FOR REVIEW
+// button — there's no separate edit-before-commit step for scans).
+function _pkgResizeAndEncodeImage(file, maxDim = 1600, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      let { width, height } = img;
+      if (width > height && width > maxDim) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Could not read that image file.'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function pkgHandleScanPhoto(inputEl) {
+  const file = inputEl?.files?.[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('pkg-scan-status');
+  const setStatus = (msg, tone) => {
+    if (!statusEl) return;
+    statusEl.style.display = 'block';
+    statusEl.textContent = msg;
+    const styles = {
+      info:    { color: '#60a5fa', background: 'rgba(96,165,250,.08)',  border: '1px solid rgba(96,165,250,.25)' },
+      success: { color: 'var(--green,#00e676)', background: 'rgba(0,230,118,.08)', border: '1px solid rgba(0,230,118,.25)' },
+      warn:    { color: '#fbbf24', background: 'rgba(251,191,36,.08)',  border: '1px solid rgba(251,191,36,.25)' },
+      error:   { color: '#f87171', background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.25)' },
+    }[tone || 'info'];
+    Object.assign(statusEl.style, styles);
+  };
+
+  // Reuse the same sign-in gate as the manual submit path.
+  try {
+    const auth = typeof _getAuth === 'function' ? _getAuth() : null;
+    if (!auth?.currentUser) {
+      setStatus('Please sign in to submit a food item.', 'warn');
+      inputEl.value = '';
+      return;
+    }
+  } catch (e) {
+    setStatus('Please sign in to submit a food item.', 'warn');
+    inputEl.value = '';
+    return;
+  }
+
+  if (typeof PackagedFoodsDB === 'undefined') {
+    setStatus('Packaged foods service is unavailable right now.', 'error');
+    inputEl.value = '';
+    return;
+  }
+
+  const toggleButtons = (disabled) => {
+    document.querySelectorAll('[onclick*="pkg-scan-camera-input"], [onclick*="pkg-scan-gallery-input"]')
+      .forEach(btn => { btn.disabled = disabled; btn.style.opacity = disabled ? '0.5' : ''; btn.style.pointerEvents = disabled ? 'none' : ''; });
+  };
+
+  try {
+    setStatus('Preparing photo…', 'info');
+    toggleButtons(true);
+    const dataUrl = await _pkgResizeAndEncodeImage(file);
+
+    setStatus('Reading label — this can take up to 15 seconds…', 'info');
+    const existingBarcode = (document.getElementById('pkg-f-barcode')?.value || '').trim();
+    const result = await PackagedFoodsDB.scanLabel(dataUrl, existingBarcode);
+
+    if (result?.status === 'success') {
+      const lowConf = !!result.needs_review;
+      setStatus(lowConf
+        ? '✓ Submitted for review — scan confidence was low, an admin will double-check.'
+        : '✓ Submitted for review. Thanks for contributing to Chakudya!', 'success');
+      pkgRender();
+      pkgUpdateStats();
+      showToast(lowConf ? '✓ Submitted — low-confidence scan, will be double-checked' : '✓ Submitted from photo — will appear once verified', 'success');
+      setTimeout(() => { pkgCloseModal(); }, 1400);
+    } else if (result?.status === 'needs_retry') {
+      setStatus(result.message || 'Couldn\'t read that label clearly. Try again or fill in the fields manually.', 'warn');
+    } else {
+      setStatus((result && result.message) || 'Scan failed. Try again or fill in the fields manually.', 'error');
+    }
+  } catch (err) {
+    console.error('[pkgHandleScanPhoto]', err);
+    setStatus('Scan failed: ' + (err.message || String(err)) + ' — try again or fill in manually.', 'error');
+  } finally {
+    toggleButtons(false);
+    inputEl.value = ''; // allow re-selecting the same file
   }
 }
 
