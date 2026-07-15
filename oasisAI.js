@@ -745,6 +745,198 @@ Core principles:
     },
   };
 
+  // ════════════════════════════════════════════════════════════
+  // CHAKUDYA LIVE DATABASE ACCESS LAYER
+  // Queries the live Chakudya Nutrition Registry API's GET endpoints —
+  // /foods, /packaged, /exchange, /renal, /formulas — so Oasis AI can
+  // ground answers in the CURRENT database contents (including
+  // community-submitted packaged foods and anything added since this
+  // bundle was built), not just the static MALAWI_FCT/UCT_EXCHANGE_DB/
+  // BLEND_FOODS arrays baked into foodData.js or the ~6,100-chunk RAG
+  // corpus above. Same "detect → fetch → inject" pattern as _RAGLayer:
+  // one non-fatal pre-fetch per matched resource, run in parallel,
+  // results appended to the system prompt before the single Groq call.
+  //
+  // All five endpoints are public GET routes (no auth required) — see
+  // chakudya-api README §Authentication Model.
+  // ════════════════════════════════════════════════════════════
+  const CHAKUDYA_API_BASE = 'https://chakudya-api.edisontaimu9.workers.dev';
+
+  const _ChakudyaDB = {
+    async _get(path, params = {}) {
+      try {
+        const url = new URL(CHAKUDYA_API_BASE + path);
+        Object.entries(params).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+        });
+        const res = await fetch(url.toString());
+        if (!res.ok) return [];
+        const json = await res.json();
+        const rows = json?.data;
+        return Array.isArray(rows) ? rows : (rows ? [rows] : []);
+      } catch (_) {
+        return []; // any single endpoint failing is non-fatal — others still inject
+      }
+    },
+
+    // Pulls a plausible search term out of free text (strips question
+    // words) rather than sending the whole sentence as a search string.
+    _extractSearchTerm(msg) {
+      return msg
+        .toLowerCase()
+        .replace(/\b(how many|how much|what|whats|is|are|does|do|the|calories|kcal|protein|carbs|carbohydrates|fat|in|of|a|an|for|contains?|per|100g|100ml)\b/g, ' ')
+        .replace(/[?.!,]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+
+    // Schema-agnostic row → text line, so this doesn't silently break if a
+    // table's columns change server-side. Skips internal/bookkeeping fields.
+    _prettyRow(row, skipKeys) {
+      const skip = new Set(['id', 'created_at', 'updated_at', 'submitted_at', 'source', 'ocr_raw', 'ai_confidence', ...(skipKeys || [])]);
+      return Object.entries(row)
+        .filter(([k, v]) => !skip.has(k) && v !== null && v !== undefined && v !== '')
+        .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+        .join(' | ');
+    },
+
+    detectFoods(msg) {
+      return _FoodDB.detectQuery(msg);
+    },
+
+    detectPackaged(msg) {
+      const m = msg.toLowerCase();
+      const triggers = [
+        'packaged', 'packet of', 'tin of', 'box of', 'brand', 'barcode',
+        'label', 'biscuit', 'cereal', 'milo', 'lacto', 'sausage', 'product',
+      ];
+      return triggers.some(t => m.includes(t));
+    },
+
+    detectExchange(msg) {
+      const m = msg.toLowerCase();
+      const triggers = [
+        'exchange list', 'food exchange', 'exchange diet', 'starch exchange',
+        'protein exchange', 'fruit exchange', 'milk exchange', 'fat exchange',
+        'carb exchange', 'carbohydrate exchange', '1 exchange', 'one exchange',
+        'diabetic exchange', 'exchange system', 'exchange value',
+      ];
+      return triggers.some(t => m.includes(t));
+    },
+
+    detectRenal(msg) {
+      const m = msg.toLowerCase();
+      const triggers = [
+        'renal diet', 'renal food', 'ckd diet', 'ckd food', 'dialysis diet',
+        'dialysis food', 'kidney diet', 'kidney food', 'phosphorus content',
+        'potassium content', 'low potassium', 'low phosphorus', 'hemodialysis diet',
+        'peritoneal dialysis diet',
+      ];
+      return triggers.some(t => m.includes(t));
+    },
+
+    detectFormulas(msg) {
+      const m = msg.toLowerCase();
+      const triggers = [
+        'enteral formula', 'tube feed', 'tube feeding', 'ng feed', 'ng tube',
+        'peg feed', 'formula feed', 'which formula', 'feeding formula',
+        'ensure', 'nutren', 'fresubin', 'osmolite', 'jevity', 'pediasure',
+        'polymeric formula', 'elemental formula', 'semi-elemental',
+      ];
+      return triggers.some(t => m.includes(t));
+    },
+
+    /**
+     * fetchContext(userMessage)
+     * Runs matched live-DB lookups in parallel (each independently
+     * non-fatal) and returns a single formatted prompt block, or '' if
+     * nothing matched / nothing came back.
+     */
+    async fetchContext(userMessage) {
+      const term = this._extractSearchTerm(userMessage);
+      const blocks = [];
+      const jobs = [];
+
+      if (this.detectFoods(userMessage) && term) {
+        jobs.push(
+          this._get('/foods', { search: term, limit: 8 }).then(rows => {
+            if (rows.length) {
+              blocks.push(`▸ CHAKUDYA FOODS DATABASE (live):\n` +
+                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+            }
+          })
+        );
+      }
+
+      if (this.detectPackaged(userMessage)) {
+        jobs.push(
+          this._get('/packaged', { limit: 50 }).then(rows => {
+            if (!rows.length) return;
+            const tokens = term.split(' ').filter(t => t.length >= 2);
+            const filtered = tokens.length
+              ? rows.filter(p => {
+                  const hay = `${p.product_name || ''} ${p.brand || ''}`.toLowerCase();
+                  return tokens.some(t => hay.includes(t));
+                })
+              : [];
+            const useRows = (filtered.length ? filtered : rows).slice(0, 8);
+            blocks.push(`▸ CHAKUDYA PACKAGED FOODS DATABASE (live, Malawi retail products):\n` +
+              useRows.map(r => `• ${this._prettyRow(r)}`).join('\n') +
+              `\n(Note: items with status "pending" are community-submitted and not yet admin-verified — flag this to the user if relevant.)`);
+          })
+        );
+      }
+
+      if (this.detectExchange(userMessage)) {
+        jobs.push(
+          this._get('/exchange', { limit: 20 }).then(rows => {
+            if (rows.length) {
+              blocks.push(`▸ CHAKUDYA EXCHANGE LISTS (live):\n` +
+                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+            }
+          })
+        );
+      }
+
+      if (this.detectRenal(userMessage)) {
+        jobs.push(
+          this._get('/renal', { limit: 20 }).then(rows => {
+            if (rows.length) {
+              blocks.push(`▸ CHAKUDYA RENAL FOODS DATABASE (live):\n` +
+                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+            }
+          })
+        );
+      }
+
+      if (this.detectFormulas(userMessage)) {
+        jobs.push(
+          this._get('/formulas', { limit: 15 }).then(rows => {
+            if (rows.length) {
+              blocks.push(`▸ CHAKUDYA ENTERAL FORMULAS DATABASE (live):\n` +
+                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+            }
+          })
+        );
+      }
+
+      if (!jobs.length) return '';
+      await Promise.allSettled(jobs);
+      if (!blocks.length) return '';
+
+      return [
+        '━━━ CHAKUDYA LIVE DATABASE (current records, fetched just now) ━━━',
+        ...blocks,
+        '━━━ END LIVE DATABASE ━━━',
+        '',
+        'INSTRUCTIONS FOR USING LIVE DATABASE CONTEXT:',
+        '• These are live records fetched from the Chakudya API at the moment of this query — more current than any bundled/static data.',
+        '• Prefer these values over general knowledge or older bundled datasets when they cover the food/product/formula in question.',
+        '• Packaged-food entries marked "pending" are unverified community submissions — mention this caveat if you use one.',
+      ].join('\n');
+    },
+  };
+
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
     const apiKey = await _waitForKey();
@@ -1262,15 +1454,22 @@ Keep it under 200 words. Use professional clinical language.`;
     //          ESPEN Guidelines · ASPEN Guidelines · Malawi CMAM 2016 ·
     //          Burns · Oncology · IBD · Dementia · TB · Cystic Fibrosis ·
     //          Surgical Nutrition · Parenteral Nutrition · and more (~6,100 chunks)
+    //
+    // Runs alongside the live-DB lookups below — both are independent
+    // network calls, so fire them together rather than sequentially.
     let ragContextInjected = false;
-    try {
-      const ragCtx = await _RAGLayer.fetchContext(userMessage, 'clinical', 7);
-      if (ragCtx) {
-        systemPrompt += '\n\n' + ragCtx;
-        ragContextInjected = true;
-      }
-    } catch (_ragErr) {
-      // RAG failure is non-fatal — Oasis AI continues without it
+    let liveDbContextInjected = false;
+    const [ragResult, liveDbResult] = await Promise.allSettled([
+      _RAGLayer.fetchContext(userMessage, 'clinical', 7),
+      _ChakudyaDB.fetchContext(userMessage),
+    ]);
+    if (ragResult.status === 'fulfilled' && ragResult.value) {
+      systemPrompt += '\n\n' + ragResult.value;
+      ragContextInjected = true;
+    }
+    if (liveDbResult.status === 'fulfilled' && liveDbResult.value) {
+      systemPrompt += '\n\n' + liveDbResult.value;
+      liveDbContextInjected = true;
     }
 
     const messages = [
@@ -1289,6 +1488,7 @@ Keep it under 200 words. Use professional clinical language.`;
       refContextInjected:     _RefDBProxy.detectQuery(userMessage),
       enteralContextInjected,
       ragContextInjected,
+      liveDbContextInjected,
     };
   }
 
@@ -1706,9 +1906,30 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     // About / Platform Knowledge
     aboutDB: _AboutDB,   // ← Oasis CNST About section knowledge base
     getAboutContext() { return _AboutDB.buildContext(); }, // ← direct context string access
+    // Chakudya Live Database (foods, packaged, exchange, renal, formulas)
+    chakudyaDB: _ChakudyaDB, // ← direct live-DB access (GET /foods, /packaged, /exchange, /renal, /formulas)
+    queryChakudyaFoods(search, limit = 8) {
+      return _ChakudyaDB._get('/foods', { search, limit });
+    },
+    queryChakudyaPackaged(params = {}) {
+      return _ChakudyaDB._get('/packaged', params);
+    },
+    queryChakudyaExchange(params = {}) {
+      return _ChakudyaDB._get('/exchange', params);
+    },
+    queryChakudyaRenal(params = {}) {
+      return _ChakudyaDB._get('/renal', params);
+    },
+    queryChakudyaFormulas(params = {}) {
+      return _ChakudyaDB._get('/formulas', params);
+    },
+    // RAG (semantic search over ~6,100 clinical chunks)
+    queryRAG(query, context = 'clinical', topK = 7) {
+      return _RAGLayer.fetchContext(query, context, topK);
+    },
   };
 
-  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator access enabled');
+  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG access enabled');
 })();
 
 
