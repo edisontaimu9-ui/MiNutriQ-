@@ -7662,6 +7662,7 @@ const BLEND_FOODS = [
   let _syncTimer    = null;
   let _pollTimer    = null;
   let _onSyncCallback = null;            // called after every sync batch
+  let _lastNutritionFlag = null;         // set by addFood() when kcal/macro check recalculates or flags a mismatch
 
   // Resolve/reject queue for callers that arrive before init completes
   let _readyPromise = null;
@@ -7734,6 +7735,52 @@ const BLEND_FOODS = [
     if (v && typeof v.toDate === 'function') return v.toDate().toISOString();      // Firestore Timestamp (legacy cache)
     if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000).toISOString();
     return null;
+  }
+
+  // ── ENERGY/MACRO CONSISTENCY (Atwater factors) ─────────────────────────────
+  // Standard general factors: 4 kcal/g protein, 4 kcal/g carbohydrate,
+  // 9 kcal/g fat. Used to sanity-check submitted/OCR'd nutrition panels —
+  // labels are frequently mistyped or misread (decimal points, g↔mg, per-
+  // serving vs per-100g mixups) and a macro/kcal mismatch is the cheapest
+  // signal that something upstream went wrong.
+  const ATWATER_KCAL_PER_G = { pro: 4, cho: 4, fat: 9 };
+
+  /**
+   * @param {number|null} pro  grams protein (per 100g/ml)
+   * @param {number|null} cho  grams carbohydrate (per 100g/ml)
+   * @param {number|null} fat  grams fat (per 100g/ml)
+   * @returns {number|null} Atwater-derived kcal, or null if any macro is missing
+   */
+  function calcExpectedKcal(pro, cho, fat) {
+    if (pro == null || cho == null || fat == null) return null;
+    return pro * ATWATER_KCAL_PER_G.pro + cho * ATWATER_KCAL_PER_G.cho + fat * ATWATER_KCAL_PER_G.fat;
+  }
+
+  /**
+   * Compare a stated kcal value against the Atwater-derived value for the
+   * given macros (all assumed already per-100g/ml).
+   * Tolerance mirrors the FDA/Codex practice of allowing rounding and fiber/
+   * sugar-alcohol adjustments on printed labels: consistent if within 10% of
+   * the expected value OR within 15 kcal absolute, whichever is more lenient
+   * (the flat floor keeps very low-kcal foods, e.g. leafy vegetables, from
+   * being flagged over a 1-2 kcal rounding difference).
+   * @returns {{checked:boolean, expectedKcal?:number, providedKcal?:number,
+   *   diffKcal?:number, diffPct?:number, consistent?:boolean}}
+   */
+  function checkKcalConsistency(kcal, pro, cho, fat, tolerancePct = 0.10) {
+    const expected = calcExpectedKcal(pro, cho, fat);
+    if (expected == null || kcal == null) return { checked: false };
+    const diff = kcal - expected;
+    const diffPct = expected > 0 ? Math.abs(diff) / expected : (Math.abs(kcal) > 0 ? 1 : 0);
+    const consistent = diffPct <= tolerancePct || Math.abs(diff) <= 15;
+    return {
+      checked: true,
+      expectedKcal: Math.round(expected),
+      providedKcal: kcal,
+      diffKcal: Math.round(diff),
+      diffPct: +(diffPct * 100).toFixed(1),
+      consistent,
+    };
   }
 
   /**
@@ -7823,6 +7870,7 @@ const BLEND_FOODS = [
       confidenceScore: 1.0,
       lastUpdated:     doc.updatedAt   ?? null,
       submittedBy:     doc.submittedBy || '',
+      nutritionFlag:   doc.nutritionFlag || null,
       _raw:            doc,
     };
   }
@@ -8301,6 +8349,15 @@ const BLEND_FOODS = [
       if (json && json.status === 'success' && json.data) {
         const doc = _normalizeApiDoc(json.data);
         if (doc && doc.id) {
+          // OCR misreads (decimal points, per-serving vs per-100g mixups)
+          // are exactly the kind of error this check catches — flag rather
+          // than silently trust a scanned kcal value that doesn't add up.
+          const n = doc.per100g || {};
+          const kcalCheck = checkKcalConsistency(n.kcal, n.pro, n.cho, n.fat);
+          if (kcalCheck.checked && !kcalCheck.consistent) {
+            doc.nutritionFlag = { type: 'kcal_mismatch', ...kcalCheck };
+            json.needs_review = true; // surface alongside the existing low-OCR-confidence flag
+          }
           _indexDoc(doc);
           _idbPutBatch([doc]).catch(() => {});
         }
@@ -8362,6 +8419,30 @@ const BLEND_FOODS = [
       fiber_g:        data.fiber  ?? src.fiber  ?? src.fiber_g   ?? null,
       sodium_mg:      data.sodium ?? src.sodium ?? src.sodium_mg ?? null,
     };
+
+    // ── Energy/macro consistency (Atwater factors, per-100g/ml basis) ──────
+    // At this point payload.* is already normalized to per-100g/ml (callers —
+    // pkgSaveModal's manual form and the OCR scan endpoint — both do the
+    // per-serving → per-100g conversion before reaching here), so the check
+    // is a straight macro→kcal comparison with no further scaling needed.
+    // - kcal missing but all three macros present → recalculate it so the
+    //   submission never goes out with a blank energy value.
+    // - kcal present but inconsistent with the macros beyond tolerance →
+    //   don't silently overwrite what was typed/read off the label; instead
+    //   flag it (surfaced to the caller via nutritionFlag on the returned
+    //   doc, so the UI can show a review badge / warning).
+    let nutritionFlag = null;
+    const kcalCheck = checkKcalConsistency(payload.energy_kcal, payload.protein_g, payload.carbs_g, payload.fat_g);
+    if (payload.energy_kcal == null) {
+      const recalculated = calcExpectedKcal(payload.protein_g, payload.carbs_g, payload.fat_g);
+      if (recalculated != null) {
+        payload.energy_kcal = Math.round(recalculated);
+        nutritionFlag = { type: 'kcal_recalculated', expectedKcal: payload.energy_kcal };
+      }
+    } else if (kcalCheck.checked && !kcalCheck.consistent) {
+      console.warn('[PackagedFoodsDB] kcal/macro mismatch for', productName, kcalCheck);
+      nutritionFlag = { type: 'kcal_mismatch', ...kcalCheck };
+    }
 
     const isEdit = !!(id && _docMap.has(id) && _docMap.get(id).source === 'chakudya');
     let docId = id;
@@ -8428,6 +8509,8 @@ const BLEND_FOODS = [
     };
 
     if (!doc.id) doc.id = docId || barcode || `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    if (nutritionFlag) doc.nutritionFlag = nutritionFlag; // local-only enrichment — not a Supabase column, never sent to the API
+    _lastNutritionFlag = nutritionFlag; // reset (to null) on every call, including clean submissions
     if (docId && doc.id !== docId && _docMap.has(docId)) _unindexDoc(docId); // replacing an edited local doc under a new id
 
     // Guard against duplicate barcodes: if this barcode is already indexed
@@ -8555,6 +8638,38 @@ const BLEND_FOODS = [
      */
     add(data, id) {
       return addFood(data, id);
+    },
+
+    /**
+     * Atwater-derived expected kcal for a set of per-100g/ml macros.
+     * @param {number|null} pro grams protein
+     * @param {number|null} cho grams carbohydrate
+     * @param {number|null} fat grams fat
+     * @returns {number|null}
+     */
+    calcExpectedKcal(pro, cho, fat) {
+      return calcExpectedKcal(pro, cho, fat);
+    },
+
+    /**
+     * Check a stated kcal value against its macros (per-100g/ml, standard
+     * Atwater factors: 4/4/9 kcal per g protein/carbohydrate/fat).
+     * @returns {{checked:boolean, expectedKcal?:number, providedKcal?:number,
+     *   diffKcal?:number, diffPct?:number, consistent?:boolean}}
+     */
+    checkKcalConsistency(kcal, pro, cho, fat, tolerancePct) {
+      return checkKcalConsistency(kcal, pro, cho, fat, tolerancePct);
+    },
+
+    /**
+     * The nutritionFlag (if any) produced by the most recent add() call —
+     * null when kcal was missing/mismatched-then-fixed or when the
+     * submission's macros were already consistent. Read this right after
+     * awaiting add() to decide whether to show a review warning.
+     * @returns {object|null}
+     */
+    getLastNutritionFlag() {
+      return _lastNutritionFlag;
     },
 
     /**

@@ -9993,8 +9993,12 @@ function pkgRender() {
     const submittedBadge = f.submittedBy
       ? `<span style="font-size:9px;color:var(--text-dim);display:block;margin-top:2px">by ${f.submittedBy}</span>`
       : '';
+    const flagBadge = f.nutritionFlag?.type === 'kcal_mismatch'
+      ? `<span title="kcal doesn't match protein/carbs/fat (≈${f.nutritionFlag.expectedKcal} kcal expected)"
+           style="font-size:9px;color:#fbbf24;display:block;margin-top:2px">⚠ kcal mismatch</span>`
+      : '';
     return `<tr>
-      <td style="font-weight:500;color:var(--text)">${f.name || '—'}${submittedBadge}</td>
+      <td style="font-weight:500;color:var(--text)">${f.name || '—'}${submittedBadge}${flagBadge}</td>
       <td style="color:var(--text-dim)">${f.brand || '—'}</td>
       <td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.barcode || '—'}</td>
       <td style="text-align:center;color:var(--text-dim)">${f.servingSize != null ? f.servingSize + 'g' : '—'}</td>
@@ -10250,17 +10254,52 @@ async function pkgSaveModal() {
   } catch(e) {}
 
   const scaledKcal = scaleIfNeeded(g('pkg-f-kcal'));
+  const scaledPro  = scaleIfNeeded(g('pkg-f-pro'));
+  const scaledCho  = scaleIfNeeded(g('pkg-f-cho'));
+  const scaledFat  = scaleIfNeeded(g('pkg-f-fat'));
+
+  // ── Energy/macro consistency check ────────────────────────────────
+  // Standard Atwater factors: 4 kcal/g protein, 4 kcal/g carbohydrate,
+  // 9 kcal/g fat. Catches typos and OCR-style misreads (decimal points,
+  // g↔mg, per-serving vs per-100g mixups) before they reach the DB.
+  // - kcal blank but protein/carbs/fat present → calculate it.
+  // - kcal present but doesn't add up → ask whether to use the calculated
+  //   value; if the person keeps what they entered it's still submitted,
+  //   just flagged locally (PackagedFoodsDB.getLastNutritionFlag()) for
+  //   admin review rather than silently overwritten.
+  let finalKcal = scaledKcal;
+  if (typeof PackagedFoodsDB !== 'undefined' && PackagedFoodsDB.checkKcalConsistency) {
+    if (finalKcal == null) {
+      const expected = PackagedFoodsDB.calcExpectedKcal(scaledPro, scaledCho, scaledFat);
+      if (expected != null) {
+        finalKcal = Math.round(expected);
+        showToast(`Calories calculated from protein/carbs/fat: ${finalKcal} kcal`, 'info');
+      }
+    } else {
+      const check = PackagedFoodsDB.checkKcalConsistency(finalKcal, scaledPro, scaledCho, scaledFat);
+      if (check.checked && !check.consistent) {
+        const useCalculated = confirm(
+          `Entered ${check.providedKcal} kcal doesn't match protein + carbs + fat ` +
+          `(≈${check.expectedKcal} kcal, ${check.diffPct}% off).\n\n` +
+          `Use the calculated ${check.expectedKcal} kcal instead?\n` +
+          `(Cancel submits ${check.providedKcal} kcal as entered, flagged for review.)`
+        );
+        if (useCalculated) finalKcal = check.expectedKcal;
+      }
+    }
+  }
+
   const data = {
     name:        name,
     brand:       s('pkg-f-brand')  || '',
     barcode:     s('pkg-f-barcode').replace(/\D/g, '') || '',
     servingSize: servingSize,
     per100g: {
-      kcal:   scaledKcal,
-      kj:     scaledKcal != null ? +(scaledKcal * 4.184).toFixed(0) : null,
-      pro:    scaleIfNeeded(g('pkg-f-pro')),
-      cho:    scaleIfNeeded(g('pkg-f-cho')),
-      fat:    scaleIfNeeded(g('pkg-f-fat')),
+      kcal:   finalKcal,
+      kj:     finalKcal != null ? +(finalKcal * 4.184).toFixed(0) : null,
+      pro:    scaledPro,
+      cho:    scaledCho,
+      fat:    scaledFat,
       sugar:  scaleIfNeeded(g('pkg-f-sugar')),
       fiber:  scaleIfNeeded(g('pkg-f-fiber')),
       sodium: scaleIfNeeded(g('pkg-f-sodium')),
@@ -10280,7 +10319,13 @@ async function pkgSaveModal() {
     pkgRender();
     pkgUpdateStats();
     const isEdit = !!pkgEditingId;
-    showToast(isEdit ? '✓ Packaged food updated' : '✓ Submitted — will appear once verified in the companion app', 'success');
+    const flag = typeof PackagedFoodsDB !== 'undefined' && PackagedFoodsDB.getLastNutritionFlag
+      ? PackagedFoodsDB.getLastNutritionFlag() : null;
+    if (flag?.type === 'kcal_mismatch') {
+      showToast(`⚠ Submitted, but flagged for review — kcal doesn't match protein/carbs/fat (≈${flag.expectedKcal} kcal expected)`, 'warning');
+    } else {
+      showToast(isEdit ? '✓ Packaged food updated' : '✓ Submitted — will appear once verified in the companion app', 'success');
+    }
   } catch (err) {
     console.error('[pkgSaveModal]', err);
     showError('Save failed: ' + (err.message || String(err)));
