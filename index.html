@@ -12848,7 +12848,8 @@ function ntClear(scopeId, resultIds) {
     </div>
     <div id="pkg-nutrition-basis-label" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0" oninput="pkgSyncEnergyField('kcal')"></div>
+      <div class="field-group"><label class="lbl">Energy (kJ)</label><input class="inp" type="number" id="pkg-f-kj" placeholder="0" min="0" oninput="pkgSyncEnergyField('kj')"></div>
       <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
       <div class="field-group"><label class="lbl">Carbohydrates (g)</label><input class="inp" type="number" id="pkg-f-cho" placeholder="0" min="0"></div>
       <div class="field-group"><label class="lbl">Fat (g)</label><input class="inp" type="number" id="pkg-f-fat" placeholder="0" min="0"></div>

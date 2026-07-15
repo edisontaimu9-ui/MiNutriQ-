@@ -10108,6 +10108,24 @@ function pkgSetNutritionBasis(basis) {
   if (sectionLabel) sectionLabel.textContent = pkgNutritionBasis === 'serving' ? 'NUTRITION PER SERVING' : 'NUTRITION PER 100 g / ml';
 }
 
+// Fixed conversion factors (kJ ↔ kcal): kcal = kJ ÷ 4.184, kJ = kcal × 4.184.
+// Live-fills whichever of the two energy fields the person didn't just type
+// in, so they only ever need to copy one number off the label. Only the
+// field NOT being edited is overwritten, so it never fights the person's
+// typing or clobbers a value they entered on purpose in both boxes.
+function pkgSyncEnergyField(source) {
+  const kcalEl = document.getElementById('pkg-f-kcal');
+  const kjEl   = document.getElementById('pkg-f-kj');
+  if (!kcalEl || !kjEl) return;
+  if (source === 'kcal') {
+    const kcal = parseFloat(kcalEl.value);
+    kjEl.value = (kcalEl.value !== '' && !isNaN(kcal)) ? Math.round(kcal * 4.184) : '';
+  } else {
+    const kj = parseFloat(kjEl.value);
+    kcalEl.value = (kjEl.value !== '' && !isNaN(kj)) ? Math.round(kj / 4.184) : '';
+  }
+}
+
 /** Scales a per-serving value to per-100g/ml, rounded to 2dp. Null-safe. */
 function _pkgScaleToPer100(value, servingSize) {
   if (value == null || !servingSize) return value;
@@ -10118,7 +10136,7 @@ function pkgOpenAddModal() {
   pkgEditingId = null;
   const title = document.getElementById('pkg-modal-title');
   if (title) title.textContent = 'SUBMIT PACKAGED FOOD';
-  ['name','brand','barcode','serving','kcal','pro','cho','fat','sugar','fiber','sodium']
+  ['name','brand','barcode','serving','kcal','kj','pro','cho','fat','sugar','fiber','sodium']
     .forEach(f => { const el = document.getElementById('pkg-f-' + f); if (el) el.value = ''; });
   const nameEl = document.getElementById('pkg-f-name');
   if (nameEl) nameEl.style.borderColor = '';
@@ -10141,7 +10159,7 @@ function pkgOpenAddModalWithData(data = {}) {
   pkgOpenAddModal();
   const map = {
     name: 'pkg-f-name', brand: 'pkg-f-brand', barcode: 'pkg-f-barcode',
-    servingSize: 'pkg-f-serving', kcal: 'pkg-f-kcal', pro: 'pkg-f-pro',
+    servingSize: 'pkg-f-serving', kcal: 'pkg-f-kcal', kj: 'pkg-f-kj', pro: 'pkg-f-pro',
     cho: 'pkg-f-cho', fat: 'pkg-f-fat', sugar: 'pkg-f-sugar',
     fiber: 'pkg-f-fiber', sodium: 'pkg-f-sodium',
   };
@@ -10174,6 +10192,7 @@ function pkgOpenEditModal(id) {
   set('pkg-f-barcode', doc.barcode);
   set('pkg-f-serving', doc.servingSize);
   set('pkg-f-kcal',   n.kcal   ?? n.energy_kcal);
+  set('pkg-f-kj',     n.kj     ?? n.energy_kj);
   set('pkg-f-pro',    n.pro    ?? n.protein_g);
   set('pkg-f-cho',    n.cho    ?? n.carbs_g);
   set('pkg-f-fat',    n.fat    ?? n.fat_g);
@@ -10254,9 +10273,16 @@ async function pkgSaveModal() {
   } catch(e) {}
 
   const scaledKcal = scaleIfNeeded(g('pkg-f-kcal'));
+  const scaledKj    = scaleIfNeeded(g('pkg-f-kj'));
   const scaledPro  = scaleIfNeeded(g('pkg-f-pro'));
   const scaledCho  = scaleIfNeeded(g('pkg-f-cho'));
   const scaledFat  = scaleIfNeeded(g('pkg-f-fat'));
+
+  // Live sync (pkgSyncEnergyField) keeps the two energy fields in step while
+  // typing, but this is a belt-and-braces fallback for values set some other
+  // way (pre-fill from a scan, programmatic edit-modal population, etc.) —
+  // fixed factor: kJ → kcal is kcal = kJ ÷ 4.184.
+  const kcalFromKj = scaledKj != null ? Math.round(scaledKj / 4.184) : null;
 
   // ── Energy/macro consistency check ────────────────────────────────
   // Standard Atwater factors: 4 kcal/g protein, 4 kcal/g carbohydrate,
@@ -10267,7 +10293,7 @@ async function pkgSaveModal() {
   //   value; if the person keeps what they entered it's still submitted,
   //   just flagged locally (PackagedFoodsDB.getLastNutritionFlag()) for
   //   admin review rather than silently overwritten.
-  let finalKcal = scaledKcal;
+  let finalKcal = scaledKcal ?? kcalFromKj;
   if (typeof PackagedFoodsDB !== 'undefined' && PackagedFoodsDB.checkKcalConsistency) {
     if (finalKcal == null) {
       const expected = PackagedFoodsDB.calcExpectedKcal(scaledPro, scaledCho, scaledFat);
@@ -10296,7 +10322,7 @@ async function pkgSaveModal() {
     servingSize: servingSize,
     per100g: {
       kcal:   finalKcal,
-      kj:     finalKcal != null ? +(finalKcal * 4.184).toFixed(0) : null,
+      kj:     scaledKj ?? (finalKcal != null ? +(finalKcal * 4.184).toFixed(0) : null),
       pro:    scaledPro,
       cho:    scaledCho,
       fat:    scaledFat,

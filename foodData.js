@@ -7804,8 +7804,15 @@ const BLEND_FOODS = [
 
     const barcode = String(raw.barcode || raw.ean || raw.upc || '').replace(/\D/g, '');
 
-    const kcal = raw.energy_kcal ?? raw.kcal ?? n.kcal ?? n.energy_kcal ?? null;
-    const kj   = raw.energy_kj   ?? raw.kj   ?? n.kj   ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null);
+    // Energy can come off a label as kcal, kJ, or (most labels) both — OCR
+    // sometimes only captures one of the two. Fill in whichever is missing
+    // using the fixed conversion factors rather than leaving it null:
+    //   kJ → kcal:  kcal = kJ ÷ 4.184
+    //   kcal → kJ:  kJ   = kcal × 4.184
+    let kcal = raw.energy_kcal ?? raw.kcal ?? n.kcal ?? n.energy_kcal ?? null;
+    let kj   = raw.energy_kj   ?? raw.kj   ?? n.kj   ?? null;
+    if (kcal == null && kj != null) kcal = +(kj / 4.184).toFixed(0);
+    if (kj == null && kcal != null) kj   = +(kcal * 4.184).toFixed(0);
 
     const status   = raw.status || (raw.verified === false ? 'pending' : null);
     const verified = raw.verified ?? (status ? status === 'approved' || status === 'verified' : true);
@@ -8397,7 +8404,12 @@ const BLEND_FOODS = [
     if (!productName) throw new Error('[PackagedFoodsDB] name is required');
 
     const src = data.per100g || data.nutrition || {};
-    const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? null;
+    // Fixed conversion factors — kJ → kcal: kcal = kJ ÷ 4.184.
+    // Covers callers that only have a kJ reading (e.g. a label where the
+    // kcal figure was cropped out of the OCR photo) so energy_kcal isn't
+    // left blank when a perfectly usable kJ value was supplied.
+    const kjVal   = data.kj ?? src.kj ?? src.energy_kj ?? null;
+    const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? (kjVal != null ? +(kjVal / 4.184).toFixed(0) : null);
     const barcode = (data.barcode || '').replace(/\D/g, '') || '';
 
     // Payload uses the exact snake_case column names of the `packaged_foods`
