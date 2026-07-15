@@ -937,6 +937,112 @@ Core principles:
     },
   };
 
+  // ════════════════════════════════════════════════════════════
+  // SESSION MEMORY LAYER — Write → Consolidate → Recall → Apply
+  // Per-session clinical scratchpad, scoped to the current patient
+  // encounter (the app's existing SESSION_ID, regenerated fresh per
+  // page load — this is intentionally session-scoped working memory,
+  // not a long-term cross-visit profile). "Consolidate" runs entirely
+  // server-side (hourly cron + Groq summarization on the Chakudya API
+  // — see chakudya-api's scheduled() handler); nothing to do here for
+  // that step. "Write" and "Recall" talk to /memory/write and
+  // /memory/recall; "Apply" = injecting recalled memory into the
+  // system prompt, done inside chatWithOasisAI() below.
+  // ════════════════════════════════════════════════════════════
+  const MEMORY_WRITE_URL       = CHAKUDYA_API_BASE + '/memory/write';
+  const MEMORY_RECALL_URL      = CHAKUDYA_API_BASE + '/memory/recall';
+  const MEMORY_MIN_CONTENT_LEN = 8; // skip writing trivially short turns ("ok", "hi")
+
+  const _MemoryLayer = {
+    _fallbackId: null,
+
+    // Reuses the app's existing per-page-load SESSION_ID global (declared
+    // in main.js, which loads before oasisAI.js per this file's own usage
+    // note at the top). Falls back to a locally-generated one if this
+    // module is ever used standalone / before main.js has run.
+    _sessionId() {
+      if (typeof SESSION_ID !== 'undefined' && SESSION_ID) return SESSION_ID;
+      if (!this._fallbackId) {
+        this._fallbackId = 'S_' + Date.now().toString(36).toUpperCase() + '_' +
+          Math.random().toString(36).substr(2, 5).toUpperCase();
+      }
+      return this._fallbackId;
+    },
+
+    // Optional "Bed 4" / patient-name field, for readability in stored
+    // memory rows only — NOT used as the scoping key (session_id is).
+    _patientLabel() {
+      try {
+        const el = document.getElementById('patient-name') || document.getElementById('pt-name');
+        const v = (el && el.value || '').trim();
+        return v || null;
+      } catch (_) {
+        return null;
+      }
+    },
+
+    /**
+     * write(content, kind)
+     * "Write" step — captures a raw fact for the current session.
+     * Deliberately cheap: no extra LLM call here, just stores the text.
+     * Compression happens later during "Consolidate". Fire-and-forget —
+     * failures are silent and never block the chat response.
+     */
+    async write(content, kind = 'fact') {
+      const trimmed = (content || '').trim();
+      if (trimmed.length < MEMORY_MIN_CONTENT_LEN) return;
+      try {
+        await fetch(MEMORY_WRITE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: this._sessionId(),
+            content: trimmed.length > 2000 ? trimmed.slice(0, 2000) : trimmed,
+            kind,
+            patient_label: this._patientLabel(),
+          }),
+        });
+      } catch (_) {
+        // non-fatal — a failed memory write must never break the chat
+      }
+    },
+
+    /**
+     * recall(query, topK)
+     * "Recall" step — top-K most relevant memory rows (facts and/or
+     * consolidated summaries) for the current session, ranked by
+     * semantic similarity to `query`. Returns a formatted prompt block,
+     * or '' on failure / no session memory yet.
+     */
+    async recall(query, topK = 5) {
+      try {
+        const url = new URL(MEMORY_RECALL_URL);
+        url.searchParams.set('session_id', this._sessionId());
+        url.searchParams.set('query', query);
+        url.searchParams.set('top_k', topK);
+        const res = await fetch(url.toString());
+        if (!res.ok) return '';
+        const data = await res.json();
+        const rows = data && data.data;
+        if (!Array.isArray(rows) || !rows.length) return '';
+        return this.buildContext(rows);
+      } catch (_) {
+        return '';
+      }
+    },
+
+    buildContext(rows) {
+      const lines = rows.map(r => `• [${r.kind}] ${r.content}`).join('\n');
+      return [
+        '━━━ SESSION MEMORY (this patient encounter, recalled just now) ━━━',
+        lines,
+        '━━━ END SESSION MEMORY ━━━',
+        '',
+        'Use the above to stay consistent with facts, goals, and decisions already established earlier in THIS session. Do not silently contradict them — if new information conflicts with something recalled here, flag the discrepancy to the user rather than overwriting it unremarked.',
+      ].join('\n');
+    },
+  };
+
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
     const apiKey = await _waitForKey();
@@ -1455,13 +1561,16 @@ Keep it under 200 words. Use professional clinical language.`;
     //          Burns · Oncology · IBD · Dementia · TB · Cystic Fibrosis ·
     //          Surgical Nutrition · Parenteral Nutrition · and more (~6,100 chunks)
     //
-    // Runs alongside the live-DB lookups below — both are independent
-    // network calls, so fire them together rather than sequentially.
+    // Runs alongside the live-DB lookups and session-memory recall below —
+    // all independent network calls, so fire them together rather than
+    // sequentially.
     let ragContextInjected = false;
     let liveDbContextInjected = false;
-    const [ragResult, liveDbResult] = await Promise.allSettled([
+    let memoryContextInjected = false;
+    const [ragResult, liveDbResult, memoryResult] = await Promise.allSettled([
       _RAGLayer.fetchContext(userMessage, 'clinical', 7),
       _ChakudyaDB.fetchContext(userMessage),
+      _MemoryLayer.recall(userMessage, 5),
     ]);
     if (ragResult.status === 'fulfilled' && ragResult.value) {
       systemPrompt += '\n\n' + ragResult.value;
@@ -1471,6 +1580,10 @@ Keep it under 200 words. Use professional clinical language.`;
       systemPrompt += '\n\n' + liveDbResult.value;
       liveDbContextInjected = true;
     }
+    if (memoryResult.status === 'fulfilled' && memoryResult.value) {
+      systemPrompt += '\n\n' + memoryResult.value;
+      memoryContextInjected = true;
+    }
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -1479,6 +1592,12 @@ Keep it under 200 words. Use professional clinical language.`;
     ];
 
     const response = await _groqChat(messages, 900);
+
+    // "Write" step — capture this turn as a raw session fact for later
+    // recall/consolidation. Fire-and-forget: never let a memory-write
+    // failure delay or break the chat response the user is waiting on.
+    _MemoryLayer.write(userMessage).catch(() => {});
+
     return {
       raw: response,
       type: 'chat',
@@ -1489,6 +1608,7 @@ Keep it under 200 words. Use professional clinical language.`;
       enteralContextInjected,
       ragContextInjected,
       liveDbContextInjected,
+      memoryContextInjected,
     };
   }
 
@@ -1927,9 +2047,20 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     queryRAG(query, context = 'clinical', topK = 7) {
       return _RAGLayer.fetchContext(query, context, topK);
     },
+    // Session Memory (Write → Consolidate → Recall → Apply)
+    memoryDB: _MemoryLayer, // ← direct access for custom integrations
+    writeMemory(content, kind = 'fact') {
+      return _MemoryLayer.write(content, kind);
+    },
+    recallMemory(query, topK = 5) {
+      return _MemoryLayer.recall(query, topK);
+    },
+    getSessionId() {
+      return _MemoryLayer._sessionId();
+    },
   };
 
-  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG access enabled');
+  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG + Session Memory access enabled');
 })();
 
 
