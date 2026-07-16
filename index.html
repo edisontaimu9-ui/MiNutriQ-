@@ -98,7 +98,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev https://oasis-ai-proxy-worker.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -12941,7 +12941,7 @@ function ntClear(scopeId, resultIds) {
   window.PAYCHANGU_SECRET_KEY = '';
 
   (function loadRemoteKeys() {
-    fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
+    fetch('https://oasis-ai-proxy-worker.edisontaimu9.workers.dev', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     })
@@ -12955,7 +12955,7 @@ function ntClear(scopeId, resultIds) {
       if (data.PAYCHANGU_SECRET_KEY) { window.PAYCHANGU_SECRET_KEY = data.PAYCHANGU_SECRET_KEY; console.log('[Oasis] Config loaded ✓ (Paychangu)'); }
     })
     .catch(function(err) {
-      console.error('[Oasis] Failed to load config from Appwrite:', err);
+      console.error('[Oasis] Failed to load config from Cloudflare Worker:', err);
     });
   })();
 </script>
