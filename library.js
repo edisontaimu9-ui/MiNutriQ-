@@ -3296,15 +3296,16 @@
   function _rsFrontiersSearch(query, page, yearFrom, yearTo) {
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var offset = (page - 1) * RS_FRONTIERS_SIZE;
-    var url = RS_FRONTIERS_BASE + '?' +
-      'query=' + encodeURIComponent(query) +
-      '&limit=' + RS_FRONTIERS_SIZE +
-      '&offset=' + offset;
-
-    return fetch(url, {
+    return fetch(RS_FRONTIERS_BASE, {
+      method: 'POST',
       headers: {
-        'Accept': 'application/json'
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: query,
+        limit: RS_FRONTIERS_SIZE,
+        offset: offset
+      })
     })
     .then(function(r) {
       if (!r.ok) throw new Error('Frontiers API ' + r.status);
