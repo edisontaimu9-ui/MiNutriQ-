@@ -22,7 +22,7 @@
   'use strict';
 
   // ── Configuration ────────────────────────────────────────────
-  const GROQ_API_URL  = 'https://api.groq.com/openai/v1/chat/completions';
+  const GROQ_API_URL  = 'https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/groq';
   const GROQ_MODEL    = 'llama-3.3-70b-versatile';
   const MAX_TOKENS    = 900;
   const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
@@ -30,29 +30,13 @@
   // Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas, Burns, Oncology,
   // IBD, Dementia, TB, Cystic Fibrosis, Surgical/Parenteral Nutrition, and more.
 
-  // API key: set via window.GROQ_API_KEY (from Appwrite Function)
-  // Waits up to 5 seconds for the key to be loaded before giving up
-  function _getKey() {
-    return (typeof window !== 'undefined' && window.GROQ_API_KEY)
-      ? window.GROQ_API_KEY
-      : '';
-  }
+  // No client-side API key needed anymore — GROQ_API_URL now points at our
+  // own Cloudflare Worker, which holds the real Groq key server-side and
+  // proxies the request. Kept as no-ops in case anything else references them.
+  function _getKey() { return ''; }
 
-  function _waitForKey(timeoutMs = 5000) {
-    if (_getKey()) return Promise.resolve(_getKey());
-    return new Promise((resolve, reject) => {
-      const start = Date.now();
-      const interval = setInterval(() => {
-        const key = _getKey();
-        if (key) {
-          clearInterval(interval);
-          resolve(key);
-        } else if (Date.now() - start >= timeoutMs) {
-          clearInterval(interval);
-          reject(new Error('API key not available — please refresh the page'));
-        }
-      }, 100);
-    });
+  function _waitForKey() {
+    return Promise.resolve('');
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
@@ -1045,12 +1029,10 @@ Core principles:
 
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
-    const apiKey = await _waitForKey();
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model:       GROQ_MODEL,
@@ -2402,9 +2384,9 @@ Rules:
 - Do NOT duplicate existing memories`;
 
     try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const res = await fetch(GROQ_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : ''}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 120, temperature: 0.1, messages: [{ role: 'user', content: prompt }] })
       });
       if (!res.ok) return;

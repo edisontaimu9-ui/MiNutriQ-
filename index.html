@@ -12932,27 +12932,21 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq + PubMed + Frontiers + Elsevier + VAPID keys — loaded securely from Appwrite Function
-  window.GROQ_API_KEY        = '';
-  window.PUBMED_API_KEY      = '';
-  window.FRONTIERS_API_KEY   = '';
-  window.ELSEVIER_API_KEY    = '';
+  // Only the VAPID *public* key is loaded here — it's meant to be public
+  // (used to subscribe the browser to push notifications). The Groq API key
+  // is no longer sent to the client at all: oasisAI.js now calls our Worker's
+  // /groq endpoint, which holds the real key server-side and proxies the
+  // request. See worker.js for details.
   window.NT_VAPID_PUBLIC_KEY = '';
-  window.PAYCHANGU_SECRET_KEY = '';
 
-  (function loadRemoteKeys() {
-    fetch('https://oasis-ai-proxy-worker.edisontaimu9.workers.dev', {
+  (function loadRemoteConfig() {
+    fetch('https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/config', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      if (data.GROQ_API_KEY)      { window.GROQ_API_KEY        = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
-      if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY      = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
-      if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY   = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
-      if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY    = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
-      if (data.VAPID_PUBLIC_KEY)  { window.NT_VAPID_PUBLIC_KEY = data.VAPID_PUBLIC_KEY;  console.log('[Oasis] Config loaded ✓ (VAPID)'); }
-      if (data.PAYCHANGU_SECRET_KEY) { window.PAYCHANGU_SECRET_KEY = data.PAYCHANGU_SECRET_KEY; console.log('[Oasis] Config loaded ✓ (Paychangu)'); }
+      if (data.VAPID_PUBLIC_KEY) { window.NT_VAPID_PUBLIC_KEY = data.VAPID_PUBLIC_KEY; console.log('[Oasis] Config loaded ✓ (VAPID)'); }
     })
     .catch(function(err) {
       console.error('[Oasis] Failed to load config from Cloudflare Worker:', err);
