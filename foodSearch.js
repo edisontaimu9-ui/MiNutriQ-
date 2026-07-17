@@ -1,58 +1,95 @@
 /**
  * foodSearch.js — Oasis Food Retrieval System
  * ─────────────────────────────────────────────────────────────────────────────
- * Two independent search pipelines — text (name-based) and barcode — both
- * offline-first and falling through to online APIs only when local data misses.
+ * Phase 1 (CNR audit/refactor): Food Search is now a complete consumer of the
+ * Chakudya Nutrition Registry (CNR). Two independent search pipelines — text
+ * (name-based) and barcode — both offline-first, falling through to CNR only
+ * when local data misses, and both able to fan out to *every* relevant CNR
+ * endpoint for a genuinely unified result set.
  *
  * ── TEXT SEARCH  (searchFood / searchLocal) ───────────────────────────────
  *
- *   Layer 1   — Local DB (MALAWI_FCT + UCT Exchange)
- *               ▶ Instant, offline, always tried first.
- *               ▶ Returns immediately if a complete match is found.
+ *   Layer 0   — Packaged Foods (Chakudya `/packaged`)
+ *               ▶ Not implemented in this file — `foodData.js`'s
+ *                 PackagedFoodsDB module owns the full `/packaged` table
+ *                 (paginated into IndexedDB) and patches `searchLocal()` /
+ *                 `searchBarcode()` below to inject its results first. This
+ *                 file just needs to make sure it calls through the *public*
+ *                 (patchable) `searchLocal` when building unified results so
+ *                 packaged foods are never left out — see `_unifiedSearch()`.
+ *
+ *   Layer 1   — Local DB (MALAWI_FCT)
+ *               ▶ Instant, offline, always tried first. This is now
+ *                 explicitly an *offline cache*, not the system of record —
+ *                 CNR's own `/foods` table is the authoritative "standard
+ *                 foods" source (see Layer 2b). Kept because Oasis is used
+ *                 at hospital sites (QECH/KUHeS) with unreliable
+ *                 connectivity, where instant offline search is a real
+ *                 clinical-workflow requirement, not a nicety.
+ *               ▶ Returns immediately if a complete match is found (single
+ *                 best-match mode only — unified/multi mode always also
+ *                 consults CNR so the result set is genuinely complete).
  *
  *   Layer 1b  — Enteral / Formula DB (ENTERAL_DB from main.js)
- *               ▶ Instant, offline. Therapeutic milks (F-75/F-100), sip
- *                 feeds, and tube feeds. Values are per 100 mL — results
- *                 carry unit:'mL' and isFormula:true.
- *               ▶ Not merged into the single-best-match pipeline below;
- *                 exposed as a standalone searchEnteral() call so UIs can
- *                 render it as its own section (e.g. homescreen search).
+ *               ▶ Instant, offline. Curated, clinically-annotated commercial
+ *                 therapeutic milks, sip feeds, tube feeds (brand, route,
+ *                 osmolality, indication notes) — this is clinical reference
+ *                 content for the Formula Reference tool, not a competing
+ *                 food-search dataset, so it is kept as-is. Values are per
+ *                 100 mL — results carry unit:'mL' and isFormula:true.
+ *               ▶ Exposed as a standalone searchEnteral() call so UIs can
+ *                 render it as its own section, and also folded into
+ *                 unified/multi search results alongside CNR's own formula
+ *                 registry (Layer 2c) so neither source is missed.
  *
- *   Layer 1.5 — Regional FCT (TZ, ZM, MZ, ZW, ZA) from regionalFCT.js
- *               ▶ Instant, offline. Searched when Layer 1 misses or is
- *                 incomplete. Returns macros + iron/zinc/vitA/calcium.
- *               ▶ Requires regionalFCT.js loaded before this script.
+ *   Layer 2   — Chakudya API: single best match  (_searchChakudyaLookup)
+ *               ▶ GET /foods/lookup?q= — one call, server-side cascade:
+ *                 CNR's own `foods` table → CNR's `packaged_foods` table →
+ *                 USDA FDC → Open Food Facts → FatSecret. Returns ONE best
+ *                 match; the client makes a single request and holds no
+ *                 external API keys.
+ *               ▶ Reached whenever local data is absent/incomplete (single
+ *                 best-match mode), and always included in unified/multi
+ *                 mode as one more candidate.
  *
- *   Layer 2   — Chakudya API  (_searchChakudyaLookup)
- *               ▶ Only reached when local data is absent/incomplete.
- *               ▶ One GET /foods/lookup?q= call; the worker itself cascades
- *                 through its own Malawi FCT / packaged-food tables → USDA
- *                 FDC → Open Food Facts → FatSecret server-side, so the
- *                 client makes a single request and holds no API keys.
- *               ▶ Fills missing nutritional fields; never overwrites local data.
+ *   Layer 2b  — Chakudya API: standard-food search  (_searchChakudyaFoods)
+ *               ▶ GET /foods?search=&limit= — returns MULTIPLE candidates
+ *                 from CNR's own curated `foods` table. This was previously
+ *                 unused: the app only ever called `/foods/lookup` (a single
+ *                 best guess), so a user could never see more than one CNR
+ *                 "standard food" match. Fixed in this phase.
+ *
+ *   Layer 2c  — Chakudya API: formula registry  (_searchChakudyaFormulas)
+ *               ▶ GET /formulas — CNR's own enteral-formula registry,
+ *                 previously never called anywhere in the app. There's no
+ *                 text-search query param on this endpoint, so the (small,
+ *                 24h-edge-cached) list is fetched once per 15-minute window
+ *                 client-side and matched with the same tiered scorer used
+ *                 for local search.
  *
  * ── BARCODE SEARCH  (searchBarcode) ──────────────────────────────────────
+ *   Barcode resolution now relies on the Chakudya Worker only — the local
+ *   hand-curated EAN-13 registry / GS1-prefix fallback that used to live in
+ *   this file has been retired (Phase 1 instruction: "barcode searches rely
+ *   only on the Chakudya Worker").
  *
- *   Layer A   — Local barcode registry → MALAWI_FCT  (_searchLocalBarcode)
- *               ▶ Instant, fully offline. Covers hand-curated Malawi-market
- *                 barcodes (exact EAN-13) and GS1 company-prefix fallbacks.
- *               ▶ Returns full Malawi FCT nutrition + measures on hit.
- *               ▶ barcodeSource: 'LocalDB' | confidenceScore 0.97 / 0.72
- *
- *   Layer B   — Chakudya API barcode lookup  (_fetchOFFBarcode)
- *               ▶ Only reached when Layer A has no match (online).
- *               ▶ GET /foods/lookup?barcode= — cascades through Chakudya's
- *                 packaged_foods table then Open Food Facts server-side.
- *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap).
- *               ▶ barcodeSource: 'Chakudya' | confidenceScore 0.88
+ *   Layer 0   — Packaged Foods DB (local cache of Chakudya `/packaged`,
+ *               patched in from foodData.js — checked first, offline-first,
+ *               but the data itself originates entirely from CNR)
+ *   Layer 1   — Chakudya API barcode lookup  (_fetchOFFBarcode)
+ *               ▶ GET /foods/lookup?barcode= — cascades through CNR's
+ *                 `packaged_foods` table then Open Food Facts server-side.
+ *               ▶ Results cached in localStorage (7-day TTL, 50-entry cap)
+ *                 purely as a client-side performance cache, not a second
+ *                 source of truth.
  *
  * ── QUERY NORMALISATION ──────────────────────────────────────────────────
  *   All queries are normalised before any search: lowercase → trim whitespace
  *   → strip punctuation/special chars → collapse runs of spaces.
  *
- * ── LAYERED RANKING (local & regional search) ────────────────────────────
- *   Within each local/regional DB search, results are ranked in three tiers
- *   so the most specific match always surfaces first:
+ * ── LAYERED RANKING (local search) ────────────────────────────────────────
+ *   Within local (and CNR formula-registry) search, results are ranked in
+ *   three tiers so the most specific match always surfaces first:
  *     Tier A — Exact Match  (score 1.00): normalised query === normalised name
  *     Tier B — Alias Match  (score 0.90): query matches any food.altNames[]
  *     Tier C — Token/Fuzzy  (score 0–1 ): weighted token overlap + Levenshtein
@@ -60,20 +97,31 @@
  *
  * ── SYNONYM / FUZZY MATCHING ──────────────────────────────────────────────
  *   Regional food name synonyms (nsima→ugali→sadza, etc.) are resolved before
- *   any text search so queries always hit the local DB when a match exists.
+ *   any text search so queries always hit local/CNR data when a match exists.
  *
- * ── OUTPUT SHAPE (unified food object) ───────────────────────────────────
+ * ── UNIFIED SEARCH  (searchFood(query, { multi: true })) ──────────────────
+ *   Fans out to every layer above in parallel, then merges + dedupes (by
+ *   normalised name, keeping the highest-confidence record per group and
+ *   filling gaps from the others) + ranks + caps to `limit`. The caller gets
+ *   one combined, ordered list and never needs to know which endpoint a
+ *   given result came from — `sourceUsed` / `dbSource` are still attached to
+ *   every item purely for the UI's existing source-badge rendering, but the
+ *   result *shape* is identical no matter which layer produced it.
+ *
+ * ── OUTPUT SHAPE (unified food object — unchanged by this refactor) ──────
  *   {
  *     id, name, cat,
- *     kcal, kj, pro, cho, fat,       // per 100 g
+ *     kcal, kj, pro, cho, fat,       // per 100 g (per 100 mL for formulas)
  *     measures[],                     // from local DB if available
- *     fiber, sodium, sugar, salt,     // extras from APIs if not in local
- *     sourceUsed,                     // 'local' | 'regional' | 'chakudya' | 'combined'
- *     matchTier,                      // 'exact' | 'alias' | 'token' (local/regional only)
- *     barcodeSource,                  // 'LocalDB' | 'Chakudya'  (barcode pipeline only)
- *     barcodeMatch,                   // 'exact' | 'prefix' | undefined
- *     confidenceScore,                // 0.0–1.0  (exact=1.00, alias=0.90, token=fuzzy score)
+ *     fiber, sodium, sugar, salt,     // extras from CNR if not in local
+ *     sourceUsed,                     // 'local' | 'chakudya' | 'custom' | 'combined'
+ *     dbSource,                       // human-readable source label
+ *     matchTier,                      // 'exact' | 'alias' | 'token' (where applicable)
+ *     barcodeSource,                  // 'Chakudya'  (barcode pipeline only)
+ *     barcodeMatch,                   // 'exact' | undefined
+ *     confidenceScore,                // 0.0–1.0
  *     lastUpdated,                    // ISO string if available
+ *     unit, isFormula, route,         // present on enteral-formula results
  *   }
  *
  * Author : Edison Taimu / Oasis
@@ -83,16 +131,16 @@
 (function (global) {
   'use strict';
 
-  // ── CHAKUDYA API ─────────────────────────────────────────────────────────
-  // Single source of truth for external food lookups (Layers 2+3 below).
-  // The worker itself cascades: its own Malawi FCT / packaged-food tables →
-  // USDA FDC → Open Food Facts → FatSecret — so the client no longer needs
-  // its own API keys or direct calls to any of those services.
+  // ── CHAKUDYA API (CNR) ───────────────────────────────────────────────────
+  // Single source of truth for external food/formula lookups (Layers 2, 2b, 2c).
+  // The worker cascades server-side (its own tables → USDA FDC → Open Food
+  // Facts → FatSecret for /foods/lookup), so the client holds no API keys.
   const CHAKUDYA_BASE = 'https://chakudya-api.edisontaimu9.workers.dev';
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
-  // Maps alternative / regional names → canonical local DB search term(s).
-  // Keys are lower-cased; values are the terms to search against MALAWI_FCT.
+  // Maps alternative / regional names → canonical local-DB / CNR search term(s).
+  // Keys are lower-cased; values are the terms to search against MALAWI_FCT
+  // and CNR's /foods and /formulas.
   const SYNONYM_MAP = {
     // Maize staples
     ugali:            ['nsima'],
@@ -153,22 +201,9 @@
     nthochi:          ['banana'],
   };
 
-  // ── REGIONAL SYNONYM MERGE (from regionalFCT.js global) ──────────────────
-  // Runs once at init; silently skips if regionalFCT.js is not loaded.
-  (function _mergeRegionalSynonyms() {
-    if (typeof REGIONAL_SYNONYM_MAP === 'undefined') return;
-    for (const [key, vals] of Object.entries(REGIONAL_SYNONYM_MAP)) {
-      if (SYNONYM_MAP[key]) {
-        SYNONYM_MAP[key] = [...new Set([...SYNONYM_MAP[key], ...vals])];
-      } else {
-        SYNONYM_MAP[key] = vals;
-      }
-    }
-  })();
-
   // ── COMPLETENESS THRESHOLD ─────────────────────────────────────────────────
-  // A local result is "complete" (no API fallback needed) when it has at least
-  // these fields populated.
+  // A local result is "complete" (no CNR fallback needed in single best-match
+  // mode) when it has at least these fields populated.
   const REQUIRED_FIELDS = ['kcal', 'pro', 'cho', 'fat'];
 
   // ── CACHE (session-level, keyed by normalised query) ──────────────────────
@@ -281,8 +316,18 @@
     };
   }
 
+  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
+  function _fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json' },
+    }).finally(() => clearTimeout(tid));
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1 — LOCAL DATABASE SEARCH  (Malawi FCT only)
+  // LAYER 1 — LOCAL DATABASE SEARCH  (Malawi FCT — offline instant cache)
   //
   // Three-tier ranking — results are sorted within each tier by score, and
   // a higher tier always beats a lower tier in the final list:
@@ -307,7 +352,9 @@
 
   /** Scores a single food entry against an already-normalised query term.
    *  Returns { score, tier } where tier is 'exact' | 'alias' | 'token'.
-   *  Returns null when the food does not meet any matching threshold. */
+   *  Returns null when the food does not meet any matching threshold.
+   *  Works against any object with .name / .altNames — reused by the local
+   *  DB, enteral DB, and CNR formula-registry scorers. */
   function _scoreFood(normTerm, food) {
     const normName = _norm(food.name);
 
@@ -380,7 +427,7 @@
         ...r.food,
         ...macros,
         sourceUsed:      'local',
-        dbSource:        'Malawi FCT',
+        dbSource:        'Malawi FCT (offline cache)',
         matchTier:       r.tier,           // 'exact' | 'alias' | 'token'
         confidenceScore: +r.score.toFixed(2),
         lastUpdated:     null,
@@ -390,7 +437,7 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1b — ENTERAL / FORMULA DATABASE SEARCH
+  // LAYER 1b — ENTERAL / FORMULA DATABASE SEARCH  (local, curated clinical DB)
   //
   // Searches ENTERAL_DB (defined in main.js — therapeutic milks, sip feeds,
   // tube feeds). Reuses the same three-tier ranking as Layer 1 (_scoreFood /
@@ -402,7 +449,8 @@
   // quantities correctly instead of assuming grams.
   //
   // Falls through silently (returns []) when ENTERAL_DB is not yet loaded
-  // (e.g. main.js hasn't executed yet) or is empty.
+  // (e.g. main.js hasn't executed yet) or is empty. See Layer 2c below for
+  // CNR's own (separate, community-maintained) formula registry.
   // ══════════════════════════════════════════════════════════════════════════
 
   /** Convert a raw ENTERAL_DB entry into the unified food-result shape. */
@@ -473,99 +521,10 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1.5 — REGIONAL FCT (TZ, ZM, MZ, ZW, ZA)
-  // Searches REGIONAL_FCT global from regionalFCT.js.
-  // Returns the same unified shape as _searchLocal(), plus micronutrients.
-  // Falls through silently when regionalFCT.js is not loaded.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  function _searchRegional(terms, limit = 10) {
-    if (typeof REGIONAL_FCT === 'undefined' || !REGIONAL_FCT.length) return [];
-
-    // Pre-normalise terms once
-    const normTerms = terms.map(_norm).filter(Boolean);
-
-    const hits = [];
-    for (const food of REGIONAL_FCT) {
-      let bestScore = 0;
-      let bestTier  = null;
-
-      for (const nt of normTerms) {
-        // Tier A: exact name match
-        if (nt === _norm(food.name)) {
-          bestScore = 1.00; bestTier = 'exact'; break;
-        }
-        // Tier B: altNames exact match
-        if (Array.isArray(food.altNames)) {
-          let aliasHit = false;
-          for (const alt of food.altNames) {
-            if (nt === _norm(alt)) {
-              if (bestTier === null || _TIER_ORDER['alias'] < _TIER_ORDER[bestTier]) {
-                bestScore = 0.90; bestTier = 'alias';
-              }
-              aliasHit = true;
-              break;
-            }
-          }
-          if (aliasHit) continue;
-        }
-        // Tier C: fuzzy on name and altNames
-        const scores = [_fuzzyScore(nt, food.name)];
-        if (Array.isArray(food.altNames)) {
-          for (const alt of food.altNames) scores.push(_fuzzyScore(nt, alt));
-        }
-        const fuzzy = Math.max(...scores);
-        if (fuzzy >= 0.40) {
-          if (bestTier === null || _TIER_ORDER['token'] < _TIER_ORDER[bestTier] ||
-              (bestTier === 'token' && fuzzy > bestScore)) {
-            bestScore = fuzzy; bestTier = 'token';
-          }
-        }
-      }
-
-      if (bestTier !== null) hits.push({ food, score: bestScore, tier: bestTier });
-    }
-
-    hits.sort((a, b) =>
-      _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] || b.score - a.score
-    );
-
-    return hits.slice(0, limit).map(r => {
-      const f = r.food;
-      return {
-        ...f,
-        // Ensure per-100g macros are at the top level (already stored that way)
-        kcal:            f.kcal,
-        kj:              f.kj ?? (f.kcal != null ? +(f.kcal * 4.184).toFixed(0) : null),
-        pro:             f.pro,
-        cho:             f.cho,
-        fat:             f.fat,
-        // Micronutrients — unique to regional entries
-        iron:            f.iron    ?? null,
-        zinc:            f.zinc    ?? null,
-        vitA:            f.vitA    ?? null,
-        calcium:         f.calcium ?? null,
-        fiber:           f.fiber   ?? null,
-        sodium:          f.sodium  ?? null,
-        sourceUsed:      'regional',
-        dbSource:        `Regional FCT — ${f.source}`,
-        matchTier:       r.tier,           // 'exact' | 'alias' | 'token'
-        confidenceScore: +r.score.toFixed(2),
-        lastUpdated:     null,
-        _raw:            f,
-      };
-    });
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2 — USDA FOODDATA CENTRAL
-  // ══════════════════════════════════════════════════════════════════════════
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 2 — CHAKUDYA API LOOKUP
+  // LAYER 2 — CHAKUDYA API: SINGLE BEST MATCH  (GET /foods/lookup)
   //
   // GET /foods/lookup?q=<name>  — single call, server-side cascade:
-  //   Chakudya's own Malawi FCT table → Chakudya's packaged_foods table →
+  //   CNR's own `foods` table → CNR's `packaged_foods` table →
   //   USDA FDC → Open Food Facts → FatSecret (OAuth 1.0a). Returns ONE best
   //   match with `data.source` telling us which tier it came from
   //   ("local" | "local_packaged" | "usda_fdc" | "openfoodfacts" | "fatsecret").
@@ -583,7 +542,7 @@
   //                       assuming one exact shape.
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** Per-source confidence — Chakudya's own curated tables outrank external cascade hits. */
+  /** Per-source confidence — CNR's own curated tables outrank external cascade hits. */
   const _CHAKUDYA_SOURCE_CONFIDENCE = {
     local:           0.9,
     local_packaged:  0.88,
@@ -605,7 +564,7 @@
       id:              'chakudya_' + (d.id ?? d.barcode ?? _norm(name)),
       name:            name,
       brand:           d.brand ?? null,
-      cat:             d.category ?? 'Chakudya API',
+      cat:             d.category ?? 'Chakudya Nutrition Registry',
       kcal:            kcal,
       kj:              d.kj ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null),
       pro:             d.protein_g ?? d.pro    ?? null,
@@ -635,7 +594,7 @@
     }
   }
 
-  // Back-compat aliases — both old export keys now resolve through the same
+  // Back-compat aliases — both old export keys resolve through the same
   // Chakudya call so nothing downstream that references NTFoodSearch._fdcSearch
   // or NTFoodSearch._offSearch breaks; the split between "FDC" and "OFF" no
   // longer exists client-side, it happens server-side inside Chakudya.
@@ -643,11 +602,195 @@
   const _searchOFF = _searchChakudyaLookup;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // BARCODE — CHAKUDYA API (Layer B)
+  // LAYER 2b — CHAKUDYA API: STANDARD-FOOD SEARCH  (GET /foods?search=)
+  //
+  // Previously unused. Unlike /foods/lookup (one best guess), this returns
+  // multiple candidates from CNR's own curated `foods` table — the piece
+  // needed for a real "give me a list" search experience instead of a
+  // single-answer autocomplete. Documented, working endpoint (README "Quick
+  // Examples": `GET /foods?search=nsima&limit=10`).
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const _CHAKUDYA_FOODS_LIST_CONFIDENCE = 0.85;
+
+  /** Normalise one raw row from GET /foods into the unified food-result shape. */
+  function _chakudyaFoodRowToUnified(d) {
+    if (!d) return null;
+    const name = d.food_name || d.name || null;
+    if (!name) return null;
+    const kcal = d.energy_kcal ?? d.kcal ?? null;
+
+    return {
+      id:              'chakudya_food_' + (d.id ?? d.external_id ?? d.barcode ?? _norm(name)),
+      name:            name,
+      cat:             d.category ?? 'Chakudya Nutrition Registry',
+      kcal:            kcal,
+      kj:              d.kj ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null),
+      pro:             d.protein_g ?? d.pro   ?? null,
+      cho:             d.carbs_g   ?? d.cho   ?? null,
+      fat:             d.fat_g     ?? d.fat   ?? null,
+      fiber:           d.fiber_g   ?? d.fiber ?? null,
+      sodium:          d.sodium_mg ?? d.sodium ?? null,
+      barcode:         d.barcode ?? null,
+      measures:        d.measure ? [{ label: d.measure, grams: d.weight_g ?? null }] : null,
+      sourceUsed:      'chakudya',
+      dbSource:        'Chakudya Nutrition Registry (foods)',
+      confidenceScore: _CHAKUDYA_FOODS_LIST_CONFIDENCE,
+      lastUpdated:     d.updated_at ?? null,
+    };
+  }
+
+  /**
+   * GET /foods?search=<query>&limit=<n> — multiple standard-food candidates.
+   * Best-effort: any network/parse failure resolves to an empty array rather
+   * than throwing, so it can always be safely raced alongside other layers.
+   * @param {string} query
+   * @param {number} [limit=10]
+   * @returns {Promise<object[]>}
+   */
+  async function _searchChakudyaFoods(query, limit = 10) {
+    if (!query || !query.trim()) return [];
+    try {
+      const capped = Math.max(1, Math.min(limit, 50));
+      const url = `${CHAKUDYA_BASE}/foods?search=${encodeURIComponent(query.trim())}&limit=${capped}`;
+      const res = await _fetchWithTimeout(url, 8000);
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (json.status !== 'success' || !Array.isArray(json.data)) return [];
+      return json.data.map(_chakudyaFoodRowToUnified).filter(Boolean);
+    } catch (_e) {
+      return [];
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 2c — CHAKUDYA API: FORMULA REGISTRY  (GET /formulas)
+  //
+  // Previously unused anywhere in the app. There is no text-search query
+  // param on this endpoint (only `route`), so the (small, 24h-edge-cached)
+  // list is fetched once per 15-minute session window and matched client
+  // side with the same tiered exact/alias/fuzzy scorer used for local
+  // search. This is CNR's own, separately-maintained formula registry — it
+  // is folded into unified/multi search results alongside (not instead of)
+  // the curated ENTERAL_DB in Layer 1b, so neither source is missed.
+  //
+  // Field names for `enteral_formulas` rows aren't fixed in the API docs
+  // beyond `route`, so the normaliser checks several plausible key names,
+  // matching the defensive approach already used for external /foods/lookup
+  // tiers. kcal is heuristically treated as per-mL (and scaled ×100) when
+  // the raw value is under 10, since formula energy density is almost
+  // always expressed as kcal/mL (~1.0–2.0) rather than kcal/100 mL in
+  // source data.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const FORMULAS_CACHE_TTL = 15 * 60 * 1000; // 15 min
+  let _formulasCache = null; // { ts, data }
+
+  async function _fetchChakudyaFormulasList() {
+    const now = Date.now();
+    if (_formulasCache && (now - _formulasCache.ts) < FORMULAS_CACHE_TTL) {
+      return _formulasCache.data;
+    }
+    try {
+      const url = `${CHAKUDYA_BASE}/formulas?limit=200`;
+      const res = await _fetchWithTimeout(url, 8000);
+      if (!res.ok) return _formulasCache?.data ?? [];
+      const json = await res.json();
+      const data = (json.status === 'success' && Array.isArray(json.data)) ? json.data : [];
+      _formulasCache = { ts: now, data };
+      return data;
+    } catch (_e) {
+      return _formulasCache?.data ?? [];
+    }
+  }
+
+  /** Normalise one raw row from GET /formulas into the unified food-result shape. */
+  function _chakudyaFormulaRowToUnified(d) {
+    if (!d) return null;
+    const name = d.name || d.formula_name || d.product_name || null;
+    if (!name) return null;
+
+    let kcal = d.kcal_per_ml ?? d.kcalMl ?? d.kcal_ml ?? d.energy_kcal_ml ?? d.kcal ?? null;
+    if (kcal != null && kcal < 10) kcal = +(kcal * 100).toFixed(0); // per-mL → per-100mL
+
+    return {
+      id:              'chakudya_formula_' + (d.id ?? _norm(name)),
+      name:            name,
+      cat:             d.category ?? d.cat ?? 'Enteral Formula',
+      route:           d.route ?? null,
+      kcal:            kcal,
+      kj:              kcal != null ? +(kcal * 4.184).toFixed(0) : null,
+      pro:             d.protein_g ?? d.pro ?? null,
+      cho:             d.carbs_g   ?? d.cho ?? null,
+      fat:             d.fat_g     ?? d.fat ?? null,
+      fibre:           d.fiber_g   ?? d.fibre ?? null,
+      fiber:           d.fiber_g   ?? d.fibre ?? null,
+      osm:             d.osmolality ?? d.osm ?? null,
+      unit:            'mL',
+      isFormula:       true,
+      sourceUsed:      'chakudya',
+      dbSource:        'Chakudya Nutrition Registry (formulas)',
+      lastUpdated:     d.updated_at ?? null,
+      // confidenceScore assigned by the caller once matched against the query
+    };
+  }
+
+  /**
+   * Match the query against CNR's formula registry (client-side, since the
+   * endpoint has no search param). Best-effort: resolves to [] on any error.
+   * @param {string} query
+   * @param {number} [limit=8]
+   * @returns {Promise<object[]>}
+   */
+  async function _searchChakudyaFormulas(query, limit = 8) {
+    const terms = _expandQuery(query).map(_norm).filter(Boolean);
+    if (!terms.length) return [];
+
+    const list = await _fetchChakudyaFormulasList();
+    if (!list.length) return [];
+
+    const hits = [];
+    for (const raw of list) {
+      const unified = _chakudyaFormulaRowToUnified(raw);
+      if (!unified) continue;
+
+      let bestScore = 0;
+      let bestTier  = null;
+      for (const t of terms) {
+        const r = _scoreFood(t, unified);
+        if (!r) continue;
+        if (
+          bestTier === null ||
+          _TIER_ORDER[r.tier] < _TIER_ORDER[bestTier] ||
+          (r.tier === bestTier && r.score > bestScore)
+        ) {
+          bestScore = r.score;
+          bestTier  = r.tier;
+        }
+      }
+
+      if (bestTier !== null) {
+        unified.matchTier       = bestTier;
+        unified.confidenceScore = +(bestScore * 0.9).toFixed(2); // slight discount vs. local exact match
+        hits.push(unified);
+      }
+    }
+
+    hits.sort((a, b) =>
+      _TIER_ORDER[a.matchTier] - _TIER_ORDER[b.matchTier] ||
+      b.confidenceScore - a.confidenceScore
+    );
+
+    return hits.slice(0, limit);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BARCODE — CHAKUDYA API ONLY
   // Fetches a single product by barcode from GET /foods/lookup?barcode=.
-  // Server-side cascade: Chakudya's packaged_foods table → Open Food Facts.
-  // Cached in localStorage (7-day TTL, 50-entry cap) so repeat scans are
-  // instant even without a network connection.
+  // Server-side cascade: CNR's packaged_foods table → Open Food Facts.
+  // Cached in localStorage (7-day TTL, 50-entry cap) as a pure client-side
+  // performance cache — it is not a second source of truth, and there is no
+  // local barcode registry any more (see Phase 1 audit: retired).
   // ══════════════════════════════════════════════════════════════════════════
 
   const _BC_CACHE_KEY = 'oasis_bc_cache_v1';
@@ -675,16 +818,6 @@
       if (keys.length > 50) delete store[keys[0]];
       localStorage.setItem(_BC_CACHE_KEY, JSON.stringify(store));
     } catch (_e) {}
-  }
-
-  /** Safe fetch with manual AbortController timeout (Android WebView compat) */
-  function _fetchWithTimeout(url, ms) {
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), ms);
-    return fetch(url, {
-      signal: ctrl.signal,
-      headers: { 'Accept': 'application/json' },
-    }).finally(() => clearTimeout(tid));
   }
 
   /**
@@ -728,120 +861,27 @@
     return result;
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // LOCAL BARCODE REGISTRY
-  // Hand-curated map of EAN-13 barcodes → MALAWI_FCT food IDs.
-  // Covers Malawi-market packaged products whose barcodes are unlikely to be
-  // in Open Food Facts or USDA FDC.  Values are MALAWI_FCT `id` strings.
-  // Add a new entry whenever a pack label is scanned and verified.
-  //
-  // GS1 prefix reference (for maintainers):
-  //   638       — Malawi
-  //   600–601   — South Africa (many SA brands distributed in Malawi)
-  //   619       — Zimbabwe
-  //   627       — Kenya / East Africa
-  //   690–699   — China (common import goods)
-  // ══════════════════════════════════════════════════════════════════════════
-  const _LOCAL_BARCODE_DB = {
-    // ── South-African / regionally distributed products ───────────────────
-    '6009681152934': 'soya_pieces_topsoy',   // Topsoy TSP soya pieces (dry) 200g
-    '6008155016918': 'onga_mchuzi_mix',      // ONGA Mchuzi Mix spiced tomato seasoning powder 200g
-    // ── Add further verified exact barcodes below ─────────────────────────
-    // '6xxxxxxxxxx': 'food_id',
-  };
-
-  // ── Company-prefix fallback ───────────────────────────────────────────────
-  // Maps the first 7 digits of an EAN-13 (GS1 company prefix) to a food ID.
-  // Used when an exact barcode isn't in _LOCAL_BARCODE_DB but the brand is known.
-  // Confidence is intentionally lower (0.72) to signal a best-guess match.
-  // Any exact entry in _LOCAL_BARCODE_DB always wins over a prefix match.
-  //
-  // How to find a company prefix:
-  //   Take any barcode from that brand and read the first 7 digits.
-  //   All products from that company share those 7 digits.
-  const _BRAND_PREFIX_DB = {
-    '6009681': { foodId: 'soya_pieces_topsoy', brandName: 'Topsoy', note: 'Any Topsoy pack size/variant' },
-    '6008155': { foodId: 'onga_mchuzi_mix',      brandName: 'ONGA',   note: 'ONGA Mchuzi Mix (Unilever EA) — GS1 600 range, Kenya/EA distribution' },
-    // '6xxxxxx': { foodId: 'food_id', brandName: 'Brand', note: '' },
-  };
-
   /**
-   * Synchronous local-barcode lookup.
-   * 1. Exact match   → _LOCAL_BARCODE_DB  (confidence 0.97, "LocalDB")
-   * 2. Prefix match  → _BRAND_PREFIX_DB   (confidence 0.72, "LocalDB-prefix")
-   * Returns null if neither layer matches.
-   * @param {string} barcode  Raw scanned string (EAN-13 preferred)
-   * @returns {object|null}
+   * Resolve a scanned barcode to a food object. Chakudya-only (see header
+   * comment) — any local packaged-foods cache check happens upstream, via
+   * foodData.js patching this function's exported entry point.
+   * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
+   * @returns {Promise<object|null>}
    */
-  function _searchLocalBarcode(barcode) {
+  async function searchBarcode(barcode) {
     if (!barcode) return null;
-    const digits = barcode.replace(/\D/g, '');
-    const db = (typeof MALAWI_FCT !== 'undefined') ? MALAWI_FCT : [];
-
-    // ── 1. Exact match ───────────────────────────────────────────────────────
-    const exactId = _LOCAL_BARCODE_DB[digits] ?? _LOCAL_BARCODE_DB[digits.replace(/^0+/, '')];
-    if (exactId) {
-      const food = db.find(f => f.id === exactId);
-      if (food) {
-        return {
-          ..._per100(food),
-          id:              food.id,
-          name:            food.name,
-          brand:           food.brand  ?? null,
-          cat:             food.cat,
-          barcode:         digits,
-          barcodeSource:   'LocalDB',
-          barcodeMatch:    'exact',
-          sourceUsed:      'local',
-          dbSource:        'Malawi FCT (barcode — exact)',
-          confidenceScore: 0.97,
-          measures:        food.measures ?? null,
-          fiber:           food.fiber   ?? null,
-          sodium:          food.sodium  ?? null,
-          _raw:            food,
-        };
-      }
-    }
-
-    // ── 2. Company-prefix fallback ───────────────────────────────────────────
-    // Try prefixes from longest (7 digits) down to 6, so more-specific entries
-    // in _BRAND_PREFIX_DB always beat shorter ones.
-    for (let len = 7; len >= 6; len--) {
-      const prefix = digits.slice(0, len);
-      const entry  = _BRAND_PREFIX_DB[prefix];
-      if (!entry) continue;
-      const food = db.find(f => f.id === entry.foodId);
-      if (!food) continue;
-      return {
-        ..._per100(food),
-        id:              food.id,
-        // Append pack-size hint so the user knows it's a best-guess
-        name:            food.name + ' (possible match — ' + entry.brandName + ')',
-        brand:           food.brand  ?? entry.brandName ?? null,
-        cat:             food.cat,
-        barcode:         digits,
-        barcodeSource:   'LocalDB',
-        barcodeMatch:    'prefix',
-        sourceUsed:      'local',
-        dbSource:        'Malawi FCT (barcode — brand prefix)',
-        confidenceScore: 0.72,
-        measures:        food.measures ?? null,
-        fiber:           food.fiber   ?? null,
-        sodium:          food.sodium  ?? null,
-        _raw:            food,
-      };
-    }
-
-    return null;
+    return await _fetchOFFBarcode(barcode);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
   // MERGE HELPER
-  // Priority: local > regional > Chakudya API — only fills null/missing fields
+  // Priority: whichever candidate has the higher confidenceScore is the base;
+  // the other only fills in null/missing fields on top of it.
   // ══════════════════════════════════════════════════════════════════════════
 
   function _merge(base, ext) {
     if (!ext) return base;
+    if (!base) return ext;
     const FIELDS = ['kcal','kj','pro','cho','fat','fiber','sugar','sodium'];
     const out    = { ...base };
     let   merged = false;
@@ -854,12 +894,101 @@
     if (!out.lastUpdated && ext.lastUpdated) out.lastUpdated = ext.lastUpdated;
     if (merged) {
       const sources = [base.sourceUsed, ext.sourceUsed].filter(Boolean);
-      out.sourceUsed      = sources.length > 1 ? 'combined' : sources[0];
+      out.sourceUsed      = new Set(sources).size > 1 ? 'combined' : sources[0];
       out.confidenceScore = +Math.min(
-        Math.max(base.confidenceScore, ext.confidenceScore) + 0.05, 1
+        Math.max(base.confidenceScore || 0, ext.confidenceScore || 0) + 0.05, 1
       ).toFixed(2);
     }
     return out;
+  }
+
+  /**
+   * Merge + dedupe + rank a flat list of unified food objects gathered from
+   * multiple layers/sources into one ordered, capped list.
+   *
+   * Dedup key is the normalised food name — deliberately simple (no fuzzy
+   * cross-source matching) so behaviour stays predictable; near-duplicate
+   * names coined slightly differently across sources (e.g. "Nsima" vs.
+   * "Nsima (thick)") are treated as distinct results rather than merged.
+   * When two candidates share a key, the higher-confidence one becomes the
+   * base and the other only fills in fields the base is missing (via
+   * `_merge`), so a local exact match's household `measures[]` is never
+   * clobbered by a CNR-cascade hit for the same food, for example.
+   *
+   * @param {object[]} items
+   * @param {number} limit
+   * @returns {object[]}
+   */
+  function _dedupeRank(items, limit) {
+    const groups = new Map(); // normalised name → best-so-far unified object
+    for (const it of items) {
+      if (!it || !it.name) continue;
+      const key = _norm(it.name);
+      if (!key) continue;
+      const existing = groups.get(key);
+      if (!existing) {
+        groups.set(key, it);
+        continue;
+      }
+      const [base, other] = (existing.confidenceScore || 0) >= (it.confidenceScore || 0)
+        ? [existing, it] : [it, existing];
+      groups.set(key, _merge(base, other));
+    }
+
+    const merged = [...groups.values()];
+    merged.sort((a, b) => (b.confidenceScore || 0) - (a.confidenceScore || 0));
+
+    return merged.slice(0, limit).map(f => {
+      if (!('_raw' in f)) return f;
+      const { _raw, ...rest } = f;
+      return rest;
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // UNIFIED / MULTI-SOURCE SEARCH
+  // The single entry point that makes Food Search a complete CNR consumer:
+  // fans out to local (+ whatever foodData.js/custom-food patches have
+  // layered on top of the public searchLocal, i.e. packaged foods too),
+  // CNR /foods, CNR /foods/lookup, and CNR /formulas — all in parallel —
+  // then hands everything to _dedupeRank(). Any individual layer failing
+  // (offline, timeout, 404) simply contributes nothing; it never aborts the
+  // whole search.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async function _unifiedSearch(query, limit = 10) {
+    const terms = _expandQuery(query);
+
+    // Call through the *public*, patchable entry points so anything layered
+    // on top externally (packaged foods, imported/custom foods) is included —
+    // not the private _searchLocal()/module-local closures, which wouldn't
+    // see those runtime patches.
+    const publicSearchLocal = (typeof global.NTFoodSearch?.searchLocal === 'function')
+      ? global.NTFoodSearch.searchLocal : searchLocal;
+    const publicSearchEnteral = (typeof global.NTFoodSearch?.searchEnteral === 'function')
+      ? global.NTFoodSearch.searchEnteral : _searchEnteral;
+
+    let localHits = [];
+    try { localHits = publicSearchLocal(query, limit) || []; } catch (_e) { /* ignore */ }
+
+    let enteralHits = [];
+    try { enteralHits = publicSearchEnteral(terms, Math.min(limit, 8)) || []; } catch (_e) { /* ignore */ }
+
+    const [chakudyaFoods, chakudyaLookup, chakudyaFormulas] = await Promise.all([
+      _searchChakudyaFoods(query, limit).catch(() => []),
+      _searchChakudyaLookup(query).catch(() => null),
+      _searchChakudyaFormulas(query, Math.min(limit, 8)).catch(() => []),
+    ]);
+
+    const combined = [
+      ...localHits,
+      ...enteralHits,
+      ...chakudyaFoods,
+      ...(chakudyaLookup ? [chakudyaLookup] : []),
+      ...chakudyaFormulas,
+    ];
+
+    return _dedupeRank(combined, limit);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -870,33 +999,35 @@
    * Main entry point.
    * @param  {string}  query        - User search query
    * @param  {object}  [opts]
-   * @param  {boolean} [opts.enrich=false]  Force API enrichment even if local is complete
-   * @param  {boolean} [opts.multi=false]   Return array of top matches (up to 5)
+   * @param  {boolean} [opts.enrich=false]  Force CNR enrichment even if local is complete
+   * @param  {boolean} [opts.multi=false]   Unified multi-source search — returns
+   *                                        an array of up to `opts.limit` merged,
+   *                                        deduped, ranked matches drawn from
+   *                                        every layer (local, packaged, CNR
+   *                                        /foods, /foods/lookup, /formulas)
+   *                                        instead of a single best guess.
+   * @param  {number}  [opts.limit=10]      Cap for multi mode.
    * @returns {Promise<object|object[]|null>}
    */
   async function searchFood(query, opts = {}) {
-    const { enrich = false, multi = false } = opts;
-    const cacheKey = _norm(query) + (enrich ? '|e' : '') + (multi ? '|m' : '');
+    const { enrich = false, multi = false, limit = 10 } = opts;
+    const cacheKey = _norm(query) + (enrich ? '|e' : '') + (multi ? '|m' + limit : '');
 
     if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
-    const terms   = _expandQuery(query);
-    const locals  = _searchLocal(terms);
-
-    // ── Multi-result mode (for autocomplete / global search UI) ────────────
+    // ── Unified multi-result mode — complete CNR consumer ──────────────────
     if (multi) {
-      const regional = _searchRegional(terms, limit);
-      const combined = [...locals, ...regional];
-      combined.sort((a, b) => b.confidenceScore - a.confidenceScore);
-      const result = combined.slice(0, limit);
+      const result = await _unifiedSearch(query, limit);
       _cache.set(cacheKey, result);
       return result;
     }
 
     // ── Single best match mode ─────────────────────────────────────────────
+    const terms  = _expandQuery(query);
+    const locals = _searchLocal(terms);
     let best = locals[0] ?? null;
 
-    // Layer 1 complete match → return immediately
+    // Layer 1 complete match → return immediately (offline-first fast path)
     if (best && _isComplete(best._raw ?? best) && !enrich) {
       const out = { ...best };
       delete out._raw;
@@ -904,38 +1035,10 @@
       return out;
     }
 
-    // Layer 1.5 — Regional FCT (offline, instant)
-    const regionalResults = _searchRegional(terms, 5);
-    if (regionalResults.length) {
-      const topRegional = regionalResults[0];
-      if (!best) {
-        best = topRegional;
-      } else {
-        // Keep whichever has the higher confidence; merge micronutrients in
-        if (topRegional.confidenceScore >= best.confidenceScore) {
-          best = _merge(topRegional, best);
-          best.sourceUsed = 'regional';
-        } else {
-          // Decorate local result with micronutrients from regional match
-          for (const mic of ['iron', 'zinc', 'vitA', 'calcium']) {
-            if (best[mic] == null && topRegional[mic] != null) best[mic] = topRegional[mic];
-          }
-        }
-      }
-      // If regional result is complete (has all macros), return without hitting APIs
-      if (!enrich && best.kcal != null && best.pro != null &&
-          best.cho != null && best.fat != null) {
-        const out = { ...best };
-        delete out._raw;
-        _cache.set(cacheKey, out);
-        return out;
-      }
-    }
-
-    // Layer 2 — Chakudya API
-    // One call covers what used to be two (direct FDC + direct OFF text
-    // search): the worker cascades through its own tables, then USDA FDC,
-    // Open Food Facts, and FatSecret server-side before replying.
+    // Layer 2 — Chakudya API single best match. One call covers what used to
+    // be two (direct FDC + direct OFF text search): the worker cascades
+    // through its own tables, then USDA FDC, Open Food Facts, and FatSecret
+    // server-side before replying.
     const chakudyaResult = await _searchChakudyaLookup(query);
 
     if (!best) {
@@ -950,115 +1053,39 @@
   }
 
   /**
-   * Fast synchronous local-only search (no API calls).
+   * Fast synchronous local-only search (no network calls).
    * Returns top matching local foods — useful for live autocomplete.
    * @param  {string} query
-   * @param  {number} [limit=8]
+   * @param  {number} [limit=10]
    * @returns {Array}
    */
   function searchLocal(query, limit = 10) {
     if (!query || query.trim().length < 2) return [];
-    const terms    = _expandQuery(query);
-    const local    = _searchLocal(terms, limit);
-    const regional = _searchRegional(terms, limit);
-    const combined = [...local, ...regional];
-    combined.sort((a, b) => b.confidenceScore - a.confidenceScore);
-    return combined.slice(0, limit);
+    const terms = _expandQuery(query);
+    return _searchLocal(terms, limit);
   }
 
   /**
-   * Clear the in-memory session cache.
+   * Clear the in-memory session cache (search results + formula-registry list).
    */
   function clearCache() {
     _cache.clear();
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // REGIONAL UI HELPERS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * filterByCountry(results, countryCodes)
-   * e.g. filterByCountry(results, ['TZ', 'ZM'])  → only Tanzania & Zambia
-   *      filterByCountry(results, ['MW'])          → only Malawi (local) entries
-   * Pass null / [] to return all.
-   */
-  function filterByCountry(results, countryCodes) {
-    if (!countryCodes || !countryCodes.length) return results;
-    return results.filter(r =>
-      r.country
-        ? countryCodes.includes(r.country)
-        : countryCodes.includes('MW')
-    );
-  }
-
-  /**
-   * getRegionalStats() → { total, byCountry, sources } | null
-   * Useful for an "About regional data" info panel.
-   */
-  function getRegionalStats() {
-    if (typeof REGIONAL_FCT === 'undefined') return null;
-    const byCountry = {};
-    for (const f of REGIONAL_FCT) byCountry[f.country] = (byCountry[f.country] || 0) + 1;
-    return {
-      total: REGIONAL_FCT.length,
-      byCountry,
-      sources: typeof REGIONAL_FCT_META !== 'undefined' ? REGIONAL_FCT_META.sources : [],
-    };
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // PUBLIC BARCODE SEARCH — 2-layer barcode resolution
-  //
-  //   Layer A — Local registry → MALAWI_FCT (instant, offline, full nutrition)
-  //             Checked first; returns immediately on hit.
-  //             barcodeSource: 'LocalDB' | confidenceScore 0.97 (exact) / 0.72 (prefix)
-  //
-  //   Layer B — Chakudya API barcode lookup (online, 7-day localStorage cache)
-  //             Only reached when Layer A has no match. Server-side cascade
-  //             through Chakudya's packaged_foods table, then Open Food Facts.
-  //             barcodeSource: 'Chakudya' | confidenceScore 0.88 (packaged) / 0.62 (external)
-  //
-  // Returns a unified food object or null when both layers find nothing.
-  // Throws on network error so the scanner UI can show a friendly message.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Resolve a scanned barcode to a food object.
-   *
-   * Layer A — Local registry (offline, instant, full Malawi FCT nutrition).
-   * Layer B — Chakudya API lookup (online, per-100g nutrients).
-   *
-   * @param  {string} barcode  EAN-13 / UPC-A / GTIN-14
-   * @returns {Promise<object|null>}
-   */
-  async function searchBarcode(barcode) {
-    if (!barcode) return null;
-
-    // ── Layer A: local registry (offline, instant) ────────────────────────
-    const localResult = _searchLocalBarcode(barcode);
-    if (localResult) return localResult;
-
-    // ── Layer B: Chakudya API barcode lookup ───────────────────────────────
-    return await _fetchOFFBarcode(barcode);
+    _formulasCache = null;
   }
 
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
   global.NTFoodSearch = {
-    search:             searchFood,
-    searchLocal:        searchLocal,
+    search:             searchFood,        // single best-match OR unified multi (opts.multi=true)
+    searchLocal:        searchLocal,       // Layer 1 — local MALAWI_FCT (sync, offline)
     searchEnteral:      _searchEnteral,    // Layer 1b — local Formula/Enteral DB search (per 100 mL)
-    searchBarcode:      searchBarcode,      // barcode scan entry-point (offline-first)
+    searchBarcode:      searchBarcode,     // barcode scan entry-point — Chakudya-only
     clearCache:         clearCache,
-    _synonymMap:        SYNONYM_MAP,        // exposed for debugging only
-    _localBarcodeDB:    _LOCAL_BARCODE_DB,  // exposed for dev inspection
-    _brandPrefixDB:     _BRAND_PREFIX_DB,   // exposed for dev inspection
-    _fdcSearch:         _searchFDC,         // legacy key name — now aliases Chakudya lookup
-    _offSearch:         _searchOFF,         // legacy key name — now aliases Chakudya lookup
-    _fetchOFFBarcode:   _fetchOFFBarcode,   // public barcode fetch (Layer B, now via Chakudya) — for scanner UI
-    _regionalSearch:    _searchRegional,    // direct regional FCT search
-    filterByCountry:    filterByCountry,    // filter results by country code(s)
-    getRegionalStats:   getRegionalStats,   // regional DB coverage summary
+    _synonymMap:        SYNONYM_MAP,             // exposed for debugging only
+    _fdcSearch:         _searchFDC,              // legacy key name — now aliases Chakudya lookup
+    _offSearch:         _searchOFF,              // legacy key name — now aliases Chakudya lookup
+    _fetchOFFBarcode:   _fetchOFFBarcode,        // public barcode fetch (Chakudya) — for scanner UI
+    _searchChakudyaFoods:    _searchChakudyaFoods,    // GET /foods?search= — direct access for debugging
+    _searchChakudyaFormulas: _searchChakudyaFormulas, // GET /formulas — direct access for debugging
   };
 
 })(typeof window !== 'undefined' ? window : this);
