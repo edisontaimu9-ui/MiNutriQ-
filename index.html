@@ -10588,6 +10588,7 @@ function ntClear(scopeId, resultIds) {
   const _SRC_BADGE = {
     local:          { label:'Malawi FCT',    color:'#1de9d4', bg:'rgba(29,233,212,.10)', border:'rgba(29,233,212,.30)' },
     'Malawi FCT':   { label:'Malawi FCT',    color:'#1de9d4', bg:'rgba(29,233,212,.10)', border:'rgba(29,233,212,.30)' },
+    cached:         { label:'Chakudya (offline)', color:'#2dd4bf', bg:'rgba(45,212,191,.10)', border:'rgba(45,212,191,.30)' },
     UCT:            { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     'UCT Exchange': { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     formula:        { label:'Formula / Enteral', color:'#f0b429', bg:'rgba(240,180,41,.10)', border:'rgba(240,180,41,.30)' },
@@ -10610,7 +10611,7 @@ function ntClear(scopeId, resultIds) {
 
   /* ── confidence bar (thin stripe at card top) ────────────── */
   function _confBar(score, sourceUsed, cat) {
-    const isLocal = sourceUsed === 'local' || (cat && (cat.startsWith('UCT') || cat === 'Malawi FCT'));
+    const isLocal = sourceUsed === 'local' || sourceUsed === 'cached' || (cat && (cat.startsWith('UCT') || cat === 'Malawi FCT'));
     const col = isLocal ? 'var(--teal)' : 'rgba(96,165,250,.7)';
     const pct = Math.round((score || 0.5) * 100);
     return `<div style="height:2px;background:var(--border);position:relative;overflow:hidden">
@@ -10709,10 +10710,10 @@ function ntClear(scopeId, resultIds) {
     const fmt  = (v,d=1) => v != null ? (d===0 ? String(+(+v).toFixed(0)) : (+(+v).toFixed(d))+'g') : '—';
     const unit = food.unit || 'g';   // ENTERAL_DB entries are per 100 mL, not per 100 g
 
-    // Confidence score: local = 0.9+, FDC = ~0.6
-    const conf  = food.confidenceScore ?? (food.sourceUsed === 'local' ? 0.9 : 0.6);
+    // Confidence score: local/cached = 0.9+, FDC = ~0.6
+    const conf  = food.confidenceScore ?? ((food.sourceUsed === 'local' || food.sourceUsed === 'cached') ? 0.9 : 0.6);
     const cat   = food.cat || '';
-    const isLocal = food.sourceUsed === 'local' || cat.startsWith('UCT') || cat === 'Malawi FCT';
+    const isLocal = food.sourceUsed === 'local' || food.sourceUsed === 'cached' || cat.startsWith('UCT') || cat === 'Malawi FCT';
     const subtitle = food.isFormula && food.route ? `${esc(cat)} · ${esc(food.route)}` : esc(cat);
 
     return `

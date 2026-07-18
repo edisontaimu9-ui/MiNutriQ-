@@ -9,6 +9,13 @@
  *
  * ── TEXT SEARCH  (searchFood / searchLocal) ───────────────────────────────
  *
+ * There is no bundled offline dataset any more. `MALAWI_FCT` and
+ * `ENTERAL_DB` (the old hardcoded food/formula arrays) are no longer read by
+ * this file at all. Instead, "instant/offline" results now come from a
+ * genuine CNR result cache — an IndexedDB store that fills up from real
+ * CNR responses as the app is used, mirrored in memory for synchronous
+ * scoring. See "PERSISTENT CNR CACHE" below for the full design. In short:
+ *
  *   Layer 0   — Packaged Foods (Chakudya `/packaged`)
  *               ▶ Not implemented in this file — `foodData.js`'s
  *                 PackagedFoodsDB module owns the full `/packaged` table
@@ -18,29 +25,40 @@
  *                 (patchable) `searchLocal` when building unified results so
  *                 packaged foods are never left out — see `_unifiedSearch()`.
  *
- *   Layer 1   — Local DB (MALAWI_FCT)
- *               ▶ Instant, offline, always tried first. This is now
- *                 explicitly an *offline cache*, not the system of record —
- *                 CNR's own `/foods` table is the authoritative "standard
- *                 foods" source (see Layer 2b). Kept because Oasis is used
- *                 at hospital sites (QECH/KUHeS) with unreliable
- *                 connectivity, where instant offline search is a real
- *                 clinical-workflow requirement, not a nicety.
- *               ▶ Returns immediately if a complete match is found (single
+ *   Layer 1   — CNR foods cache (IndexedDB, replaces MALAWI_FCT)
+ *               ▶ Instant, offline, always tried first — but the data in it
+ *                 is 100% real Chakudya responses, cached client-side after
+ *                 every live `/foods` / `/foods/lookup` hit. Nothing is
+ *                 preloaded at build time. A food that has never been
+ *                 searched for on this device while online will not be
+ *                 found here yet — the first search always has to reach
+ *                 CNR at least once. After that, it's instant and offline
+ *                 from then on, on that device.
+ *               ▶ Returns immediately if a cached match is found (single
  *                 best-match mode only — unified/multi mode always also
- *                 consults CNR so the result set is genuinely complete).
+ *                 consults live CNR so the result set is genuinely complete
+ *                 and the cache stays fresh).
  *
- *   Layer 1b  — Enteral / Formula DB (ENTERAL_DB from main.js)
- *               ▶ Instant, offline. Curated, clinically-annotated commercial
- *                 therapeutic milks, sip feeds, tube feeds (brand, route,
- *                 osmolality, indication notes) — this is clinical reference
- *                 content for the Formula Reference tool, not a competing
- *                 food-search dataset, so it is kept as-is. Values are per
- *                 100 mL — results carry unit:'mL' and isFormula:true.
+ *   Layer 1b  — CNR formula-registry cache (IndexedDB, replaces ENTERAL_DB)
+ *               ▶ Instant, offline. Unlike the foods cache, this one is kept
+ *                 *fully* in sync, not just opportunistically: the whole
+ *                 `/formulas` list is small and unfiltered server-side, so
+ *                 it's fetched wholesale on load and every 15 minutes while
+ *                 online (the same pattern PackagedFoodsDB already uses for
+ *                 `/packaged`), so offline formula search has complete
+ *                 registry coverage, not just "whatever was searched
+ *                 before." Values are per 100 mL — results carry
+ *                 unit:'mL' and isFormula:true.
+ *               ▶ This is CNR's own community formula registry — a
+ *                 different, separate dataset from the curated
+ *                 clinically-annotated `ENTERAL_DB` still used by the
+ *                 standalone Formula Reference tool elsewhere in Oasis
+ *                 (main.js). Food Search no longer reads `ENTERAL_DB` at
+ *                 all; that array is untouched but is now solely that other
+ *                 tool's concern, not Food Search's.
  *               ▶ Exposed as a standalone searchEnteral() call so UIs can
  *                 render it as its own section, and also folded into
- *                 unified/multi search results alongside CNR's own formula
- *                 registry (Layer 2c) so neither source is missed.
+ *                 unified/multi search results.
  *
  *   Layer 2   — Chakudya API: single best match  (_searchChakudyaLookup)
  *               ▶ GET /foods/lookup?q= — one call, server-side cascade:
@@ -114,7 +132,7 @@
  *     kcal, kj, pro, cho, fat,       // per 100 g (per 100 mL for formulas)
  *     measures[],                     // from local DB if available
  *     fiber, sodium, sugar, salt,     // extras from CNR if not in local
- *     sourceUsed,                     // 'local' | 'chakudya' | 'custom' | 'combined'
+ *     sourceUsed,                     // 'cached' | 'chakudya' | 'custom' | 'combined'
  *     dbSource,                       // human-readable source label
  *     matchTier,                      // 'exact' | 'alias' | 'token' (where applicable)
  *     barcodeSource,                  // 'Chakudya'  (barcode pipeline only)
@@ -139,7 +157,7 @@
 
   // ── REGIONAL SYNONYM MAP ──────────────────────────────────────────────────
   // Maps alternative / regional names → canonical local-DB / CNR search term(s).
-  // Keys are lower-cased; values are the terms to search against MALAWI_FCT
+  // Keys are lower-cased; values are the terms to search against the CNR
   // and CNR's /foods and /formulas.
   const SYNONYM_MAP = {
     // Maize staples
@@ -202,11 +220,13 @@
   };
 
   // ── COMPLETENESS THRESHOLD ─────────────────────────────────────────────────
-  // A local result is "complete" (no CNR fallback needed in single best-match
-  // mode) when it has at least these fields populated.
+  // A cached result is "complete" (no live CNR call needed in single
+  // best-match mode) when it has at least these fields populated.
   const REQUIRED_FIELDS = ['kcal', 'pro', 'cho', 'fat'];
 
-  // ── CACHE (session-level, keyed by normalised query) ──────────────────────
+  // ── SESSION CACHE (in-memory only, keyed by normalised query+opts) ────────
+  // Distinct from the PERSISTENT CNR CACHE below: this just avoids repeating
+  // an identical search() call within the same page session.
   const _cache = new Map();
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -291,29 +311,13 @@
     return [key];
   }
 
-  /** Check if a local food object has all required macro fields */
+  /** Check if a cached food object has all required macro fields. Cached
+   *  objects are already flat/normalised (kcal/pro/cho/fat at the top
+   *  level), unlike the old MALAWI_FCT raw shape, so this no longer needs
+   *  to dig into a `measures[0]` sub-object. */
   function _isComplete(food) {
     if (!food) return false;
-    const m = food.measures?.[0];
-    if (!m) return false;
-    return REQUIRED_FIELDS.every(f => m[f] != null && m[f] !== '' && m[f] !== '—');
-  }
-
-  /** Extract per-100g macros from a MALAWI_FCT food entry */
-  function _per100(food) {
-    const m = food.measures?.[0];
-    if (!m) return {};
-    const raw  = m.lbl || '';
-    const wm   = raw.match(/\((\d+(?:\.\d+)?)\s*(?:g|mL|ml)\)/i);
-    const wg   = m.weight ?? (wm ? parseFloat(wm[1]) : 100);
-    const f    = wg > 0 ? 100 / wg : 1;
-    return {
-      kcal: +(m.kcal * f).toFixed(1),
-      kj:   +(m.kj   * f).toFixed(0),
-      pro:  +(m.pro   * f).toFixed(2),
-      cho:  +(m.cho   * f).toFixed(2),
-      fat:  +(m.fat   * f).toFixed(2),
-    };
+    return REQUIRED_FIELDS.every(f => food[f] != null && food[f] !== '' && food[f] !== '—');
   }
 
   /** Safe fetch with manual AbortController timeout (Android WebView compat) */
@@ -327,7 +331,8 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1 — LOCAL DATABASE SEARCH  (Malawi FCT — offline instant cache)
+  // TIERED SCORER — shared by the CNR foods cache, the CNR formula-registry
+  // cache, and CNR formula-registry text matching (Layer 2c).
   //
   // Three-tier ranking — results are sorted within each tier by score, and
   // a higher tier always beats a lower tier in the final list:
@@ -353,8 +358,8 @@
   /** Scores a single food entry against an already-normalised query term.
    *  Returns { score, tier } where tier is 'exact' | 'alias' | 'token'.
    *  Returns null when the food does not meet any matching threshold.
-   *  Works against any object with .name / .altNames — reused by the local
-   *  DB, enteral DB, and CNR formula-registry scorers. */
+   *  Works against any object with .name / .altNames — reused everywhere a
+   *  list of candidates needs ranking against a query. */
   function _scoreFood(normTerm, food) {
     const normName = _norm(food.name);
 
@@ -384,22 +389,19 @@
   /** Tier sort order — lower number = higher priority */
   const _TIER_ORDER = { exact: 0, alias: 1, token: 2 };
 
-  function _searchLocal(terms, limit = 10) {
-    const db = (typeof MALAWI_FCT !== 'undefined') ? MALAWI_FCT : [];
-    if (!db.length) return [];
-
-    // Pre-normalise all search terms once
-    const normTerms = terms.map(_norm).filter(Boolean);
-
+  /** Generic: score+rank a Map<string, unifiedFoodObject> against a list of
+   *  search terms, tier-then-score sorted, capped to `limit`. Used by both
+   *  the foods cache and the formulas cache below — they only differ in
+   *  which Map they read from. */
+  function _rankCacheMap(cacheMap, normTerms, limit) {
+    if (!cacheMap.size || !normTerms.length) return [];
     const hits = [];
-    for (const food of db) {
+    for (const food of cacheMap.values()) {
       let bestScore = 0;
       let bestTier  = null;
-
       for (const nt of normTerms) {
         const result = _scoreFood(nt, food);
         if (!result) continue;
-        // Prefer higher-priority tier; break ties by score
         if (
           bestTier === null ||
           _TIER_ORDER[result.tier] < _TIER_ORDER[bestTier] ||
@@ -409,115 +411,194 @@
           bestTier  = result.tier;
         }
       }
-
-      if (bestTier !== null) {
-        hits.push({ food, score: bestScore, tier: bestTier });
-      }
+      if (bestTier !== null) hits.push({ food, score: bestScore, tier: bestTier });
     }
+    hits.sort((a, b) => _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] || b.score - a.score);
+    return hits.slice(0, limit).map(r => ({
+      ...r.food,
+      matchTier:       r.tier,
+      confidenceScore: +r.score.toFixed(2),
+    }));
+  }
 
-    // Sort: tier priority first, then descending score within tier
-    hits.sort((a, b) =>
-      _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] ||
-      b.score - a.score
-    );
+  // ══════════════════════════════════════════════════════════════════════════
+  // PERSISTENT CNR CACHE  (IndexedDB — replaces the old hardcoded MALAWI_FCT
+  // and ENTERAL_DB arrays as the offline layer)
+  //
+  // Food Search no longer ships a bundled offline dataset. Every successful
+  // *live* CNR response (from _searchChakudyaFoods / _searchChakudyaLookup
+  // below) is written into this cache — memory-mirrored for instant
+  // synchronous scoring, and persisted to IndexedDB so it survives reloads
+  // and works fully offline afterwards. A food that has genuinely never
+  // been seen on this device while online won't be in here yet; the first
+  // time it's searched for, the app has to reach CNR at least once — after
+  // that it's instant and offline from then on, on that device.
+  //
+  // The formula registry (/formulas) is small and has no server-side text
+  // filter, so instead of caching opportunistically it's synced *wholesale*
+  // on load and every 15 minutes while online (same pattern PackagedFoodsDB
+  // already uses for /packaged) — offline formula search therefore has full
+  // registry coverage, not just "whatever happened to be searched before."
+  //
+  // Gracefully degrades to memory-only (no persistence across reloads) if
+  // IndexedDB is unavailable (e.g. some locked-down WebView configurations)
+  // — the cache still works for the current session, it just starts empty
+  // again next launch.
+  // ══════════════════════════════════════════════════════════════════════════
 
-    return hits.slice(0, limit).map(r => {
-      const macros = _per100(r.food);
-      return {
-        ...r.food,
-        ...macros,
-        sourceUsed:      'local',
-        dbSource:        'Malawi FCT (offline cache)',
-        matchTier:       r.tier,           // 'exact' | 'alias' | 'token'
-        confidenceScore: +r.score.toFixed(2),
-        lastUpdated:     null,
-        _raw:            r.food,
+  const CACHE_DB_NAME    = 'OasisCNRCache';
+  const CACHE_DB_VERSION = 1;
+  const FOOD_STORE       = 'foods';
+  const FORMULA_STORE    = 'formulas';
+
+  const _cachedFoods    = new Map(); // normalised name -> unified food object
+  const _cachedFormulas = new Map(); // normalised name -> unified formula object
+
+  let _idb = null;
+  let _cacheReadyResolve;
+  const _cacheReadyPromise = new Promise(res => { _cacheReadyResolve = res; });
+
+  function _hasIDB() {
+    return typeof indexedDB !== 'undefined';
+  }
+
+  function _openCacheDB() {
+    return new Promise((resolve, reject) => {
+      if (!_hasIDB()) { reject(new Error('IndexedDB unavailable')); return; }
+      const req = indexedDB.open(CACHE_DB_NAME, CACHE_DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(FOOD_STORE))    db.createObjectStore(FOOD_STORE, { keyPath: 'key' });
+        if (!db.objectStoreNames.contains(FORMULA_STORE)) db.createObjectStore(FORMULA_STORE, { keyPath: 'key' });
       };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror   = () => reject(req.error);
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // LAYER 1b — ENTERAL / FORMULA DATABASE SEARCH  (local, curated clinical DB)
-  //
-  // Searches ENTERAL_DB (defined in main.js — therapeutic milks, sip feeds,
-  // tube feeds). Reuses the same three-tier ranking as Layer 1 (_scoreFood /
-  // _TIER_ORDER), so "Fresubin", "F-75", "Ensure", etc. all resolve via
-  // exact → alias → fuzzy token matching, same as ordinary foods.
-  //
-  // ENTERAL_DB values are documented "per 100 mL" (not per 100 g) — every
-  // result carries unit:'mL' and isFormula:true so calling UIs can label
-  // quantities correctly instead of assuming grams.
-  //
-  // Falls through silently (returns []) when ENTERAL_DB is not yet loaded
-  // (e.g. main.js hasn't executed yet) or is empty. See Layer 2c below for
-  // CNR's own (separate, community-maintained) formula registry.
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /** Convert a raw ENTERAL_DB entry into the unified food-result shape. */
-  function _enteralToUnified(f, tier, score) {
-    const kcal = +(f.kcalML * 100).toFixed(0);
-    return {
-      id:              'EN_' + _norm(f.name).replace(/\s+/g, '_'),
-      name:            f.name,
-      cat:             f.cat,
-      route:           f.route ?? null,
-      kcal:            kcal,
-      kj:              Math.round(kcal * 4.184),
-      pro:             f.pro,
-      cho:             f.cho,
-      fat:             f.fat,
-      fibre:           f.fibre ?? null,
-      fiber:           f.fibre ?? null,   // alias (US spelling) for consumers expecting `fiber`
-      osm:             f.osm   ?? null,
-      note:            f.note  ?? null,
-      unit:            'mL',              // values are per 100 mL, not per 100 g
-      isFormula:       true,
-      sourceUsed:      'local',
-      dbSource:        'Enteral Formula DB',
-      matchTier:       tier,              // 'exact' | 'alias' | 'token'
-      confidenceScore: +score.toFixed(2),
-      lastUpdated:     null,
-      _raw:            f,
-    };
+  function _idbGetAll(storeName) {
+    return new Promise((resolve) => {
+      if (!_idb) { resolve([]); return; }
+      try {
+        const tx  = _idb.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror   = () => resolve([]);
+      } catch (_e) { resolve([]); }
+    });
   }
 
-  function _searchEnteral(terms, limit = 8) {
-    const db = (typeof ENTERAL_DB !== 'undefined') ? ENTERAL_DB : [];
-    if (!db.length) return [];
+  function _idbPut(storeName, record) {
+    if (!_idb) return;
+    try {
+      const tx = _idb.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).put(record);
+    } catch (_e) { /* best-effort persistence — memory cache still holds it */ }
+  }
 
+  async function _initCache() {
+    try {
+      _idb = await _openCacheDB();
+      const [foods, formulas] = await Promise.all([
+        _idbGetAll(FOOD_STORE),
+        _idbGetAll(FORMULA_STORE),
+      ]);
+      for (const rec of foods)    _cachedFoods.set(rec.key, rec.value);
+      for (const rec of formulas) _cachedFormulas.set(rec.key, rec.value);
+    } catch (_e) {
+      // IndexedDB unavailable — cache runs in-memory-only for this session.
+    }
+    _cacheReadyResolve();
+  }
+  _initCache();
+
+  /** Upsert a unified food object into the CNR foods cache (memory + IndexedDB). */
+  function _cacheFood(food) {
+    if (!food || !food.name) return;
+    const key = _norm(food.name);
+    if (!key) return;
+    const cached = {
+      ...food,
+      sourceUsed: 'cached',
+      dbSource:   (food.dbSource || 'Chakudya Nutrition Registry') + ' (cached offline)',
+      cachedAt:   Date.now(),
+    };
+    _cachedFoods.set(key, cached);
+    _idbPut(FOOD_STORE, { key, value: cached });
+  }
+
+  /** Upsert a unified formula object into the CNR formulas cache (memory + IndexedDB). */
+  function _cacheFormula(formula) {
+    if (!formula || !formula.name) return;
+    const key = _norm(formula.name);
+    if (!key) return;
+    const cached = {
+      ...formula,
+      sourceUsed: 'cached',
+      dbSource:   (formula.dbSource || 'Chakudya Nutrition Registry (formulas)') + ' (cached offline)',
+      cachedAt:   Date.now(),
+    };
+    _cachedFormulas.set(key, cached);
+    _idbPut(FORMULA_STORE, { key, value: cached });
+  }
+
+  /** Resolves once the IndexedDB-backed cache has hydrated into memory
+   *  (or has given up and settled for memory-only). Exposed publicly as
+   *  NTFoodSearch.ready() for callers that want to wait before their first
+   *  search rather than risk racing an empty cache right after page load. */
+  function _cacheReady() { return _cacheReadyPromise; }
+
+  // ── Layer 1b sync: pull the whole /formulas registry periodically ─────────
+  const FORMULAS_SYNC_INTERVAL = 15 * 60 * 1000; // 15 min
+  let _lastFormulasSync = 0;
+
+  async function _syncFormulasFromCNR() {
+    try {
+      const url = `${CHAKUDYA_BASE}/formulas?limit=200`;
+      const res = await _fetchWithTimeout(url, 10000);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.status !== 'success' || !Array.isArray(json.data)) return;
+      for (const raw of json.data) {
+        const unified = _chakudyaFormulaRowToUnified(raw);
+        if (unified) _cacheFormula(unified);
+      }
+      _lastFormulasSync = Date.now();
+    } catch (_e) {
+      // Offline or unreachable — whatever's already cached from the last
+      // successful sync stands.
+    }
+  }
+
+  _cacheReadyPromise.then(() => {
+    _syncFormulasFromCNR();
+    setInterval(() => {
+      if (Date.now() - _lastFormulasSync >= FORMULAS_SYNC_INTERVAL) _syncFormulasFromCNR();
+    }, FORMULAS_SYNC_INTERVAL);
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 1 — CNR FOODS CACHE SEARCH  (instant, offline, IndexedDB-backed)
+  // Reads _cachedFoods, populated opportunistically by every live
+  // _searchChakudyaFoods() / _searchChakudyaLookup() hit (see Layer 2 / 2b).
+  // ══════════════════════════════════════════════════════════════════════════
+
+  function _searchLocal(terms, limit = 10) {
+    const normTerms = terms.map(_norm).filter(Boolean);
+    return _rankCacheMap(_cachedFoods, normTerms, limit);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // LAYER 1b — CNR FORMULA-REGISTRY CACHE SEARCH  (instant, offline,
+  // IndexedDB-backed, kept fully in sync — see _syncFormulasFromCNR above)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  function _searchEnteral(terms, limit = 8) {
     // Accept either a pre-split terms array (internal callers) or a raw
     // query string (public callers) for convenience.
     const termList  = Array.isArray(terms) ? terms : _expandQuery(String(terms || ''));
     const normTerms = termList.map(_norm).filter(Boolean);
-    if (!normTerms.length) return [];
-
-    const hits = [];
-    for (const f of db) {
-      let bestScore = 0;
-      let bestTier  = null;
-
-      for (const nt of normTerms) {
-        const result = _scoreFood(nt, f);
-        if (!result) continue;
-        if (
-          bestTier === null ||
-          _TIER_ORDER[result.tier] < _TIER_ORDER[bestTier] ||
-          (result.tier === bestTier && result.score > bestScore)
-        ) {
-          bestScore = result.score;
-          bestTier  = result.tier;
-        }
-      }
-
-      if (bestTier !== null) hits.push({ food: f, score: bestScore, tier: bestTier });
-    }
-
-    hits.sort((a, b) =>
-      _TIER_ORDER[a.tier] - _TIER_ORDER[b.tier] ||
-      b.score - a.score
-    );
-
-    return hits.slice(0, limit).map(r => _enteralToUnified(r.food, r.tier, r.score));
+    return _rankCacheMap(_cachedFormulas, normTerms, limit);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -588,7 +669,9 @@
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return null;
       const json = await res.json();
-      return _chakudyaLookupToUnified(json, query);
+      const unified = _chakudyaLookupToUnified(json, query);
+      if (unified) _cacheFood(unified); // warm the offline cache with this live hit
+      return unified;
     } catch (_e) {
       return null;
     }
@@ -657,7 +740,9 @@
       if (!res.ok) return [];
       const json = await res.json();
       if (json.status !== 'success' || !Array.isArray(json.data)) return [];
-      return json.data.map(_chakudyaFoodRowToUnified).filter(Boolean);
+      const results = json.data.map(_chakudyaFoodRowToUnified).filter(Boolean);
+      results.forEach(_cacheFood); // warm the offline cache with every live hit
+      return results;
     } catch (_e) {
       return [];
     }
@@ -667,12 +752,13 @@
   // LAYER 2c — CHAKUDYA API: FORMULA REGISTRY  (GET /formulas)
   //
   // Previously unused anywhere in the app. There is no text-search query
-  // param on this endpoint (only `route`), so the (small, 24h-edge-cached)
-  // list is fetched once per 15-minute session window and matched client
-  // side with the same tiered exact/alias/fuzzy scorer used for local
-  // search. This is CNR's own, separately-maintained formula registry — it
-  // is folded into unified/multi search results alongside (not instead of)
-  // the curated ENTERAL_DB in Layer 1b, so neither source is missed.
+  // param on this endpoint (only `route`), so rather than duplicating fetch
+  // logic here, this layer piggybacks on the same wholesale periodic sync
+  // that keeps the persistent formulas cache warm (_syncFormulasFromCNR,
+  // defined above) — nudging a sync first if the cache looks stale/empty,
+  // then ranking with the shared tiered scorer. This is CNR's own,
+  // separately-maintained formula registry; Food Search no longer reads the
+  // curated `ENTERAL_DB` array at all (see file header).
   //
   // Field names for `enteral_formulas` rows aren't fixed in the API docs
   // beyond `route`, so the normaliser checks several plausible key names,
@@ -682,27 +768,6 @@
   // always expressed as kcal/mL (~1.0–2.0) rather than kcal/100 mL in
   // source data.
   // ══════════════════════════════════════════════════════════════════════════
-
-  const FORMULAS_CACHE_TTL = 15 * 60 * 1000; // 15 min
-  let _formulasCache = null; // { ts, data }
-
-  async function _fetchChakudyaFormulasList() {
-    const now = Date.now();
-    if (_formulasCache && (now - _formulasCache.ts) < FORMULAS_CACHE_TTL) {
-      return _formulasCache.data;
-    }
-    try {
-      const url = `${CHAKUDYA_BASE}/formulas?limit=200`;
-      const res = await _fetchWithTimeout(url, 8000);
-      if (!res.ok) return _formulasCache?.data ?? [];
-      const json = await res.json();
-      const data = (json.status === 'success' && Array.isArray(json.data)) ? json.data : [];
-      _formulasCache = { ts: now, data };
-      return data;
-    } catch (_e) {
-      return _formulasCache?.data ?? [];
-    }
-  }
 
   /** Normalise one raw row from GET /formulas into the unified food-result shape. */
   function _chakudyaFormulaRowToUnified(d) {
@@ -736,52 +801,23 @@
   }
 
   /**
-   * Match the query against CNR's formula registry (client-side, since the
-   * endpoint has no search param). Best-effort: resolves to [] on any error.
+   * Match the query against CNR's formula registry. If the persistent cache
+   * looks stale or has never synced, kicks off a fresh wholesale sync first
+   * (best-effort — proceeds with whatever's cached if that fails, e.g.
+   * offline) then ranks with the shared tiered scorer.
    * @param {string} query
    * @param {number} [limit=8]
    * @returns {Promise<object[]>}
    */
   async function _searchChakudyaFormulas(query, limit = 8) {
-    const terms = _expandQuery(query).map(_norm).filter(Boolean);
-    if (!terms.length) return [];
+    const normTerms = _expandQuery(query).map(_norm).filter(Boolean);
+    if (!normTerms.length) return [];
 
-    const list = await _fetchChakudyaFormulasList();
-    if (!list.length) return [];
-
-    const hits = [];
-    for (const raw of list) {
-      const unified = _chakudyaFormulaRowToUnified(raw);
-      if (!unified) continue;
-
-      let bestScore = 0;
-      let bestTier  = null;
-      for (const t of terms) {
-        const r = _scoreFood(t, unified);
-        if (!r) continue;
-        if (
-          bestTier === null ||
-          _TIER_ORDER[r.tier] < _TIER_ORDER[bestTier] ||
-          (r.tier === bestTier && r.score > bestScore)
-        ) {
-          bestScore = r.score;
-          bestTier  = r.tier;
-        }
-      }
-
-      if (bestTier !== null) {
-        unified.matchTier       = bestTier;
-        unified.confidenceScore = +(bestScore * 0.9).toFixed(2); // slight discount vs. local exact match
-        hits.push(unified);
-      }
+    if (!_cachedFormulas.size || Date.now() - _lastFormulasSync >= FORMULAS_SYNC_INTERVAL) {
+      await _syncFormulasFromCNR();
     }
 
-    hits.sort((a, b) =>
-      _TIER_ORDER[a.matchTier] - _TIER_ORDER[b.matchTier] ||
-      b.confidenceScore - a.confidenceScore
-    );
-
-    return hits.slice(0, limit);
+    return _rankCacheMap(_cachedFormulas, normTerms, limit);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -938,11 +974,7 @@
     const merged = [...groups.values()];
     merged.sort((a, b) => (b.confidenceScore || 0) - (a.confidenceScore || 0));
 
-    return merged.slice(0, limit).map(f => {
-      if (!('_raw' in f)) return f;
-      const { _raw, ...rest } = f;
-      return rest;
-    });
+    return merged.slice(0, limit);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1027,18 +1059,17 @@
     const locals = _searchLocal(terms);
     let best = locals[0] ?? null;
 
-    // Layer 1 complete match → return immediately (offline-first fast path)
-    if (best && _isComplete(best._raw ?? best) && !enrich) {
-      const out = { ...best };
-      delete out._raw;
-      _cache.set(cacheKey, out);
-      return out;
+    // Layer 1 cached match → return immediately (offline-first fast path)
+    if (best && _isComplete(best) && !enrich) {
+      _cache.set(cacheKey, best);
+      return best;
     }
 
     // Layer 2 — Chakudya API single best match. One call covers what used to
     // be two (direct FDC + direct OFF text search): the worker cascades
     // through its own tables, then USDA FDC, Open Food Facts, and FatSecret
-    // server-side before replying.
+    // server-side before replying. Also warms the offline cache (Layer 1)
+    // for next time — see _searchChakudyaLookup.
     const chakudyaResult = await _searchChakudyaLookup(query);
 
     if (!best) {
@@ -1047,7 +1078,6 @@
       best = _merge(best, chakudyaResult);
     }
 
-    if (best) delete best._raw;
     _cache.set(cacheKey, best);
     return best;
   }
@@ -1066,24 +1096,57 @@
   }
 
   /**
-   * Clear the in-memory session cache (search results + formula-registry list).
+   * Clear the in-memory session cache only (memoised search() calls this
+   * page session). Does NOT touch the persistent CNR cache — use
+   * clearPersistentCache() for that.
    */
   function clearCache() {
     _cache.clear();
-    _formulasCache = null;
+  }
+
+  /**
+   * Wipe the persistent offline CNR cache (both foods and formulas) — memory
+   * maps and IndexedDB. Useful for a "reset app data" flow, or to force a
+   * clean re-sync. Formulas will re-sync automatically on next use; the
+   * foods cache rebuilds opportunistically as searches happen again.
+   * @returns {Promise<void>}
+   */
+  async function clearPersistentCache() {
+    _cachedFoods.clear();
+    _cachedFormulas.clear();
+    _lastFormulasSync = 0;
+    if (!_idb) return;
+    try {
+      const tx = _idb.transaction([FOOD_STORE, FORMULA_STORE], 'readwrite');
+      tx.objectStore(FOOD_STORE).clear();
+      tx.objectStore(FORMULA_STORE).clear();
+    } catch (_e) { /* best-effort */ }
+  }
+
+  /** Debug helper — how many entries the offline CNR cache currently holds. */
+  function getCacheStats() {
+    return {
+      foods:            _cachedFoods.size,
+      formulas:         _cachedFormulas.size,
+      lastFormulasSync: _lastFormulasSync ? new Date(_lastFormulasSync).toISOString() : null,
+      persistent:       !!_idb,
+    };
   }
 
   // ── Expose as globals (PWA global-script pattern) ─────────────────────────
   global.NTFoodSearch = {
-    search:             searchFood,        // single best-match OR unified multi (opts.multi=true)
-    searchLocal:        searchLocal,       // Layer 1 — local MALAWI_FCT (sync, offline)
-    searchEnteral:      _searchEnteral,    // Layer 1b — local Formula/Enteral DB search (per 100 mL)
-    searchBarcode:      searchBarcode,     // barcode scan entry-point — Chakudya-only
-    clearCache:         clearCache,
-    _synonymMap:        SYNONYM_MAP,             // exposed for debugging only
-    _fdcSearch:         _searchFDC,              // legacy key name — now aliases Chakudya lookup
-    _offSearch:         _searchOFF,              // legacy key name — now aliases Chakudya lookup
-    _fetchOFFBarcode:   _fetchOFFBarcode,        // public barcode fetch (Chakudya) — for scanner UI
+    search:               searchFood,          // single best-match OR unified multi (opts.multi=true)
+    searchLocal:          searchLocal,         // Layer 1  — CNR foods cache (sync, offline, IndexedDB-backed)
+    searchEnteral:        _searchEnteral,      // Layer 1b — CNR formulas cache (sync, offline, IndexedDB-backed)
+    searchBarcode:        searchBarcode,       // barcode scan entry-point — Chakudya-only
+    clearCache:           clearCache,          // clear session-level search() memoisation only
+    clearPersistentCache: clearPersistentCache,// wipe the offline CNR cache (foods + formulas)
+    ready:                _cacheReady,         // Promise — resolves once the offline cache has hydrated
+    getCacheStats:        getCacheStats,       // debug helper
+    _synonymMap:             SYNONYM_MAP,             // exposed for debugging only
+    _fdcSearch:              _searchFDC,              // legacy key name — now aliases Chakudya lookup
+    _offSearch:              _searchOFF,              // legacy key name — now aliases Chakudya lookup
+    _fetchOFFBarcode:        _fetchOFFBarcode,        // public barcode fetch (Chakudya) — for scanner UI
     _searchChakudyaFoods:    _searchChakudyaFoods,    // GET /foods?search= — direct access for debugging
     _searchChakudyaFormulas: _searchChakudyaFormulas, // GET /formulas — direct access for debugging
   };
