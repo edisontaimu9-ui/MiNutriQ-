@@ -12958,72 +12958,7 @@ function ntClear(scopeId, resultIds) {
 <script src="oasisAI.js" defer></script>
 <!-- ════════════ END OASIS AI ════════════ -->
 
-<!-- ════════════ BUY ME A SNACK FAB ════════════ -->
-<button
-  id="bs-fab"
-  aria-label="Buy me a Snack"
-  title="Buy me a Snack 🍿"
-  style="
-    display: none;
-    position: fixed;
-    bottom: calc(var(--bottom-nav-h, 60px) + var(--sab, 0px) + 16px);
-    right: 20px;
-    z-index: 900;
-    align-items: center;
-    gap: 7px;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    padding: 11px 18px 11px 14px;
-    font-family: var(--sans, 'Outfit', sans-serif);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(234,88,12,0.40), 0 2px 8px rgba(0,0,0,0.25);
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-  "
-  onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(234,88,12,0.50),0 2px 8px rgba(0,0,0,0.25)'"
-  onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(234,88,12,0.40),0 2px 8px rgba(0,0,0,0.25)'"
-  ontouchstart="this.style.transform='scale(0.96)';this.style.opacity='0.88'"
-  ontouchend="this.style.transform='';this.style.opacity='1'"
->
-  <span style="font-size:17px;line-height:1">🍿</span>
-  <span>Buy me a Snack</span>
-</button>
-
-<script type="module">
-  import { initBuySnack } from './buySnack.js';
-
-  // Init widget — public key read lazily from window.PAYCHANGU_PUBLIC_KEY at pay time
-  // (loaded asynchronously from Remote Config key "paychangu_public_key").
-  // Secret key lives ONLY in the Appwrite Function environment — never in the browser.
-  initBuySnack(null); // null = will read window.PAYCHANGU_PUBLIC_KEY at runtime
-
-  // ── FAB visibility: only show on home tab ──
-  const fab     = document.getElementById('bs-fab');
-  const homeTab = document.getElementById('tab-home');
-
-  if (fab && homeTab) {
-    const observer = new MutationObserver(() => {
-      fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
-    });
-    observer.observe(homeTab, { attributes: true, attributeFilter: ['class'] });
-
-    // Set initial state
-    fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
-
-    // Wire FAB click to open the Buy Me a Snack modal
-    fab.addEventListener('click', () => {
-      const overlay = document.getElementById('buysnack-overlay');
-      if (overlay) overlay.classList.add('active');
-    });
-  }
-</script>
-<!-- ════════════ END BUY ME A SNACK FAB ════════════ -->
+<!-- ════════════ BUY ME A SNACK FAB — now rendered by React (see react-src/BuySnackWidget.jsx) into #oasis-react-root ════════════ -->
 
 <!-- ════════════ USER GUIDE MODAL ════════════ -->
 <div id="userguide-overlay" role="dialog" aria-modal="true" aria-label="Oasis User Guide" style="
@@ -14104,7 +14039,7 @@ document.addEventListener('keydown', function(e){
 })();
 </script>
 <!-- React migration test mount — safe to remove anytime -->
-<div id="oasis-react-root" style="margin:16px;"></div>
+<div id="oasis-react-root"></div>
 <script src="react-dist/oasis-react.js" defer></script>
 </body>
 </html>
