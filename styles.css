@@ -5,7 +5,7 @@
  * Load order: styles.css → foodData.js → main app script
  *
  * Sections:
- *   1. Safe-area baseline (originally inline in <head>)
+ *   1. Splash screen + safe-area baseline (originally inline in <head>)
  *   2. Main design system — NutriCalc Clinical UI
  *
  * Note: The offline-page CSS and print-report CSS remain inline in
@@ -18,12 +18,292 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════
-   SECTION 1 — SAFE-AREA BASELINE
+   SECTION 1 — SPLASH SCREEN + SAFE-AREA BASELINE
    ═══════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap');
   :root { --sat: env(safe-area-inset-top,0px); --sab: env(safe-area-inset-bottom,0px); --bottom-nav-h: 60px; }
   body  { padding-bottom: max(calc(var(--bottom-nav-h) + 8px), calc(var(--bottom-nav-h) + 8px + var(--sab))); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SPLASH SCREEN — Oasis (Redesigned)
+   Shown immediately from CSS — no JS needed to display it.
+   JS adds .splash-out to fade it away once the app is ready.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Colour tokens */
+#nt-splash {
+  --nts-teal:   #00f5e4;
+  --nts-blue:   #3b82f6;
+  --nts-violet: #818cf8;
+  --nts-text:   #ffffff;
+  --nts-muted:  rgba(220,238,255,0.97);
+  --nts-dim:    rgba(200,225,248,0.92);
+}
+
+#nt-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #020617;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+           env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  pointer-events: all;
+  transition: opacity .45s cubic-bezier(.4,0,.2,1), visibility .45s;
+  opacity: 1;
+  visibility: visible;
+}
+#nt-splash.splash-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Standalone splash suppression is handled by JS (MIN_SHOW_MS = 0),
+   not CSS, so the fade-out transition works correctly in all contexts. */
+
+/* Ambient background glows */
+#nt-splash::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(0,245,228,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 80% 90%,  rgba(59,130,246,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 40% at 15% 60%,  rgba(129,140,248,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Subtle grid overlay */
+#nt-splash::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(29,233,212,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29,233,212,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── 1. App name ── */
+.nts-name {
+  font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 7.5vw, 34px);
+  letter-spacing: 4px;
+  color: var(--nts-text);
+  text-align: center;
+  text-transform: none;
+  margin-bottom: 34px;
+  position: relative;
+  animation: nts-reveal .9s cubic-bezier(.16,1,.3,1) both;
+}
+.nts-name .nts-nutri { color: var(--nts-teal); }
+
+/* ── 2. Logo ring wrap ── */
+.nts-ring-wrap {
+  position: relative; width: 210px; height: 210px;
+  margin-bottom: 36px;
+  animation: nts-reveal .9s cubic-bezier(.16,1,.3,1) .08s both;
+}
+.nts-halo {
+  position: absolute; inset: -14px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,245,228,0.05) 30%, transparent 70%);
+  animation: nts-halo 3.2s ease-in-out infinite;
+}
+.nts-ring-static {
+  position: absolute; inset: -6px; border-radius: 50%;
+  border: 1px dotted rgba(0,245,228,0.12);
+}
+.nts-ring-outer {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2.5px solid transparent;
+  border-top-color: var(--nts-teal);
+  border-left-color: rgba(0,245,228,0.35);
+  animation: nts-cw 1.9s linear infinite;
+  box-shadow: 0 0 7px rgba(0,245,228,0.5);
+}
+.nts-ring-mid {
+  position: absolute; inset: 6px; border-radius: 50%;
+  border: 2px solid transparent;
+  border-bottom-color: var(--nts-blue);
+  border-right-color: rgba(59,130,246,0.35);
+  animation: nts-ccw 2.6s linear infinite;
+  box-shadow: 0 0 6px rgba(59,130,246,0.45);
+}
+.nts-ring-inner {
+  position: absolute; inset: 20px; border-radius: 50%;
+  border: 1.5px solid transparent;
+  border-top-color: rgba(129,140,248,0.5);
+  border-left-color: rgba(129,140,248,0.2);
+  animation: nts-cw 4s linear infinite;
+}
+.nts-logo-circle {
+  position: absolute; inset: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 48%, rgba(10,28,52,0.98) 0%, rgba(2,6,23,0.98) 100%);
+  border: 1px solid rgba(0,245,228,0.12);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.nts-logo-circle img {
+  width: 92%; height: 92%; object-fit: contain;
+  display: block;
+  margin-bottom: 8px; /* nudges logo up to optical centre */
+  filter: drop-shadow(0 0 10px rgba(0,245,228,0.4)) drop-shadow(0 0 24px rgba(59,130,246,0.22));
+  animation: nts-logo-float 3.4s ease-in-out infinite;
+}
+@keyframes nts-logo-float {
+  0%,100% { transform: translateY(0);   filter: drop-shadow(0 0 10px rgba(0,245,228,0.4))  drop-shadow(0 0 24px rgba(59,130,246,0.22)); }
+  50%     { transform: translateY(-3px); filter: drop-shadow(0 0 16px rgba(0,245,228,0.6)) drop-shadow(0 0 30px rgba(59,130,246,0.32)); }
+}
+
+/* ── 3. Loading dots ── */
+.nts-dots {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 36px;
+  animation: nts-reveal .9s cubic-bezier(.16,1,.3,1) .18s both;
+}
+.nts-dot {
+  width: 8px; height: 8px; border-radius: 2px;
+  background: rgba(0,245,228,0.15);
+  border: 1px solid rgba(0,245,228,0.3);
+  animation: nts-dot 1.6s ease-in-out infinite;
+}
+.nts-dot:nth-child(1){animation-delay:0s}
+.nts-dot:nth-child(2){animation-delay:.22s}
+.nts-dot:nth-child(3){animation-delay:.44s}
+.nts-dot:nth-child(4){animation-delay:.66s}
+.nts-dot:nth-child(5){animation-delay:.88s}
+.nts-dot:nth-child(6){animation-delay:1.1s}
+
+/* ── 4. Subtitle ── */
+.nts-sub {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  font-size: clamp(10px, 2.5vw, 12px);
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--nts-muted); text-align: center;
+  margin-bottom: 18px; padding: 0 20px; line-height: 1.8;
+  animation: nts-reveal .9s cubic-bezier(.16,1,.3,1) .26s both;
+}
+
+/* ── 5. WELCOME — animated pure text, no frame ── */
+.nts-welcome {
+  font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(16px, 4.5vw, 21px);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  text-align: center;
+  color: transparent;
+  margin-bottom: 10px;
+  position: relative;
+  display: flex;
+  gap: 0;
+  align-items: center;
+  justify-content: center;
+  /* no border, no background, no box-shadow */
+}
+/* Each letter is a <span> — animated individually */
+.nts-welcome span {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--nts-teal) 0%, #ffffff 50%, var(--nts-blue) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    nts-letter-drop 0.7s cubic-bezier(.16,1,.3,1) both,
+    nts-letter-shine 3.5s ease-in-out infinite;
+}
+.nts-welcome span:nth-child(1){ animation-delay: 0.30s, 1.1s }
+.nts-welcome span:nth-child(2){ animation-delay: 0.38s, 1.2s }
+.nts-welcome span:nth-child(3){ animation-delay: 0.46s, 1.3s }
+.nts-welcome span:nth-child(4){ animation-delay: 0.54s, 1.4s }
+.nts-welcome span:nth-child(5){ animation-delay: 0.62s, 1.5s }
+.nts-welcome span:nth-child(6){ animation-delay: 0.70s, 1.6s }
+.nts-welcome span:nth-child(7){ animation-delay: 0.78s, 1.7s }
+
+/* ── 6. Attribution ── */
+.nts-by {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(190,215,245,0.72); text-transform: uppercase;
+  text-align: center; margin-bottom: 28px;
+  animation: nts-reveal .9s cubic-bezier(.16,1,.3,1) .42s both;
+}
+
+/* ── 7. Glow line ── */
+.nts-line {
+  width: min(280px, 68vw); height: 4px; border-radius: 99px;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(0,245,228,0.4) 20%,
+    var(--nts-teal) 40%, var(--nts-blue) 60%,
+    rgba(59,130,246,0.4) 80%, transparent 100%);
+  box-shadow:
+    0 0 14px rgba(0,245,228,0.55),
+    0 0 32px rgba(0,245,228,0.20),
+    0 0 6px  rgba(59,130,246,0.40);
+  animation: nts-line 2.8s ease-in-out infinite,
+             nts-reveal .9s cubic-bezier(.16,1,.3,1) .40s both;
+}
+
+/* ── Keyframes ── */
+@keyframes nts-cw  { to { transform: rotate(360deg);  } }
+@keyframes nts-ccw { to { transform: rotate(-360deg); } }
+@keyframes nts-halo {
+  0%,100% { transform: scale(1);    opacity: .6; }
+  50%     { transform: scale(1.06); opacity: 1;  }
+}
+@keyframes nts-dot {
+  0%,100% { opacity:.15; transform:scale(.8);
+            background:rgba(0,245,228,.12);
+            box-shadow:0 0 3px rgba(0,245,228,.2); }
+  50%     { opacity:1; transform:scale(1.15);
+            background:var(--nts-teal);
+            box-shadow:0 0 12px rgba(0,245,228,.9), 0 0 24px rgba(0,245,228,.35); }
+}
+@keyframes nts-line {
+  0%,100% { opacity: .55; }
+  50%     { opacity: 1; box-shadow:0 0 22px rgba(0,245,228,.75),0 0 50px rgba(0,245,228,.25); }
+}
+@keyframes nts-reveal {
+  from { opacity:0; transform:translateY(16px); filter:blur(4px); }
+  to   { opacity:1; transform:translateY(0);    filter:blur(0); }
+}
+@keyframes nts-welcome-in {
+  from { opacity:0; transform:translateY(10px) scaleX(0.85); filter:blur(6px); letter-spacing:12px; }
+  to   { opacity:1; transform:translateY(0)    scaleX(1);    filter:blur(0);   letter-spacing:6px; }
+}
+@keyframes nts-welcome-pulse {
+  0%,100% { text-shadow: 0 0 12px rgba(0,245,228,0.7), 0 0 28px rgba(0,245,228,0.35);
+            box-shadow: 0 0 14px rgba(0,245,228,0.12), inset 0 0 10px rgba(0,245,228,0.04); }
+  50%     { text-shadow: 0 0 20px rgba(0,245,228,1),   0 0 48px rgba(0,245,228,0.55);
+            box-shadow: 0 0 24px rgba(0,245,228,0.28), inset 0 0 16px rgba(0,245,228,0.08); }
+}
+
+@keyframes nts-letter-drop {
+  from { opacity:0; transform:translateY(-18px) scale(0.8); filter:blur(5px); }
+  to   { opacity:1; transform:translateY(0)     scale(1);   filter:blur(0); }
+}
+@keyframes nts-letter-shine {
+  0%,100% { background-position: 0% 50%; }
+  50%     { background-position: 100% 50%; }
+}
+
+/* ── Standalone / home-screen launch: show full HTML splash ──
+   The OS system splash (Android 12+) transitions seamlessly into
+   our HTML splash because both share #020617 as background.
+   We now show all splash elements regardless of display-mode so
+   the branded loading screen appears whether launched from a link
+   or from the installed home-screen icon.
+   ──────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════
    PEDI RESULTS — Responsive Layout System

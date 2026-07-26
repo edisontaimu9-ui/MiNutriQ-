@@ -147,32 +147,21 @@
   var _webHistory     = [];
 
   /* ── API credentials ── */
-  /* PubMed API key — loaded at call-time from Remote Config (window.PUBMED_API_KEY). */
-  function _getPubMedKey() {
-    return (typeof window !== 'undefined' && window.PUBMED_API_KEY)
-      ? String(window.PUBMED_API_KEY).trim() : '';
-  }
+  /* All external research APIs (PubMed, Frontiers, Elsevier) and Groq now go
+     through our own Cloudflare Worker, which holds the real keys server-side
+     and proxies the requests. No API keys are loaded into the client anymore. */
+  var WORKER_BASE = 'https://oasis-ai-proxy-worker.edisontaimu9.workers.dev';
   var RS_OPENALEX_MAILTO = 'oasis-cnst@research.tool';
   var RS_PAGE_SIZE       = 10;
 
   /* ── Frontiers Search API config ── */
-  /* Frontiers API key — loaded at call-time from Remote Config (window.FRONTIERS_API_KEY). */
-  function _getFrontiersKey() {
-    return (typeof window !== 'undefined' && window.FRONTIERS_API_KEY)
-      ? String(window.FRONTIERS_API_KEY).trim() : '';
-  }
-  var RS_FRONTIERS_BASE = 'https://search-api.frontiersin.org/api/V1';
+  var RS_FRONTIERS_BASE = WORKER_BASE + '/frontiers';
   var RS_FRONTIERS_SIZE = 10;
 
   /* ── Layer 3: Elsevier (Scopus + ScienceDirect) config ── */
-  /* Elsevier API key — loaded at call-time from Remote Config (window.ELSEVIER_API_KEY). */
-  function _getElsevierKey() {
-    return (typeof window !== 'undefined' && window.ELSEVIER_API_KEY)
-      ? String(window.ELSEVIER_API_KEY).trim() : '';
-  }
-  var RS_ELSEVIER_SCOPUS   = 'https://api.elsevier.com/content/search/scopus';
-  var RS_ELSEVIER_SD       = 'https://api.elsevier.com/content/search/sciencedirect';
-  var RS_ELSEVIER_ABSTRACT = 'https://api.elsevier.com/content/abstract/scopus_id/';
+  var RS_ELSEVIER_SCOPUS   = WORKER_BASE + '/elsevier?endpoint=scopus';
+  var RS_ELSEVIER_SD       = WORKER_BASE + '/elsevier?endpoint=sciencedirect';
+  var RS_ELSEVIER_ABSTRACT = WORKER_BASE + '/elsevier?endpoint=abstract&scopusId=';
   var RS_ELSEVIER_SIZE     = 10;
 
   /* ── Layer 2: Clinical Guidelines config ── */
@@ -1328,15 +1317,10 @@
 
     _aioShowLoading();
 
-    var apiKey = (typeof window !== 'undefined' && window.GROQ_API_KEY)
-      ? window.GROQ_API_KEY
-      : '';
-    if (!apiKey) { _aioClear(); return; }
-
     var capturedQ = q.trim();
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
+    fetch(WORKER_BASE + '/groq', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         max_tokens: 400,
@@ -2628,10 +2612,9 @@
   function _rsPubMedSearch(query, page, yearFrom, yearTo) {
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var retstart = (page - 1) * RS_PAGE_SIZE;
-    var base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
-    var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + RS_PAGE_SIZE +
+    var base = WORKER_BASE + '/pubmed?';
+    var searchUrl = base + 'endpoint=esearch&db=pubmed&retmode=json&retmax=' + RS_PAGE_SIZE +
       '&retstart=' + retstart +
-      '&api_key=' + _getPubMedKey() +
       '&term=' + encodeURIComponent(query) +
       (yearFrom || yearTo
         ? '&datetype=pdat&mindate=' + (yearFrom || '1900') + '/01/01' +
@@ -2645,7 +2628,7 @@
         var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
         if (!ids.length) return { results: [], total: total };
 
-        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + _getPubMedKey() +
+        var summaryUrl = base + 'endpoint=esummary&db=pubmed&retmode=json' +
           '&id=' + ids.join(',');
         return fetch(summaryUrl)
           .then(function(r){ return r.json(); })
@@ -2676,8 +2659,8 @@
 
   /* ── PubMed: fetch abstract for a single PMID ── */
   function _rsPubMedAbstract(pmid, callback) {
-    var url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?' +
-      'db=pubmed&retmode=xml&rettype=abstract&api_key=' + _getPubMedKey() +
+    var url = WORKER_BASE + '/pubmed?endpoint=efetch&' +
+      'db=pubmed&retmode=xml&rettype=abstract' +
       '&id=' + pmid;
     fetch(url)
       .then(function(r){ return r.text(); })
@@ -3088,12 +3071,12 @@
       'guideline OR "systematic review" OR "meta-analysis" OR ' +
       '"clinical practice" OR consensus))';
     var url = RS_ELSEVIER_SCOPUS +
-      '?query=' + encodeURIComponent(scopusQ) +
+      '&query=' + encodeURIComponent(scopusQ) +
       '&count=' + GL_PAGE_SIZE +
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,' +
              'prism:doi,prism:url,dc:description,openaccess,subtype,subtypeDescription,eid';
-    return _elsFetch(url, { 'X-ELS-APIKey': _getElsevierKey(), 'Accept': 'application/json' }, 'GL-Scopus')
+    return _elsFetch(url, { 'Accept': 'application/json' }, 'GL-Scopus')
     .then(function(data) {
       var sr    = (data && data['search-results']) || {};
       var total = parseInt(sr['opensearch:totalResults'] || '0', 10) || 0;
@@ -3135,10 +3118,10 @@
   function _glPubMedSearch(query, page) {
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var retstart = (page - 1) * GL_PAGE_SIZE;
-    var base     = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+    var base     = WORKER_BASE + '/pubmed?';
     var fullTerm = '(' + query + ') AND ' + GL_PT_FILTER + ' AND (' + GL_ORG_FILTER + ')';
-    var searchUrl = base + 'esearch.fcgi?db=pubmed&retmode=json&retmax=' + GL_PAGE_SIZE +
-      '&retstart=' + retstart + '&api_key=' + _getPubMedKey() +
+    var searchUrl = base + 'endpoint=esearch&db=pubmed&retmode=json&retmax=' + GL_PAGE_SIZE +
+      '&retstart=' + retstart +
       '&term=' + encodeURIComponent(fullTerm);
 
     return fetch(searchUrl)
@@ -3148,7 +3131,7 @@
         var total = parseInt((data.esearchresult && data.esearchresult.count) || 0, 10);
         if (!ids.length) return { results: [], total: total };
 
-        var summaryUrl = base + 'esummary.fcgi?db=pubmed&retmode=json&api_key=' + _getPubMedKey() +
+        var summaryUrl = base + 'endpoint=esummary&db=pubmed&retmode=json' +
           '&id=' + ids.join(',');
         return fetch(summaryUrl)
           .then(function(r){ return r.json(); })
@@ -3313,16 +3296,16 @@
   function _rsFrontiersSearch(query, page, yearFrom, yearTo) {
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var offset = (page - 1) * RS_FRONTIERS_SIZE;
-    var url = RS_FRONTIERS_BASE + '/search?' +
-      'query=' + encodeURIComponent(query) +
-      '&limit=' + RS_FRONTIERS_SIZE +
-      '&offset=' + offset;
-
-    return fetch(url, {
+    return fetch(RS_FRONTIERS_BASE, {
+      method: 'POST',
       headers: {
-        'X-ELS-APIKey': _getFrontiersKey(),
-        'Accept':       'application/json'
-      }
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: query,
+        limit: RS_FRONTIERS_SIZE,
+        offset: offset
+      })
     })
     .then(function(r) {
       if (!r.ok) throw new Error('Frontiers API ' + r.status);
@@ -3700,7 +3683,7 @@
   function _elsAbstractFetch(scopusId, callback) {
     if (!scopusId) { callback(''); return; }
     var url  = RS_ELSEVIER_ABSTRACT + encodeURIComponent(scopusId);
-    var hdrs = { 'X-ELS-APIKey': _getElsevierKey(), 'Accept': 'application/json' };
+    var hdrs = { 'Accept': 'application/json' };
     _elsFetch(url, hdrs, 'AbstractRetrieval')
       .then(function(data) {
         /* JSON path */
@@ -3720,7 +3703,6 @@
     if (!query) return Promise.resolve({ results: [], total: 0 });
     var start = (page - 1) * RS_ELSEVIER_SIZE;
     var headers = {
-      'X-ELS-APIKey': _getElsevierKey(),
       'Accept':       'application/json'
     };
 
@@ -3731,7 +3713,7 @@
 
     /* ── Scopus ── */
     var scopusUrl = RS_ELSEVIER_SCOPUS +
-      '?query=TITLE-ABS-KEY(' + encodeURIComponent(query) + ')' + encodeURIComponent(pubYearClause) +
+      '&query=TITLE-ABS-KEY(' + encodeURIComponent(query) + ')' + encodeURIComponent(pubYearClause) +
       '&count=' + RS_ELSEVIER_SIZE +
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess,citedby-count,eid';
@@ -3778,7 +3760,7 @@
 
     /* ── ScienceDirect ── */
     var sdUrl = RS_ELSEVIER_SD +
-      '?query=' + encodeURIComponent(query) +
+      '&query=' + encodeURIComponent(query) +
       '&count=' + RS_ELSEVIER_SIZE +
       '&start=' + start +
       '&field=dc:title,dc:creator,prism:publicationName,prism:coverDate,prism:doi,prism:url,dc:description,openaccess';
