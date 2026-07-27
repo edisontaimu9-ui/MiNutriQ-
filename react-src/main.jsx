@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import BuySnackWidget from './BuySnackWidget.jsx';
 import PNBagDatabase from './PNBagDatabase.jsx';
 import PNCalculator from './PNCalculator.jsx';
+import Screening from './Screening.jsx';
 
 const buySnackMount = document.getElementById('oasis-react-root');
 if (buySnackMount) {
@@ -17,4 +18,9 @@ if (pnDbMount) {
 const pnCalcMount = document.getElementById('pn-calc-react-root');
 if (pnCalcMount) {
   createRoot(pnCalcMount).render(<PNCalculator />);
+}
+
+const screeningMount = document.getElementById('screening-react-root');
+if (screeningMount) {
+  createRoot(screeningMount).render(<Screening />);
 }

@@ -1876,32 +1876,16 @@ function _buildScreeningTab() {
 // 11.  INIT  (mirrors parenteral.js _init)
 // ══════════════════════════════════════════════════════════════════════
 
-function _init() {
-  function _run() {
-    _buildScreeningTab();
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _run);
-  } else {
-    _run();
-  }
+// ══════════════════════════════════════════════════════════════════════
+// 11.  INIT  — RETIRED
+// Nutrition Screening tab migrated to React — see react-src/Screening.jsx
+// and the static #tab-screening markup in index.html.
+// _buildScreeningTab() and window._scr*/window._must*/etc. exposures are
+// no longer needed — React owns this module's UI and state now.
+// ══════════════════════════════════════════════════════════════════════
 
-  // Expose globals
-  window._renderMUST          = _renderMUST;
-  window._renderMNASF         = _renderMNASF;
-  window._renderSTAMP         = _renderSTAMP;
-  window._mustSaveToHistory   = _mustSaveToHistory;
-  window._mnaSaveToHistory    = _mnaSaveToHistory;
-  window._stampSaveToHistory  = _stampSaveToHistory;
-  window._mustClear           = _mustClear;
-  window._mnaClear            = _mnaClear;
-  window._stampClear          = _stampClear;
-  window._renderSTRONGkids    = _renderSTRONGkids;
-  window._skSaveToHistory     = _skSaveToHistory;
-  window._skClear             = _skClear;
-  window._renderNRS2002       = _renderNRS2002;
-  window._nrs2002SaveToHistory= _nrs2002SaveToHistory;
-  window._nrs2002Clear        = _nrs2002Clear;
+function _init() {
+  // intentionally inert — see note above
 }
 
 
