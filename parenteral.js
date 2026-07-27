@@ -640,7 +640,7 @@ function _buildPNTab() {
           style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(96,165,250,0.35);background:rgba(96,165,250,0.06);color:#60a5fa;cursor:pointer;min-width:120px">
           ↻ PEDI CALCULATOR
         </button>
-        <button onclick="switchTab('database');setTimeout(function(){dbSwitchTab('parenteral');},300)"
+        <button onclick="switchTab('database');setTimeout(function(){dbSwitchTab('pn');},300)"
           style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.35);background:rgba(167,139,250,0.06);color:#a78bfa;cursor:pointer">
           📦 BAG DB
         </button>
@@ -778,8 +778,9 @@ function _buildPNTab() {
 function _init() {
   function _run() {
     _buildPNTab();
-    // Delay DB injection so dbInit() has had time to run
-    setTimeout(_injectPNDatabasePanel, 800);
+    // PN Bag Database panel migrated to React — see react-src/PNBagDatabase.jsx
+    // and the native dbtab-pn / dbpanel-pn markup in index.html.
+    // _injectPNDatabasePanel() intentionally no longer called.
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _run);
   else _run();

@@ -7150,6 +7150,7 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
     <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
+    <button onclick="dbSwitchTab('pn')"       id="dbtab-pn"       class="dbtab-btn">PN Bags</button>
   </div>
 
   <!-- ════════════════════ PANEL 1: FOOD DB ════════════════════ -->
@@ -7591,6 +7592,21 @@ var photoCropper = (function () {
 
   <div class="dev-footer">Packaged Foods · Chakudya API sync · Offline-first IndexedDB cache</div>
   </div><!-- end dbpanel-packaged -->
+
+  <!-- ════════════════════ PANEL 5: PN BAG DATABASE (React) ════════════════════ -->
+  <div id="dbpanel-pn" style="display:none">
+    <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span style="font-size:22px">💉</span>
+        <div>
+          <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">PN Bag Database</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">20 products · Kabiven · NuTRIflex Lipid · Clinimix E</div>
+        </div>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,rgba(167,139,250,0.3),transparent);margin:10px 0 0"></div>
+    </div>
+    <div id="pn-db-react-root"></div>
+  </div><!-- end dbpanel-pn -->
 
 
 </div>
