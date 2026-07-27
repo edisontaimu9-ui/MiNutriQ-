@@ -775,23 +775,11 @@ function _buildPNTab() {
 }
 
 // ── 11. INIT ─────────────────────────────────────────────────────────
-function _init() {
-  function _run() {
-    _buildPNTab();
-    // PN Bag Database panel migrated to React — see react-src/PNBagDatabase.jsx
-    // and the native dbtab-pn / dbpanel-pn markup in index.html.
-    // _injectPNDatabasePanel() intentionally no longer called.
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _run);
-  else _run();
-
-  // Expose globals
-  window._renderPN        = _renderPN;
-  window._pnSyncFrom      = _syncFromModule;
-  window._pnSaveToHistory = _pnSaveToHistory;
-  window._pnClear         = _pnClear;
-}
-
-_init();
+// PN Calculator tab migrated to React — see react-src/PNCalculator.jsx
+// and the static #tab-parenteral markup in index.html.
+// _buildPNTab(), _injectPNDatabasePanel(), and the window._pn* exposures
+// are no longer needed — React owns this module's UI and state now.
+// PN_BAGS, _syncFromModule and other helpers below remain as reference
+// only; nothing in this file calls itself on load anymore.
 
 })();
