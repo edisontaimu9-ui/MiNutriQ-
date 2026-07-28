@@ -4,6 +4,7 @@ import BuySnackWidget from './BuySnackWidget.jsx';
 import PNBagDatabase from './PNBagDatabase.jsx';
 import PNCalculator from './PNCalculator.jsx';
 import Screening from './Screening.jsx';
+import { installGrowthChartsBridge } from './growthChartsBridge.jsx';
 
 const buySnackMount = document.getElementById('oasis-react-root');
 if (buySnackMount) {
@@ -24,3 +25,5 @@ const screeningMount = document.getElementById('screening-react-root');
 if (screeningMount) {
   createRoot(screeningMount).render(<Screening />);
 }
+
+installGrowthChartsBridge();
