@@ -5,6 +5,8 @@ import PNBagDatabase from './PNBagDatabase.jsx';
 import PNCalculator from './PNCalculator.jsx';
 import Screening from './Screening.jsx';
 import { installGrowthChartsBridge } from './growthChartsBridge.jsx';
+import DrugNutrientInteractions from './DrugNutrientInteractions.jsx';
+import { DNI_DB, SEVERITY_CONFIG, searchDNI } from './dniData.js';
 
 const buySnackMount = document.getElementById('oasis-react-root');
 if (buySnackMount) {
@@ -25,5 +27,15 @@ const screeningMount = document.getElementById('screening-react-root');
 if (screeningMount) {
   createRoot(screeningMount).render(<Screening />);
 }
+
+const dniMount = document.getElementById('dni-react-root');
+if (dniMount) {
+  createRoot(dniMount).render(<DrugNutrientInteractions />);
+}
+
+// oasisAI.js reads these directly — same contract as the old dni.js exposed
+window.DNI_DB = DNI_DB;
+window._dniSearchFn = searchDNI;
+window.DNI_SEVERITY = SEVERITY_CONFIG;
 
 installGrowthChartsBridge();
