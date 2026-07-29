@@ -22,7 +22,7 @@
   'use strict';
 
   // ── Configuration ────────────────────────────────────────────
-  const GROQ_API_URL  = 'https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/groq';
+  const GROQ_API_URL  = 'https://api.groq.com/openai/v1/chat/completions';
   const GROQ_MODEL    = 'llama-3.3-70b-versatile';
   const MAX_TOKENS    = 900;
   const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
@@ -30,13 +30,29 @@
   // Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas, Burns, Oncology,
   // IBD, Dementia, TB, Cystic Fibrosis, Surgical/Parenteral Nutrition, and more.
 
-  // No client-side API key needed anymore — GROQ_API_URL now points at our
-  // own Cloudflare Worker, which holds the real Groq key server-side and
-  // proxies the request. Kept as no-ops in case anything else references them.
-  function _getKey() { return ''; }
+  // API key: set via window.GROQ_API_KEY (from Appwrite Function)
+  // Waits up to 5 seconds for the key to be loaded before giving up
+  function _getKey() {
+    return (typeof window !== 'undefined' && window.GROQ_API_KEY)
+      ? window.GROQ_API_KEY
+      : '';
+  }
 
-  function _waitForKey() {
-    return Promise.resolve('');
+  function _waitForKey(timeoutMs = 5000) {
+    if (_getKey()) return Promise.resolve(_getKey());
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        const key = _getKey();
+        if (key) {
+          clearInterval(interval);
+          resolve(key);
+        } else if (Date.now() - start >= timeoutMs) {
+          clearInterval(interval);
+          reject(new Error('API key not available — please refresh the page'));
+        }
+      }, 100);
+    });
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
@@ -729,310 +745,14 @@ Core principles:
     },
   };
 
-  // ════════════════════════════════════════════════════════════
-  // CHAKUDYA LIVE DATABASE ACCESS LAYER
-  // Queries the live Chakudya Nutrition Registry API's GET endpoints —
-  // /foods, /packaged, /exchange, /renal, /formulas — so Oasis AI can
-  // ground answers in the CURRENT database contents (including
-  // community-submitted packaged foods and anything added since this
-  // bundle was built), not just the static MALAWI_FCT/UCT_EXCHANGE_DB/
-  // BLEND_FOODS arrays baked into foodData.js or the ~6,100-chunk RAG
-  // corpus above. Same "detect → fetch → inject" pattern as _RAGLayer:
-  // one non-fatal pre-fetch per matched resource, run in parallel,
-  // results appended to the system prompt before the single Groq call.
-  //
-  // All five endpoints are public GET routes (no auth required) — see
-  // chakudya-api README §Authentication Model.
-  // ════════════════════════════════════════════════════════════
-  const CHAKUDYA_API_BASE = 'https://chakudya-api.edisontaimu9.workers.dev';
-
-  const _ChakudyaDB = {
-    async _get(path, params = {}) {
-      try {
-        const url = new URL(CHAKUDYA_API_BASE + path);
-        Object.entries(params).forEach(([k, v]) => {
-          if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
-        });
-        const res = await fetch(url.toString());
-        if (!res.ok) return [];
-        const json = await res.json();
-        const rows = json?.data;
-        return Array.isArray(rows) ? rows : (rows ? [rows] : []);
-      } catch (_) {
-        return []; // any single endpoint failing is non-fatal — others still inject
-      }
-    },
-
-    // Pulls a plausible search term out of free text (strips question
-    // words) rather than sending the whole sentence as a search string.
-    _extractSearchTerm(msg) {
-      return msg
-        .toLowerCase()
-        .replace(/\b(how many|how much|what|whats|is|are|does|do|the|calories|kcal|protein|carbs|carbohydrates|fat|in|of|a|an|for|contains?|per|100g|100ml)\b/g, ' ')
-        .replace(/[?.!,]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    },
-
-    // Schema-agnostic row → text line, so this doesn't silently break if a
-    // table's columns change server-side. Skips internal/bookkeeping fields.
-    _prettyRow(row, skipKeys) {
-      const skip = new Set(['id', 'created_at', 'updated_at', 'submitted_at', 'source', 'ocr_raw', 'ai_confidence', ...(skipKeys || [])]);
-      return Object.entries(row)
-        .filter(([k, v]) => !skip.has(k) && v !== null && v !== undefined && v !== '')
-        .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
-        .join(' | ');
-    },
-
-    detectFoods(msg) {
-      return _FoodDB.detectQuery(msg);
-    },
-
-    detectPackaged(msg) {
-      const m = msg.toLowerCase();
-      const triggers = [
-        'packaged', 'packet of', 'tin of', 'box of', 'brand', 'barcode',
-        'label', 'biscuit', 'cereal', 'milo', 'lacto', 'sausage', 'product',
-      ];
-      return triggers.some(t => m.includes(t));
-    },
-
-    detectExchange(msg) {
-      const m = msg.toLowerCase();
-      const triggers = [
-        'exchange list', 'food exchange', 'exchange diet', 'starch exchange',
-        'protein exchange', 'fruit exchange', 'milk exchange', 'fat exchange',
-        'carb exchange', 'carbohydrate exchange', '1 exchange', 'one exchange',
-        'diabetic exchange', 'exchange system', 'exchange value',
-      ];
-      return triggers.some(t => m.includes(t));
-    },
-
-    detectRenal(msg) {
-      const m = msg.toLowerCase();
-      const triggers = [
-        'renal diet', 'renal food', 'ckd diet', 'ckd food', 'dialysis diet',
-        'dialysis food', 'kidney diet', 'kidney food', 'phosphorus content',
-        'potassium content', 'low potassium', 'low phosphorus', 'hemodialysis diet',
-        'peritoneal dialysis diet',
-      ];
-      return triggers.some(t => m.includes(t));
-    },
-
-    detectFormulas(msg) {
-      const m = msg.toLowerCase();
-      const triggers = [
-        'enteral formula', 'tube feed', 'tube feeding', 'ng feed', 'ng tube',
-        'peg feed', 'formula feed', 'which formula', 'feeding formula',
-        'ensure', 'nutren', 'fresubin', 'osmolite', 'jevity', 'pediasure',
-        'polymeric formula', 'elemental formula', 'semi-elemental',
-      ];
-      return triggers.some(t => m.includes(t));
-    },
-
-    /**
-     * fetchContext(userMessage)
-     * Runs matched live-DB lookups in parallel (each independently
-     * non-fatal) and returns a single formatted prompt block, or '' if
-     * nothing matched / nothing came back.
-     */
-    async fetchContext(userMessage) {
-      const term = this._extractSearchTerm(userMessage);
-      const blocks = [];
-      const jobs = [];
-
-      if (this.detectFoods(userMessage) && term) {
-        jobs.push(
-          this._get('/foods', { search: term, limit: 8 }).then(rows => {
-            if (rows.length) {
-              blocks.push(`▸ CHAKUDYA FOODS DATABASE (live):\n` +
-                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
-            }
-          })
-        );
-      }
-
-      if (this.detectPackaged(userMessage)) {
-        jobs.push(
-          this._get('/packaged', { limit: 50 }).then(rows => {
-            if (!rows.length) return;
-            const tokens = term.split(' ').filter(t => t.length >= 2);
-            const filtered = tokens.length
-              ? rows.filter(p => {
-                  const hay = `${p.product_name || ''} ${p.brand || ''}`.toLowerCase();
-                  return tokens.some(t => hay.includes(t));
-                })
-              : [];
-            const useRows = (filtered.length ? filtered : rows).slice(0, 8);
-            blocks.push(`▸ CHAKUDYA PACKAGED FOODS DATABASE (live, Malawi retail products):\n` +
-              useRows.map(r => `• ${this._prettyRow(r)}`).join('\n') +
-              `\n(Note: items with status "pending" are community-submitted and not yet admin-verified — flag this to the user if relevant.)`);
-          })
-        );
-      }
-
-      if (this.detectExchange(userMessage)) {
-        jobs.push(
-          this._get('/exchange', { limit: 20 }).then(rows => {
-            if (rows.length) {
-              blocks.push(`▸ CHAKUDYA EXCHANGE LISTS (live):\n` +
-                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
-            }
-          })
-        );
-      }
-
-      if (this.detectRenal(userMessage)) {
-        jobs.push(
-          this._get('/renal', { limit: 20 }).then(rows => {
-            if (rows.length) {
-              blocks.push(`▸ CHAKUDYA RENAL FOODS DATABASE (live):\n` +
-                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
-            }
-          })
-        );
-      }
-
-      if (this.detectFormulas(userMessage)) {
-        jobs.push(
-          this._get('/formulas', { limit: 15 }).then(rows => {
-            if (rows.length) {
-              blocks.push(`▸ CHAKUDYA ENTERAL FORMULAS DATABASE (live):\n` +
-                rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
-            }
-          })
-        );
-      }
-
-      if (!jobs.length) return '';
-      await Promise.allSettled(jobs);
-      if (!blocks.length) return '';
-
-      return [
-        '━━━ CHAKUDYA LIVE DATABASE (current records, fetched just now) ━━━',
-        ...blocks,
-        '━━━ END LIVE DATABASE ━━━',
-        '',
-        'INSTRUCTIONS FOR USING LIVE DATABASE CONTEXT:',
-        '• These are live records fetched from the Chakudya API at the moment of this query — more current than any bundled/static data.',
-        '• Prefer these values over general knowledge or older bundled datasets when they cover the food/product/formula in question.',
-        '• Packaged-food entries marked "pending" are unverified community submissions — mention this caveat if you use one.',
-      ].join('\n');
-    },
-  };
-
-  // ════════════════════════════════════════════════════════════
-  // SESSION MEMORY LAYER — Write → Consolidate → Recall → Apply
-  // Per-session clinical scratchpad, scoped to the current patient
-  // encounter (the app's existing SESSION_ID, regenerated fresh per
-  // page load — this is intentionally session-scoped working memory,
-  // not a long-term cross-visit profile). "Consolidate" runs entirely
-  // server-side (hourly cron + Groq summarization on the Chakudya API
-  // — see chakudya-api's scheduled() handler); nothing to do here for
-  // that step. "Write" and "Recall" talk to /memory/write and
-  // /memory/recall; "Apply" = injecting recalled memory into the
-  // system prompt, done inside chatWithOasisAI() below.
-  // ════════════════════════════════════════════════════════════
-  const MEMORY_WRITE_URL       = CHAKUDYA_API_BASE + '/memory/write';
-  const MEMORY_RECALL_URL      = CHAKUDYA_API_BASE + '/memory/recall';
-  const MEMORY_MIN_CONTENT_LEN = 8; // skip writing trivially short turns ("ok", "hi")
-
-  const _MemoryLayer = {
-    _fallbackId: null,
-
-    // Reuses the app's existing per-page-load SESSION_ID global (declared
-    // in main.js, which loads before oasisAI.js per this file's own usage
-    // note at the top). Falls back to a locally-generated one if this
-    // module is ever used standalone / before main.js has run.
-    _sessionId() {
-      if (typeof SESSION_ID !== 'undefined' && SESSION_ID) return SESSION_ID;
-      if (!this._fallbackId) {
-        this._fallbackId = 'S_' + Date.now().toString(36).toUpperCase() + '_' +
-          Math.random().toString(36).substr(2, 5).toUpperCase();
-      }
-      return this._fallbackId;
-    },
-
-    // Optional "Bed 4" / patient-name field, for readability in stored
-    // memory rows only — NOT used as the scoping key (session_id is).
-    _patientLabel() {
-      try {
-        const el = document.getElementById('patient-name') || document.getElementById('pt-name');
-        const v = (el && el.value || '').trim();
-        return v || null;
-      } catch (_) {
-        return null;
-      }
-    },
-
-    /**
-     * write(content, kind)
-     * "Write" step — captures a raw fact for the current session.
-     * Deliberately cheap: no extra LLM call here, just stores the text.
-     * Compression happens later during "Consolidate". Fire-and-forget —
-     * failures are silent and never block the chat response.
-     */
-    async write(content, kind = 'fact') {
-      const trimmed = (content || '').trim();
-      if (trimmed.length < MEMORY_MIN_CONTENT_LEN) return;
-      try {
-        await fetch(MEMORY_WRITE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: this._sessionId(),
-            content: trimmed.length > 2000 ? trimmed.slice(0, 2000) : trimmed,
-            kind,
-            patient_label: this._patientLabel(),
-          }),
-        });
-      } catch (_) {
-        // non-fatal — a failed memory write must never break the chat
-      }
-    },
-
-    /**
-     * recall(query, topK)
-     * "Recall" step — top-K most relevant memory rows (facts and/or
-     * consolidated summaries) for the current session, ranked by
-     * semantic similarity to `query`. Returns a formatted prompt block,
-     * or '' on failure / no session memory yet.
-     */
-    async recall(query, topK = 5) {
-      try {
-        const url = new URL(MEMORY_RECALL_URL);
-        url.searchParams.set('session_id', this._sessionId());
-        url.searchParams.set('query', query);
-        url.searchParams.set('top_k', topK);
-        const res = await fetch(url.toString());
-        if (!res.ok) return '';
-        const data = await res.json();
-        const rows = data && data.data;
-        if (!Array.isArray(rows) || !rows.length) return '';
-        return this.buildContext(rows);
-      } catch (_) {
-        return '';
-      }
-    },
-
-    buildContext(rows) {
-      const lines = rows.map(r => `• [${r.kind}] ${r.content}`).join('\n');
-      return [
-        '━━━ SESSION MEMORY (this patient encounter, recalled just now) ━━━',
-        lines,
-        '━━━ END SESSION MEMORY ━━━',
-        '',
-        'Use the above to stay consistent with facts, goals, and decisions already established earlier in THIS session. Do not silently contradict them — if new information conflicts with something recalled here, flag the discrepancy to the user rather than overwriting it unremarked.',
-      ].join('\n');
-    },
-  };
-
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
+    const apiKey = await _waitForKey();
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model:       GROQ_MODEL,
@@ -1542,29 +1262,15 @@ Keep it under 200 words. Use professional clinical language.`;
     //          ESPEN Guidelines · ASPEN Guidelines · Malawi CMAM 2016 ·
     //          Burns · Oncology · IBD · Dementia · TB · Cystic Fibrosis ·
     //          Surgical Nutrition · Parenteral Nutrition · and more (~6,100 chunks)
-    //
-    // Runs alongside the live-DB lookups and session-memory recall below —
-    // all independent network calls, so fire them together rather than
-    // sequentially.
     let ragContextInjected = false;
-    let liveDbContextInjected = false;
-    let memoryContextInjected = false;
-    const [ragResult, liveDbResult, memoryResult] = await Promise.allSettled([
-      _RAGLayer.fetchContext(userMessage, 'clinical', 7),
-      _ChakudyaDB.fetchContext(userMessage),
-      _MemoryLayer.recall(userMessage, 5),
-    ]);
-    if (ragResult.status === 'fulfilled' && ragResult.value) {
-      systemPrompt += '\n\n' + ragResult.value;
-      ragContextInjected = true;
-    }
-    if (liveDbResult.status === 'fulfilled' && liveDbResult.value) {
-      systemPrompt += '\n\n' + liveDbResult.value;
-      liveDbContextInjected = true;
-    }
-    if (memoryResult.status === 'fulfilled' && memoryResult.value) {
-      systemPrompt += '\n\n' + memoryResult.value;
-      memoryContextInjected = true;
+    try {
+      const ragCtx = await _RAGLayer.fetchContext(userMessage, 'clinical', 7);
+      if (ragCtx) {
+        systemPrompt += '\n\n' + ragCtx;
+        ragContextInjected = true;
+      }
+    } catch (_ragErr) {
+      // RAG failure is non-fatal — Oasis AI continues without it
     }
 
     const messages = [
@@ -1574,12 +1280,6 @@ Keep it under 200 words. Use professional clinical language.`;
     ];
 
     const response = await _groqChat(messages, 900);
-
-    // "Write" step — capture this turn as a raw session fact for later
-    // recall/consolidation. Fire-and-forget: never let a memory-write
-    // failure delay or break the chat response the user is waiting on.
-    _MemoryLayer.write(userMessage).catch(() => {});
-
     return {
       raw: response,
       type: 'chat',
@@ -1589,8 +1289,6 @@ Keep it under 200 words. Use professional clinical language.`;
       refContextInjected:     _RefDBProxy.detectQuery(userMessage),
       enteralContextInjected,
       ragContextInjected,
-      liveDbContextInjected,
-      memoryContextInjected,
     };
   }
 
@@ -2008,41 +1706,9 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     // About / Platform Knowledge
     aboutDB: _AboutDB,   // ← Oasis CNST About section knowledge base
     getAboutContext() { return _AboutDB.buildContext(); }, // ← direct context string access
-    // Chakudya Live Database (foods, packaged, exchange, renal, formulas)
-    chakudyaDB: _ChakudyaDB, // ← direct live-DB access (GET /foods, /packaged, /exchange, /renal, /formulas)
-    queryChakudyaFoods(search, limit = 8) {
-      return _ChakudyaDB._get('/foods', { search, limit });
-    },
-    queryChakudyaPackaged(params = {}) {
-      return _ChakudyaDB._get('/packaged', params);
-    },
-    queryChakudyaExchange(params = {}) {
-      return _ChakudyaDB._get('/exchange', params);
-    },
-    queryChakudyaRenal(params = {}) {
-      return _ChakudyaDB._get('/renal', params);
-    },
-    queryChakudyaFormulas(params = {}) {
-      return _ChakudyaDB._get('/formulas', params);
-    },
-    // RAG (semantic search over ~6,100 clinical chunks)
-    queryRAG(query, context = 'clinical', topK = 7) {
-      return _RAGLayer.fetchContext(query, context, topK);
-    },
-    // Session Memory (Write → Consolidate → Recall → Apply)
-    memoryDB: _MemoryLayer, // ← direct access for custom integrations
-    writeMemory(content, kind = 'fact') {
-      return _MemoryLayer.write(content, kind);
-    },
-    recallMemory(query, topK = 5) {
-      return _MemoryLayer.recall(query, topK);
-    },
-    getSessionId() {
-      return _MemoryLayer._sessionId();
-    },
   };
 
-  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG + Session Memory access enabled');
+  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator access enabled');
 })();
 
 
@@ -2384,9 +2050,9 @@ Rules:
 - Do NOT duplicate existing memories`;
 
     try {
-      const res = await fetch(GROQ_API_URL, {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : ''}` },
         body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 120, temperature: 0.1, messages: [{ role: 'user', content: prompt }] })
       });
       if (!res.ok) return;

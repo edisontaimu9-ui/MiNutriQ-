@@ -1,43 +1,43 @@
-// Drug-Nutrient Interactions database — ported verbatim from dni.js DNI_DB
-// (Kuz G. Appendix 13, Krause & Mahan's Food and the Nutrition Care Process, 16th ed.)
-// Single source of truth: also exposed as window.DNI_DB for oasisAI.js to consume.
+/* ══════════════════════════════════════════════════════════════════════
+   DRUG-NUTRIENT INTERACTIONS MODULE  v1  |  Oasis
 
-export const QUICK_TAGS = [
-  'grapefruit','alcohol','potassium','vitamin B12','vitamin D',
-  'folate','calcium','magnesium','tyramine','sjw','enteral nutrition','warfarin',
-  'metformin','colchicine','aspirin','antiretroviral','hypoglycemia','antiplatelet',
-];
+   Data source
+   ───────────
+   Kuz G. Appendix 13: Nutritional Implications of Selected Drugs.
+   In: Mahan LK, Raymond JL, eds. Krause and Mahan's Food and the
+   Nutrition Care Process. 16th ed. Elsevier; 2022:1097–1107.
+   (Portions © Waza, Inc. T/A Food Medication Interactions,
+    Birchrunville PA — reproduced for educational/clinical reference.)
 
-export const SEVERITY_CONFIG = {
-  info:     { color:'#94a3b8', bg:'rgba(148,163,184,0.07)', border:'rgba(148,163,184,0.2)',  label:'INFO'     },
-  caution:  { color:'#f0b429', bg:'rgba(240,180,41,0.07)',  border:'rgba(240,180,41,0.2)',   label:'CAUTION'  },
-  moderate: { color:'#fb923c', bg:'rgba(251,146,60,0.07)',  border:'rgba(251,146,60,0.2)',   label:'MODERATE' },
-  major:    { color:'#fb7185', bg:'rgba(251,113,133,0.07)', border:'rgba(251,113,133,0.25)', label:'MAJOR'    },
-};
+   Additional resources cited in Appendix 13
+   ──────────────────────────────────────────
+   • Bailey DG et al. CMAJ 2013;185:309–316 (grapefruit interactions)
+   • Pronsky ZM et al. Food Medication Interactions, 2015.
+   • FDA Center for Drug Evaluation and Research
+   • Natural Medicines Database; NIH Clinical Center
+   • Medscape / WebMD Drug Interaction Checkers
 
-export function searchDNI(query) {
-  if (!query || query.trim().length < 2) return [];
-  const q = query.trim().toLowerCase();
-  return DNI_DB.filter(e =>
-    e.drug.toLowerCase().includes(q) ||
-    e.category.toLowerCase().includes(q) ||
-    e.subcategory.toLowerCase().includes(q) ||
-    e.aliases.some(a => a.toLowerCase().includes(q)) ||
-    e.tags.some(t => t.toLowerCase().includes(q)) ||
-    e.effects.some(ef => ef.toLowerCase().includes(q)) ||
-    e.implications.some(im => im.toLowerCase().includes(q))
-  );
-}
+   Architecture
+   ────────────
+   Strictly mirrors parenteral.js / screening.js:
+   • Single IIFE, all private logic
+   • _buildDNITab() injects tab div + bottom-nav button
+   • TAB_META entry registered at runtime
+   • Searchable UI: drug name OR nutrient/food keyword
+   • Save-to-history via DataService.addToList
+   ══════════════════════════════════════════════════════════════════════ */
 
-const _NON_DRUG_KEYWORDS = QUICK_TAGS.map(t => t.toLowerCase());
-export function isDrugQuery(query) {
-  const q = query.trim().toLowerCase();
-  if (_NON_DRUG_KEYWORDS.includes(q)) return false;
-  if (q.split(/\s+/).length === 1 && q.length < 4) return false;
-  return true;
-}
+(function _installDNIModule() {
+'use strict';
 
-export const DNI_DB = [
+// ══════════════════════════════════════════════════════════════════════
+// 1.  DATABASE  — sourced from Krause & Mahan 16th ed. Appendix 13
+//     Each entry: { id, drug, aliases[], category, subcategory,
+//                   effects[], implications[], severity, tags[] }
+//     severity: 'info' | 'caution' | 'moderate' | 'major'
+// ══════════════════════════════════════════════════════════════════════
+
+var DNI_DB = [
 
   // ── ANTIBACTERIALS ────────────────────────────────────────────────
 
@@ -2200,3 +2200,656 @@ export const DNI_DB = [
 
 ];
 
+
+// ══════════════════════════════════════════════════════════════════════
+// 2.  FDA OpenFDA API INTEGRATION
+//     Endpoint: https://api.fda.gov/drug/label.json
+//     API Key:  Q7kS10buNjh8A2rvkTY60jPCPQbCqNA4X0aSaW8D
+// ══════════════════════════════════════════════════════════════════════
+
+var FDA_BASE    = 'https://api.fda.gov/drug/label.json';
+
+// In-memory cache: key → { data: [], error: null|string }
+var _fdaCache = {};
+
+// Pure nutrient/food/symptom keywords — never drug names.
+// Intentionally narrow; do NOT add drug names like "warfarin" here.
+var _NON_DRUG_KEYWORDS = [
+  'grapefruit','alcohol','potassium','folate','folic acid','calcium',
+  'magnesium','tyramine','sjw','st john','enteral nutrition',
+  'iron','zinc','sodium','phosphorus','selenium','copper',
+  'fiber','fibre','omega','fish oil','caffeine','sugar',
+  'lipids','cholesterol','protein','diarrhea','nausea',
+  'probiotic','c.diff','electrolyte','mineral',
+  'vitamin b','vitamin c','vitamin d','vitamin e','vitamin k','vitamin a',
+  'riboflavin','pyridoxine','cobalamin','thiamine','biotin',
+  'cranberry','pomegranate','celery','soy','dairy','milk',
+  'absorption','gi ','renal','hepatic','maoi','disulfiram',
+];
+
+/**
+ * Returns true if the query looks like a drug/medication name
+ * rather than a pure nutrient, food, or symptom keyword.
+ */
+function _isDrugQuery(query) {
+  var q = query.trim().toLowerCase();
+  for (var i = 0; i < _NON_DRUG_KEYWORDS.length; i++) {
+    var kw = _NON_DRUG_KEYWORDS[i];
+    if (q === kw || q === kw.trim()) return false;
+  }
+  if (q.split(/\s+/).length === 1 && q.length < 4) return false;
+  return true;
+}
+
+/**
+ * Build OpenFDA search URLs.
+ * OpenFDA uses Lucene syntax. Quoted = exact phrase; unquoted = prefix/partial.
+ */
+function _buildFDAUrl(query, fuzzy) {
+  var q = query.trim();
+  // OpenFDA Lucene syntax: encode only the value, keep +OR+ literal in the URL
+  var val = fuzzy
+    ? encodeURIComponent(q)
+    : encodeURIComponent('"' + q + '"');
+  var search = '(openfda.brand_name:' + val + '+OR+openfda.generic_name:' + val + ')';
+  return FDA_BASE + '?search=' + search + '&limit=3';
+}
+
+/**
+ * Fetch FDA drug label data for a given drug name.
+ * Tries exact quoted search first; falls back to fuzzy prefix on empty result.
+ * Returns a Promise resolving to { data: [], error: null|string }.
+ */
+function _fetchFDA(query) {
+  var key = query.trim().toLowerCase();
+  if (_fdaCache[key] !== undefined) {
+    return Promise.resolve(_fdaCache[key]);
+  }
+
+  function doFetch(url) {
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = controller
+      ? setTimeout(function(){ controller.abort(); }, 8000)
+      : null;
+    var opts = { method: 'GET', headers: { 'Accept': 'application/json' }, mode: 'cors' };
+    if (controller) opts.signal = controller.signal;
+    return fetch(url, opts)
+      .then(function(r) {
+        if (timer) clearTimeout(timer);
+        if (r.status === 404) return { results: [] };  // valid "no matches"
+        if (r.status === 429) throw new Error('rate_limit');
+        if (!r.ok) throw new Error('http_' + r.status);
+        return r.json();
+      })
+      .catch(function(err) {
+        if (timer) clearTimeout(timer);
+        // AbortError = timeout; rethrow with readable message
+        if (err && err.name === 'AbortError') throw new Error('timeout');
+        throw err;
+      });
+  }
+
+  return doFetch(_buildFDAUrl(query, false))
+    .then(function(data) {
+      var results = (data && data.results) ? data.results : [];
+      if (results.length === 0) {
+        // Retry with fuzzy/prefix search
+        return doFetch(_buildFDAUrl(query, true)).then(function(d2) {
+          return (d2 && d2.results) ? d2.results : [];
+        });
+      }
+      return results;
+    })
+    .then(function(results) {
+      var cached = { data: results, error: null };
+      _fdaCache[key] = cached;
+      return cached;
+    })
+    .catch(function(err) {
+      var msg = (err && err.message) ? err.message : 'network_error';
+      var cached = { data: [], error: msg };
+      _fdaCache[key] = cached;
+      return cached;
+    });
+}
+
+/**
+ * Extract the most clinically useful text sections from an FDA label object.
+ */
+function _parseFDALabel(label) {
+  function first(arr) { return arr && arr[0] ? arr[0] : null; }
+
+  var name = (label.openfda && label.openfda.brand_name && label.openfda.brand_name[0])
+             || (label.openfda && label.openfda.generic_name && label.openfda.generic_name[0])
+             || 'Unknown Drug';
+
+  var generic = (label.openfda && label.openfda.generic_name && label.openfda.generic_name[0]) || '';
+  var mfr     = (label.openfda && label.openfda.manufacturer_name && label.openfda.manufacturer_name[0]) || '';
+  var rxnorm  = (label.openfda && label.openfda.rxcui && label.openfda.rxcui[0]) || '';
+
+  // Truncate long field text for clinical display
+  function trim(text, max) {
+    if (!text) return null;
+    // Strip HTML tags
+    var clean = text.replace(/<[^>]+>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    return clean.length > max ? clean.substring(0, max) + '…' : clean;
+  }
+
+  return {
+    name:           name,
+    generic:        generic,
+    manufacturer:   mfr,
+    rxnorm:         rxnorm,
+    interactions:   trim(first(label.drug_interactions), 600),
+    warnings:       trim(first(label.warnings) || first(label.warnings_and_cautions), 500),
+    adverseRx:      trim(first(label.adverse_reactions), 450),
+    foodEffect:     trim(first(label.food_effect), 400),
+    dietaryInfo:    trim(first(label.information_for_patients), 300),
+    contraindic:    trim(first(label.contraindications), 350),
+    mechanism:      trim(first(label.clinical_pharmacology), 350),
+    dosageForm:     first(label.dosage_forms_and_strengths) || null,
+    route:          (label.openfda && label.openfda.route && label.openfda.route[0]) || null,
+    substanceNames: (label.openfda && label.openfda.substance_name) ? label.openfda.substance_name.slice(0,4) : [],
+  };
+}
+
+/**
+ * Render a single FDA label result as an HTML card string.
+ */
+function _renderFDACard(parsed, index) {
+  var sections = [];
+
+  function row(label, text, color) {
+    if (!text) return '';
+    color = color || 'var(--text-dim)';
+    return `
+      <div style="margin-bottom:8px">
+        <div style="font-family:var(--mono);font-size:8px;color:#818cf8;font-weight:700;letter-spacing:1px;margin-bottom:4px">${label}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:${color};line-height:1.65;background:rgba(0,0,0,0.12);border-radius:6px;padding:7px 9px">${text}</div>
+      </div>`;
+  }
+
+  sections.push(row('⚡ DRUG INTERACTIONS', parsed.interactions, 'var(--text)'));
+  sections.push(row('⚠ WARNINGS & CAUTIONS', parsed.warnings, '#fbbf24'));
+  sections.push(row('🥗 FOOD EFFECT', parsed.foodEffect, '#34d399'));
+  sections.push(row('🩺 ADVERSE REACTIONS', parsed.adverseRx, '#fb923c'));
+  sections.push(row('🚫 CONTRAINDICATIONS', parsed.contraindic, '#fb7185'));
+  sections.push(row('ℹ PATIENT INFORMATION', parsed.dietaryInfo, 'var(--text-dim)'));
+
+  var hasSections = sections.some(function(s){ return s.length > 0; });
+  if (!hasSections) return '';
+
+  var metaRow = [
+    parsed.generic     ? `<span>Generic: <strong style="color:var(--text)">${parsed.generic}</strong></span>` : '',
+    parsed.route       ? `<span>Route: <strong style="color:var(--text)">${parsed.route}</strong></span>` : '',
+    parsed.manufacturer? `<span>Mfr: <strong style="color:var(--text)">${parsed.manufacturer}</strong></span>` : '',
+    parsed.rxnorm      ? `<span>RxNorm: <strong style="color:var(--text)">${parsed.rxnorm}</strong></span>` : '',
+  ].filter(Boolean).join(' · ');
+
+  return `
+  <div class="fda-card" style="background:var(--surface2);border:1px solid rgba(129,140,248,0.25);border-radius:10px;overflow:hidden;margin-bottom:10px">
+    <!-- FDA Card Header -->
+    <div style="background:rgba(129,140,248,0.08);border-bottom:1px solid rgba(129,140,248,0.2);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div>
+        <span style="font-size:9px;background:rgba(129,140,248,0.15);color:#818cf8;border:1px solid rgba(129,140,248,0.3);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-weight:700;letter-spacing:1px;margin-right:8px">FDA LIVE</span>
+        <span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:var(--text-bright)">${parsed.name}</span>
+      </div>
+      <span style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim)">${index + 1} of label results</span>
+    </div>
+
+    <!-- Meta row -->
+    ${metaRow ? `<div style="padding:6px 14px;font-family:var(--mono);font-size:8px;color:var(--text-dim);border-bottom:1px solid rgba(129,140,248,0.1);line-height:1.8">${metaRow}</div>` : ''}
+
+    <!-- Substance tags -->
+    ${parsed.substanceNames.length ? `
+    <div style="padding:7px 14px 2px;display:flex;flex-wrap:wrap;gap:4px">
+      ${parsed.substanceNames.map(function(s){
+        return `<span style="font-family:var(--mono);font-size:7.5px;background:rgba(129,140,248,0.08);color:#818cf8;border:1px solid rgba(129,140,248,0.2);border-radius:4px;padding:2px 7px">${s}</span>`;
+      }).join('')}
+    </div>` : ''}
+
+    <!-- Content sections -->
+    <div style="padding:10px 14px 4px">
+      ${sections.join('')}
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:4px 14px 10px;font-family:var(--mono);font-size:7.5px;color:var(--text-dim);opacity:0.65">
+      Source: U.S. FDA OpenFDA Drug Label API · openfda.hhs.gov
+    </div>
+  </div>`;
+}
+
+/**
+ * Fetch FDA data and inject FDA cards into the results panel.
+ * Called after local results are rendered.
+ */
+function _injectFDAResults(query, localCount) {
+  var container = document.getElementById('dni-fda-section');
+  if (!container) return;
+
+  // Show loading state
+  container.innerHTML = `
+    <div id="dni-fda-header" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px">
+      <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(129,140,248,0.4),transparent)"></div>
+      <span style="font-family:var(--mono);font-size:8.5px;color:#818cf8;font-weight:700;letter-spacing:1.5px">FDA LIVE DATA</span>
+      <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(129,140,248,0.4))"></div>
+    </div>
+    <div id="dni-fda-cards">
+      <div style="text-align:center;padding:16px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+        ⟳ Fetching FDA drug label data…
+      </div>
+    </div>`;
+
+  _fetchFDA(query).then(function(result) {
+    var cardsEl = document.getElementById('dni-fda-cards');
+    if (!cardsEl) return;
+
+    // Handle fetch errors with a visible message
+    if (result.error) {
+      var errMsg = result.error === 'rate_limit'
+        ? 'FDA API rate limit reached — try again in a moment.'
+        : result.error === 'timeout'
+          ? 'FDA API request timed out. Local database results shown above.'
+          : result.error.startsWith('http_')
+            ? 'FDA API returned status ' + result.error.replace('http_','') + '.'
+            : null; // For generic network/CORS errors: fail silently
+      if (!errMsg) {
+        // Silent fail — network/CORS issue; don't alarm the user
+        container.innerHTML = '';
+        return;
+      }
+      cardsEl.innerHTML = `
+        <div style="font-family:var(--mono);font-size:8.5px;color:#f0b429;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:9px 12px;line-height:1.7">
+          ℹ FDA live data unavailable — ${errMsg}
+        </div>`;
+      return;
+    }
+
+    var results = result.data || [];
+
+    if (!results || results.length === 0) {
+      // Silently remove — no noise for nutrient/food searches
+      container.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    results.forEach(function(label, i) {
+      var parsed = _parseFDALabel(label);
+      var card   = _renderFDACard(parsed, i);
+      if (card) html += card;
+    });
+
+    if (!html) {
+      container.innerHTML = '';
+      return;
+    }
+
+    cardsEl.innerHTML = html;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 4.  LOCAL SEARCH ENGINE
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Search DNI_DB by drug name, alias, category, tag, or keyword.
+ * Returns entries where ANY field contains the query string.
+ */
+function _search(query) {
+  if (!query || query.trim().length < 2) return [];
+  var q = query.trim().toLowerCase();
+
+  return DNI_DB.filter(function(e) {
+    if (e.drug.toLowerCase().includes(q)) return true;
+    if (e.category.toLowerCase().includes(q)) return true;
+    if (e.subcategory.toLowerCase().includes(q)) return true;
+    if (e.aliases.some(function(a){ return a.toLowerCase().includes(q); })) return true;
+    if (e.tags.some(function(t){ return t.toLowerCase().includes(q); })) return true;
+    if (e.effects.some(function(ef){ return ef.toLowerCase().includes(q); })) return true;
+    if (e.implications.some(function(im){ return im.toLowerCase().includes(q); })) return true;
+    return false;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 5.  RENDER RESULTS
+// ══════════════════════════════════════════════════════════════════════
+
+var SEVERITY_CONFIG = {
+  info:     { color:'#94a3b8', bg:'rgba(148,163,184,0.07)', border:'rgba(148,163,184,0.2)',  label:'INFO'     },
+  caution:  { color:'#f0b429', bg:'rgba(240,180,41,0.07)',  border:'rgba(240,180,41,0.2)',   label:'CAUTION'  },
+  moderate: { color:'#fb923c', bg:'rgba(251,146,60,0.07)',  border:'rgba(251,146,60,0.2)',   label:'MODERATE' },
+  major:    { color:'#fb7185', bg:'rgba(251,113,133,0.07)', border:'rgba(251,113,133,0.25)', label:'MAJOR'    },
+};
+
+function _renderEntry(e) {
+  var sv = SEVERITY_CONFIG[e.severity] || SEVERITY_CONFIG.caution;
+  var html = '';
+
+  html += `
+  <div class="dni-card" style="background:var(--surface2);border:1px solid ${sv.border};border-radius:10px;overflow:hidden;margin-bottom:10px">
+
+    <!-- Card header -->
+    <div style="background:${sv.bg};border-bottom:1px solid ${sv.border};padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div>
+        <span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:var(--text-bright)">${e.drug}</span>
+        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-left:8px">${e.subcategory}</span>
+      </div>
+      <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1.5px;color:${sv.color};background:${sv.bg};border:1px solid ${sv.border};border-radius:4px;padding:3px 8px">${sv.label}</span>
+    </div>
+
+    <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+
+      <!-- Drug effects -->
+      <div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:${sv.color};font-weight:700;letter-spacing:1px;margin-bottom:5px">DRUG / NUTRIENT EFFECTS</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          ${e.effects.map(function(ef){
+            return `<div style="display:flex;gap:7px;background:rgba(0,0,0,0.1);border-radius:5px;padding:5px 8px">
+              <span style="color:${sv.color};flex-shrink:0;font-size:10px">●</span>
+              <span style="font-family:var(--mono);font-size:9.5px;color:var(--text);line-height:1.6">${ef}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Nutritional implications -->
+      <div>
+        <div style="font-family:var(--mono);font-size:8.5px;color:#34d399;font-weight:700;letter-spacing:1px;margin-bottom:5px">NUTRITIONAL IMPLICATIONS & CAUTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          ${e.implications.map(function(im){
+            var isAvoid = im.toUpperCase().startsWith('AVOID') || im.toUpperCase().startsWith('DO NOT');
+            var c = isAvoid ? '#fb7185' : 'var(--text-dim)';
+            return `<div style="display:flex;gap:7px;background:rgba(52,211,153,0.04);border-radius:5px;padding:5px 8px">
+              <span style="color:#34d399;flex-shrink:0;font-size:10px">→</span>
+              <span style="font-family:var(--mono);font-size:9.5px;color:${c};line-height:1.6">${im}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer tags -->
+    <div style="padding:0 12px 10px;display:flex;flex-wrap:wrap;gap:4px">
+      ${e.tags.map(function(t){
+        return `<span style="font-family:var(--mono);font-size:7.5px;background:rgba(148,163,184,0.1);color:var(--text-dim);border:1px solid rgba(148,163,184,0.15);border-radius:4px;padding:2px 6px">${t}</span>`;
+      }).join('')}
+    </div>
+
+  </div>`;
+
+  return html;
+}
+
+function _renderResults(query) {
+  var resultsEl = document.getElementById('dni-results');
+  if (!resultsEl) return;
+
+  if (!query || query.trim().length < 2) {
+    resultsEl.innerHTML = _dniPlaceholder();
+    return;
+  }
+
+  var results = _search(query);
+
+  // ── Header with clear button ────────────────────────────────────────
+  var clearBtn = `
+    <button onclick="dniClear()"
+      style="font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      ✕ Clear
+    </button>`;
+
+  if (results.length === 0) {
+    // No local results
+    var isMaybeDrug = _isDrugQuery(query);
+    resultsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+          No local results for "<strong style="color:var(--text)">${query}</strong>"${isMaybeDrug ? ' — searching FDA…' : ''}
+        </div>
+        ${clearBtn}
+      </div>
+      <div style="text-align:center;padding:14px;background:rgba(251,113,133,0.05);border:1px solid rgba(251,113,133,0.15);border-radius:10px;margin-bottom:12px">
+        <div style="font-size:18px;margin-bottom:6px">📚</div>
+        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+          Not found in local Krause &amp; Mahan database.<br>
+          <span style="font-size:8.5px;opacity:0.8">${isMaybeDrug ? 'FDA live label data shown below (if available).' : 'Try a specific drug name for FDA live data.'}</span>
+        </div>
+      </div>
+      <div id="dni-fda-section"></div>`;
+    if (isMaybeDrug) _injectFDAResults(query, 0);
+    return;
+  }
+
+  // ── Local results found ─────────────────────────────────────────────
+  var isDrug = _isDrugQuery(query);
+  var localSection = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(56,189,248,0.4),transparent)"></div>
+      <span style="font-family:var(--mono);font-size:8.5px;color:#38bdf8;font-weight:700;letter-spacing:1.5px">LOCAL DATABASE</span>
+      <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(56,189,248,0.4))"></div>
+    </div>
+    ${results.map(_renderEntry).join('')}`;
+
+  var headerHtml = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+        <span style="color:#38bdf8;font-weight:700">${results.length}</span> local result${results.length===1?'':'s'}
+        ${isDrug ? '+ <span style="color:#818cf8;font-weight:700">FDA live</span>' : ''}
+        for "<strong style="color:var(--text)">${query}</strong>"
+      </div>
+      ${clearBtn}
+    </div>`;
+
+  resultsEl.innerHTML = headerHtml + localSection + '<div id="dni-fda-section"></div>';
+
+  // Only fire FDA fetch for actual drug name queries
+  if (isDrug) _injectFDAResults(query, results.length);
+}
+
+function _dniPlaceholder() {
+  return `
+    <div style="text-align:center;padding:32px 16px;font-family:var(--mono)">
+      <div style="font-size:28px;margin-bottom:10px">💊</div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.7">
+        Enter a drug name, brand name, or nutrient keyword to search.
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 6.  QUICK-SEARCH TAG BUTTONS
+// ══════════════════════════════════════════════════════════════════════
+
+var QUICK_TAGS = [
+  'grapefruit','alcohol','potassium','vitamin B12','vitamin D',
+  'folate','calcium','magnesium','tyramine','sjw','enteral nutrition','warfarin',
+  'metformin','colchicine','aspirin','antiretroviral','hypoglycemia','antiplatelet',
+];
+
+function _renderQuickTags() {
+  return QUICK_TAGS.map(function(t){
+    return `<button onclick="dniQuickSearch('${t}')"
+      style="font-family:var(--mono);font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.25);background:rgba(56,189,248,0.06);color:#38bdf8;cursor:pointer;white-space:nowrap">
+      ${t}
+    </button>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 7.  PUBLIC API (window.*)
+// ══════════════════════════════════════════════════════════════════════
+
+window.dniSearch = function() {
+  var q = (document.getElementById('dni-input')||{}).value || '';
+  _renderResults(q);
+};
+
+window.dniQuickSearch = function(tag) {
+  var inp = document.getElementById('dni-input');
+  if (inp) { inp.value = tag; }
+  _renderResults(tag);
+};
+
+window.dniClear = function() {
+  var inp = document.getElementById('dni-input');
+  if (inp) inp.value = '';
+  var res = document.getElementById('dni-results');
+  if (res) res.innerHTML = _dniPlaceholder();
+};
+
+window.dniInputKeyup = function(e) {
+  if (e.key === 'Enter') { window.dniSearch(); return; }
+  // Live search with debounce
+  clearTimeout(window._dniDebounce);
+  window._dniDebounce = setTimeout(function(){
+    var q = (document.getElementById('dni-input')||{}).value || '';
+    if (q.length === 0 || q.length >= 2) _renderResults(q);
+  }, 250);
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// 8.  BUILD TAB  (mirrors parenteral.js / screening.js pattern)
+// ══════════════════════════════════════════════════════════════════════
+
+function _buildDNITab() {
+  if (document.getElementById('tab-dni')) return;
+
+  // Bottom-nav button
+  var nav = document.querySelector('nav.bottom-nav');
+  if (nav && !document.getElementById('bnav-dni')) {
+    var btn = document.createElement('div');
+    btn.className = 'tab tab-support';
+    btn.id = 'bnav-dni';
+    btn.setAttribute('onclick', "switchTab('dni')");
+    btn.setAttribute('role','button');
+    btn.setAttribute('tabindex','0');
+    btn.setAttribute('aria-label','Drug-Nutrient Interactions');
+    btn.innerHTML = `
+      <span class="tab-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+          <path d="M11 8v6M8 11h6"/>
+        </svg>
+      </span>
+      <span class="tab-label">DNI</span>`;
+    nav.appendChild(btn);
+  }
+
+  // TAB_META
+  if (typeof TAB_META !== 'undefined' && !TAB_META['dni']) {
+    TAB_META['dni'] = { label: 'Drug-Nutrient Interactions', accent: '#38bdf8' };
+  }
+
+  // Tab div
+  var div = document.createElement('div');
+  div.className = 'main';
+  div.id = 'tab-dni';
+  div.innerHTML = `
+<div style="padding:0 0 80px 0">
+
+  <!-- Header -->
+  <div style="padding:16px 16px 0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-size:26px">💊</span>
+      <div>
+        <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Drug-Nutrient Interactions</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">SEARCH · EFFECTS · IMPLICATIONS · CAUTIONS</div>
+      </div>
+    </div>
+    <div style="height:2px;background:linear-gradient(90deg,#38bdf8,rgba(56,189,248,0));border-radius:2px;margin:10px 0 14px"></div>
+  </div>
+
+  <!-- Intro -->
+  <div style="margin:0 16px 12px;background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.18);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.8">
+    <div style="color:#38bdf8;font-weight:700;font-size:10px;margin-bottom:6px">DNI Reference</div>
+    <div style="margin-bottom:7px">Search by drug name, brand name, drug class, or nutrient/food keyword.</div>
+    <div style="color:var(--text);font-weight:700;margin-bottom:3px">Local Data Sources</div>
+    <div style="padding-left:8px;border-left:2px solid rgba(56,189,248,0.3);margin-bottom:7px">
+      · <strong style="color:var(--text)">Krause &amp; Mahan's Food and the Nutrition Care Process</strong>, 16th ed.<br>
+      · <strong style="color:var(--text)">The Essential Pocket Guide for Clinical Nutrition</strong>, 4th ed. <span style="color:var(--text-dim)">(Width &amp; Reinhard)</span><br>
+      · <strong style="color:var(--text)">LPI/OSU Micronutrient Info Center</strong> — Drake &amp; Stevens, Drug-Nutrient Interactions 2020 <span style="color:var(--text-dim)">(lpi.oregonstate.edu)</span><br>
+      · <strong style="color:var(--text)">NIH PMC</strong> — Prescott JD et al. <em>J Pharm Technol</em> 2018;34(5):216–230 <span style="color:var(--text-dim)">(PMC6109862)</span>
+    </div>
+    <div style="margin-bottom:7px">
+      <span style="color:#818cf8;font-weight:700">+ Live Data:</span> FDA OpenFDA label information (interactions, warnings, and food effects) fetched in real time.
+    </div>
+    <div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.25);border-radius:6px;padding:5px 8px;color:#fb7185;font-weight:700">
+      ⚠ Clinical reference only. Always verify interactions with a current pharmacopoeia or drug interaction checker for individual patients.
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div style="padding:0 16px;margin-bottom:10px">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <div style="background:rgba(56,189,248,0.07);border-bottom:1px solid rgba(56,189,248,0.13);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+        🔍 SEARCH INTERACTIONS
+      </div>
+      <div style="padding:12px;display:flex;gap:8px">
+        <input id="dni-input" type="text" placeholder="e.g. warfarin, grapefruit, vitamin B12, metformin, potassium…"
+          onkeyup="dniInputKeyup(event)"
+          style="flex:1;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+        <button onclick="dniSearch()"
+          style="padding:10px 16px;background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border:none;border-radius:7px;cursor:pointer;white-space:nowrap">
+          SEARCH
+        </button>
+      </div>
+      <!-- Quick-search tags -->
+      <div style="padding:0 12px 12px">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">QUICK SEARCH</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${_renderQuickTags()}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results area -->
+  <div style="padding:0 16px" id="dni-results">
+    ${_dniPlaceholder()}
+  </div>
+
+</div>`;
+
+  // Insert after last .main
+  var mains = document.querySelectorAll('.main');
+  var last  = mains[mains.length - 1];
+  if (last && last.parentNode) last.parentNode.insertBefore(div, last.nextSibling);
+  else document.body.appendChild(div);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 9.  INIT  (mirrors parenteral.js _init)
+// ══════════════════════════════════════════════════════════════════════
+
+function _init() {
+  function _run() {
+    _buildDNITab();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _run);
+  } else {
+    _run();
+  }
+
+  window.dniSearch      = window.dniSearch;
+  window.dniQuickSearch = window.dniQuickSearch;
+  window.dniClear       = window.dniClear;
+  window.dniInputKeyup  = window.dniInputKeyup;
+
+  // ── Expose database and search for OasisAI direct access ────────────
+  // oasisAI.js reads these lazily, so order of script loading doesn't matter.
+  window.DNI_DB         = DNI_DB;
+  window._dniSearchFn   = _search;         // (_search) internal query engine
+  window.DNI_SEVERITY   = SEVERITY_CONFIG; // severity metadata
+}
+
+_init();
+
+})();
