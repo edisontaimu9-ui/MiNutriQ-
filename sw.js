@@ -287,3 +287,40 @@ self.addEventListener('pushsubscriptionchange', e => {
     ).catch(() => {})
   );
 });
+
+// ── BACKGROUND SYNC & PERIODIC SYNC ─────────────────────────────
+// Note: the SW has no access to localStorage, so the 'oasis_news_api'
+// dev override used by js/oasis-news.js is not honoured here — this
+// always talks to the production API.
+const NEWS_API_SW = 'https://oasis-nutrition-api.onrender.com/api/v1';
+const NEWS_CACHE_KEY = self.registration.scope + '__news-cache__';
+
+// One-off Background Sync — fires once connectivity returns after a
+// tag was registered from the page (see js/oasis-news.js triggerCrawl()).
+self.addEventListener('sync', e => {
+  if (e.tag === 'news-crawl-retry') {
+    e.waitUntil(
+      fetch(NEWS_API_SW + '/crawl/trigger/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    '{}',
+      }).catch(() => {})
+    );
+  }
+});
+
+// Periodic Background Sync — Chromium-only, installed-PWA-only. Refreshes
+// the news cache in the background so the News tab has fresh data the
+// next time it's opened, even before the network request resolves.
+self.addEventListener('periodicsync', e => {
+  if (e.tag === 'news-refresh') {
+    e.waitUntil(
+      fetch(NEWS_API_SW + '/articles/?page=1&page_size=10')
+        .then(res => {
+          if (!res || res.status !== 200) return;
+          return caches.open(CACHE).then(c => c.put(NEWS_CACHE_KEY, res.clone()));
+        })
+        .catch(() => {})
+    );
+  }
+});

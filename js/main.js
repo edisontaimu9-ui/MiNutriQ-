@@ -440,7 +440,10 @@ const appState = {
         }
       });
 
-      navigator.serviceWorker.ready.then(() => _initPushNotifications(reg));
+      navigator.serviceWorker.ready.then(() => {
+        _initPushNotifications(reg);
+        _initPeriodicSync(reg);
+      });
 
     }).catch(() => {});
   }
@@ -661,6 +664,39 @@ async function _initPushNotifications(reg) {
     await _ensurePushSubscription(reg).catch(() => {});
   }
 }
+
+/**
+ * Periodic Background Sync — Chromium-only, and only fires once the app
+ * is installed as a PWA (browser tabs never get periodic sync). Silently
+ * no-ops everywhere else, including iOS Safari.
+ * Registers a 'news-refresh' tag so js/oasis-news.js has a warm cache
+ * by the time the user opens the News tab.
+ */
+async function _initPeriodicSync(reg) {
+  if (!('periodicSync' in reg)) return;
+  try {
+    const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+    if (status.state !== 'granted') return;
+    await reg.periodicSync.register('news-refresh', {
+      minInterval: 12 * 60 * 60 * 1000, // 12h — browser treats this as a floor, not a guarantee
+    });
+  } catch (_) { /* unsupported or denied — safe to ignore */ }
+}
+
+/**
+ * One-off Background Sync helper — call this from a failed fetch's
+ * .catch() to have the browser retry automatically once connectivity
+ * returns, instead of just showing an error. No-ops if unsupported.
+ * Usage: _registerBackgroundSync('news-crawl-retry')
+ */
+window._registerBackgroundSync = async function(tag) {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (!('sync' in reg)) return false;
+    await reg.sync.register(tag);
+    return true;
+  } catch (_) { return false; }
+};
 
 /** Read / write the persisted notification preference */
 function _ntPushPref(update) {

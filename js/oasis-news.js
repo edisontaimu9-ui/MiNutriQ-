@@ -311,6 +311,9 @@
           }, 8000);
         })
         .catch(function () {
+          // Offline or request failed — queue a Background Sync retry so it
+          // fires automatically once connectivity returns (no-ops if unsupported).
+          if (window._registerBackgroundSync) window._registerBackgroundSync('news-crawl-retry');
           if (btn) { btn.textContent = 'Failed'; btn.disabled = false; }
         });
     },
