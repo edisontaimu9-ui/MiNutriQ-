@@ -12012,7 +12012,6 @@ function dbSwitchTab(tab) {
     if (tab === 'enteral')  { exportBtn.onclick = enExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
     if (tab === 'renal')    { exportBtn.onclick = rnExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
     if (tab === 'packaged') { exportBtn.onclick = pkgExportCSV; exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-    if (tab === 'pn')       { exportBtn.style.display = 'none'; }
   }
   if (tab === 'enteral'  && !enInitialized)  enInit();
   if (tab === 'exchange' && !uctInitialized) uctInit();

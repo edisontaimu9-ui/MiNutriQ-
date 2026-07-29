@@ -7150,7 +7150,6 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
     <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
-    <button onclick="dbSwitchTab('pn')"       id="dbtab-pn"       class="dbtab-btn">PN Bags</button>
   </div>
 
   <!-- ════════════════════ PANEL 1: FOOD DB ════════════════════ -->
@@ -7592,21 +7591,6 @@ var photoCropper = (function () {
 
   <div class="dev-footer">Packaged Foods · Chakudya API sync · Offline-first IndexedDB cache</div>
   </div><!-- end dbpanel-packaged -->
-
-  <!-- ════════════════════ PANEL 5: PN BAG DATABASE (React) ════════════════════ -->
-  <div id="dbpanel-pn" style="display:none">
-    <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:14px 18px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        <span style="font-size:22px">💉</span>
-        <div>
-          <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">PN Bag Database</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">20 products · Kabiven · NuTRIflex Lipid · Clinimix E</div>
-        </div>
-      </div>
-      <div style="height:1px;background:linear-gradient(90deg,rgba(167,139,250,0.3),transparent);margin:10px 0 0"></div>
-    </div>
-    <div id="pn-db-react-root"></div>
-  </div><!-- end dbpanel-pn -->
 
 
 </div>
@@ -12974,7 +12958,72 @@ function ntClear(scopeId, resultIds) {
 <script src="oasisAI.js" defer></script>
 <!-- ════════════ END OASIS AI ════════════ -->
 
-<!-- ════════════ BUY ME A SNACK FAB — now rendered by React (see react-src/BuySnackWidget.jsx) into #oasis-react-root ════════════ -->
+<!-- ════════════ BUY ME A SNACK FAB ════════════ -->
+<button
+  id="bs-fab"
+  aria-label="Buy me a Snack"
+  title="Buy me a Snack 🍿"
+  style="
+    display: none;
+    position: fixed;
+    bottom: calc(var(--bottom-nav-h, 60px) + var(--sab, 0px) + 16px);
+    right: 20px;
+    z-index: 900;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 11px 18px 11px 14px;
+    font-family: var(--sans, 'Outfit', sans-serif);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(234,88,12,0.40), 0 2px 8px rgba(0,0,0,0.25);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  "
+  onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(234,88,12,0.50),0 2px 8px rgba(0,0,0,0.25)'"
+  onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(234,88,12,0.40),0 2px 8px rgba(0,0,0,0.25)'"
+  ontouchstart="this.style.transform='scale(0.96)';this.style.opacity='0.88'"
+  ontouchend="this.style.transform='';this.style.opacity='1'"
+>
+  <span style="font-size:17px;line-height:1">🍿</span>
+  <span>Buy me a Snack</span>
+</button>
+
+<script type="module">
+  import { initBuySnack } from './buySnack.js';
+
+  // Init widget — public key read lazily from window.PAYCHANGU_PUBLIC_KEY at pay time
+  // (loaded asynchronously from Remote Config key "paychangu_public_key").
+  // Secret key lives ONLY in the Appwrite Function environment — never in the browser.
+  initBuySnack(null); // null = will read window.PAYCHANGU_PUBLIC_KEY at runtime
+
+  // ── FAB visibility: only show on home tab ──
+  const fab     = document.getElementById('bs-fab');
+  const homeTab = document.getElementById('tab-home');
+
+  if (fab && homeTab) {
+    const observer = new MutationObserver(() => {
+      fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
+    });
+    observer.observe(homeTab, { attributes: true, attributeFilter: ['class'] });
+
+    // Set initial state
+    fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
+
+    // Wire FAB click to open the Buy Me a Snack modal
+    fab.addEventListener('click', () => {
+      const overlay = document.getElementById('buysnack-overlay');
+      if (overlay) overlay.classList.add('active');
+    });
+  }
+</script>
+<!-- ════════════ END BUY ME A SNACK FAB ════════════ -->
 
 <!-- ════════════ USER GUIDE MODAL ════════════ -->
 <div id="userguide-overlay" role="dialog" aria-modal="true" aria-label="Oasis User Guide" style="
@@ -14054,25 +14103,5 @@ document.addEventListener('keydown', function(e){
   }
 })();
 </script>
-<!-- React migration test mount — safe to remove anytime -->
-<!-- ════════════════════ PN CALCULATOR TAB (React) ════════════════════ -->
-<div class="main" id="tab-parenteral">
-<div style="padding:0 0 80px 0">
-  <div style="padding:16px 16px 0">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <span style="font-size:26px">💉</span>
-      <div>
-        <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Parenteral Nutrition</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">CUSTOM TPN CALCULATOR · BAG SELECTOR · MONITORING</div>
-      </div>
-    </div>
-    <div style="height:2px;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,0));border-radius:2px;margin:10px 0 14px"></div>
-  </div>
-  <div id="pn-calc-react-root"></div>
-</div>
-</div><!-- end tab-parenteral -->
-
-<div id="oasis-react-root"></div>
-<script src="react-dist/oasis-react.js" defer></script>
 </body>
 </html>
