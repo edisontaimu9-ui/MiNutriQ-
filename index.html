@@ -100,7 +100,7 @@
   font-src 'self' https://fonts.gstatic.com data:;
   connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev https://oasis-ai-proxy-worker.edisontaimu9.workers.dev https://paychangu-payment-gateway.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
-  worker-src blob:;
+  worker-src 'self' blob:;
   manifest-src blob: 'self';
 ">
 <!-- safe-area insets for notch devices -->
