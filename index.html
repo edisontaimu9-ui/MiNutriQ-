@@ -104,9 +104,9 @@
   manifest-src blob: 'self';
 ">
 <!-- safe-area insets for notch devices -->
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="responsive.css">
-<link rel="stylesheet" href="news-styles.css">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/news-styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -8860,7 +8860,7 @@ var photoCropper = (function () {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-remote-config-compat.js"></script>
 <!-- foodData.js removed — replaced by chakudyaDB.js -->
-<script src="pediNutrition.js"></script>
+<script src="js/pediNutrition.js"></script>
 <script>
 /* ── pediSetPop safety net ─────────────────────────────────────────────
    If pediNutrition.js failed to load or parse (syntax error, network error,
@@ -8891,8 +8891,8 @@ var photoCropper = (function () {
 </script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <!-- regionalFCT.js removed — replaced by chakudyaDB.js -->
-<script src="foodData.js?v=1.3.7"></script>
-<script src="foodSearch.js?v=1.3.7"></script>
+<script src="js/foodData.js?v=1.3.7"></script>
+<script src="js/foodSearch.js?v=1.3.7"></script>
 <!-- ═══════════════════════════════════════════════════════════════════════
      NT_CustomFoods — Import FDC results into local DB (localStorage)
      Patches NTFoodSearch.searchLocal to prepend imported foods.
@@ -9076,8 +9076,8 @@ var photoCropper = (function () {
 })();
 </script>
 
-<script src="main.js?v=1.3.7"></script>
-<script src="pwaManifest.js"></script>
+<script src="js/main.js?v=1.3.7"></script>
+<script src="js/pwaManifest.js"></script>
 
 <script>
 /* ════════════════════════════════════════════════════════════
@@ -9656,7 +9656,7 @@ var photoCropper = (function () {
 })();
 </script>
 
-<script src="cde.js"></script>
+<script src="js/cde.js"></script>
 
 <!-- ── Collapsible section toggles & Clear ── -->
 <script>
@@ -9835,11 +9835,11 @@ function ntClear(scopeId, resultIds) {
                  ASPEN PICU 2017 · Krause & Mahan 16e Ch.41
                  WHO 2006/2007 · IOM DRI 2023
      ═══════════════════════════════════════════════════════════════════ -->
-<script src="pediBurn.js"></script>
-<script src="growthCharts.js"></script>
-<script src="parenteral.js"></script>
-<script src="screening.js"></script>
-<script src="dni.js"></script>
+<script src="js/pediBurn.js"></script>
+<script src="js/growthCharts.js"></script>
+<script src="js/parenteral.js"></script>
+<script src="js/screening.js"></script>
+<script src="js/dni.js"></script>
 
 <!-- ════════════════════════════════════════════════════════════════════════
      ANTHROPOMETRY & BODY COMPOSITION MODULE  |  tab-anthro
@@ -12265,16 +12265,16 @@ function ntClear(scopeId, resultIds) {
 })();
 </script>
 
-<script src="pes.js"></script>
+<script src="js/pes.js"></script>
 
 <!-- Appwrite Web SDK — required by library.js (Storage + Databases).
      Firebase Auth is NOT replaced; only library Storage/DB use Appwrite. -->
 <script src="https://cdn.jsdelivr.net/npm/appwrite@15/dist/iife/sdk.js"></script>
-<script src="appwriteClient.js"></script>
+<script src="js/appwriteClient.js"></script>
 
-<script src="library.js"></script>
-<script src="assessment.js"></script>
-<script src="recipeCalculator.js"></script>
+<script src="js/library.js"></script>
+<script src="js/assessment.js"></script>
+<script src="js/recipeCalculator.js"></script>
 
 <!-- ════════════ UCT EXCHANGE LIST TOOLTIP ════════════ -->
 <div id="uct-exchange-tooltip" role="tooltip" aria-live="polite" style="
@@ -12943,8 +12943,8 @@ function ntClear(scopeId, resultIds) {
     });
   })();
 </script>
-<script src="references.js" defer></script>
-<script src="oasisAI.js" defer></script>
+<script src="js/references.js" defer></script>
+<script src="js/oasisAI.js" defer></script>
 <!-- ════════════ END OASIS AI ════════════ -->
 
 <!-- ════════════ BUY ME A SNACK FAB ════════════ -->
@@ -12985,7 +12985,7 @@ function ntClear(scopeId, resultIds) {
 </button>
 
 <script type="module">
-  import { initBuySnack } from './buySnack.js';
+  import { initBuySnack } from './js/buySnack.js';
 
   // Init widget — payments go straight from the browser to the PayChangu
   // Worker directly via fetch. No keys of any kind live in the browser.
@@ -14017,7 +14017,7 @@ document.addEventListener('keydown', function(e){
 </script>
 <!-- ════════════ END NOTIFICATION PANEL ════════════ -->
 
-<script src="responsive.js" defer></script>
-<script src="oasis-news.js" defer></script>
+<script src="js/responsive.js" defer></script>
+<script src="js/oasis-news.js" defer></script>
 </body>
 </html>
