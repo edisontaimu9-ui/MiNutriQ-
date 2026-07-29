@@ -7638,6 +7638,7 @@ const BLEND_FOODS = [
   const API_BASE        = 'https://chakudya-api.edisontaimu9.workers.dev';
   const PACKAGED_URL     = API_BASE + '/packaged';
   const SUBMIT_URL       = API_BASE + '/packaged/submit';
+  const SCAN_URL         = API_BASE + '/packaged/scan';
 
   const IDB_DB_NAME     = 'OasisPackagedFoods';
   const IDB_STORE       = 'foods';
@@ -7648,6 +7649,7 @@ const BLEND_FOODS = [
   const PAGE_SIZE       = 200;           // items per GET /packaged page during sync
   const MAX_SYNC_PAGES  = 25;            // safety cap (≈5000 items) against runaway pagination
   const FETCH_TIMEOUT   = 10000;         // ms
+  const SCAN_FETCH_TIMEOUT = 30000;      // ms — vision OCR + a ~6MB upload runs well past the normal 10s budget
   const MAX_RESULTS     = 20;
   const FUZZY_THRESHOLD = 0.35;
 
@@ -7660,6 +7662,7 @@ const BLEND_FOODS = [
   let _syncTimer    = null;
   let _pollTimer    = null;
   let _onSyncCallback = null;            // called after every sync batch
+  let _lastNutritionFlag = null;         // set by addFood() when kcal/macro check recalculates or flags a mismatch
 
   // Resolve/reject queue for callers that arrive before init completes
   let _readyPromise = null;
@@ -7734,6 +7737,52 @@ const BLEND_FOODS = [
     return null;
   }
 
+  // ── ENERGY/MACRO CONSISTENCY (Atwater factors) ─────────────────────────────
+  // Standard general factors: 4 kcal/g protein, 4 kcal/g carbohydrate,
+  // 9 kcal/g fat. Used to sanity-check submitted/OCR'd nutrition panels —
+  // labels are frequently mistyped or misread (decimal points, g↔mg, per-
+  // serving vs per-100g mixups) and a macro/kcal mismatch is the cheapest
+  // signal that something upstream went wrong.
+  const ATWATER_KCAL_PER_G = { pro: 4, cho: 4, fat: 9 };
+
+  /**
+   * @param {number|null} pro  grams protein (per 100g/ml)
+   * @param {number|null} cho  grams carbohydrate (per 100g/ml)
+   * @param {number|null} fat  grams fat (per 100g/ml)
+   * @returns {number|null} Atwater-derived kcal, or null if any macro is missing
+   */
+  function calcExpectedKcal(pro, cho, fat) {
+    if (pro == null || cho == null || fat == null) return null;
+    return pro * ATWATER_KCAL_PER_G.pro + cho * ATWATER_KCAL_PER_G.cho + fat * ATWATER_KCAL_PER_G.fat;
+  }
+
+  /**
+   * Compare a stated kcal value against the Atwater-derived value for the
+   * given macros (all assumed already per-100g/ml).
+   * Tolerance mirrors the FDA/Codex practice of allowing rounding and fiber/
+   * sugar-alcohol adjustments on printed labels: consistent if within 10% of
+   * the expected value OR within 15 kcal absolute, whichever is more lenient
+   * (the flat floor keeps very low-kcal foods, e.g. leafy vegetables, from
+   * being flagged over a 1-2 kcal rounding difference).
+   * @returns {{checked:boolean, expectedKcal?:number, providedKcal?:number,
+   *   diffKcal?:number, diffPct?:number, consistent?:boolean}}
+   */
+  function checkKcalConsistency(kcal, pro, cho, fat, tolerancePct = 0.10) {
+    const expected = calcExpectedKcal(pro, cho, fat);
+    if (expected == null || kcal == null) return { checked: false };
+    const diff = kcal - expected;
+    const diffPct = expected > 0 ? Math.abs(diff) / expected : (Math.abs(kcal) > 0 ? 1 : 0);
+    const consistent = diffPct <= tolerancePct || Math.abs(diff) <= 15;
+    return {
+      checked: true,
+      expectedKcal: Math.round(expected),
+      providedKcal: kcal,
+      diffKcal: Math.round(diff),
+      diffPct: +(diffPct * 100).toFixed(1),
+      consistent,
+    };
+  }
+
   /**
    * Normalise a raw Chakudya API record (or a locally-cached admin-schema doc)
    * into the single internal shape the rest of this module works with:
@@ -7755,8 +7804,15 @@ const BLEND_FOODS = [
 
     const barcode = String(raw.barcode || raw.ean || raw.upc || '').replace(/\D/g, '');
 
-    const kcal = raw.energy_kcal ?? raw.kcal ?? n.kcal ?? n.energy_kcal ?? null;
-    const kj   = raw.energy_kj   ?? raw.kj   ?? n.kj   ?? (kcal != null ? +(kcal * 4.184).toFixed(0) : null);
+    // Energy can come off a label as kcal, kJ, or (most labels) both — OCR
+    // sometimes only captures one of the two. Fill in whichever is missing
+    // using the fixed conversion factors rather than leaving it null:
+    //   kJ → kcal:  kcal = kJ ÷ 4.184
+    //   kcal → kJ:  kJ   = kcal × 4.184
+    let kcal = raw.energy_kcal ?? raw.kcal ?? n.kcal ?? n.energy_kcal ?? null;
+    let kj   = raw.energy_kj   ?? raw.kj   ?? n.kj   ?? null;
+    if (kcal == null && kj != null) kcal = +(kj / 4.184).toFixed(0);
+    if (kj == null && kcal != null) kj   = +(kcal * 4.184).toFixed(0);
 
     const status   = raw.status || (raw.verified === false ? 'pending' : null);
     const verified = raw.verified ?? (status ? status === 'approved' || status === 'verified' : true);
@@ -7821,6 +7877,7 @@ const BLEND_FOODS = [
       confidenceScore: 1.0,
       lastUpdated:     doc.updatedAt   ?? null,
       submittedBy:     doc.submittedBy || '',
+      nutritionFlag:   doc.nutritionFlag || null,
       _raw:            doc,
     };
   }
@@ -7948,8 +8005,9 @@ const BLEND_FOODS = [
   // ── CHAKUDYA API — NETWORK HELPERS ───────────────────────────────────────────
 
   async function _apiFetch(url, opts = {}) {
+    const timeoutMs = opts.timeoutMs || FETCH_TIMEOUT;
     const ctrl    = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer   = ctrl ? setTimeout(() => ctrl.abort(), FETCH_TIMEOUT) : null;
+    const timer   = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
     try {
       const res = await fetch(url, { ...opts, signal: ctrl ? ctrl.signal : undefined });
       const text = await res.text();
@@ -8260,6 +8318,68 @@ const BLEND_FOODS = [
   // ── CRUD — WRITE OPERATIONS ──────────────────────────────────────────────────
 
   /**
+   * Submit one or more photos of a nutrition label to the Chakudya API's
+   * OCR/AI scan endpoint (POST /packaged/scan). Useful when the barcode and
+   * nutrition panel are on different faces of the package — send both
+   * photos in one call and the server combines what it reads across them.
+   * The server normalizes values to per-100g/ml and inserts the result
+   * directly as status:"pending" — same review queue as a manual submission.
+   * This does NOT go through addFood()/SUBMIT_URL; the scan endpoint handles
+   * both extraction and insertion server-side in one call.
+   *
+   * @param {string|string[]} images - one or more "data:image/jpeg;base64,...."
+   *   strings (already resized/compressed client-side — keep each well under
+   *   ~6MB decoded, ~15MB combined). Max 5 images; extras are dropped.
+   * @param {string} [barcode] - optional barcode captured separately (e.g.
+   *   from the barcode scanner on the same screen); takes priority over
+   *   whatever the AI reads off the packaging
+   * @returns {Promise<object>} { status: "success"|"needs_retry", message,
+   *   data? (the inserted row, on success), extracted? (raw AI read, on
+   *   needs_retry), needs_review? (true if AI confidence was low) }
+   */
+  async function _scanLabel(images, barcode) {
+    const list = (Array.isArray(images) ? images : [images]).filter(Boolean).slice(0, 5);
+    if (!list.length) throw new Error('[PackagedFoodsDB] at least one image is required');
+    const body = { images: list };
+    if (barcode) body.barcode = String(barcode).replace(/\D/g, '');
+
+    try {
+      const json = await _apiFetch(SCAN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        timeoutMs: SCAN_FETCH_TIMEOUT,
+      });
+      // On success, drop the freshly-inserted row into the local cache
+      // immediately so it shows up in "my submissions" style views without
+      // waiting for the next poll cycle — same pattern addFood() follows.
+      if (json && json.status === 'success' && json.data) {
+        const doc = _normalizeApiDoc(json.data);
+        if (doc && doc.id) {
+          // OCR misreads (decimal points, per-serving vs per-100g mixups)
+          // are exactly the kind of error this check catches — flag rather
+          // than silently trust a scanned kcal value that doesn't add up.
+          const n = doc.per100g || {};
+          const kcalCheck = checkKcalConsistency(n.kcal, n.pro, n.cho, n.fat);
+          if (kcalCheck.checked && !kcalCheck.consistent) {
+            doc.nutritionFlag = { type: 'kcal_mismatch', ...kcalCheck };
+            json.needs_review = true; // surface alongside the existing low-OCR-confidence flag
+          }
+          _indexDoc(doc);
+          _idbPutBatch([doc]).catch(() => {});
+        }
+      }
+      return json;
+    } catch (err) {
+      // err.status present = request reached the server (needs_retry, rate
+      // limit, validation error) — surface the structured body if we have
+      // one so the caller can show the actual message rather than "HTTP 422".
+      if (err && err.status && err.body) return err.body;
+      throw err;
+    }
+  }
+
+  /**
    * Submit a packaged food to the Chakudya API (POST /packaged/submit).
    * Public + rate-limited on the API side — no auth required. New submissions
    * come back tagged status:"pending" server-side and only surface in public
@@ -8284,7 +8404,12 @@ const BLEND_FOODS = [
     if (!productName) throw new Error('[PackagedFoodsDB] name is required');
 
     const src = data.per100g || data.nutrition || {};
-    const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? null;
+    // Fixed conversion factors — kJ → kcal: kcal = kJ ÷ 4.184.
+    // Covers callers that only have a kJ reading (e.g. a label where the
+    // kcal figure was cropped out of the OCR photo) so energy_kcal isn't
+    // left blank when a perfectly usable kJ value was supplied.
+    const kjVal   = data.kj ?? src.kj ?? src.energy_kj ?? null;
+    const kcalVal = data.kcal ?? src.kcal ?? src.energy_kcal ?? (kjVal != null ? +(kjVal / 4.184).toFixed(0) : null);
     const barcode = (data.barcode || '').replace(/\D/g, '') || '';
 
     // Payload uses the exact snake_case column names of the `packaged_foods`
@@ -8306,6 +8431,30 @@ const BLEND_FOODS = [
       fiber_g:        data.fiber  ?? src.fiber  ?? src.fiber_g   ?? null,
       sodium_mg:      data.sodium ?? src.sodium ?? src.sodium_mg ?? null,
     };
+
+    // ── Energy/macro consistency (Atwater factors, per-100g/ml basis) ──────
+    // At this point payload.* is already normalized to per-100g/ml (callers —
+    // pkgSaveModal's manual form and the OCR scan endpoint — both do the
+    // per-serving → per-100g conversion before reaching here), so the check
+    // is a straight macro→kcal comparison with no further scaling needed.
+    // - kcal missing but all three macros present → recalculate it so the
+    //   submission never goes out with a blank energy value.
+    // - kcal present but inconsistent with the macros beyond tolerance →
+    //   don't silently overwrite what was typed/read off the label; instead
+    //   flag it (surfaced to the caller via nutritionFlag on the returned
+    //   doc, so the UI can show a review badge / warning).
+    let nutritionFlag = null;
+    const kcalCheck = checkKcalConsistency(payload.energy_kcal, payload.protein_g, payload.carbs_g, payload.fat_g);
+    if (payload.energy_kcal == null) {
+      const recalculated = calcExpectedKcal(payload.protein_g, payload.carbs_g, payload.fat_g);
+      if (recalculated != null) {
+        payload.energy_kcal = Math.round(recalculated);
+        nutritionFlag = { type: 'kcal_recalculated', expectedKcal: payload.energy_kcal };
+      }
+    } else if (kcalCheck.checked && !kcalCheck.consistent) {
+      console.warn('[PackagedFoodsDB] kcal/macro mismatch for', productName, kcalCheck);
+      nutritionFlag = { type: 'kcal_mismatch', ...kcalCheck };
+    }
 
     const isEdit = !!(id && _docMap.has(id) && _docMap.get(id).source === 'chakudya');
     let docId = id;
@@ -8372,6 +8521,8 @@ const BLEND_FOODS = [
     };
 
     if (!doc.id) doc.id = docId || barcode || `local_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    if (nutritionFlag) doc.nutritionFlag = nutritionFlag; // local-only enrichment — not a Supabase column, never sent to the API
+    _lastNutritionFlag = nutritionFlag; // reset (to null) on every call, including clean submissions
     if (docId && doc.id !== docId && _docMap.has(docId)) _unindexDoc(docId); // replacing an edited local doc under a new id
 
     // Guard against duplicate barcodes: if this barcode is already indexed
@@ -8478,6 +8629,18 @@ const BLEND_FOODS = [
     },
 
     /**
+     * Submit one or more photos of a nutrition label — server-side OCR/AI
+     * reads them (combined) and inserts a status:"pending" row directly
+     * (POST /packaged/scan).
+     * @param {string|string[]} images - one or up to 5 "data:image/jpeg;base64,...." strings
+     * @param {string} [barcode] - optional, takes priority over AI-read barcode
+     * @returns {Promise<object>} { status, message, data?, extracted?, needs_review? }
+     */
+    scanLabel(images, barcode) {
+      return _scanLabel(images, barcode);
+    },
+
+    /**
      * Submit or update a packaged food. New items go to
      * POST /packaged/submit (public, rate-limited) and land as status:"pending"
      * pending admin review. See addFood() doc-comment for edit-path caveats.
@@ -8487,6 +8650,38 @@ const BLEND_FOODS = [
      */
     add(data, id) {
       return addFood(data, id);
+    },
+
+    /**
+     * Atwater-derived expected kcal for a set of per-100g/ml macros.
+     * @param {number|null} pro grams protein
+     * @param {number|null} cho grams carbohydrate
+     * @param {number|null} fat grams fat
+     * @returns {number|null}
+     */
+    calcExpectedKcal(pro, cho, fat) {
+      return calcExpectedKcal(pro, cho, fat);
+    },
+
+    /**
+     * Check a stated kcal value against its macros (per-100g/ml, standard
+     * Atwater factors: 4/4/9 kcal per g protein/carbohydrate/fat).
+     * @returns {{checked:boolean, expectedKcal?:number, providedKcal?:number,
+     *   diffKcal?:number, diffPct?:number, consistent?:boolean}}
+     */
+    checkKcalConsistency(kcal, pro, cho, fat, tolerancePct) {
+      return checkKcalConsistency(kcal, pro, cho, fat, tolerancePct);
+    },
+
+    /**
+     * The nutritionFlag (if any) produced by the most recent add() call —
+     * null when kcal was missing/mismatched-then-fixed or when the
+     * submission's macros were already consistent. Read this right after
+     * awaiting add() to decide whether to show a review warning.
+     * @returns {object|null}
+     */
+    getLastNutritionFlag() {
+      return _lastNutritionFlag;
     },
 
     /**

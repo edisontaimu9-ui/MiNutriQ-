@@ -98,7 +98,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev https://oasis-ai-proxy-worker.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
   worker-src blob:;
   manifest-src blob: 'self';
@@ -116,7 +116,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.3.6';
+  const APP_VERSION = '1.4.1';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -7150,6 +7150,7 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
     <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
+    <button onclick="dbSwitchTab('pn')"       id="dbtab-pn"       class="dbtab-btn">PN Bags</button>
   </div>
 
   <!-- ════════════════════ PANEL 1: FOOD DB ════════════════════ -->
@@ -7591,6 +7592,21 @@ var photoCropper = (function () {
 
   <div class="dev-footer">Packaged Foods · Chakudya API sync · Offline-first IndexedDB cache</div>
   </div><!-- end dbpanel-packaged -->
+
+  <!-- ════════════════════ PANEL 5: PN BAG DATABASE (React) ════════════════════ -->
+  <div id="dbpanel-pn" style="display:none">
+    <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span style="font-size:22px">💉</span>
+        <div>
+          <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">PN Bag Database</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">20 products · Kabiven · NuTRIflex Lipid · Clinimix E</div>
+        </div>
+      </div>
+      <div style="height:1px;background:linear-gradient(90deg,rgba(167,139,250,0.3),transparent);margin:10px 0 0"></div>
+    </div>
+    <div id="pn-db-react-root"></div>
+  </div><!-- end dbpanel-pn -->
 
 
 </div>
@@ -8902,8 +8918,8 @@ var photoCropper = (function () {
 </script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <!-- regionalFCT.js removed — replaced by chakudyaDB.js -->
-<script src="foodData.js?v=1.3.6"></script>
-<script src="foodSearch.js?v=1.3.6"></script>
+<script src="foodData.js?v=1.3.7"></script>
+<script src="foodSearch.js?v=1.3.7"></script>
 <!-- ═══════════════════════════════════════════════════════════════════════
      NT_CustomFoods — Import FDC results into local DB (localStorage)
      Patches NTFoodSearch.searchLocal to prepend imported foods.
@@ -9087,7 +9103,7 @@ var photoCropper = (function () {
 })();
 </script>
 
-<script src="main.js?v=1.3.6"></script>
+<script src="main.js?v=1.3.7"></script>
 <script src="pwaManifest.js"></script>
 
 <script>
@@ -10588,6 +10604,7 @@ function ntClear(scopeId, resultIds) {
   const _SRC_BADGE = {
     local:          { label:'Malawi FCT',    color:'#1de9d4', bg:'rgba(29,233,212,.10)', border:'rgba(29,233,212,.30)' },
     'Malawi FCT':   { label:'Malawi FCT',    color:'#1de9d4', bg:'rgba(29,233,212,.10)', border:'rgba(29,233,212,.30)' },
+    cached:         { label:'Chakudya (offline)', color:'#2dd4bf', bg:'rgba(45,212,191,.10)', border:'rgba(45,212,191,.30)' },
     UCT:            { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     'UCT Exchange': { label:'UCT Exchange',  color:'#a78bfa', bg:'rgba(167,139,250,.10)', border:'rgba(167,139,250,.30)' },
     formula:        { label:'Formula / Enteral', color:'#f0b429', bg:'rgba(240,180,41,.10)', border:'rgba(240,180,41,.30)' },
@@ -10600,8 +10617,8 @@ function ntClear(scopeId, resultIds) {
     // UCT foods have cat starting with 'UCT'; formula entries get their own badge
     const key = isFormula ? 'formula'
               : (cat && cat.startsWith('UCT')) ? 'UCT'
-              : (_SRC_BADGE[sourceUsed] ? sourceUsed : 'FDC');
-    const b = _SRC_BADGE[key] || _SRC_BADGE['FDC'];
+              : (_SRC_BADGE[sourceUsed] ? sourceUsed : 'chakudya');
+    const b = _SRC_BADGE[key] || _SRC_BADGE['chakudya'];
     return `<span style="font-family:var(--mono);font-size:8px;font-weight:700;
                          letter-spacing:.06em;padding:2px 7px;border-radius:100px;
                          color:${b.color};background:${b.bg};border:1px solid ${b.border};
@@ -10610,7 +10627,7 @@ function ntClear(scopeId, resultIds) {
 
   /* ── confidence bar (thin stripe at card top) ────────────── */
   function _confBar(score, sourceUsed, cat) {
-    const isLocal = sourceUsed === 'local' || (cat && (cat.startsWith('UCT') || cat === 'Malawi FCT'));
+    const isLocal = sourceUsed === 'local' || sourceUsed === 'cached' || (cat && (cat.startsWith('UCT') || cat === 'Malawi FCT'));
     const col = isLocal ? 'var(--teal)' : 'rgba(96,165,250,.7)';
     const pct = Math.round((score || 0.5) * 100);
     return `<div style="height:2px;background:var(--border);position:relative;overflow:hidden">
@@ -10709,10 +10726,10 @@ function ntClear(scopeId, resultIds) {
     const fmt  = (v,d=1) => v != null ? (d===0 ? String(+(+v).toFixed(0)) : (+(+v).toFixed(d))+'g') : '—';
     const unit = food.unit || 'g';   // ENTERAL_DB entries are per 100 mL, not per 100 g
 
-    // Confidence score: local = 0.9+, FDC = ~0.6
-    const conf  = food.confidenceScore ?? (food.sourceUsed === 'local' ? 0.9 : 0.6);
+    // Confidence score: local/cached = 0.9+, FDC = ~0.6
+    const conf  = food.confidenceScore ?? ((food.sourceUsed === 'local' || food.sourceUsed === 'cached') ? 0.9 : 0.6);
     const cat   = food.cat || '';
-    const isLocal = food.sourceUsed === 'local' || cat.startsWith('UCT') || cat === 'Malawi FCT';
+    const isLocal = food.sourceUsed === 'local' || food.sourceUsed === 'cached' || cat.startsWith('UCT') || cat === 'Malawi FCT';
     const subtitle = food.isFormula && food.route ? `${esc(cat)} · ${esc(food.route)}` : esc(cat);
 
     return `
@@ -12779,6 +12796,39 @@ function ntClear(scopeId, resultIds) {
     <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:16px">
       Missing a packaged product? Add it here — it'll be reviewed before appearing for everyone.
     </div>
+
+    <!-- ── Scan-a-label shortcut (secondary path — manual form below remains the default way in) ── -->
+    <div style="border:1px dashed rgba(96,165,250,.3);border-radius:10px;padding:12px 14px;margin-bottom:18px;background:rgba(96,165,250,.04)">
+      <div style="font-family:var(--mono);font-size:9px;color:#60a5fa;letter-spacing:1px;margin-bottom:8px">OPTIONAL — GOT THE PACKET ON HAND?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" onclick="document.getElementById('pkg-scan-camera-input').click()"
+          style="flex:1;min-width:140px;font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Add Photo
+        </button>
+        <button type="button" onclick="document.getElementById('pkg-scan-gallery-input').click()"
+          style="flex:1;min-width:140px;font-family:var(--mono);font-size:10px;color:#60a5fa;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:6px;padding:9px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Choose from Gallery
+        </button>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:8px;line-height:1.5">
+        Add up to 5 photos of the SAME product — e.g. one of the nutrition panel and one of the barcode, if they're on different sides. Good lighting and a flat, in-focus label give the best results.
+      </div>
+
+      <!-- Thumbnail strip for staged photos, hidden until at least one is added -->
+      <div id="pkg-scan-thumbs" style="display:none;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+
+      <button type="button" id="pkg-scan-submit-btn" onclick="pkgSubmitScanPhotos()" disabled
+        style="display:none;width:100%;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:1px;color:#0a1420;background:#60a5fa;border:none;border-radius:6px;padding:10px 12px;cursor:pointer;font-weight:700">
+        SCAN PHOTO(S)
+      </button>
+
+      <div id="pkg-scan-status" style="display:none;font-family:var(--mono);font-size:9.5px;margin-top:9px;padding:8px 10px;border-radius:6px"></div>
+      <input type="file" id="pkg-scan-camera-input"  accept="image/*" capture="environment" style="display:none" onchange="pkgAddScanPhotos(this)">
+      <input type="file" id="pkg-scan-gallery-input" accept="image/*" multiple style="display:none" onchange="pkgAddScanPhotos(this)">
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="field-group" style="grid-column:1/-1">
         <label class="lbl">Product Name *</label>
@@ -12797,9 +12847,26 @@ function ntClear(scopeId, resultIds) {
         <input class="inp" type="number" id="pkg-f-serving" placeholder="100" min="0">
       </div>
     </div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
+    <div class="field-group" style="grid-column:1/-1;margin-top:14px">
+      <label class="lbl">Values below are entered per:</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button type="button" id="pkg-basis-btn-100" onclick="pkgSetNutritionBasis('100')"
+          style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.5px;border-radius:6px;padding:9px 10px;cursor:pointer;color:var(--teal);background:rgba(29,233,212,.12);border:1px solid var(--teal)">
+          100 g / ml
+        </button>
+        <button type="button" id="pkg-basis-btn-serving" onclick="pkgSetNutritionBasis('serving')"
+          style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.5px;border-radius:6px;padding:9px 10px;cursor:pointer;color:var(--text-dim);background:transparent;border:1px solid var(--border)">
+          Serving size (above)
+        </button>
+      </div>
+      <div id="pkg-basis-hint" style="display:none;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px;line-height:1.5">
+        We'll convert these to per-100g/ml automatically using the serving size you entered above.
+      </div>
+    </div>
+    <div id="pkg-nutrition-basis-label" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin:16px 0 8px;border-top:1px solid var(--border);padding-top:14px">NUTRITION PER 100 g / ml</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0"></div>
+      <div class="field-group"><label class="lbl">Energy (kcal)</label><input class="inp" type="number" id="pkg-f-kcal" placeholder="0" min="0" oninput="pkgSyncEnergyField('kcal')"></div>
+      <div class="field-group"><label class="lbl">Energy (kJ)</label><input class="inp" type="number" id="pkg-f-kj" placeholder="0" min="0" oninput="pkgSyncEnergyField('kj')"></div>
       <div class="field-group"><label class="lbl">Protein (g)</label><input class="inp" type="number" id="pkg-f-pro" placeholder="0" min="0"></div>
       <div class="field-group"><label class="lbl">Carbohydrates (g)</label><input class="inp" type="number" id="pkg-f-cho" placeholder="0" min="0"></div>
       <div class="field-group"><label class="lbl">Fat (g)</label><input class="inp" type="number" id="pkg-f-fat" placeholder="0" min="0"></div>
@@ -12882,30 +12949,24 @@ function ntClear(scopeId, resultIds) {
 
 <!-- ════════════ OASIS AI MODULE ════════════ -->
 <script>
-  // Groq + PubMed + Frontiers + Elsevier + VAPID keys — loaded securely from Appwrite Function
-  window.GROQ_API_KEY        = '';
-  window.PUBMED_API_KEY      = '';
-  window.FRONTIERS_API_KEY   = '';
-  window.ELSEVIER_API_KEY    = '';
+  // Only the VAPID *public* key is loaded here — it's meant to be public
+  // (used to subscribe the browser to push notifications). The Groq API key
+  // is no longer sent to the client at all: oasisAI.js now calls our Worker's
+  // /groq endpoint, which holds the real key server-side and proxies the
+  // request. See worker.js for details.
   window.NT_VAPID_PUBLIC_KEY = '';
-  window.PAYCHANGU_SECRET_KEY = '';
 
-  (function loadRemoteKeys() {
-    fetch('https://6a27bdd9002e2f1a60ae.sgp.appwrite.run', {
+  (function loadRemoteConfig() {
+    fetch('https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/config', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      if (data.GROQ_API_KEY)      { window.GROQ_API_KEY        = data.GROQ_API_KEY;      console.log('[Oasis] Config loaded ✓ (Groq)'); }
-      if (data.PUBMED_API_KEY)    { window.PUBMED_API_KEY      = data.PUBMED_API_KEY;    console.log('[Oasis] Config loaded ✓ (PubMed)'); }
-      if (data.FRONTIERS_API_KEY) { window.FRONTIERS_API_KEY   = data.FRONTIERS_API_KEY; console.log('[Oasis] Config loaded ✓ (Frontiers)'); }
-      if (data.ELSEVIER_API_KEY)  { window.ELSEVIER_API_KEY    = data.ELSEVIER_API_KEY;  console.log('[Oasis] Config loaded ✓ (Elsevier)'); }
-      if (data.VAPID_PUBLIC_KEY)  { window.NT_VAPID_PUBLIC_KEY = data.VAPID_PUBLIC_KEY;  console.log('[Oasis] Config loaded ✓ (VAPID)'); }
-      if (data.PAYCHANGU_SECRET_KEY) { window.PAYCHANGU_SECRET_KEY = data.PAYCHANGU_SECRET_KEY; console.log('[Oasis] Config loaded ✓ (Paychangu)'); }
+      if (data.VAPID_PUBLIC_KEY) { window.NT_VAPID_PUBLIC_KEY = data.VAPID_PUBLIC_KEY; console.log('[Oasis] Config loaded ✓ (VAPID)'); }
     })
     .catch(function(err) {
-      console.error('[Oasis] Failed to load config from Appwrite:', err);
+      console.error('[Oasis] Failed to load config from Cloudflare Worker:', err);
     });
   })();
 </script>
@@ -12913,72 +12974,7 @@ function ntClear(scopeId, resultIds) {
 <script src="oasisAI.js" defer></script>
 <!-- ════════════ END OASIS AI ════════════ -->
 
-<!-- ════════════ BUY ME A SNACK FAB ════════════ -->
-<button
-  id="bs-fab"
-  aria-label="Buy me a Snack"
-  title="Buy me a Snack 🍿"
-  style="
-    display: none;
-    position: fixed;
-    bottom: calc(var(--bottom-nav-h, 60px) + var(--sab, 0px) + 16px);
-    right: 20px;
-    z-index: 900;
-    align-items: center;
-    gap: 7px;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    padding: 11px 18px 11px 14px;
-    font-family: var(--sans, 'Outfit', sans-serif);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(234,88,12,0.40), 0 2px 8px rgba(0,0,0,0.25);
-    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-  "
-  onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(234,88,12,0.50),0 2px 8px rgba(0,0,0,0.25)'"
-  onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(234,88,12,0.40),0 2px 8px rgba(0,0,0,0.25)'"
-  ontouchstart="this.style.transform='scale(0.96)';this.style.opacity='0.88'"
-  ontouchend="this.style.transform='';this.style.opacity='1'"
->
-  <span style="font-size:17px;line-height:1">🍿</span>
-  <span>Buy me a Snack</span>
-</button>
-
-<script type="module">
-  import { initBuySnack } from './buySnack.js';
-
-  // Init widget — public key read lazily from window.PAYCHANGU_PUBLIC_KEY at pay time
-  // (loaded asynchronously from Remote Config key "paychangu_public_key").
-  // Secret key lives ONLY in the Appwrite Function environment — never in the browser.
-  initBuySnack(null); // null = will read window.PAYCHANGU_PUBLIC_KEY at runtime
-
-  // ── FAB visibility: only show on home tab ──
-  const fab     = document.getElementById('bs-fab');
-  const homeTab = document.getElementById('tab-home');
-
-  if (fab && homeTab) {
-    const observer = new MutationObserver(() => {
-      fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
-    });
-    observer.observe(homeTab, { attributes: true, attributeFilter: ['class'] });
-
-    // Set initial state
-    fab.style.display = homeTab.classList.contains('active') ? 'flex' : 'none';
-
-    // Wire FAB click to open the Buy Me a Snack modal
-    fab.addEventListener('click', () => {
-      const overlay = document.getElementById('buysnack-overlay');
-      if (overlay) overlay.classList.add('active');
-    });
-  }
-</script>
-<!-- ════════════ END BUY ME A SNACK FAB ════════════ -->
+<!-- ════════════ BUY ME A SNACK FAB — now rendered by React (see react-src/BuySnackWidget.jsx) into #oasis-react-root ════════════ -->
 
 <!-- ════════════ USER GUIDE MODAL ════════════ -->
 <div id="userguide-overlay" role="dialog" aria-modal="true" aria-label="Oasis User Guide" style="
@@ -14058,5 +14054,25 @@ document.addEventListener('keydown', function(e){
   }
 })();
 </script>
+<!-- React migration test mount — safe to remove anytime -->
+<!-- ════════════════════ PN CALCULATOR TAB (React) ════════════════════ -->
+<div class="main" id="tab-parenteral">
+<div style="padding:0 0 80px 0">
+  <div style="padding:16px 16px 0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-size:26px">💉</span>
+      <div>
+        <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Parenteral Nutrition</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">CUSTOM TPN CALCULATOR · BAG SELECTOR · MONITORING</div>
+      </div>
+    </div>
+    <div style="height:2px;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,0));border-radius:2px;margin:10px 0 14px"></div>
+  </div>
+  <div id="pn-calc-react-root"></div>
+</div>
+</div><!-- end tab-parenteral -->
+
+<div id="oasis-react-root"></div>
+<script src="react-dist/oasis-react.js" defer></script>
 </body>
 </html>
