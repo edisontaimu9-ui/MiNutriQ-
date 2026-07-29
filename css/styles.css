@@ -4850,7 +4850,11 @@ html.sr-armed [data-sr="fade-left"]    { transform: translateX(22px); }  /* slid
 html.sr-armed [data-sr="fade-right"]   { transform: translateX(-22px); } /* slides in from left  */
 html.sr-armed [data-sr="zoom-in"]      { transform: scale(0.93); }
 
-/* Revealed state — added by IntersectionObserver once per element */
+/* Revealed state — added by IntersectionObserver once per element.
+   Specificity must beat html.sr-armed [data-sr] above (which is
+   html + class + attr = 3), otherwise the armed/hidden rule wins
+   forever and content never actually becomes visible. */
+html.sr-armed [data-sr].sr-visible,
 [data-sr].sr-visible {
   opacity: 1;
   transform: none;
