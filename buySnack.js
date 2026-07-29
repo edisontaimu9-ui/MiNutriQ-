@@ -21,6 +21,39 @@
 
 const PAYCHANGU_WORKER_URL = 'https://paychangu-payment-gateway.edisontaimu9.workers.dev';
 
+// ─── Redirect configuration ────────────────────────────────────────────────
+// This widget is embedded on more than one site (Oasis CNST + the portfolio
+// site). After checkout, PayChangu redirects the browser back to whatever
+// `return_url` we send when initiating the payment. Instead of hardcoding
+// one destination, we pick it based on the domain the widget is actually
+// running on, so a donor always lands back where they started.
+//
+// SECURITY: we don't just trust `window.location.origin` blindly — we map
+// it against a small allow-list of known, trusted origins. Anything that
+// isn't recognised falls back to a safe default instead of being echoed
+// straight back into a redirect URL.
+const TRUSTED_RETURN_ORIGINS = {
+  'oasiscnst.app':     'https://oasiscnst.app',
+  'www.oasiscnst.app': 'https://oasiscnst.app',
+  'minutriq.me':       'https://minutriq.me',
+  'www.minutriq.me':   'https://minutriq.me',
+};
+
+const DEFAULT_RETURN_ORIGIN = 'https://minutriq.me';
+
+function _getReturnUrl() {
+  const hostname = (typeof window !== 'undefined' && window.location?.hostname || '').toLowerCase();
+
+  // Convenience for local development / previews — safe because it only
+  // ever redirects back to whatever machine is already running the page.
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `${window.location.origin}/?donated=true`;
+  }
+
+  const origin = TRUSTED_RETURN_ORIGINS[hostname] || DEFAULT_RETURN_ORIGIN;
+  return `${origin}/?donated=true`;
+}
+
 const SNACKS = [
   { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1000,  color: '#F59E0B', bg: '#FFFDE7' },
   { id: 'doughnut',  emoji: '🍩', name: 'Doughnut',   desc: 'Sweet glazed treat',           price: 2000,  color: '#F59E0B', bg: '#FFFBEB' },
@@ -346,7 +379,7 @@ async function _processDonation() {
         last_name:   lastName,
         email,
         message:     `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼${phone ? ` (phone: ${phone})` : ''}`,
-        return_url:  'https://minutriq.me/?donated=true',
+        return_url:  _getReturnUrl(),
       }),
     });
 
