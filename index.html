@@ -8782,6 +8782,70 @@ var photoCropper = (function () {
 </div><!-- end tab-pedi -->
 <!-- END PEDIATRIC CALCULATOR TAB -->
 
+<!-- ════════════════════════════════════════════════════════════
+     SCROLL REVEAL  —  Viewport-entry animations for Homescreen
+     Lightweight IntersectionObserver; no external library.
+     Each element fires once, then observer is detached.
+
+     Placed here (right after all tab markup, BEFORE the large
+     Firebase / feature-script chain below) so it initialises
+     immediately instead of waiting behind ~2MB of blocking
+     <script src> tags — that delay was causing the homescreen
+     content to sit invisible for a noticeable, awkward stretch
+     while the header/tabs/bottom-nav (parsed even earlier) were
+     already on screen.
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* Skip entirely if the browser doesn't support IntersectionObserver
+     (very old WebViews) — elements just stay visible (default CSS state,
+     see the html.sr-armed gate in styles.css).                          */
+  if (!('IntersectionObserver' in window)) return;
+
+  /* ── Honour prefers-reduced-motion at the JS level too ── */
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return; /* CSS already shows everything, un-armed */
+
+  var homeTab = document.getElementById('tab-home');
+  var targets = homeTab ? homeTab.querySelectorAll('[data-sr]') : [];
+  if (!targets.length) return;
+
+  /* Apply stagger delays from data-sr-delay attributes */
+  targets.forEach(function (el) {
+    var delay = el.dataset.srDelay;
+    if (delay) el.style.setProperty('--sr-delay', delay + 'ms');
+  });
+
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('sr-visible');
+          observer.unobserve(entry.target); /* trigger once */
+        }
+      });
+    },
+    {
+      /* Fire when 12 % of the element is inside the viewport.
+         -24px bottom rootMargin gives a small buffer so elements
+         just below the fold animate in slightly before being
+         fully visible, keeping the reveal feeling smooth.      */
+      threshold:   0.12,
+      rootMargin: '0px 0px -24px 0px'
+    }
+  );
+
+  /* Arm the CSS hidden/offset state now — right before observing.
+     Elements already in view get 'sr-visible' added by the observer
+     on the very next frame, so there's no perceptible flash to blank. */
+  document.documentElement.classList.add('sr-armed');
+
+  targets.forEach(function (el) { observer.observe(el); });
+})();
+</script>
+
 <div id="status-bar" style="display:none!important;visibility:hidden!important;pointer-events:none!important">
   <div class="sb-dot" id="sb-dot" style="background:var(--amber)"></div>
   <span id="sb-txt">Initializing…</span>
@@ -13955,77 +14019,5 @@ document.addEventListener('keydown', function(e){
 
 <script src="responsive.js" defer></script>
 <script src="oasis-news.js" defer></script>
-
-<!-- ════════════════════════════════════════════════════════════
-     SCROLL REVEAL  —  Viewport-entry animations for Homescreen
-     Lightweight IntersectionObserver; no external library.
-     Each element fires once, then observer is detached.
-     ════════════════════════════════════════════════════════════ -->
-<script>
-(function () {
-  'use strict';
-
-  /* Skip entirely if the browser doesn't support IntersectionObserver
-     (very old WebViews) — elements stay visible via prefers-reduced-motion
-     fallback in CSS or simply via opacity:0 not being applied yet.       */
-  if (!('IntersectionObserver' in window)) {
-    // Make everything visible immediately on unsupported browsers
-    document.querySelectorAll('[data-sr]').forEach(function (el) {
-      el.classList.add('sr-visible');
-    });
-    return;
-  }
-
-  /* ── Honour prefers-reduced-motion at the JS level too ── */
-  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function initScrollReveal() {
-    var homeTab = document.getElementById('tab-home');
-    if (!homeTab) return;
-
-    var targets = homeTab.querySelectorAll('[data-sr]');
-    if (!targets.length) return;
-
-    /* Apply stagger delays from data-sr-delay attributes */
-    targets.forEach(function (el) {
-      var delay = el.dataset.srDelay;
-      if (delay) el.style.setProperty('--sr-delay', delay + 'ms');
-      /* If reduced-motion, reveal immediately — CSS handles the rest */
-      if (prefersReduced) el.classList.add('sr-visible');
-    });
-
-    if (prefersReduced) return; /* CSS already shows everything */
-
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('sr-visible');
-            observer.unobserve(entry.target); /* trigger once */
-          }
-        });
-      },
-      {
-        /* Fire when 12 % of the element is inside the viewport.
-           -24px bottom rootMargin gives a small buffer so elements
-           just below the fold animate in slightly before being
-           fully visible, keeping the reveal feeling smooth.      */
-        threshold:   0.12,
-        rootMargin: '0px 0px -24px 0px'
-      }
-    );
-
-    targets.forEach(function (el) { observer.observe(el); });
-  }
-
-  /* Initialise after DOM is ready */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrollReveal);
-  } else {
-    /* DOMContentLoaded already fired (script is deferred) */
-    initScrollReveal();
-  }
-})();
-</script>
 </body>
 </html>
