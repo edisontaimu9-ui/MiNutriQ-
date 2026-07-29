@@ -1,27 +1,29 @@
 // buySnack.js — "Buy me a Snack" donation widget for Oasis
 // Integrates with Paychangu API (MWK · Airtel Money · TNM Mpamba · Bank · Card)
+// via the paychangu-sdk client, which talks to the PayChangu support-payment
+// Cloudflare Worker.
 //
 // Usage:
 //   import { initBuySnack } from './buySnack.js';
-//   initBuySnack(loadedConfig?.paychangu_public_key);
+//   initBuySnack();
 //
 // Add trigger anywhere in your HTML:
 //   <button id="buy-snack-btn">🍿 Buy me a Snack</button>
 //
 // Security model:
-//   • PUBLIC key  — passed here from Remote Config key "paychangu_public_key".
-//                   Safe to expose in frontend code.
-//   • SECRET key  — stored ONLY as an Appwrite Function environment variable
-//                   (PAYCHANGU_SECRET_KEY). Never sent to the browser.
+//   • The browser never holds a Paychangu key of any kind.
+//   • SECRET key — stored ONLY as a Cloudflare Worker environment variable
+//                  (PAYCHANGU_SECRET_KEY). Never sent to the browser.
 //
 // Payment flow:
-//   Browser → Appwrite Function (PAYCHANGU_FUNCTION_ID)
-//           → Function injects secret key → Paychangu API
-//           → checkout_url returned to browser
+//   Browser → paychangu-sdk (PayChanguClient.initiate)
+//           → PayChangu Worker (holds the secret key) → Paychangu API
+//           → checkout_url returned to browser → browser redirects
 
-// ── Appwrite Function that proxies Paychangu payment initiation ──
-// Set this to the Function ID from your Appwrite console.
-const PAYCHANGU_FUNCTION_ID = 'paychangu_proxy'; // ← update if your function ID differs
+import { PayChanguClient } from './paychangu-sdk.js';
+
+// Single shared client — defaults to the deployed PayChangu Worker.
+const _payChangu = new PayChanguClient();
 
 const SNACKS = [
   { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1000,  color: '#F59E0B', bg: '#FFFDE7' },
@@ -36,14 +38,12 @@ const SNACKS = [
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let _selectedSnack     = null;
-let _customAmount      = 0;
-let _paychanguPublicKey = null;  // public key only — secret lives in Appwrite Function
+let _selectedSnack = null;
+let _customAmount  = 0;
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export function initBuySnack(paychanguPublicKey = null) {
-  _paychanguPublicKey = paychanguPublicKey;
+export function initBuySnack() {
   _injectStyles();
   _injectModal();
   _bindTriggers();
@@ -334,71 +334,31 @@ async function _processDonation() {
   const [firstName, ...rest] = name.split(' ');
   const lastName = rest.join(' ') || 'Supporter';
 
-  // Public key — safe to send from the browser.
-  // The Appwrite Function injects the secret key server-side.
-  const publicKey = _paychanguPublicKey
-    ?? window.PAYCHANGU_PUBLIC_KEY
-    ?? (typeof loadedConfig !== 'undefined' && loadedConfig?.paychangu_public_key)
-    ?? null;
-
-  // AppwriteFunctions must be initialised by appwriteClient.js
-  if (typeof window.AppwriteFunctions === 'undefined') {
-    _showError('Payment not available — Appwrite client not initialised.');
-    console.error('[buySnack] window.AppwriteFunctions is undefined. Ensure appwriteClient.js loads before buySnack.js.');
-    return;
-  }
-
   _setLoading(true);
 
   try {
-    const payload = {
-      amount:       finalPrice,
-      currency:     'MWK',
+    // ── Call the PayChangu Worker directly via paychangu-sdk ─────────────────
+    // The Worker holds PAYCHANGU_SECRET_KEY server-side and never exposes it
+    // to the browser; the SDK just posts to its /api/support/initiate route.
+    const { checkout_url } = await _payChangu.initiate({
+      amount:     finalPrice,
+      currency:   'MWK',
+      firstName,
+      lastName,
       email,
-      first_name:   firstName,
-      last_name:    lastName,
-      ...(phone      && { phone_number: phone }),
-      ...(publicKey  && { public_key: publicKey }),   // forwarded so the Function can use it if needed
-      callback_url:  'https://minutriq.me',
-      return_url:    'https://minutriq.me/?donated=true',
-      tx_ref:        `OASIS-SNACK-${Date.now()}`,
-      customization: {
-        title:       'Support Oasis',
-        description: `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼`,
-        logo:        'https://minutriq.me/icons/icon-192.png',
-      },
-    };
+      message:    `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼${phone ? ` (phone: ${phone})` : ''}`,
+      returnUrl:  'https://minutriq.me/?donated=true',
+    });
 
-    // ── Call Appwrite Function proxy ──────────────────────────────────────────
-    // The Function reads PAYCHANGU_SECRET_KEY from its env vars and calls
-    // https://api.paychangu.com/payment, then returns { status, data }.
-    const exec = await window.AppwriteFunctions.createExecution(
-      PAYCHANGU_FUNCTION_ID,
-      JSON.stringify(payload),
-      false  // synchronous — wait for the checkout_url
-    );
-
-    let data;
-    try {
-      data = JSON.parse(exec.responseBody);
-    } catch (_) {
-      throw new Error('Invalid response from payment proxy.');
-    }
-
-    if (exec.responseStatusCode !== 200 || data?.status !== 'success') {
-      _showError(data?.message || 'Payment could not be initiated. Please try again.');
-      return;
-    }
-
-    if (data?.data?.checkout_url) {
-      window.location.href = data.data.checkout_url;
+    if (checkout_url) {
+      window.location.href = checkout_url;
     } else {
       _showError('No checkout URL returned. Please try again.');
     }
 
   } catch (err) {
-    console.error('[buySnack] Appwrite Function error:', err);
-    _showError('Network error. Check your connection and try again.');
+    console.error('[buySnack] PayChangu error:', err);
+    _showError(err?.message || 'Payment could not be initiated. Please try again.');
   } finally {
     _setLoading(false);
   }

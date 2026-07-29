@@ -12964,10 +12964,9 @@ function ntClear(scopeId, resultIds) {
 <script type="module">
   import { initBuySnack } from './buySnack.js';
 
-  // Init widget — public key read lazily from window.PAYCHANGU_PUBLIC_KEY at pay time
-  // (loaded asynchronously from Remote Config key "paychangu_public_key").
-  // Secret key lives ONLY in the Appwrite Function environment — never in the browser.
-  initBuySnack(null); // null = will read window.PAYCHANGU_PUBLIC_KEY at runtime
+  // Init widget — payments go straight from the browser to the PayChangu
+  // Worker via paychangu-sdk. No keys of any kind live in the browser.
+  initBuySnack();
 
   // ── FAB visibility: only show on home tab ──
   const fab     = document.getElementById('bs-fab');
