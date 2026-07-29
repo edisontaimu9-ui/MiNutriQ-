@@ -26,7 +26,7 @@ class PayChanguClient {
    */
   constructor(options = {}) {
     this.baseUrl = (options.baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, "");
-    this._fetch = options.fetchImpl || globalThis.fetch;
+    this._fetch = options.fetchImpl || globalThis.fetch.bind(globalThis);
     if (!this._fetch) {
       throw new Error(
         "No fetch implementation found. Pass { fetchImpl } or run on Node 18+/a browser."
