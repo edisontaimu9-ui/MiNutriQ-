@@ -116,7 +116,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.4.2';
+  const APP_VERSION = '1.4.3';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -12965,7 +12965,7 @@ function ntClear(scopeId, resultIds) {
   import { initBuySnack } from './buySnack.js';
 
   // Init widget — payments go straight from the browser to the PayChangu
-  // Worker via paychangu-sdk. No keys of any kind live in the browser.
+  // Worker directly via fetch. No keys of any kind live in the browser.
   initBuySnack();
 
   // ── FAB visibility: only show on home tab ──

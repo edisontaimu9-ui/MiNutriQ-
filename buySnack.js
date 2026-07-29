@@ -1,7 +1,7 @@
 // buySnack.js — "Buy me a Snack" donation widget for Oasis
 // Integrates with Paychangu API (MWK · Airtel Money · TNM Mpamba · Bank · Card)
-// via the paychangu-sdk client, which talks to the PayChangu support-payment
-// Cloudflare Worker.
+// by calling the PayChangu support-payment Cloudflare Worker directly with
+// fetch — no SDK wrapper in between.
 //
 // Usage:
 //   import { initBuySnack } from './buySnack.js';
@@ -16,14 +16,10 @@
 //                  (PAYCHANGU_SECRET_KEY). Never sent to the browser.
 //
 // Payment flow:
-//   Browser → paychangu-sdk (PayChanguClient.initiate)
-//           → PayChangu Worker (holds the secret key) → Paychangu API
+//   Browser → fetch() → PayChangu Worker (holds the secret key) → Paychangu API
 //           → checkout_url returned to browser → browser redirects
 
-import { PayChanguClient } from './paychangu-sdk.js';
-
-// Single shared client — defaults to the deployed PayChangu Worker.
-const _payChangu = new PayChanguClient();
+const PAYCHANGU_WORKER_URL = 'https://paychangu-payment-gateway.edisontaimu9.workers.dev';
 
 const SNACKS = [
   { id: 'zitumbuwa', emoji: '🍌', name: 'Zitumbuwa',  desc: 'Malawian banana fritters',     price: 1000,  color: '#F59E0B', bg: '#FFFDE7' },
@@ -337,28 +333,48 @@ async function _processDonation() {
   _setLoading(true);
 
   try {
-    // ── Call the PayChangu Worker directly via paychangu-sdk ─────────────────
+    // ── Call the PayChangu Worker directly ────────────────────────────────
     // The Worker holds PAYCHANGU_SECRET_KEY server-side and never exposes it
-    // to the browser; the SDK just posts to its /api/support/initiate route.
-    const { checkout_url } = await _payChangu.initiate({
-      amount:     finalPrice,
-      currency:   'MWK',
-      firstName,
-      lastName,
-      email,
-      message:    `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼${phone ? ` (phone: ${phone})` : ''}`,
-      returnUrl:  'https://minutriq.me/?donated=true',
+    // to the browser; we just POST straight to its /api/support/initiate route.
+    const res = await fetch(`${PAYCHANGU_WORKER_URL}/api/support/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount:      finalPrice,
+        currency:    'MWK',
+        first_name:  firstName,
+        last_name:   lastName,
+        email,
+        message:     `${_selectedSnack.emoji} ${_selectedSnack.name} — Thank you for supporting free clinical nutrition tools in Malawi 🇲🇼${phone ? ` (phone: ${phone})` : ''}`,
+        return_url:  'https://minutriq.me/?donated=true',
+      }),
     });
 
-    if (checkout_url) {
-      window.location.href = checkout_url;
+    let data;
+    try {
+      data = await res.json();
+    } catch (_) {
+      throw new Error('Invalid response from payment server.');
+    }
+
+    if (!res.ok || data?.status !== 'success') {
+      _showError(data?.message || 'Payment could not be initiated. Please try again.');
+      return;
+    }
+
+    if (data?.checkout_url) {
+      window.location.href = data.checkout_url;
     } else {
       _showError('No checkout URL returned. Please try again.');
     }
 
   } catch (err) {
-    console.error('[buySnack] PayChangu error:', err);
-    _showError(err?.message || 'Payment could not be initiated. Please try again.');
+    console.error('[buySnack] PayChangu request error:', err);
+    _showError(
+      err?.message === 'Failed to fetch'
+        ? 'Could not reach the payment server. Check your connection and try again.'
+        : (err?.message || 'Network error. Check your connection and try again.')
+    );
   } finally {
     _setLoading(false);
   }
