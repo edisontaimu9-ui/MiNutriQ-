@@ -76,6 +76,10 @@
   /* References → 3 columns */
   .hp-refs { grid-template-columns: repeat(3, 1fr); padding: 0 20px; }
 
+  /* Tools & Assistant / Information tiles → 3 columns, more breathing room */
+  .hp-ptile-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px; }
+  .hp-ptile      { padding: 18px 16px; }
+
   /* Section spacing */
   .hp-recent        { padding: 0 20px 28px; }
   .hp-section-title { padding: 0 24px; }
@@ -486,21 +490,14 @@
   #settings-drawer { width: 480px; right: -500px; }
   #settings-drawer.open { right: 0; }
 
-  /* ── Feature row: Recipe / Assessment / Oasis AI — one row on desktop ── */
-  #hp-feature-row {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: stretch;
+  /* ── Tools & Assistant / Information tiles — fixed width, no stretch ── */
+  .hp-ptile-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
+    justify-content: start;
+    gap: 14px;
+    padding: 0 24px;
   }
-  #hp-feature-row .hp-feature-card {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  #hp-feature-row .hp-assess-entry {
-    height: 100%;
-    box-sizing: border-box;
-  }
+  .hp-ptile { padding: 18px 16px; }
 
   /* Sub-module topbar */
   .tab-topbar       { padding: 13px 24px; }

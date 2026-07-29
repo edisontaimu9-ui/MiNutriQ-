@@ -503,6 +503,99 @@
   line-height: 1.45;
 }
 
+/* ── Premium Tile Grid — Tools & Assistant / Information ─────────
+   Replaces the old full-bleed .hp-assess-entry rows. Cards are
+   inset with proper gutters and never stretch edge-to-edge, at
+   any breakpoint.
+   ────────────────────────────────────────────────────────────── */
+.hp-ptile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 4px;
+}
+.hp-ptile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 14px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.hp-ptile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(140px 70px at 88% -12%, var(--ptile-glow, rgba(29,233,212,0.14)), transparent 70%);
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events: none;
+}
+.hp-ptile:hover {
+  border-color: var(--ptile-accent, rgba(29,233,212,0.35));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px -12px rgba(0,0,0,0.45);
+}
+.hp-ptile:hover::before { opacity: 1; }
+.hp-ptile:active { transform: scale(0.97); }
+
+.hp-ptile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.hp-ptile-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid;
+  transition: filter .16s ease;
+}
+.hp-ptile:hover .hp-ptile-icon { filter: brightness(1.15); }
+.hp-ptile-badge {
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 20px;
+  padding: 3px 7px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.hp-ptile-body { min-width: 0; }
+.hp-ptile-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+.hp-ptile-desc {
+  font-family: var(--mono);
+  font-size: 7.8px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* Compact variant — Information section (icon + label, no badge) */
+.hp-ptile-compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 13px;
+}
+.hp-ptile-compact .hp-ptile-icon { width: 38px; height: 38px; border-radius: 11px; }
+
+body.theme-light .hp-ptile { background: linear-gradient(165deg, #fff 0%, #f8fafc 100%); }
+
 /* Footer */
 /* ══════════════════════════════════════════════════════════
    HP-FOOTER  —  NutriTrack-style multi-section layout
