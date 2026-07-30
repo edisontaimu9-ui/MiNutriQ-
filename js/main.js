@@ -934,6 +934,7 @@ async function initFirebase() {
     // Resolves to { user: null } when there's no pending redirect, so this
     // is a no-op on every normal page load.
     if (typeof firebase.auth === 'function') {
+      _obRedirectPending = true;
       firebase.auth().getRedirectResult().then(result => {
         if (result && result.user && typeof _obHandleGoogleUser === 'function') {
           const googleBtn = document.getElementById('ob-google-btn');
@@ -947,12 +948,20 @@ async function initFirebase() {
           }).finally(() => {
             if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
           });
+        } else if (!(_getAuth() && _getAuth().currentUser)) {
+          // No pending redirect and no active session — this is just a
+          // normal, already-signed-out page load. checkOnboarding() held
+          // off showing the overlay while this was unresolved; do it now.
+          if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
         }
       }).catch(err => {
         console.error('[Google Redirect]', err && err.code, err && err.message);
         if (err && err.code === 'auth/account-exists-with-different-credential' && typeof _obSetAuthError === 'function') {
           _obSetAuthError('An account with this email already exists using a different sign-in method.');
         }
+        if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
+      }).finally(() => {
+        _obRedirectPending = false;
       });
     }
 
@@ -10759,6 +10768,14 @@ let _obIsRegisterMode = false;
 // Cleared immediately after successful account creation in obSubmit().
 let _obPendingReg = null;  // { email: string, pw: string } | null
 
+// True while getRedirectResult() (mobile Google sign-in) is being resolved.
+// checkOnboarding()'s onAuthStateChanged listener fires with user=null as
+// an interim state on the page load that follows a redirect — BEFORE
+// Firebase finishes restoring the real signed-in session — and without
+// this guard, that interim null was forcing the sign-in overlay back open,
+// stomping on whatever screen the redirect handler had already moved to.
+let _obRedirectPending = false;
+
 // Set heading on load: "Welcome back" for returning users, "Welcome" for new
 (function() {
   const el = document.getElementById('ob-auth-heading');
@@ -11629,7 +11646,12 @@ function checkOnboarding() {
           _obResolveProfile(user);
         }
       } else {
-        // Not signed in — always block home screen
+        // Not signed in — always block home screen. Exception: if a
+        // Google redirect sign-in is still being resolved, this null is
+        // likely just the interim pre-redirect-restore state, not a real
+        // "not signed in" — wait for the redirect handler to finish
+        // instead of flashing the sign-in screen over its result.
+        if (_obRedirectPending) return;
         _showOnboardingOverlay();
       }
     });
