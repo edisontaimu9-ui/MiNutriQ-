@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.oasiscnst.twa",
+        "sha256_cert_fingerprints": ["12:0F:0A:04:E7:A6:9A:82:C4:D0:93:F0:51:25:1B:59:DD:9F:4D:0E:0E:D4:07:80:EC:64:8B:4B:F2:0C:45:29"]
+      }
+    }]
