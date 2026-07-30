@@ -927,6 +927,35 @@ async function initFirebase() {
     }
     db = firebase.firestore();
 
+    // ── Google Sign-In redirect result (mobile flow) ────────────────
+    // Mobile devices sign in via signInWithRedirect() (see obGoogleSignIn),
+    // which navigates away and back rather than using a popup. This must
+    // run on every load to pick up the result of a redirect in progress.
+    // Resolves to { user: null } when there's no pending redirect, so this
+    // is a no-op on every normal page load.
+    if (typeof firebase.auth === 'function') {
+      firebase.auth().getRedirectResult().then(result => {
+        if (result && result.user && typeof _obHandleGoogleUser === 'function') {
+          const googleBtn = document.getElementById('ob-google-btn');
+          if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
+          _obHandleGoogleUser(result.user).catch(err => {
+            console.error('[Google Redirect]', err && err.code, err && err.message);
+            if (typeof _obSetAuthError === 'function') {
+              const codeStr = (err && err.code) ? ` (${err.code})` : '';
+              _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
+            }
+          }).finally(() => {
+            if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
+          });
+        }
+      }).catch(err => {
+        console.error('[Google Redirect]', err && err.code, err && err.message);
+        if (err && err.code === 'auth/account-exists-with-different-credential' && typeof _obSetAuthError === 'function') {
+          _obSetAuthError('An account with this email already exists using a different sign-in method.');
+        }
+      });
+    }
+
     // ── Realtime Database init ────────────────────────────────────
     rtdb = firebase.database();
     appState.rtdbConnected = false;
@@ -10796,12 +10825,73 @@ function _obAuthBusy(busy) {
 }
 
 // ── Google Sign-In ───────────────────────────────────────────────
-// Uses Firebase Auth's GoogleAuthProvider popup flow. Unlike email
-// registration, Google sign-in creates the Firebase account immediately
-// on success — there's no deferred-creation step, so a first-time Google
-// user is routed straight into the existing profile-setup step
-// (_obSkipToProfile → obSubmit's "EXISTING USER" branch), pre-filled
-// with their Google name/photo where available.
+// signInWithPopup() is unreliable on mobile Chrome: the popup doesn't
+// behave like a true popup there, and Firebase relays the auth result
+// back via cross-window messaging that depends on third-party cookies/
+// storage — which mobile Chrome increasingly blocks by default. When
+// that relay silently fails, Firebase surfaces it as a generic
+// auth/internal-error (exactly what was reported).
+//
+// Fix: mobile devices use signInWithRedirect() instead — a full page
+// navigation to Google and back, with no cross-window messaging
+// involved. The result is picked up via getRedirectResult() in
+// initFirebase() on the page load that follows the redirect. Desktop
+// keeps the popup flow (nicer UX there, and not subject to this bug).
+function _isMobileBrowser() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+// Shared logic for both the popup (desktop) and redirect (mobile) flows:
+// look up whether this Google account already has a saved profile, and
+// either finish sign-in or drop into profile setup for a first-time user.
+async function _obHandleGoogleUser(gUser) {
+  const fbUid   = gUser?.uid;
+  const fbEmail = gUser?.email || '';
+
+  let existingProfile = null;
+  if (db && fbUid) {
+    const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
+    if (snap && snap.exists && snap.data().userName) {
+      existingProfile = snap.data();
+    }
+  }
+
+  if (existingProfile) {
+    // Returning user — same finish path as email sign-in.
+    const p = {
+      name:        existingProfile.userName    || '',
+      uid:         existingProfile.userId      || '',
+      institution: existingProfile.institution || '',
+      role:        existingProfile.userRole    || 'student',
+      email:       fbEmail,
+      photoURL:    existingProfile.photoURL    || '',
+      createdAt:   existingProfile.createdAt   || new Date().toISOString(),
+      firebaseUid: fbUid,
+    };
+    saveUserProfile(p);
+    _obFinish(p.name, true);
+  } else {
+    // First-time Google user — account already exists (created by
+    // Firebase on sign-in success), so just collect the rest of the
+    // profile. _obPendingReg stays null, which routes obSubmit() to
+    // its "EXISTING USER" (no account creation) branch.
+    _wipeAllUserData();
+    _obSkipToProfile();
+
+    const nameEl = document.getElementById('ob-name');
+    if (nameEl && gUser?.displayName) nameEl.value = gUser.displayName;
+
+    if (gUser?.photoURL) {
+      const avatarImg   = document.getElementById('ob-avatar-img');
+      const placeholder = document.getElementById('ob-avatar-placeholder');
+      const photoData   = document.getElementById('ob-photo-data');
+      if (avatarImg)   { avatarImg.src = gUser.photoURL; avatarImg.style.display = ''; }
+      if (placeholder) placeholder.style.display = 'none';
+      if (photoData)   photoData.value = gUser.photoURL;
+    }
+  }
+}
+
 async function obGoogleSignIn() {
   const auth = _getAuth();
   if (!auth) {
@@ -10813,55 +10903,27 @@ async function obGoogleSignIn() {
   if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
   document.getElementById('ob-auth-error').style.display = 'none';
 
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  // Mobile: redirect flow — the page navigates away entirely, so nothing
+  // after this call runs on this page load. The result is handled by
+  // getRedirectResult() in initFirebase() once the page comes back.
+  if (_isMobileBrowser()) {
+    try {
+      await auth.signInWithRedirect(provider);
+    } catch (err) {
+      console.error('[Google Sign-In]', err && err.code, err && err.message);
+      const codeStr = (err && err.code) ? ` (${err.code})` : '';
+      _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
+      if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
+    }
+    return;
+  }
+
+  // Desktop: popup flow — resolves immediately, no page reload needed.
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const result   = await auth.signInWithPopup(provider);
-    const gUser    = result.user;
-    const fbUid    = gUser?.uid;
-    const fbEmail  = gUser?.email || '';
-
-    let existingProfile = null;
-    if (db && fbUid) {
-      const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
-      if (snap && snap.exists && snap.data().userName) {
-        existingProfile = snap.data();
-      }
-    }
-
-    if (existingProfile) {
-      // Returning user — same finish path as email sign-in.
-      const p = {
-        name:        existingProfile.userName    || '',
-        uid:         existingProfile.userId      || '',
-        institution: existingProfile.institution || '',
-        role:        existingProfile.userRole    || 'student',
-        email:       fbEmail,
-        photoURL:    existingProfile.photoURL    || '',
-        createdAt:   existingProfile.createdAt   || new Date().toISOString(),
-        firebaseUid: fbUid,
-      };
-      saveUserProfile(p);
-      _obFinish(p.name, true);
-    } else {
-      // First-time Google user — account already exists (created by
-      // Firebase on popup success), so just collect the rest of the
-      // profile. _obPendingReg stays null, which routes obSubmit() to
-      // its "EXISTING USER" (no account creation) branch.
-      _wipeAllUserData();
-      _obSkipToProfile();
-
-      const nameEl = document.getElementById('ob-name');
-      if (nameEl && gUser?.displayName) nameEl.value = gUser.displayName;
-
-      if (gUser?.photoURL) {
-        const avatarImg   = document.getElementById('ob-avatar-img');
-        const placeholder = document.getElementById('ob-avatar-placeholder');
-        const photoData   = document.getElementById('ob-photo-data');
-        if (avatarImg)   { avatarImg.src = gUser.photoURL; avatarImg.style.display = ''; }
-        if (placeholder) placeholder.style.display = 'none';
-        if (photoData)   photoData.value = gUser.photoURL;
-      }
-    }
+    const result = await auth.signInWithPopup(provider);
+    await _obHandleGoogleUser(result.user);
   } catch (err) {
     console.error('[Google Sign-In]', err && err.code, err && err.message);
     if (err && err.code === 'auth/popup-closed-by-user') {
