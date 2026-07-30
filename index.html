@@ -7077,7 +7077,7 @@ var photoCropper = (function () {
     <div>
       <div style="font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:2px;color:var(--teal)">Clinical Nutrition Databases</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">
-        Malawi FCT · UCT Exchange Lists · Formula · PN Bags · Global Food Search
+        Malawi FCT · UCT Exchange Lists · Formula · Renal Exchange · PN Bags · Global Food Search
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -7091,6 +7091,7 @@ var photoCropper = (function () {
     <button onclick="dbSwitchTab('food')"     id="dbtab-food"     class="dbtab-btn dbtab-active">Malawi FCT</button>
     <button onclick="dbSwitchTab('exchange')" id="dbtab-exchange" class="dbtab-btn">UCT Exchange</button>
     <button onclick="dbSwitchTab('enteral')"  id="dbtab-enteral"  class="dbtab-btn">Formula</button>
+    <button onclick="dbSwitchTab('renal')"    id="dbtab-renal"    class="dbtab-btn">Renal Exchange</button>
     <button onclick="dbSwitchTab('packaged')" id="dbtab-packaged" class="dbtab-btn">Packaged Foods</button>
   </div>
 
@@ -7289,10 +7290,110 @@ var photoCropper = (function () {
   <div class="dev-footer">UCT Exchange Lists for Meal Planning · Steyn NP, Senekal M. UCT Division of Human Nutrition; 2014.</div>
   </div><!-- end dbpanel-exchange -->
 
+  <!-- ════════════════════ PANEL: RENAL EXCHANGE LIST ════════════════════ -->
+  <div id="dbpanel-renal" style="display:none">
+
+  <!-- Search & Filter bar -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end">
+      <div class="field-group">
+        <label class="lbl">Search Food</label>
+        <input type="text" class="inp" id="rn-search" placeholder="Type food name…" oninput="rnRender()" style="font-size:14px">
+      </div>
+      <div class="field-group">
+        <label class="lbl">Phosphorus</label>
+        <select class="sel" id="rn-po4" onchange="rnRender()">
+          <option value="">All</option>
+          <option value="High Phosphorus">High</option>
+          <option value="Low Phosphorus">Low</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Potassium</label>
+        <select class="sel" id="rn-k" onchange="rnRender()">
+          <option value="">All</option>
+          <option value="High Potassium">High</option>
+          <option value="Moderate Potassium">Moderate</option>
+          <option value="Low Potassium">Low</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Sodium</label>
+        <select class="sel" id="rn-na" onchange="rnRender()">
+          <option value="">All</option>
+          <option value="High Sodium">High</option>
+          <option value="Low Sodium">Low</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="lbl">Sort by</label>
+        <select class="sel" id="rn-sort" onchange="rnRender()">
+          <option value="name">Name A–Z</option>
+          <option value="po4_desc">Highest Phosphorus</option>
+          <option value="k_desc">Highest Potassium</option>
+          <option value="na_desc">Highest Sodium</option>
+          <option value="kcal_desc">Highest kcal</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--teal)" id="rn-stat-count">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">FOODS SHOWN</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--amber)" id="rn-stat-po4">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG PHOSPHORUS mg</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700" id="rn-stat-k">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG POTASSIUM mg</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--blue)" id="rn-stat-na">—</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px">AVG SODIUM mg</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-title">Renal Exchange List</div>
+      <div class="card-badge" id="rn-table-badge">Chakudya CNR</div>
+    </div>
+    <div class="hscroll-table">
+      <table class="dtbl" id="rn-table">
+        <thead>
+          <tr>
+            <th style="min-width:180px">Food Name</th>
+            <th>Portion</th>
+            <th style="color:var(--amber)">kcal</th>
+            <th style="color:var(--blue)">Protein (g)</th>
+            <th style="color:var(--amber)">Phosphorus (mg)</th>
+            <th style="color:#c084fc">Potassium (mg)</th>
+            <th style="color:var(--blue)">Sodium (mg)</th>
+            <th>Tags</th>
+          </tr>
+        </thead>
+        <tbody id="rn-tbody"></tbody>
+      </table>
+    </div>
+    <div id="rn-no-results" style="display:none;text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">
+      No foods match your search or filters.
+    </div>
+  </div>
+
+  <div class="dev-footer">South African Renal Exchange List · via Chakudya Nutrition Registry (CNR) — offline-first, synced on open.</div>
+  </div><!-- end dbpanel-renal -->
+
   <!-- ════════════════════ PANEL 2: ENTERAL DB ════════════════════ -->
   <div id="dbpanel-enteral" style="display:none">
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:10px">
       <div class="field-group">
         <label class="lbl">Search Formula</label>
