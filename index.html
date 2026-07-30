@@ -13890,7 +13890,8 @@ document.addEventListener('keydown', function(e){
 (function() {
   'use strict';
 
-  var NOTIF_KEY = 'oasis-notifications';
+  var NOTIF_KEY      = 'oasis-notifications';
+  var DISMISSED_KEY  = 'oasis-notifications-dismissed';
   var _panelOpen = false;
 
   // ── Storage helpers ────────────────────────────────────────────
@@ -13907,8 +13908,34 @@ document.addEventListener('keydown', function(e){
     return _load() || [];
   }
 
+  // ── Dismissed-id tracking ────────────────────────────────────────
+  // Once a notification is dismissed/cleared, its id is remembered here
+  // permanently so a re-fired push (e.g. Firestore/RTDB listener firing
+  // again on the next page load with the same payload) can't bring it
+  // back. Capped at 200 ids so this can't grow unbounded over time.
+  function _loadDismissed() {
+    try {
+      var raw = localStorage.getItem(DISMISSED_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+  function _markDismissed(id) {
+    try {
+      var ids = _loadDismissed();
+      if (ids.indexOf(id) === -1) {
+        ids.push(id);
+        if (ids.length > 200) ids = ids.slice(ids.length - 200);
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify(ids));
+      }
+    } catch(e) {}
+  }
+  function _isDismissed(id) {
+    return _loadDismissed().indexOf(id) !== -1;
+  }
+
   // ── Push a new notification ────────────────────────────────────
   window.notifPush = function(notif) {
+    if (_isDismissed(notif.id)) return; // permanently dismissed — don't resurrect
     var list = _getList();
     var existing = list.findIndex(function(n){ return n.id === notif.id; });
     if (existing === -1) {
@@ -13921,6 +13948,7 @@ document.addEventListener('keydown', function(e){
 
   // ── Dismiss (delete) a single notification ─────────────────────
   function _dismiss(id) {
+    _markDismissed(id);
     var list = _getList().filter(function(n){ return n.id !== id; });
     _save(list);
     _renderPanel();
@@ -13929,6 +13957,8 @@ document.addEventListener('keydown', function(e){
 
   // ── Clear all notifications ────────────────────────────────────
   window.notifClearAll = function() {
+    var list = _getList();
+    list.forEach(function(n){ _markDismissed(n.id); });
     _save([]);
     _renderPanel();
     _updateBadge();
@@ -14042,6 +14072,7 @@ document.addEventListener('keydown', function(e){
     var list = _getList();
     list.forEach(function(n){ if (n.id === id) n.read = true; });
     _save(list);
+    _markDismissed(id); // seen — don't let a re-fired push resurrect it as unread
     _renderPanel();
     _updateBadge();
   }
@@ -14049,7 +14080,7 @@ document.addEventListener('keydown', function(e){
   // ── Mark all read ─────────────────────────────────────────────
   window.notifMarkAllRead = function() {
     var list = _getList();
-    list.forEach(function(n){ n.read = true; });
+    list.forEach(function(n){ n.read = true; _markDismissed(n.id); });
     _save(list);
     _renderPanel();
     _updateBadge();
