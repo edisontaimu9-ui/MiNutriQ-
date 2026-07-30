@@ -927,83 +927,16 @@ async function initFirebase() {
     }
     db = firebase.firestore();
 
-    // ── Google Sign-In redirect result (mobile flow) ────────────────
-    // Mobile devices sign in via signInWithRedirect() (see obGoogleSignIn),
-    // which navigates away and back rather than using a popup. This must
-    // run on every load to pick up the result of a redirect in progress.
-    // Resolves to { user: null } when there's no pending redirect, so this
-    // is a no-op on every normal page load.
-    //
-    // DIAGNOSTIC: sign-in has failed silently across prior fixes with no
-    // visible error and no debug line ever appearing — meaning the
-    // getRedirectResult() promise itself never settles (neither resolves
-    // nor rejects). This block now (a) shows the debug line immediately,
-    // updating it in place, so an in-progress/hung state is visible too,
-    // and (b) races against an 8s timeout so a hang can't block forever.
-    if (typeof firebase.auth === 'function') {
-      _obRedirectPending = true;
-
-      const _obShowDebug = (msg) => {
-        try { localStorage.setItem('ob_google_redirect_debug', msg + ' @ ' + new Date().toISOString()); } catch(e) {}
-        console.log('[Google Redirect DEBUG]', msg);
-        try {
-          const errEl = document.getElementById('ob-auth-error');
-          if (errEl && errEl.parentNode) {
-            let dbgLine = document.getElementById('ob-google-redirect-debug-line');
-            if (!dbgLine) {
-              dbgLine = document.createElement('div');
-              dbgLine.id = 'ob-google-redirect-debug-line';
-              dbgLine.style.cssText = 'margin-top:10px;font-family:monospace;font-size:10px;color:#64748b;word-break:break-all;';
-              errEl.parentNode.insertBefore(dbgLine, errEl.nextSibling);
-            }
-            dbgLine.textContent = 'DEBUG: ' + msg;
-          }
-        } catch(e) {}
-      };
-
-      _obShowDebug('getRedirectResult() called — waiting…');
-
-      const _obTimeout = new Promise((_, reject) =>
-        setTimeout(() => reject({ code: 'client/timeout', message: 'getRedirectResult() did not settle within 8s' }), 8000)
-      );
-
-      Promise.race([firebase.auth().getRedirectResult(), _obTimeout]).then(result => {
-        if (result && result.user) {
-          _obShowDebug('SUCCESS user=' + result.user.uid + ' email=' + result.user.email);
-        } else {
-          _obShowDebug('resolved with NO user (result=' + JSON.stringify(result && { operationType: result.operationType, providerId: result.providerId }) + ')');
-        }
-        if (result && result.user && typeof _obHandleGoogleUser === 'function') {
-          const googleBtn = document.getElementById('ob-google-btn');
-          if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
-          _obHandleGoogleUser(result.user).then(() => {
-            _obShowDebug('_obHandleGoogleUser completed OK');
-          }).catch(err => {
-            _obShowDebug('_obHandleGoogleUser THREW: ' + (err && err.code) + ' ' + (err && err.message));
-            console.error('[Google Redirect]', err && err.code, err && err.message);
-            if (typeof _obSetAuthError === 'function') {
-              const codeStr = (err && err.code) ? ` (${err.code})` : '';
-              _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
-            }
-          }).finally(() => {
-            if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
-          });
-        } else if (!(_getAuth() && _getAuth().currentUser)) {
-          // No pending redirect and no active session — this is just a
-          // normal, already-signed-out page load. checkOnboarding() held
-          // off showing the overlay while this was unresolved; do it now.
-          if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
-        }
-      }).catch(err => {
-        _obShowDebug((err && err.code === 'client/timeout' ? 'TIMED OUT: ' : 'THREW: ') + (err && err.code) + ' ' + (err && err.message));
-        console.error('[Google Redirect]', err && err.code, err && err.message);
-        if (err && err.code === 'auth/account-exists-with-different-credential' && typeof _obSetAuthError === 'function') {
-          _obSetAuthError('An account with this email already exists using a different sign-in method.');
-        }
-        if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
-      }).finally(() => {
-        _obRedirectPending = false;
-      });
+    // ── Google Sign-In: popup flow only ──────────────────────────────
+    // Previously mobile devices used signInWithRedirect() + getRedirectResult(),
+    // which is what threw auth/internal-error (see debug line under the
+    // password field). The reference implementation (dietitianos-master)
+    // uses signInWithPopup() unconditionally, on every device, and does not
+    // call getRedirectResult() at all — so that call is removed here.
+    // obGoogleSignIn() below now always uses the popup flow to match.
+    if (!(_getAuth() && _getAuth().currentUser)) {
+      // No active session on this load — show the sign-in overlay.
+      if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
     }
 
     // ── Realtime Database init ────────────────────────────────────
@@ -10963,22 +10896,10 @@ async function obGoogleSignIn() {
 
   const provider = new firebase.auth.GoogleAuthProvider();
 
-  // Mobile: redirect flow — the page navigates away entirely, so nothing
-  // after this call runs on this page load. The result is handled by
-  // getRedirectResult() in initFirebase() once the page comes back.
-  if (_isMobileBrowser()) {
-    try {
-      await auth.signInWithRedirect(provider);
-    } catch (err) {
-      console.error('[Google Sign-In]', err && err.code, err && err.message);
-      const codeStr = (err && err.code) ? ` (${err.code})` : '';
-      _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
-      if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
-    }
-    return;
-  }
-
-  // Desktop: popup flow — resolves immediately, no page reload needed.
+  // Popup flow on every device — matches the confirmed-working reference
+  // implementation, which never uses signInWithRedirect(). The redirect
+  // flow (via getRedirectResult()) was the source of the auth/internal-error
+  // and has been removed.
   try {
     const result = await auth.signInWithPopup(provider);
     await _obHandleGoogleUser(result.user);
