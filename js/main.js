@@ -927,10 +927,17 @@ async function initFirebase() {
     }
     db = firebase.firestore();
 
-    // Show the sign-in overlay if there's no active session.
-    if (!(_getAuth() && _getAuth().currentUser)) {
-      if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
-    }
+    // NOTE: We deliberately do NOT decide here whether to show the sign-in
+    // overlay. Immediately after firebase.initializeApp(), auth.currentUser
+    // is still null even for a returning, already-signed-in user — Firebase
+    // Auth restores the persisted session asynchronously, and that restore
+    // hasn't completed yet at this point. Checking currentUser here used to
+    // force the sign-in overlay open, only for checkOnboarding()'s
+    // onAuthStateChanged listener to flip it shut again a moment later once
+    // the real session was restored — that flash was the startup flicker.
+    // checkOnboarding() (started in parallel at boot) is the single source
+    // of truth for the overlay; it waits for onAuthStateChanged to fire
+    // with the real, restored user before showing or hiding anything.
 
     // ── Realtime Database init ────────────────────────────────────
     rtdb = firebase.database();
@@ -11438,10 +11445,22 @@ async function obSubmit() {
   _obSaveAndFinish(fields, fbUid);
 }
 
+// ── Auth-ready signal ──────────────────────────────────────────────
+// Tells the splash-dismiss script (index.html) that we now know whether
+// the user is signed in or not, so it's safe to reveal either the app or
+// the sign-in overlay — whichever _showOnboardingOverlay/_hideOnboardingOverlay
+// just chose. Idempotent: dismissSplash() on the listening side no-ops
+// after the first call, so firing this more than once is harmless.
+function _signalAuthReady() {
+  window.__oasisAuthReady = true;
+  try { document.dispatchEvent(new CustomEvent('oasis-auth-ready')); } catch(e) {}
+}
+
 function _obFinish(name, isReturning) {
   document.getElementById('ob-overlay').classList.add('hidden');
   document.body.classList.add('ob-authed');
   document.body.style.overflow = '';
+  _signalAuthReady();
   try { renderHomePage(); } catch(e) {}
   try { renderProfileCard(); } catch(e) {}
   showToast((isReturning ? 'Welcome back, ' : 'Welcome, ') + name + '! ', 'success');
@@ -11527,18 +11546,24 @@ function _obResolveProfile(user) {
 
 function _showOnboardingOverlay() {
   const overlay = document.getElementById('ob-overlay');
-  if (!overlay) return;
-  overlay.classList.remove('hidden');
-  document.body.classList.remove('ob-authed');
-  document.body.style.overflow = 'hidden';
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    document.body.classList.remove('ob-authed');
+    document.body.style.overflow = 'hidden';
+  }
+  // No session found — safe to reveal the sign-in form now.
+  _signalAuthReady();
 }
 
 function _hideOnboardingOverlay() {
   const overlay = document.getElementById('ob-overlay');
-  if (!overlay) return;
-  overlay.classList.add('hidden');
-  document.body.classList.add('ob-authed');
-  document.body.style.overflow = '';
+  if (overlay) {
+    overlay.classList.add('hidden');
+    document.body.classList.add('ob-authed');
+    document.body.style.overflow = '';
+  }
+  // Valid session confirmed — safe to reveal the authenticated app now.
+  _signalAuthReady();
 }
 
 // ── Home profile card render ──────────────────────────────────────
@@ -11899,11 +11924,14 @@ document.addEventListener('nt-tick', function(e) {
 // ── BOOT ─────────────────────────────────────────────────────────
 applyInitialSettings();
 
-// Immediately hide overlay if user is already signed in (prevents home screen flash)
+// Fast path: a cached profile means we very likely have a session, so hide
+// the overlay right away (prevents home-screen flash for returning users
+// on a warm cache). checkOnboarding() below still runs immediately after
+// to confirm this against the real Firebase Auth state — if it turns out
+// there's no valid session after all, it will flip back to the sign-in
+// overlay itself (via _showOnboardingOverlay).
 if (getUserProfile()) {
-  const _bootOverlay = document.getElementById('ob-overlay');
-  if (_bootOverlay) { _bootOverlay.classList.add('hidden'); document.body.style.overflow = ''; }
-  document.body.classList.add('ob-authed');
+  _hideOnboardingOverlay();
 }
 
 if (USE_FIREBASE) {
@@ -11911,13 +11939,21 @@ if (USE_FIREBASE) {
 } else {
   initOfflineMode();
 }
-// Render the activity/preset strip after a short delay to allow DataService to init
+
+// Determine auth state (and therefore whether to show the sign-in overlay
+// or the app) as early as possible — do NOT defer this behind a timer.
+// The splash screen stays up until this resolves (see the
+// 'oasis-auth-ready' listener in index.html), so starting it late is what
+// causes the sign-in-form flash on startup/refresh/PWA launch.
+checkOnboarding();
+
+// Render the activity/preset strip after a short delay to allow DataService to init.
+// Purely cosmetic content, unrelated to the auth gate, so it can stay deferred.
 setTimeout(() => {
   try { renderActivityStrip(); } catch(e){}
   try { renderHomePage();      } catch(e){}
   try { renderProfileCard();   } catch(e){}
   try { buildDiagList();       } catch(e){}
-  checkOnboarding();
 }, 300);
 
 

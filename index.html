@@ -9457,9 +9457,17 @@ var photoCropper = (function () {
   })();
 
   var SPLASH_ID    = 'nt-splash';
-  var MAX_SHOW_MS  = 4000;  // safety valve — dismiss even if load stalls
+  // Safety valve — dismiss even if the auth check stalls (e.g. dead network,
+  // Firebase SDK failed to load). Generous enough to cover slow connections
+  // without leaving the user stuck on the splash indefinitely.
+  var MAX_SHOW_MS  = 8000;
   var _startTime   = Date.now();
   var _dismissed   = false;
+  // Becomes true once js/main.js has determined the auth state and decided
+  // whether to show the sign-in overlay or the authenticated app. The splash
+  // is not allowed to dismiss before this (outside of the MAX_SHOW_MS safety
+  // valve) — this is what prevents the sign-in-form flash on startup.
+  var _authReady   = false;
 
   // ── Standalone / home-screen launch splash ───────────────────────────
   // Android 12+ shows a native OS splash BEFORE our HTML paints, using
@@ -9511,17 +9519,29 @@ var photoCropper = (function () {
     }, delay);
   }
 
-  // Primary trigger: interactive — DOM ready, scripts run
-  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  // ── Primary trigger: auth state resolved ──────────────────────────
+  // js/main.js dispatches this once it knows — via the Firebase Auth
+  // session restore — whether to show the sign-in overlay or the
+  // authenticated app. Waiting for this (instead of DOMContentLoaded /
+  // window.load, which only tell us the page painted, not that we know
+  // who the user is) is what stops the sign-in form from flashing before
+  // the redirect to the authenticated app.
+  document.addEventListener('oasis-auth-ready', function () {
+    _authReady = true;
     dismissSplash();
-  } else {
-    document.addEventListener('DOMContentLoaded', dismissSplash);
+  });
+
+  // If main.js has *already* signalled readiness before this listener was
+  // attached (e.g. a very fast cached-session boot), catch that here too.
+  if (window.__oasisAuthReady) {
+    _authReady = true;
+    dismissSplash();
   }
 
-  // Secondary trigger: full load (images, SW, etc.)
-  window.addEventListener('load', dismissSplash);
-
-  // Safety valve: always dismiss after MAX_SHOW_MS
+  // Safety valve: dismiss after MAX_SHOW_MS regardless, so a stalled or
+  // failed auth check (offline, SDK failure, script error) never leaves
+  // the user stuck on the splash forever. Falls through to the sign-in
+  // overlay, which is the safe default.
   setTimeout(dismissSplash, MAX_SHOW_MS);
 
   // ── iOS apple-touch-startup-image ────────────────────────────
