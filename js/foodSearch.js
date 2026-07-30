@@ -224,10 +224,48 @@
   // best-match mode) when it has at least these fields populated.
   const REQUIRED_FIELDS = ['kcal', 'pro', 'cho', 'fat'];
 
-  // ── SESSION CACHE (in-memory only, keyed by normalised query+opts) ────────
+  // ── SESSION CACHE (in-memory, keyed by normalised query+opts) ──────────────
   // Distinct from the PERSISTENT CNR CACHE below: this just avoids repeating
   // an identical search() call within the same page session.
   const _cache = new Map();
+
+  // ── SEARCH RESULT CACHE (localStorage, 24h TTL, 100-entry cap) ─────────────
+  // In-memory `_cache` above is wiped on every reload. This mirrors it to
+  // localStorage — same pattern as the barcode cache below — so a food
+  // searched earlier still returns instantly (no network round-trip) for at
+  // least 24 hours, even across page reloads / app restarts.
+  const _SEARCH_CACHE_KEY = 'oasis_search_cache_v1';
+  const _SEARCH_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+  function _searchCacheGet(key) {
+    try {
+      const store = JSON.parse(localStorage.getItem(_SEARCH_CACHE_KEY) || '{}');
+      const entry = store[key];
+      if (!entry) return undefined;
+      if (Date.now() - entry.ts > _SEARCH_CACHE_TTL) {
+        delete store[key];
+        localStorage.setItem(_SEARCH_CACHE_KEY, JSON.stringify(store));
+        return undefined;
+      }
+      return entry.data;
+    } catch (_e) { return undefined; }
+  }
+
+  function _searchCacheSet(key, data) {
+    try {
+      const store = JSON.parse(localStorage.getItem(_SEARCH_CACHE_KEY) || '{}');
+      store[key] = { ts: Date.now(), data };
+      const keys = Object.keys(store);
+      if (keys.length > 100) delete store[keys[0]];
+      localStorage.setItem(_SEARCH_CACHE_KEY, JSON.stringify(store));
+    } catch (_e) {}
+  }
+
+  /** Write to both the in-memory session cache and the 24h localStorage cache. */
+  function _cacheResult(key, data) {
+    _cache.set(key, data);
+    _searchCacheSet(key, data);
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // UTILITY HELPERS
@@ -1055,10 +1093,18 @@
 
     if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
+    // In-memory cache is empty (e.g. fresh page load) — fall back to the
+    // 24h localStorage cache before hitting the network.
+    const persisted = _searchCacheGet(cacheKey);
+    if (persisted !== undefined) {
+      _cache.set(cacheKey, persisted); // warm the in-memory cache too
+      return persisted;
+    }
+
     // ── Unified multi-result mode — complete CNR consumer ──────────────────
     if (multi) {
       const result = await _unifiedSearch(query, limit);
-      _cache.set(cacheKey, result);
+      _cacheResult(cacheKey, result);
       return result;
     }
 
@@ -1069,7 +1115,7 @@
 
     // Layer 1 cached match → return immediately (offline-first fast path)
     if (best && _isComplete(best) && !enrich) {
-      _cache.set(cacheKey, best);
+      _cacheResult(cacheKey, best);
       return best;
     }
 
@@ -1086,7 +1132,7 @@
       best = _merge(best, chakudyaResult);
     }
 
-    _cache.set(cacheKey, best);
+    _cacheResult(cacheKey, best);
     return best;
   }
 
