@@ -104,13 +104,43 @@
   manifest-src blob: 'self';
 ">
 <!-- safe-area insets for notch devices -->
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css" id="oasis-core-css">
 <link rel="stylesheet" href="css/responsive.css">
 <link rel="stylesheet" href="css/news-styles.css">
+<script>
+  // ── Connection-failure fallback ─────────────────────────────────────
+  // If the core stylesheet fails to load (typically: offline + nothing
+  // cached yet, e.g. a visitor's very first ever load with no connection,
+  // or the Service Worker hasn't installed yet), the app would otherwise
+  // render as broken/unstyled raw HTML with every hidden overlay visible
+  // at once. Catch that failure and show a clean, self-contained message
+  // instead — no external CSS/JS dependency, so it can never itself fail
+  // to render.
+  document.getElementById('oasis-core-css').addEventListener('error', function () {
+    document.documentElement.innerHTML =
+      '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>Oasis — Connection Problem</title></head>' +
+      '<body style="margin:0;min-height:100dvh;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;gap:16px;padding:32px 24px;' +
+      'text-align:center;background:#020617;color:#e2e8f0;' +
+      'font-family:-apple-system,\'Segoe UI\',system-ui,sans-serif;">' +
+      '<div style="font-size:40px">📡</div>' +
+      '<h1 style="font-size:20px;font-weight:800;letter-spacing:1px;color:#f0f6ff;margin:0">Connection Problem</h1>' +
+      '<p style="font-size:13px;color:#94aed0;line-height:1.7;max-width:320px;margin:0">' +
+      'Oasis couldn\'t load — check your connection and try again. ' +
+      'Once you\'ve opened the app online at least once, it will keep working offline automatically.</p>' +
+      '<button onclick="location.reload()" style="font-family:ui-monospace,\'SF Mono\',monospace;' +
+      'font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;' +
+      'background:#1de9d4;color:#020617;border:none;border-radius:10px;padding:13px 32px;' +
+      'cursor:pointer;margin-top:8px">↺ Try Again</button>' +
+      '</body>';
+  }, true);
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>
+
   // ══════════════════════════════════════════════════════
   // APP MODE: USE_FIREBASE = true (Firestore sync enabled)
   const USE_FIREBASE = true;

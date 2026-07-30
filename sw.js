@@ -23,7 +23,24 @@ const CACHE       = 'oasis-v' + SW_VERSION;
 // PRECACHE: use the SW scope root (the app shell URL) instead of the
 // page's location.href (which was only available via template literal).
 // self.registration.scope resolves to the deployed app root, e.g. https://example.com/
-const PRECACHE    = [self.registration.scope];
+//
+// Core CSS/JS are precached explicitly (not just the root document) so that
+// a fresh install always has a fully-styled, functional shell available
+// offline — even right after a version bump wipes the previous cache, and
+// even on a visitor's very first (offline) load. Without this, a failed
+// stylesheet fetch renders unstyled/broken HTML instead of falling back
+// to the offline page below.
+const CORE_ASSETS = [
+  'css/styles.css',
+  'css/responsive.css',
+  'css/news-styles.css',
+  'js/main.js',
+  'manifest.json',
+];
+const PRECACHE    = [
+  self.registration.scope,
+  ...CORE_ASSETS.map(p => self.registration.scope + p),
+];
 const OFFLINE_URL = '__offline__';
 
 // ── Offline fallback page (baked-in, no network needed) ─────
@@ -176,8 +193,16 @@ const OFFLINE_HTML = `<!DOCTYPE html>
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c =>
-      // Cache the app shell + store the offline page
-      c.addAll(PRECACHE).then(() =>
+      // Cache each shell asset independently — a single failed/missing
+      // resource must not abort the whole install (addAll() is all-or-
+      // nothing and would leave the cache empty if even one 404'd).
+      Promise.all(
+        PRECACHE.map(url =>
+          fetch(url).then(res => {
+            if (res && res.ok) return c.put(url, res);
+          }).catch(() => {})
+        )
+      ).then(() =>
         c.put(OFFLINE_URL, new Response(OFFLINE_HTML, {
           headers: { 'Content-Type': 'text/html; charset=utf-8' }
         }))
