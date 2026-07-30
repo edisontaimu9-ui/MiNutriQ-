@@ -10791,6 +10791,86 @@ function _obAuthBusy(busy) {
     : label;
 }
 
+// ── Google Sign-In ───────────────────────────────────────────────
+// Uses Firebase Auth's GoogleAuthProvider popup flow. Unlike email
+// registration, Google sign-in creates the Firebase account immediately
+// on success — there's no deferred-creation step, so a first-time Google
+// user is routed straight into the existing profile-setup step
+// (_obSkipToProfile → obSubmit's "EXISTING USER" branch), pre-filled
+// with their Google name/photo where available.
+async function obGoogleSignIn() {
+  const auth = _getAuth();
+  if (!auth) {
+    _obSetAuthError('Unable to connect. Please check your internet and try again.');
+    return;
+  }
+
+  const googleBtn = document.getElementById('ob-google-btn');
+  if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
+  document.getElementById('ob-auth-error').style.display = 'none';
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result   = await auth.signInWithPopup(provider);
+    const gUser    = result.user;
+    const fbUid    = gUser?.uid;
+    const fbEmail  = gUser?.email || '';
+
+    let existingProfile = null;
+    if (db && fbUid) {
+      const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
+      if (snap && snap.exists && snap.data().userName) {
+        existingProfile = snap.data();
+      }
+    }
+
+    if (existingProfile) {
+      // Returning user — same finish path as email sign-in.
+      const p = {
+        name:        existingProfile.userName    || '',
+        uid:         existingProfile.userId      || '',
+        institution: existingProfile.institution || '',
+        role:        existingProfile.userRole    || 'student',
+        email:       fbEmail,
+        photoURL:    existingProfile.photoURL    || '',
+        createdAt:   existingProfile.createdAt   || new Date().toISOString(),
+        firebaseUid: fbUid,
+      };
+      saveUserProfile(p);
+      _obFinish(p.name, true);
+    } else {
+      // First-time Google user — account already exists (created by
+      // Firebase on popup success), so just collect the rest of the
+      // profile. _obPendingReg stays null, which routes obSubmit() to
+      // its "EXISTING USER" (no account creation) branch.
+      _wipeAllUserData();
+      _obSkipToProfile();
+
+      const nameEl = document.getElementById('ob-name');
+      if (nameEl && gUser?.displayName) nameEl.value = gUser.displayName;
+
+      if (gUser?.photoURL) {
+        const avatarImg   = document.getElementById('ob-avatar-img');
+        const placeholder = document.getElementById('ob-avatar-placeholder');
+        const photoData   = document.getElementById('ob-photo-data');
+        if (avatarImg)   { avatarImg.src = gUser.photoURL; avatarImg.style.display = ''; }
+        if (placeholder) placeholder.style.display = 'none';
+        if (photoData)   photoData.value = gUser.photoURL;
+      }
+    }
+  } catch (err) {
+    if (err && err.code === 'auth/popup-closed-by-user') {
+      // User dismissed the popup — no error message needed.
+    } else if (err && err.code === 'auth/account-exists-with-different-credential') {
+      _obSetAuthError('An account with this email already exists using a different sign-in method.');
+    } else {
+      _obSetAuthError('Google sign-in failed. Please try again.');
+    }
+  } finally {
+    if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
+  }
+}
+
 async function obAuthSubmit() {
   const emailVal   = document.getElementById('ob-auth-email')?.value.trim();
   const pwVal      = document.getElementById('ob-auth-pw')?.value;
