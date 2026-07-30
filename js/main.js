@@ -9816,6 +9816,35 @@ function dbRender() {
     return nameMatch && catMatch;
   });
 
+  // ── ENTERAL FORMULAS — CNR formula-registry cache (Layer 1b, offline,
+  //    instant — see foodSearch.js). Only fired on an actual search term
+  //    (formula names never match blindly) and only when the category
+  //    filter is unset or specifically "Enteral Formula", so a food-only
+  //    browse (empty search, category picked) never pulls formulas in.
+  if (searchN.length >= 2 && (!cat || cat === 'Enteral Formula') &&
+      typeof NTFoodSearch !== 'undefined' && typeof NTFoodSearch.searchEnteral === 'function') {
+    try {
+      const formulaHits = NTFoodSearch.searchEnteral(search, 20) || [];
+      formulaHits.forEach(h => {
+        if (!h || !h.name) return;
+        foods.push({
+          name:      h.name,
+          cat:       'Enteral Formula',
+          isFormula: true,
+          route:     h.route || null,
+          kcal: h.kcal ?? 0, kj: h.kj ?? 0, pro: h.pro ?? 0, cho: h.cho ?? 0, fat: h.fat ?? 0,
+          // Synthetic single measure so the existing per-100 / per-measure
+          // render paths (which expect food.measures) need no branching.
+          measures: [{
+            lbl: h.route ? `Per 100 mL · ${h.route}` : 'Per 100 mL',
+            weight: 100,
+            kcal: h.kcal ?? 0, kj: h.kj ?? 0, pro: h.pro ?? 0, cho: h.cho ?? 0, fat: h.fat ?? 0,
+          }],
+        });
+      });
+    } catch (_e) { /* formula cache not yet hydrated — offline-first, skip silently */ }
+  }
+
   // Sort
   if (sort === 'name')     foods.sort((a,b) => a.name.localeCompare(b.name));
   else if (sort === 'cat') foods.sort((a,b) => a.cat.localeCompare(b.cat) || a.name.localeCompare(b.name));
@@ -9838,7 +9867,10 @@ function dbRender() {
     statKcal.textContent = avgKcal.toFixed(0);
     statPro.textContent  = avgPro.toFixed(1);
   }
-  if (badge) badge.textContent = `${foods.length} of ${MALAWI_FCT.length} foods`;
+  const formulaCount = foods.filter(f => f.isFormula).length;
+  if (badge) badge.textContent = formulaCount
+    ? `${foods.length} results (${formulaCount} formula${formulaCount > 1 ? 's' : ''})`
+    : `${foods.length} of ${MALAWI_FCT.length} foods`;
 
   if (!foods.length) {
     tbody.innerHTML = '';
@@ -9863,12 +9895,12 @@ function dbRender() {
       const catColor = {
         Staples:'var(--amber)', Legumes:'var(--teal)', Vegetables:'var(--green)',
         'Protein Foods':'var(--blue)', Fruits:'#ff9f43', 'Fats & Oils':'var(--red)',
-        Beverages:'var(--purple)', Condiments:'var(--text-dim)'
+        Beverages:'var(--purple)', Condiments:'var(--text-dim)', 'Enteral Formula':'var(--purple)'
       }[f.cat] || 'var(--text-dim)';
       return `<tr>
         <td style="font-weight:600;color:var(--text-bright)">${f.name}</td>
         <td><span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${catColor};color:${catColor}">${f.cat}</span></td>
-        <td style="color:var(--text-dim);font-size:10px">per 100g</td>
+        <td style="color:var(--text-dim);font-size:10px">${f.isFormula ? 'per 100mL' : 'per 100g'}</td>
         <td style="color:var(--text-dim)">100</td>
         <td style="color:var(--amber);font-weight:700">${v.kcal}</td>
         <td style="color:var(--text-dim)">${v.kj}</td>
@@ -9885,7 +9917,7 @@ function dbRender() {
       const catColor = {
         Staples:'var(--amber)', Legumes:'var(--teal)', Vegetables:'var(--green)',
         'Protein Foods':'var(--blue)', Fruits:'#ff9f43', 'Fats & Oils':'var(--red)',
-        Beverages:'var(--purple)', Condiments:'var(--text-dim)'
+        Beverages:'var(--purple)', Condiments:'var(--text-dim)', 'Enteral Formula':'var(--purple)'
       }[f.cat] || 'var(--text-dim)';
       f.measures.forEach((m, mi) => {
         rows.push(`<tr>
