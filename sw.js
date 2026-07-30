@@ -194,9 +194,62 @@ self.addEventListener('activate', e => {
   );
 });
 
+// ── Share Target: receive images/PDFs/text/links shared from other apps ──
+// Browser POSTs multipart form data here (per manifest.json "share_target").
+// We can't hand a POST body to the SPA directly, so we stash the payload in
+// IndexedDB and 303-redirect to a GET the page can read on load.
+const SHARE_DB = 'oasis-share-target';
+function _openShareDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(SHARE_DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('incoming');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function _stashShare(payload) {
+  const db = await _openShareDB();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction('incoming', 'readwrite');
+    tx.objectStore('incoming').put(payload, 'latest');
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+  db.close();
+}
+
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+
+  if (e.request.method === 'POST' && url.pathname === '/share-target/') {
+    e.respondWith((async () => {
+      try {
+        const formData = await e.request.formData();
+        const title = formData.get('title') || '';
+        const text  = formData.get('text')  || '';
+        const link  = formData.get('url')   || '';
+        const images = formData.getAll('images').filter(f => f && f.size);
+        const documents = formData.getAll('documents').filter(f => f && f.size);
+
+        // Only the first image/document is used — Oasis handles one shared
+        // item at a time (barcode photo or a single guideline PDF).
+        const file = images[0] || documents[0] || null;
+        await _stashShare({
+          title, text, url: link,
+          fileBlob: file || null,
+          fileName: file ? file.name : null,
+          fileType: file ? file.type : null,
+          receivedAt: Date.now()
+        });
+      } catch (err) {
+        console.warn('[sw] share-target parse failed', err);
+      }
+      return Response.redirect('/?share-target=1', 303);
+    })());
+    return;
+  }
+
+  if (e.request.method !== 'GET') return;
 
   // Always network-first for Firebase/CDN resources — fall back to cache only,
   // never serve offline HTML for non-navigation requests

@@ -2291,6 +2291,31 @@ header {
   position: sticky;
   top: 0;
   z-index: 200;
+  /* The whole header acts as the draggable titlebar region when running
+     with Window Controls Overlay (desktop installs). Interactive children
+     opt back out below. */
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+header button,
+header a,
+header input,
+header select,
+header [onclick] {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* ── Window Controls Overlay (desktop PWA titlebar) ──
+   When supported, reserve space for the OS window controls and align the
+   header to the overlay's geometry instead of guessing a fixed inset. */
+@media (display-mode: window-controls-overlay) {
+  header {
+    min-height: env(titlebar-area-height, 40px);
+    padding-left: max(env(titlebar-area-x, 0px), 24px);
+    padding-right: calc(100% - env(titlebar-area-width, 100%) - env(titlebar-area-x, 0px) + 24px);
+  }
 }
 
 /* ── Logo ── */
