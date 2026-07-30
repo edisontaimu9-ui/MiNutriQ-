@@ -26,14 +26,17 @@
  *                 packaged foods are never left out — see `_unifiedSearch()`.
  *
  *   Layer 1   — CNR foods cache (IndexedDB, replaces MALAWI_FCT)
- *               ▶ Instant, offline, always tried first — but the data in it
- *                 is 100% real Chakudya responses, cached client-side after
- *                 every live `/foods` / `/foods/lookup` hit. Nothing is
- *                 preloaded at build time. A food that has never been
- *                 searched for on this device while online will not be
- *                 found here yet — the first search always has to reach
- *                 CNR at least once. After that, it's instant and offline
- *                 from then on, on that device.
+ *               ▶ Instant, offline, always tried first. Populated two ways:
+ *                 opportunistically (every live `/foods` / `/foods/lookup`
+ *                 hit caches its result), AND proactively — a wholesale
+ *                 paginated pull of GET /foods (no search term) runs once
+ *                 per session and every 6h while online, pre-seeding the
+ *                 cache so offline search has broad coverage from first
+ *                 launch rather than only "whatever's been searched
+ *                 before." Everything in the cache is still 100% real CNR
+ *                 data either way — nothing is bundled at build time, and
+ *                 a pre-seeded entry is silently overwritten the next time
+ *                 that same food is hit by a live search.
  *               ▶ Returns immediately if a cached match is found (single
  *                 best-match mode only — unified/multi mode always also
  *                 consults live CNR so the result set is genuinely complete
@@ -613,6 +616,78 @@
     setInterval(() => {
       if (Date.now() - _lastFormulasSync >= FORMULAS_SYNC_INTERVAL) _syncFormulasFromCNR();
     }, FORMULAS_SYNC_INTERVAL);
+  });
+
+  // ── Layer 1 pre-seed: bulk-pull GET /foods (no search term) so offline
+  //    coverage exists from first launch, not just "whatever's been
+  //    searched before" ────────────────────────────────────────────────
+  // Same principle as the formulas sync above: 100% real Chakudya
+  // responses, nothing fabricated or bundled at build time — this just
+  // pulls them proactively instead of waiting for an opportunistic search
+  // hit. Runs once per cache-ready session plus every 6h while the app
+  // stays open; best-effort — if offline, whatever's already cached (from
+  // a prior sync or prior searches) stands untouched. Every live search
+  // hit afterwards (_searchChakudyaFoods / _searchChakudyaLookup) still
+  // overwrites the matching entry via _cacheFood(), so a pre-seeded record
+  // is silently upgraded the next time that food is actually searched for
+  // while online — pre-seeding never blocks a fresher live result.
+  const FOODS_SYNC_PAGE_SIZE   = 200;
+  const FOODS_SYNC_MAX_PAGES   = 20;             // safety cap (~4000 items)
+  const FOODS_SYNC_INTERVAL    = 6 * 60 * 60 * 1000; // 6 hours
+  const FOODS_SYNC_DONE_KEY    = 'oasis_foods_preseed_done_v1';
+  let _lastFoodsSync = 0;
+
+  async function _fetchFoodsPage(limit, offset) {
+    const url = `${CHAKUDYA_BASE}/foods?limit=${limit}&offset=${offset}`;
+    const res = await _fetchWithTimeout(url, 10000);
+    if (!res.ok) return [];
+    const json = await res.json();
+    if (json.status !== 'success' || !Array.isArray(json.data)) return [];
+    return json.data;
+  }
+
+  async function _syncFoodsFromCNR() {
+    try {
+      let offset = 0;
+      let page   = 0;
+      let firstIdSeen = null;
+      let total = 0;
+
+      while (page < FOODS_SYNC_MAX_PAGES) {
+        const raw = await _fetchFoodsPage(FOODS_SYNC_PAGE_SIZE, offset);
+        if (!raw.length) break; // no more data
+
+        // Safety valve: if the API doesn't actually support offset and
+        // just keeps returning page 1, stop instead of looping uselessly.
+        const thisFirstId = raw[0] && (raw[0].id ?? raw[0].external_id ?? raw[0].food_name);
+        if (page > 0 && thisFirstId === firstIdSeen) break;
+        firstIdSeen = page === 0 ? thisFirstId : firstIdSeen;
+
+        for (const row of raw) {
+          const unified = _chakudyaFoodRowToUnified(row);
+          if (unified) { _cacheFood(unified); total++; }
+        }
+
+        if (raw.length < FOODS_SYNC_PAGE_SIZE) break; // short page — last page
+        offset += FOODS_SYNC_PAGE_SIZE;
+        page++;
+      }
+
+      _lastFoodsSync = Date.now();
+      if (total > 0) {
+        try { localStorage.setItem(FOODS_SYNC_DONE_KEY, '1'); } catch (_e) {}
+        console.info(`[Oasis] Pre-seeded ${total} food(s) from CNR for offline search`);
+      }
+    } catch (_e) {
+      // Offline or unreachable — whatever's already cached stands.
+    }
+  }
+
+  _cacheReadyPromise.then(() => {
+    _syncFoodsFromCNR();
+    setInterval(() => {
+      if (Date.now() - _lastFoodsSync >= FOODS_SYNC_INTERVAL) _syncFoodsFromCNR();
+    }, FOODS_SYNC_INTERVAL);
   });
 
   // ══════════════════════════════════════════════════════════════════════════
