@@ -772,11 +772,19 @@
   /** Normalise one raw row from GET /formulas into the unified food-result shape. */
   function _chakudyaFormulaRowToUnified(d) {
     if (!d) return null;
-    const name = d.name || d.formula_name || d.product_name || null;
+    // Confirmed against the live API: the name field is `formula`, not
+    // `name`/`formula_name`/`product_name` — every record was silently
+    // dropped before this fix because none of those matched.
+    const name = d.formula || d.name || d.formula_name || d.product_name || null;
     if (!name) return null;
 
     let kcal = d.kcal_per_ml ?? d.kcalMl ?? d.kcal_ml ?? d.energy_kcal_ml ?? d.kcal ?? null;
     if (kcal != null && kcal < 10) kcal = +(kcal * 100).toFixed(0); // per-mL → per-100mL
+
+    // protein_g_per_l / cho_g_per_l / fat_g_per_l / fibre_g_per_l are per
+    // LITRE on this endpoint — divide by 10 for per-100mL to match the
+    // unified food-object convention used everywhere else.
+    const per100 = (v) => (v == null ? null : +(v / 10).toFixed(1));
 
     return {
       id:              'chakudya_formula_' + (d.id ?? _norm(name)),
@@ -785,12 +793,12 @@
       route:           d.route ?? null,
       kcal:            kcal,
       kj:              kcal != null ? +(kcal * 4.184).toFixed(0) : null,
-      pro:             d.protein_g ?? d.pro ?? null,
-      cho:             d.carbs_g   ?? d.cho ?? null,
-      fat:             d.fat_g     ?? d.fat ?? null,
-      fibre:           d.fiber_g   ?? d.fibre ?? null,
-      fiber:           d.fiber_g   ?? d.fibre ?? null,
-      osm:             d.osmolality ?? d.osm ?? null,
+      pro:             per100(d.protein_g_per_l) ?? d.protein_g ?? d.pro ?? null,
+      cho:             per100(d.cho_g_per_l)     ?? d.carbs_g   ?? d.cho ?? null,
+      fat:             per100(d.fat_g_per_l)     ?? d.fat_g     ?? d.fat ?? null,
+      fibre:           per100(d.fibre_g_per_l)   ?? d.fiber_g   ?? d.fibre ?? null,
+      fiber:           per100(d.fibre_g_per_l)   ?? d.fiber_g   ?? d.fibre ?? null,
+      osm:             d.osmol ?? d.osmolality ?? d.osm ?? null,
       unit:            'mL',
       isFormula:       true,
       sourceUsed:      'chakudya',

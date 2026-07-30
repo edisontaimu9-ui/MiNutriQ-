@@ -10946,12 +10946,15 @@ function ntClear(scopeId, resultIds) {
       }
 
       // ── Layer 1b: local Formula / Enteral Feed DB ────────────
-      // ENTERAL_DB (therapeutic milks, sip feeds, tube feeds) — offline,
-      // instant. Values are per 100 mL; cards render with unit:'mL'.
+      // Chakudya CNR /formulas registry only — ENTERAL_DB is being
+      // retired. GET /formulas has no text-search param, so
+      // NTFoodSearch.searchEnteral() fetches the whole registry into an
+      // offline cache and matches client-side. Values are per 100 mL;
+      // cards render with unit:'mL'.
       let enteralHits = [];
       if (typeof NTFoodSearch !== 'undefined' && typeof NTFoodSearch.searchEnteral === 'function') {
         try { enteralHits = NTFoodSearch.searchEnteral(q, 5); }
-        catch(_e) { /* ENTERAL_DB not yet loaded — skip */ }
+        catch(_e) { /* CNR formula cache not yet loaded — skip */ }
       }
 
       // ── Layer 2: FDC online (only if total offline hits < 3) ─

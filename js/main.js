@@ -9816,11 +9816,15 @@ function dbRender() {
     return nameMatch && catMatch;
   });
 
-  // ── ENTERAL FORMULAS — CNR formula-registry cache (Layer 1b, offline,
-  //    instant — see foodSearch.js). Only fired on an actual search term
-  //    (formula names never match blindly) and only when the category
-  //    filter is unset or specifically "Enteral Formula", so a food-only
-  //    browse (empty search, category picked) never pulls formulas in.
+  // ── ENTERAL FORMULAS — Chakudya CNR /formulas registry only ────────────
+  // ENTERAL_DB is being retired, so this no longer touches it. GET /formulas
+  // has no text-search query param (only route/limit/offset — see the API
+  // README), so NTFoodSearch.searchEnteral() fetches the whole (paginated)
+  // registry into an offline IndexedDB cache and matches it client-side
+  // with the same tiered scorer used everywhere else in Food Search — see
+  // foodSearch.js Layer 1b / 2c. Only fired on an actual search term and
+  // only when the category filter is unset or specifically "Enteral
+  // Formula", so a plain food browse never pulls formulas in.
   if (searchN.length >= 2 && (!cat || cat === 'Enteral Formula') &&
       typeof NTFoodSearch !== 'undefined' && typeof NTFoodSearch.searchEnteral === 'function') {
     try {
@@ -9833,8 +9837,6 @@ function dbRender() {
           isFormula: true,
           route:     h.route || null,
           kcal: h.kcal ?? 0, kj: h.kj ?? 0, pro: h.pro ?? 0, cho: h.cho ?? 0, fat: h.fat ?? 0,
-          // Synthetic single measure so the existing per-100 / per-measure
-          // render paths (which expect food.measures) need no branching.
           measures: [{
             lbl: h.route ? `Per 100 mL · ${h.route}` : 'Per 100 mL',
             weight: 100,
@@ -9842,7 +9844,7 @@ function dbRender() {
           }],
         });
       });
-    } catch (_e) { /* formula cache not yet hydrated — offline-first, skip silently */ }
+    } catch (_e) { /* CNR formula cache not yet hydrated — offline-first, skip silently */ }
   }
 
   // Sort
