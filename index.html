@@ -102,6 +102,8 @@
   img-src 'self' blob: data:;
   worker-src 'self' blob:;
   manifest-src blob: 'self';
+  frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
+  form-action 'self' https://*.firebaseapp.com https://accounts.google.com;
 ">
 <!-- safe-area insets for notch devices -->
 <link rel="stylesheet" href="css/styles.css" id="oasis-core-css">
