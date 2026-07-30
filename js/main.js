@@ -9965,25 +9965,8 @@ function dbRenderHighlights() {
 }
 
 function dbExportCSV() {
-  const cat  = document.getElementById('db-cat')?.value || '';
-  const srch = (document.getElementById('db-search')?.value || '').toLowerCase();
-  let foods = MALAWI_FCT.filter(f =>
-    (!cat || f.cat === cat) &&
-    (!srch || f.name.toLowerCase().includes(srch))
-  );
-  const headers = ['Food Name','Category','Measure','Weight (g)','kcal','kJ','Protein (g)','Carbs (g)','Fat (g)'];
-  const rows = [];
-  foods.forEach(f => {
-    f.measures.forEach(m => {
-      rows.push([f.name, f.cat, m.lbl, m.weight||100, m.kcal, m.kj, m.pro, m.cho, m.fat]);
-    });
-  });
-  const csv = [headers, ...rows].map(r => r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  a.download = 'Oasis_FoodDatabase.csv';
-  a.click();
-  showToast('✓ Database exported as CSV');
+  // Database export disabled — food composition tables are not downloadable.
+  showToast('Database export is disabled');
 }
 
 
@@ -10618,21 +10601,8 @@ async function pkgDelete(id) {
 
 // ── CSV Export ────────────────────────────────────────────────────
 function pkgExportCSV() {
-  if (typeof PackagedFoodsDB === 'undefined') return;
-  const all  = PackagedFoodsDB.list({ page: 0, size: 99999 }).items;
-  const head = 'Product,Brand,Barcode,Serving(g),kcal/100g,Protein(g),Carbs(g),Fat(g),Sugar(g),Fiber(g),Sodium(mg),SubmittedBy,LastUpdated';
-  const rows = all.map(f =>
-    [f.name, f.brand, f.barcode, f.servingSize, f.kcal, f.pro, f.cho, f.fat, f.sugar, f.fiber, f.sodium, f.submittedBy, f.lastUpdated]
-      .map(v => `"${v ?? ''}"`)
-      .join(',')
-  );
-  const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = 'Oasis_Packaged_Foods.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showToast('✓ Packaged foods exported as CSV');
+  // Database export disabled — packaged foods tables are not downloadable.
+  showToast('Database export is disabled');
 }
 
 // ── END PKG MODULE ────────────────────────────────────────────────
@@ -12134,23 +12104,8 @@ function uctRender() {
 }
 
 function uctExportCSV() {
-  if (typeof UCT_EXCHANGE_DB === 'undefined') return;
-  const search  = (document.getElementById('uct-search')?.value || '').toLowerCase().trim();
-  const catVal  = document.getElementById('uct-cat')?.value   || '';
-  let foods = UCT_EXCHANGE_DB.filter(f => {
-    const matchName = !search || f.name.toLowerCase().includes(search);
-    const matchCat  = !catVal || f.exchange_type === catVal;
-    return matchName && matchCat;
-  });
-  const header = 'Food Name,Exchange Type,Portion,kcal,kJ,Protein (g),Carbs (g),Fat (g)';
-  const rows = foods.map(f =>
-    `"${f.name}","${UCT_EXCHANGE_TYPE_LABELS[f.exchange_type]||f.exchange_type}","${f.portions[0]||''}",${f.kcal[0]||0},${f.kj[0]||0},${f.pro[0]||0},${f.cho[0]||0},${f.fat[0]||0}`
-  );
-  const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'UCT_Exchange_Lists.csv';
-  a.click();
+  // Database export disabled — exchange list tables are not downloadable.
+  showToast('Database export is disabled');
 }
 
 function dbSwitchTab(tab) {
@@ -12160,21 +12115,14 @@ function dbSwitchTab(tab) {
     if (panel) panel.style.display = t === tab ? '' : 'none';
     if (btn)   btn.classList.toggle('dbtab-active', t === tab);
   });
+  // Database export button disabled across all tabs — food/exchange/enteral/
+  // renal/packaged tables are no longer downloadable.
   const exportBtn = document.getElementById('db-export-btn');
-  if (exportBtn) {
-    if (tab === 'food')     { exportBtn.onclick = dbExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-    if (tab === 'exchange') { exportBtn.onclick = uctExportCSV; exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-    if (tab === 'enteral')  { exportBtn.onclick = enExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-    if (tab === 'renal')    { exportBtn.onclick = rnExportCSV;  exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-    if (tab === 'packaged') { exportBtn.onclick = pkgExportCSV; exportBtn.textContent = '\u2b07 EXPORT CSV'; exportBtn.style.display = ''; }
-  }
+  if (exportBtn) { exportBtn.onclick = null; exportBtn.style.display = 'none'; }
   if (tab === 'enteral'  && !enInitialized)  enInit();
   if (tab === 'exchange' && !uctInitialized) uctInit();
   if (tab === 'renal'    && !rnInitialized)  rnInit();
   if (tab === 'packaged' && !pkgInitialized) pkgInit();
-  // Restore export btn visibility (PN panel hides it)
-  const _exportBtnR = document.getElementById('db-export-btn');
-  if (_exportBtnR && tab !== 'pn') _exportBtnR.style.display = '';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -12356,17 +12304,8 @@ function rnRender() {
 }
 
 function rnExportCSV() {
-  const headers = ['ID','Name','Code','Portion (g)','Portion (measure)','Energy (kJ)','kcal',
-                   'Protein (g)','Fat (g)','CHO (g)','Phosphorus (mg)','Potassium (mg)','Sodium (mg)'];
-  const rows = _renalCache.map(e => [
-    e.id, e.name, e.code, e.grams, e.measure,
-    e.energy_kj, e.energy_kj != null ? Math.round(e.energy_kj / 4.184) : '',
-    e.protein_g, e.fat_g, e.cho_g, e.po4_mg, e.k_mg, e.na_mg
-  ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
-  const csv  = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a    = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'Renal_Exchange_List.csv'; a.click();
+  // Database export disabled — renal exchange list tables are not downloadable.
+  showToast('Database export is disabled');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -12782,30 +12721,8 @@ function enRenderHighlights() {
 }
 
 function enExportCSV() {
-  const search    = (document.getElementById('en-search')?.value   || '').toLowerCase();
-  const cat       = document.getElementById('en-cat')?.value       || '';
-  const tagEnergy = document.getElementById('en-tag-energy')?.value || '';
-  const tagPro    = document.getElementById('en-tag-protein')?.value || '';
-  const tagFibre  = document.getElementById('en-tag-fibre')?.value  || '';
-  let data = ENTERAL_DB.filter(f => {
-    if (search && !f.name.toLowerCase().includes(search)) return false;
-    if (cat    && f.cat !== cat) return false;
-    const tags = getFormulaTags(f);
-    if (tagEnergy && !tags.includes(tagEnergy)) return false;
-    if (tagPro    && !tags.includes(tagPro))    return false;
-    if (tagFibre  && !tags.includes(tagFibre))  return false;
-    return true;
-  });
-  const headers = ['Formula','Category','Route','kcal/mL','kcal/500mL','Protein g/L','Protein %E','CHO g/L','Fat g/L','Osmol mOsm/L','Fibre g/L','Tags','Notes'];
-  const rows = data.map(f => {
-    const proPct = f.kcalML ? Math.round(f.pro*4/(f.kcalML*100)*100)+'%' : '';
-    const tags   = getFormulaTags(f).join(' | ');
-    return [f.name, f.cat, f.route, f.kcalML, Math.round(f.kcalML*500), f.pro*10, proPct, f.cho*10, f.fat*10, f.osm||'', (f.fibre||0)*10, tags, f.note];
-  });
-  const csv = [headers, ...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = 'Oasis_EnteralFormulas.csv'; a.click();
-  showToast('✓ Enteral database exported as CSV (with clinical tags)');
+  // Database export disabled — enteral formula tables are not downloadable.
+  showToast('Database export is disabled');
 }
 
 // ── Disease filter state ──────────────────────────────────────
