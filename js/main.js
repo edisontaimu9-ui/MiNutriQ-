@@ -934,30 +934,52 @@ async function initFirebase() {
     // Resolves to { user: null } when there's no pending redirect, so this
     // is a no-op on every normal page load.
     //
-    // DIAGNOSTIC: sign-in has failed silently across two prior fixes with
-    // no visible error, so every outcome here is written to a persistent
-    // localStorage key AND surfaced on-screen — this must survive a full
-    // page reload and any overlay state reset that follows.
+    // DIAGNOSTIC: sign-in has failed silently across prior fixes with no
+    // visible error and no debug line ever appearing — meaning the
+    // getRedirectResult() promise itself never settles (neither resolves
+    // nor rejects). This block now (a) shows the debug line immediately,
+    // updating it in place, so an in-progress/hung state is visible too,
+    // and (b) races against an 8s timeout so a hang can't block forever.
     if (typeof firebase.auth === 'function') {
       _obRedirectPending = true;
-      const _obDebug = (msg) => {
+
+      const _obShowDebug = (msg) => {
         try { localStorage.setItem('ob_google_redirect_debug', msg + ' @ ' + new Date().toISOString()); } catch(e) {}
         console.log('[Google Redirect DEBUG]', msg);
+        try {
+          const errEl = document.getElementById('ob-auth-error');
+          if (errEl && errEl.parentNode) {
+            let dbgLine = document.getElementById('ob-google-redirect-debug-line');
+            if (!dbgLine) {
+              dbgLine = document.createElement('div');
+              dbgLine.id = 'ob-google-redirect-debug-line';
+              dbgLine.style.cssText = 'margin-top:10px;font-family:monospace;font-size:10px;color:#64748b;word-break:break-all;';
+              errEl.parentNode.insertBefore(dbgLine, errEl.nextSibling);
+            }
+            dbgLine.textContent = 'DEBUG: ' + msg;
+          }
+        } catch(e) {}
       };
-      _obDebug('getRedirectResult() called');
-      firebase.auth().getRedirectResult().then(result => {
+
+      _obShowDebug('getRedirectResult() called — waiting…');
+
+      const _obTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject({ code: 'client/timeout', message: 'getRedirectResult() did not settle within 8s' }), 8000)
+      );
+
+      Promise.race([firebase.auth().getRedirectResult(), _obTimeout]).then(result => {
         if (result && result.user) {
-          _obDebug('SUCCESS user=' + result.user.uid + ' email=' + result.user.email);
+          _obShowDebug('SUCCESS user=' + result.user.uid + ' email=' + result.user.email);
         } else {
-          _obDebug('resolved with NO user (result=' + JSON.stringify(result && { operationType: result.operationType, providerId: result.providerId }) + ')');
+          _obShowDebug('resolved with NO user (result=' + JSON.stringify(result && { operationType: result.operationType, providerId: result.providerId }) + ')');
         }
         if (result && result.user && typeof _obHandleGoogleUser === 'function') {
           const googleBtn = document.getElementById('ob-google-btn');
           if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
           _obHandleGoogleUser(result.user).then(() => {
-            _obDebug('_obHandleGoogleUser completed OK');
+            _obShowDebug('_obHandleGoogleUser completed OK');
           }).catch(err => {
-            _obDebug('_obHandleGoogleUser THREW: ' + (err && err.code) + ' ' + (err && err.message));
+            _obShowDebug('_obHandleGoogleUser THREW: ' + (err && err.code) + ' ' + (err && err.message));
             console.error('[Google Redirect]', err && err.code, err && err.message);
             if (typeof _obSetAuthError === 'function') {
               const codeStr = (err && err.code) ? ` (${err.code})` : '';
@@ -973,7 +995,7 @@ async function initFirebase() {
           if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
         }
       }).catch(err => {
-        _obDebug('getRedirectResult() THREW: ' + (err && err.code) + ' ' + (err && err.message));
+        _obShowDebug((err && err.code === 'client/timeout' ? 'TIMED OUT: ' : 'THREW: ') + (err && err.code) + ' ' + (err && err.message));
         console.error('[Google Redirect]', err && err.code, err && err.message);
         if (err && err.code === 'auth/account-exists-with-different-credential' && typeof _obSetAuthError === 'function') {
           _obSetAuthError('An account with this email already exists using a different sign-in method.');
@@ -981,20 +1003,6 @@ async function initFirebase() {
         if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
       }).finally(() => {
         _obRedirectPending = false;
-        // Surface the last debug line on-screen (small, below the form)
-        // so it shows up in a screenshot even if nothing else is visible.
-        try {
-          const dbg = localStorage.getItem('ob_google_redirect_debug');
-          if (dbg) {
-            const errEl = document.getElementById('ob-auth-error');
-            if (errEl) {
-              const dbgLine = document.createElement('div');
-              dbgLine.style.cssText = 'margin-top:10px;font-family:monospace;font-size:10px;color:#64748b;word-break:break-all;';
-              dbgLine.textContent = 'DEBUG: ' + dbg;
-              errEl.parentNode.insertBefore(dbgLine, errEl.nextSibling);
-            }
-          }
-        } catch(e) {}
       });
     }
 
