@@ -927,15 +927,8 @@ async function initFirebase() {
     }
     db = firebase.firestore();
 
-    // ── Google Sign-In: popup flow only ──────────────────────────────
-    // Previously mobile devices used signInWithRedirect() + getRedirectResult(),
-    // which is what threw auth/internal-error (see debug line under the
-    // password field). The reference implementation (dietitianos-master)
-    // uses signInWithPopup() unconditionally, on every device, and does not
-    // call getRedirectResult() at all — so that call is removed here.
-    // obGoogleSignIn() below now always uses the popup flow to match.
+    // Show the sign-in overlay if there's no active session.
     if (!(_getAuth() && _getAuth().currentUser)) {
-      // No active session on this load — show the sign-in overlay.
       if (typeof _showOnboardingOverlay === 'function') _showOnboardingOverlay();
     }
 
@@ -10742,14 +10735,6 @@ let _obIsRegisterMode = false;
 // Cleared immediately after successful account creation in obSubmit().
 let _obPendingReg = null;  // { email: string, pw: string } | null
 
-// True while getRedirectResult() (mobile Google sign-in) is being resolved.
-// checkOnboarding()'s onAuthStateChanged listener fires with user=null as
-// an interim state on the page load that follows a redirect — BEFORE
-// Firebase finishes restoring the real signed-in session — and without
-// this guard, that interim null was forcing the sign-in overlay back open,
-// stomping on whatever screen the redirect handler had already moved to.
-let _obRedirectPending = false;
-
 // Set heading on load: "Welcome back" for returning users, "Welcome" for new
 (function() {
   const el = document.getElementById('ob-auth-heading');
@@ -10813,112 +10798,6 @@ function _obAuthBusy(busy) {
   btn.innerHTML = busy
     ? `<span class="ob-spinner"></span><span>Please wait…</span>`
     : label;
-}
-
-// ── Google Sign-In ───────────────────────────────────────────────
-// signInWithPopup() is unreliable on mobile Chrome: the popup doesn't
-// behave like a true popup there, and Firebase relays the auth result
-// back via cross-window messaging that depends on third-party cookies/
-// storage — which mobile Chrome increasingly blocks by default. When
-// that relay silently fails, Firebase surfaces it as a generic
-// auth/internal-error (exactly what was reported).
-//
-// Fix: mobile devices use signInWithRedirect() instead — a full page
-// navigation to Google and back, with no cross-window messaging
-// involved. The result is picked up via getRedirectResult() in
-// initFirebase() on the page load that follows the redirect. Desktop
-// keeps the popup flow (nicer UX there, and not subject to this bug).
-function _isMobileBrowser() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-// Shared logic for both the popup (desktop) and redirect (mobile) flows:
-// look up whether this Google account already has a saved profile, and
-// either finish sign-in or drop into profile setup for a first-time user.
-async function _obHandleGoogleUser(gUser) {
-  const fbUid   = gUser?.uid;
-  const fbEmail = gUser?.email || '';
-
-  let existingProfile = null;
-  if (db && fbUid) {
-    const snap = await db.collection('users').doc(fbUid).get().catch(() => null);
-    if (snap && snap.exists && snap.data().userName) {
-      existingProfile = snap.data();
-    }
-  }
-
-  if (existingProfile) {
-    // Returning user — same finish path as email sign-in.
-    const p = {
-      name:        existingProfile.userName    || '',
-      uid:         existingProfile.userId      || '',
-      institution: existingProfile.institution || '',
-      role:        existingProfile.userRole    || 'student',
-      email:       fbEmail,
-      photoURL:    existingProfile.photoURL    || '',
-      createdAt:   existingProfile.createdAt   || new Date().toISOString(),
-      firebaseUid: fbUid,
-    };
-    saveUserProfile(p);
-    _obFinish(p.name, true);
-  } else {
-    // First-time Google user — account already exists (created by
-    // Firebase on sign-in success), so just collect the rest of the
-    // profile. _obPendingReg stays null, which routes obSubmit() to
-    // its "EXISTING USER" (no account creation) branch.
-    _wipeAllUserData();
-    _obSkipToProfile();
-
-    const nameEl = document.getElementById('ob-name');
-    if (nameEl && gUser?.displayName) nameEl.value = gUser.displayName;
-
-    if (gUser?.photoURL) {
-      const avatarImg   = document.getElementById('ob-avatar-img');
-      const placeholder = document.getElementById('ob-avatar-placeholder');
-      const photoData   = document.getElementById('ob-photo-data');
-      if (avatarImg)   { avatarImg.src = gUser.photoURL; avatarImg.style.display = ''; }
-      if (placeholder) placeholder.style.display = 'none';
-      if (photoData)   photoData.value = gUser.photoURL;
-    }
-  }
-}
-
-async function obGoogleSignIn() {
-  const auth = _getAuth();
-  if (!auth) {
-    _obSetAuthError('Unable to connect. Please check your internet and try again.');
-    return;
-  }
-
-  const googleBtn = document.getElementById('ob-google-btn');
-  if (googleBtn) { googleBtn.disabled = true; googleBtn.style.opacity = '0.6'; }
-  document.getElementById('ob-auth-error').style.display = 'none';
-
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  // Popup flow on every device — matches the confirmed-working reference
-  // implementation, which never uses signInWithRedirect(). The redirect
-  // flow (via getRedirectResult()) was the source of the auth/internal-error
-  // and has been removed.
-  try {
-    const result = await auth.signInWithPopup(provider);
-    await _obHandleGoogleUser(result.user);
-  } catch (err) {
-    console.error('[Google Sign-In]', err && err.code, err && err.message);
-    if (err && err.code === 'auth/popup-closed-by-user') {
-      // User dismissed the popup — no error message needed.
-    } else if (err && err.code === 'auth/account-exists-with-different-credential') {
-      _obSetAuthError('An account with this email already exists using a different sign-in method.');
-    } else {
-      // TEMP: showing the raw error code to make this diagnosable from a
-      // phone without desktop remote debugging. Revert to the generic
-      // message once the underlying cause is confirmed fixed.
-      const codeStr = (err && err.code) ? ` (${err.code})` : '';
-      _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
-    }
-  } finally {
-    if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
-  }
 }
 
 async function obAuthSubmit() {
@@ -11608,12 +11487,7 @@ function checkOnboarding() {
           _obResolveProfile(user);
         }
       } else {
-        // Not signed in — always block home screen. Exception: if a
-        // Google redirect sign-in is still being resolved, this null is
-        // likely just the interim pre-redirect-restore state, not a real
-        // "not signed in" — wait for the redirect handler to finish
-        // instead of flashing the sign-in screen over its result.
-        if (_obRedirectPending) return;
+        // Not signed in — block home screen and show the sign-in overlay.
         _showOnboardingOverlay();
       }
     });
