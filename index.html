@@ -156,7 +156,10 @@
      Dismissed by #nt-splash-dismiss script at end of <body>.
      ═══════════════════════════════════════════════════════════ -->
 <div id="nt-splash" role="status" aria-label="Oasis loading" aria-live="polite">
-  <img class="nts-logo" src="/icons/logo-transparent.png" width="120" height="120" alt="Oasis">
+  <picture>
+    <source srcset="/icons/logo-transparent-240.webp" type="image/webp">
+    <img class="nts-logo" src="/icons/logo-transparent-240.png" width="120" height="120" alt="Oasis">
+  </picture>
 </div>
 <!-- /SPLASH -->
 
@@ -413,7 +416,10 @@
   <!-- Logo -->
   <div class="logo">
     <div class="logo-icon" style="width:46px;height:46px;display:flex;align-items:center;justify-content:center">
-      <img src="/icons/logo-transparent.png" width="46" height="46" alt="Oasis" style="object-fit:contain;display:block">
+      <picture>
+        <source srcset="/icons/logo-transparent-96.webp" type="image/webp">
+        <img src="/icons/logo-transparent-96.png" width="46" height="46" alt="Oasis" style="object-fit:contain;display:block" loading="eager" fetchpriority="high">
+      </picture>
     </div>
     <div class="logo-text" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
       <div class="logo-name">
@@ -14013,5 +14019,6 @@ document.addEventListener('keydown', function(e){
 
 <script src="js/responsive.js" defer></script>
 <script src="js/oasis-news.js" defer></script>
+<script src="js/shareTarget.js" defer></script>
 </body>
 </html>
