@@ -10859,12 +10859,17 @@ async function obGoogleSignIn() {
       }
     }
   } catch (err) {
+    console.error('[Google Sign-In]', err && err.code, err && err.message);
     if (err && err.code === 'auth/popup-closed-by-user') {
       // User dismissed the popup — no error message needed.
     } else if (err && err.code === 'auth/account-exists-with-different-credential') {
       _obSetAuthError('An account with this email already exists using a different sign-in method.');
     } else {
-      _obSetAuthError('Google sign-in failed. Please try again.');
+      // TEMP: showing the raw error code to make this diagnosable from a
+      // phone without desktop remote debugging. Revert to the generic
+      // message once the underlying cause is confirmed fixed.
+      const codeStr = (err && err.code) ? ` (${err.code})` : '';
+      _obSetAuthError('Google sign-in failed. Please try again.' + codeStr);
     }
   } finally {
     if (googleBtn) { googleBtn.disabled = false; googleBtn.style.opacity = ''; }
