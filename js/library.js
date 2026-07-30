@@ -4345,26 +4345,36 @@
     }
 
     // ── 3. Home-screen Information card ──────────────
-    var hpRefs = document.querySelector('.hp-refs');
-    if (hpRefs && !document.getElementById('hp-ref-library')) {
+    // NOTE: this used to target ".hp-refs", a class that no longer exists
+    // anywhere in the page (leftover from an earlier layout) — the card
+    // silently never rendered. Fixed to target the real #hp-info-grid
+    // container and match the current hp-ptile-compact tile style used by
+    // its siblings (Food Database / History / Reference).
+    var hpInfoGrid = document.getElementById('hp-info-grid');
+    if (hpInfoGrid && !document.getElementById('hp-ref-library')) {
       var card = document.createElement('div');
       card.id        = 'hp-ref-library';
-      card.className = 'hp-ref-card';
-      card.setAttribute('onclick', "switchTab('library')");
+      card.className = 'hp-ptile hp-ptile-compact';
+      card.setAttribute('onclick',   "switchTab('library')");
+      card.setAttribute('role',      'button');
+      card.setAttribute('tabindex',  '0');
+      card.setAttribute('aria-label','Open Resource Library');
+      card.style.setProperty('--ptile-accent', 'rgba(29,233,212,0.4)');
+      card.style.setProperty('--ptile-glow',   'rgba(29,233,212,0.16)');
       card.innerHTML =
-        '<span class="hp-ref-icon">'+
-          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
+        '<div class="hp-ptile-icon" style="background:rgba(29,233,212,0.08);border-color:rgba(29,233,212,0.25);color:var(--teal,#1de9d4)">'+
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
             '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>'+
             '<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'+
             '<line x1="9" y1="8" x2="15" y2="8" opacity="0.6"/>'+
             '<line x1="9" y1="12" x2="13" y2="12" opacity="0.4"/>'+
           '</svg>'+
-        '</span>'+
-        '<div>'+
-          '<div class="hp-ref-name">Resource Library</div>'+
-          '<div class="hp-ref-desc">Guidelines · Protocols · Articles</div>'+
+        '</div>'+
+        '<div class="hp-ptile-body">'+
+          '<div class="hp-ptile-title" style="color:var(--teal,#1de9d4)">Library</div>'+
+          '<div class="hp-ptile-desc">Guidelines · Protocols · Articles</div>'+
         '</div>';
-      hpRefs.appendChild(card);
+      hpInfoGrid.appendChild(card);
     }
   }
 
