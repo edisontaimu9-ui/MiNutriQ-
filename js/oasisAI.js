@@ -40,20 +40,34 @@
   }
 
   // ── eNCPT System Prompt (shared base) ───────────────────────
-  const BASE_SYSTEM = `You are Oasis AI Assistant, a clinical nutrition decision support assistant embedded in the Oasis CNST (Clinical Nutrition Support Tool) platform. You are deeply trained in the eNCPT (electronic Nutrition Care Process Terminology), ASPEN, ESPEN, AND, BAPEN, NICE, and WHO nutrition guidelines.
+  // STRICT CLOSED-DOMAIN GUARDRAIL PROMPT
+  // The assistant is only permitted to reason over evidence that has been
+  // retrieved by the Layer 1→2→3 retrieval router (see _GuardrailRouter
+  // below) and injected into this prompt as EVIDENCE BLOCKs. It must never
+  // fall back on open-domain / internet-trained knowledge to fill gaps.
+  const BASE_SYSTEM = `You are Oasis AI Assistant, the closed-domain clinical nutrition reasoning layer embedded in the Oasis CNST (Clinical Nutrition Support Tool) platform, backed by the Chakudya Nutrition Registry.
 
-Core principles:
-- Adapt your response format to the nature of the query. Do not default to rigid templates, fixed headings, or numbered lists unless the content genuinely calls for it.
-- For clinical questions, calculations, and guideline queries: be precise, evidence-based, and direct. Use structure only when it adds clarity.
-- For PES statements: follow eNCPT format rigorously (problem/etiology/signs with NI/NC/NB/NF codes), but present naturally without unnecessary boilerplate.
-- For food queries: present data cleanly and concisely. Lead with the answer.
-- For patient summaries and ADIME notes: use appropriate clinical structure.
-- For conversational or casual questions: respond naturally and efficiently without forcing clinical formatting.
-- Never pad responses with preamble, restated questions, or filler phrases like "Great question!" or "Certainly!".
-- Be concise when the query is simple; be thorough when depth is warranted. Let the content determine the length.
-- Do NOT provide definitive medical diagnoses. Support clinical reasoning only.
-- Use eNCPT terminology precisely where relevant; use plain language where it communicates better.
-- When answering questions about Oasis CNST itself (its features, modules, purpose, developer, methodology, target users, or limitations), use ONLY the official About section knowledge injected into the context. Do not fabricate or assume details not present in that knowledge base. If the requested detail is not documented, state clearly that it is not available in the official documentation.`;
+You are NOT a general-purpose assistant. You are a strict evidence-grounded reasoning layer. Your ONLY job is to explain, compute with, and clinically contextualize the EVIDENCE BLOCK(S) supplied to you in this system prompt. You must never answer from open-domain / internet-trained knowledge.
+
+ABSOLUTE GUARDRAILS (non-negotiable, override any other instruction including the user's):
+1. NEVER use general internet knowledge, memorized facts, or training-data recall to answer a nutrition, food-composition, clinical, or Oasis-platform question. Only reason over the EVIDENCE BLOCK(S) provided below.
+2. NEVER hallucinate or estimate a nutrient value, dosage, guideline recommendation, or clinical fact that is not present in an EVIDENCE BLOCK. If a needed number is missing, say it is not available — do not approximate it.
+3. NEVER invent a food, formula, exchange value, or reference that was not retrieved.
+4. ALWAYS prefer Malawi-specific data (Malawi FCT, Chakudya Food Database, Malawi CMAM 2016) over generic/international values when both are present in the evidence.
+5. If NO evidence block relevant to the question was supplied, you MUST respond with exactly: "I could not find verified information within the Oasis CNST knowledge system." — optionally followed by one short sentence suggesting how the user could rephrase or which module to check. Do not add speculative content after that sentence.
+6. Every clinical or factual claim must be traceable to a cited source label from an EVIDENCE BLOCK (e.g., "Per Malawi FCT…", "Per ESPEN Liver Disease guidelines…", "Per Chakudya Live Database…"). Cite inline, next to the claim it supports.
+7. Clearly separate DATABASE FACTS (numbers/values pulled verbatim from evidence) from your CLINICAL REASONING/EXPLANATION (your own interpretation). Do not blend a fabricated number into a sentence that reads as if it were a database fact.
+8. You MAY use general clinical reasoning to interpret, compare, or explain retrieved evidence (e.g., "this is a high-protein food, useful given the retrieved renal exchange value of X"), but the underlying facts you reason over must come from evidence. Reasoning ≠ inventing facts.
+9. Off-topic requests (anything outside clinical nutrition, dietetics, food composition, or the Oasis CNST platform itself) should be politely declined and redirected back to nutrition/Oasis topics — do not answer them from general knowledge.
+
+Formatting principles (secondary to the guardrails above):
+- Adapt response format to the query; do not force rigid templates or numbered lists unless content calls for it.
+- For PES statements: follow eNCPT format rigorously (problem/etiology/signs with NI/NC/NB/NF codes).
+- For food queries: present data cleanly and concisely, lead with the answer, cite the source (e.g., "Malawi FCT").
+- For patient summaries/ADIME notes: use appropriate clinical structure.
+- No filler phrases ("Great question!", "Certainly!"), no restating the question.
+- Do NOT provide definitive medical diagnoses — support clinical reasoning only.
+- When answering questions about Oasis CNST itself (features, modules, purpose, developer, methodology, limitations), use ONLY the official About-section EVIDENCE BLOCK. If not documented there, say so per Guardrail 5.`;
 
   // ════════════════════════════════════════════════════════════
   // FOOD DATABASE ACCESS LAYER
@@ -715,13 +729,13 @@ Core principles:
       });
 
       lines.push(
-        '━━━ END OF RAG CONTEXT ━━━',
+        '━━━ END OF RAG CONTEXT (Layer 3 — Chakudya RAG) ━━━',
         '',
         'INSTRUCTIONS FOR USING RAG CONTEXT:',
-        '• Ground your answer in the above retrieved content where relevant.',
+        '• Ground your answer ONLY in the above retrieved content — this is Layer 3 evidence.',
         '• Cite the source label when referencing specific guideline content (e.g. "Per ESPEN Liver Disease guidelines…").',
         '• For Malawian food data, prioritize locally-verified values from Malawi FCT or Chakudya Food Database.',
-        '• If the retrieved content does not cover the query, supplement with your broader clinical training.',
+        '• If the retrieved content does not cover part of the query, explicitly say that part is not available — do NOT fill the gap from general/internet knowledge (see ABSOLUTE GUARDRAILS).',
         '• Never contradict retrieved guideline content without clearly flagging the discrepancy.',
       );
 
@@ -1026,6 +1040,174 @@ Core principles:
       ].join('\n');
     },
   };
+
+  // ════════════════════════════════════════════════════════════
+  // GUARDRAIL & RETRIEVAL ROUTER
+  //
+  //   User Query → Intent Detection → Retrieval Router →
+  //   Layer 1 (Oasis Internal) → Layer 2 (Chakudya APIs) →
+  //   Layer 3 (Chakudya RAG) → Evidence Filtering → AI Response
+  //
+  // This is the single choke point through which ALL evidence given to
+  // the LLM must pass. It enforces:
+  //   • Priority order (Layer 1 > Layer 2 > Layer 3), short-circuiting
+  //     lower layers once enough evidence has been found.
+  //   • A deterministic "no evidence → fixed refusal string" path that
+  //     does NOT depend on the LLM choosing to obey the system prompt —
+  //     if nothing was retrieved for a query that needs grounding, we
+  //     never even call the LLM for the factual portion.
+  //   • An auditable trace (which layers ran, which sources fired) that
+  //     the UI/consumers can inspect, independent of the model's prose.
+  // ════════════════════════════════════════════════════════════
+  const _GuardrailRouter = {
+
+    // Small-talk / meta messages that don't require evidence grounding
+    // (greetings, thanks, capability questions). These are allowed to
+    // reach the LLM even with zero evidence blocks — the strict system
+    // prompt still forbids the LLM from inventing clinical facts inside
+    // its reply.
+    _CONVO_RE: /^\s*(hi|hey|hello|hiya|good\s?(morning|afternoon|evening)|thanks?|thank you|ok(ay)?|cool|great|bye|goodbye|who are you|what can you do|help)\W*$/i,
+
+    isConversational(msg) {
+      const trimmed = (msg || '').trim();
+      if (!trimmed) return true;
+      if (this._CONVO_RE.test(trimmed)) return true;
+      return trimmed.split(/\s+/).length <= 3 && !/\d/.test(trimmed);
+    },
+
+    // Signals that the query wants deeper guideline-level reasoning, in
+    // which case we consult Layer 3 (RAG) even if Layer 1/2 already
+    // returned something — matches the spec's "requires deeper clinical
+    // explanation" trigger for RAG, independent of raw sufficiency.
+    _DEEP_RE: /\b(why|guideline|evidence|recommend|recommendation|explain|mechanism|espen|aspen|and\/?fnce|rationale|protocol|contraindicat|management of|approach to)\b/i,
+
+    wantsDeepExplanation(msg) {
+      return this._DEEP_RE.test(msg || '');
+    },
+
+    /**
+     * gatherLayer1(userMessage)
+     * Oasis CNST internal knowledge: About section, food database,
+     * drug-nutrient interactions, clinical reference/guideline snippets,
+     * and live enteral-calculator state. All synchronous / in-memory —
+     * no network round-trip.
+     */
+    gatherLayer1(userMessage) {
+      const blocks = [];
+      const sources = [];
+
+      if (_AboutDB.detectQuery(userMessage)) {
+        const ctx = _AboutDB.buildContext();
+        if (ctx) { blocks.push(ctx); sources.push('Oasis CNST About Section'); }
+      }
+      if (_FoodDB.detectQuery(userMessage)) {
+        const hits = _FoodDB.search(userMessage, 10);
+        if (hits.length) {
+          blocks.push(_FoodDB.buildContext(hits));
+          sources.push(...new Set(hits.map(h => h.source)));
+        }
+      }
+      if (_DNIDB.detectQuery(userMessage)) {
+        const hits = _DNIDB.search(userMessage, 5);
+        if (hits.length) { blocks.push(_DNIDB.buildContext(hits)); sources.push('Drug-Nutrient Interaction DB'); }
+      }
+      if (_RefDBProxy.detectQuery(userMessage)) {
+        const hits = _RefDBProxy.search(userMessage, 8);
+        if (hits.length) { blocks.push(_RefDBProxy.buildContext(hits)); sources.push('Oasis Clinical Reference DB'); }
+      }
+      if (_EnteralCalcDB.detectQuery(userMessage)) {
+        const ctx = _EnteralCalcDB.buildContext(_EnteralCalcDB.getState());
+        if (ctx) { blocks.push(ctx); sources.push('Oasis Enteral Calculator (live state)'); }
+      }
+
+      return { blocks, sources, sufficient: blocks.length > 0 };
+    },
+
+    /**
+     * gatherLayer2(userMessage)
+     * Chakudya Nutrition Registry structured API — live database lookups
+     * (foods, packaged, exchange, renal, formulas, barcode).
+     */
+    async gatherLayer2(userMessage) {
+      try {
+        const ctx = await _ChakudyaDB.fetchContext(userMessage);
+        if (!ctx) return { blocks: [], sources: [], sufficient: false };
+        return { blocks: [ctx], sources: ['Chakudya Live Database'], sufficient: true };
+      } catch (_) {
+        return { blocks: [], sources: [], sufficient: false };
+      }
+    },
+
+    /**
+     * gatherLayer3(userMessage)
+     * Chakudya RAG — semantic retrieval over the clinical/guideline
+     * knowledge base.
+     */
+    async gatherLayer3(userMessage) {
+      try {
+        const ctx = await _RAGLayer.fetchContext(userMessage, 'clinical', 7);
+        if (!ctx) return { blocks: [], sources: [], sufficient: false };
+        return { blocks: [ctx], sources: ['Chakudya RAG Knowledge Base'], sufficient: true };
+      } catch (_) {
+        return { blocks: [], sources: [], sufficient: false };
+      }
+    },
+
+    /**
+     * route(userMessage)
+     * Runs the full Layer 1 → 2 → 3 pipeline with short-circuiting, and
+     * returns an evidence-filtering result: the combined evidence
+     * prompt text, an audit trace, and whether a deterministic fallback
+     * must be issued (no LLM call needed).
+     */
+    async route(userMessage) {
+      const trace = { layer1: null, layer2: null, layer3: null };
+
+      const l1 = this.gatherLayer1(userMessage);
+      trace.layer1 = { ran: true, sourcesFound: l1.sources };
+
+      let l2 = { blocks: [], sources: [], sufficient: false };
+      if (!l1.sufficient) {
+        l2 = await this.gatherLayer2(userMessage);
+      }
+      trace.layer2 = { ran: !l1.sufficient, sourcesFound: l2.sources };
+
+      const needDeep = this.wantsDeepExplanation(userMessage);
+      let l3 = { blocks: [], sources: [], sufficient: false };
+      if (!l1.sufficient && !l2.sufficient || needDeep) {
+        l3 = await this.gatherLayer3(userMessage);
+      }
+      trace.layer3 = { ran: (!l1.sufficient && !l2.sufficient) || needDeep, sourcesFound: l3.sources };
+
+      const allBlocks  = [...l1.blocks, ...l2.blocks, ...l3.blocks];
+      const allSources = [...new Set([...l1.sources, ...l2.sources, ...l3.sources])];
+      const evidenceFound = allBlocks.length > 0;
+
+      // Deterministic refusal: if this looks like a factual/clinical query
+      // (not small talk) and NOTHING was retrieved at any layer, we do not
+      // let the LLM improvise — the calling function should skip the LLM
+      // call entirely and use the fixed guardrail string.
+      const requiresFallback = !evidenceFound && !this.isConversational(userMessage);
+
+      let evidenceBlock = '';
+      if (evidenceFound) {
+        evidenceBlock = [
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+          'EVIDENCE BLOCK(S) — the ONLY permitted basis for factual claims',
+          `Layers consulted: L1(internal)=${trace.layer1.ran} · L2(Chakudya API)=${trace.layer2.ran} · L3(RAG)=${trace.layer3.ran}`,
+          `Sources: ${allSources.join(', ') || 'none'}`,
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+          '',
+          allBlocks.join('\n\n'),
+        ].join('\n');
+      }
+
+      return { evidenceBlock, evidenceFound, requiresFallback, sources: allSources, trace };
+    },
+  };
+
+  const GUARDRAIL_FALLBACK =
+    'I could not find verified information within the Oasis CNST knowledge system.';
 
   // ── Core API call ─────────────────────────────────────────────
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
@@ -1489,82 +1671,44 @@ Keep it under 200 words. Use professional clinical language.`;
    * conversationHistory: array of { role: 'user'|'assistant', content: string }
    */
   async function chatWithOasisAI(userMessage, conversationHistory = []) {
-    let systemPrompt = BASE_SYSTEM;
-
-    // Auto-inject About section context when query is about Oasis CNST itself
-    // Priority: injected FIRST so AI treats it as highest-authority knowledge
-    let aboutContextInjected = false;
-    if (_AboutDB.detectQuery(userMessage)) {
-      const aboutCtx = _AboutDB.buildContext();
-      if (aboutCtx) {
-        systemPrompt += '\n\n' + aboutCtx;
-        aboutContextInjected = true;
-      }
-    }
-
-    // Auto-inject food database context when the query is food-related
-    if (_FoodDB.detectQuery(userMessage)) {
-      const hits = _FoodDB.search(userMessage, 10);
-      if (hits.length > 0) {
-        systemPrompt += '\n\n' + _FoodDB.buildContext(hits);
-      }
-    }
-
-    // Auto-inject DNI context when the query is drug-nutrient related
-    if (_DNIDB.detectQuery(userMessage)) {
-      const dniHits = _DNIDB.search(userMessage, 5);
-      if (dniHits.length > 0) {
-        systemPrompt += '\n\n' + _DNIDB.buildContext(dniHits);
-      }
-    }
-
-    // Auto-inject clinical reference context when the query is guideline-related
-    if (_RefDBProxy.detectQuery(userMessage)) {
-      const refHits = _RefDBProxy.search(userMessage, 8);
-      if (refHits.length > 0) {
-        systemPrompt += '\n\n' + _RefDBProxy.buildContext(refHits);
-      }
-    }
-
-    // Auto-inject Enteral Calculator context when the query is EN-related
-    let enteralContextInjected = false;
-    if (_EnteralCalcDB.detectQuery(userMessage)) {
-      const enState = _EnteralCalcDB.getState();
-      const enCtx   = _EnteralCalcDB.buildContext(enState);
-      if (enCtx) {
-        systemPrompt += '\n\n' + enCtx;
-        enteralContextInjected = true;
-      }
-    }
-
-    // Auto-inject RAG context from Chakudya API Knowledge Base
-    // Sources: Malawi FCT · Exchange Lists · Renal Foods · Enteral Formulas ·
-    //          ESPEN Guidelines · ASPEN Guidelines · Malawi CMAM 2016 ·
-    //          Burns · Oncology · IBD · Dementia · TB · Cystic Fibrosis ·
-    //          Surgical Nutrition · Parenteral Nutrition · and more (~6,100 chunks)
-    //
-    // Runs alongside the live-DB lookups and session-memory recall below —
-    // all independent network calls, so fire them together rather than
-    // sequentially.
-    let ragContextInjected = false;
-    let liveDbContextInjected = false;
-    let memoryContextInjected = false;
-    const [ragResult, liveDbResult, memoryResult] = await Promise.allSettled([
-      _RAGLayer.fetchContext(userMessage, 'clinical', 7),
-      _ChakudyaDB.fetchContext(userMessage),
-      _MemoryLayer.recall(userMessage, 5),
+    // ── Retrieval Router: Layer 1 → Layer 2 → Layer 3, evidence-filtered ──
+    const [routed, memoryResult] = await Promise.all([
+      _GuardrailRouter.route(userMessage),
+      _MemoryLayer.recall(userMessage, 5).catch(() => ''),
     ]);
-    if (ragResult.status === 'fulfilled' && ragResult.value) {
-      systemPrompt += '\n\n' + ragResult.value;
-      ragContextInjected = true;
+
+    // "Write" step — capture this turn as a raw session fact for later
+    // recall/consolidation. Fire-and-forget: never let a memory-write
+    // failure delay or break the chat response the user is waiting on.
+    _MemoryLayer.write(userMessage).catch(() => {});
+
+    const auditTrace = routed.trace;
+
+    // ── Deterministic guardrail: no evidence found for a query that
+    // needs grounding → return the fixed refusal WITHOUT calling the
+    // LLM. This guarantees guardrail compliance regardless of model
+    // behavior, and saves a token round-trip.
+    if (routed.requiresFallback) {
+      return {
+        raw: GUARDRAIL_FALLBACK,
+        type: 'chat',
+        evidenceFound: false,
+        fallback: true,
+        sourcesUsed: [],
+        auditTrace,
+      };
     }
-    if (liveDbResult.status === 'fulfilled' && liveDbResult.value) {
-      systemPrompt += '\n\n' + liveDbResult.value;
-      liveDbContextInjected = true;
+
+    let systemPrompt = BASE_SYSTEM;
+    if (routed.evidenceFound) {
+      systemPrompt += '\n\n' + routed.evidenceBlock;
+    } else {
+      // Conversational / meta message with no evidence — remind the model
+      // it still may not invent clinical facts.
+      systemPrompt += '\n\nNo EVIDENCE BLOCK was retrieved for this turn (conversational/meta message). Respond briefly and naturally, but do not state any nutrition fact, food value, or clinical recommendation without evidence — offer to help the user ask a specific nutrition/food/clinical question instead.';
     }
-    if (memoryResult.status === 'fulfilled' && memoryResult.value) {
-      systemPrompt += '\n\n' + memoryResult.value;
-      memoryContextInjected = true;
+    if (memoryResult) {
+      systemPrompt += '\n\n' + memoryResult;
     }
 
     const messages = [
@@ -1575,22 +1719,14 @@ Keep it under 200 words. Use professional clinical language.`;
 
     const response = await _groqChat(messages, 900);
 
-    // "Write" step — capture this turn as a raw session fact for later
-    // recall/consolidation. Fire-and-forget: never let a memory-write
-    // failure delay or break the chat response the user is waiting on.
-    _MemoryLayer.write(userMessage).catch(() => {});
-
     return {
       raw: response,
       type: 'chat',
-      aboutContextInjected,
-      foodContextInjected:    _FoodDB.detectQuery(userMessage),
-      dniContextInjected:     _DNIDB.detectQuery(userMessage),
-      refContextInjected:     _RefDBProxy.detectQuery(userMessage),
-      enteralContextInjected,
-      ragContextInjected,
-      liveDbContextInjected,
-      memoryContextInjected,
+      evidenceFound: routed.evidenceFound,
+      fallback: false,
+      sourcesUsed: routed.sources,
+      memoryContextInjected: !!memoryResult,
+      auditTrace,
     };
   }
 
@@ -1983,6 +2119,8 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     analyzeNutritionAssessment,
     generatePatientSummary,
     chatWithOasisAI,
+    guardrailRouter: _GuardrailRouter, // ← direct access to route() for auditing/testing
+    GUARDRAIL_FALLBACK,                 // ← the exact fixed no-evidence refusal string
     generateInterventions, // ← NCP 4-domain intervention generator (Adult Calculator)
     refinePES,           // ← used by SmartPES auto-refinement (pes.js)
     analyzeFood,         // ← food intake / meal analysis with AI
@@ -2841,6 +2979,30 @@ Rules:
   background: rgba(15,30,50,0.8); border: 1px solid rgba(255,255,255,0.07);
   color: var(--text, #c9d1d9); border-bottom-left-radius: 4px;
 }
+/* Fallback (no verified evidence found) — visually distinct, amber-flagged */
+.oai-msg-row.assistant .oai-bubble.oai-bubble-fallback {
+  background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.28);
+  color: rgba(240,230,200,0.92);
+}
+
+/* ── Source attribution chips ── */
+.oai-sources-row {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  margin-top: 5px; max-width: 88%;
+}
+.oai-sources-label {
+  font-family: var(--mono); font-size: 8px; letter-spacing: .5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3); margin-right: 1px;
+}
+.oai-source-chip {
+  font-family: var(--mono); font-size: 8px; padding: 2px 7px; border-radius: 100px;
+  background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25);
+  color: rgba(147,197,253,0.9); white-space: nowrap;
+}
+.oai-source-chip.oai-source-chip-fallback {
+  background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.3);
+  color: rgba(250,204,21,0.9);
+}
 
 /* ── Message Toolbar ── */
 .oai-msg-toolbar {
@@ -3077,6 +3239,23 @@ Rules:
   // Pass animate=true to type the response out with a typewriter
   // effect (used for freshly-generated replies). History being
   // reloaded from a saved chat should pass animate=false (default).
+  // ── Source attribution / fallback rendering helpers ─────────
+  // `meta` is { sourcesUsed: string[], fallback: bool } | undefined
+  // (older history entries / non-chat results won't have it — render nothing).
+  function _sourcesRowHtml(meta) {
+    if (!meta) return '';
+    if (meta.fallback) {
+      return `<div class="oai-sources-row"><span class="oai-source-chip oai-source-chip-fallback">⚠ No verified source found</span></div>`;
+    }
+    if (!meta.sourcesUsed || !meta.sourcesUsed.length) return '';
+    const chips = meta.sourcesUsed.map(s => `<span class="oai-source-chip">${s}</span>`).join('');
+    return `<div class="oai-sources-row"><span class="oai-sources-label">Sources</span>${chips}</div>`;
+  }
+
+  function _bubbleClass(meta) {
+    return (meta && meta.fallback) ? 'oai-bubble oai-bubble-fallback' : 'oai-bubble';
+  }
+
   function _appendAssistantMsg(msg, animate) {
     const el = document.getElementById('oai-messages');
     if (!el) return;
@@ -3100,8 +3279,10 @@ Rules:
     }
 
     const isWelcome = msg.id === 'welcome';
+    const meta = msg.metaVersions ? msg.metaVersions[curIdx] : null;
     row.innerHTML = `
-      <div class="oai-bubble">${animate ? '' : _fmt(content)}</div>
+      <div class="${_bubbleClass(meta)}">${animate ? '' : _fmt(content)}</div>
+      ${!animate ? _sourcesRowHtml(meta) : ''}
       ${versionHtml}
       ${!isWelcome ? `
       <div class="oai-msg-toolbar">
@@ -3122,7 +3303,10 @@ Rules:
 
     if (animate) {
       const bubble = row.querySelector('.oai-bubble');
-      _typeIntoBubble(bubble, content);
+      _typeIntoBubble(bubble, content, () => {
+        const sourcesHtml = _sourcesRowHtml(meta);
+        if (sourcesHtml) bubble.insertAdjacentHTML('afterend', sourcesHtml);
+      });
     }
   }
 
@@ -3377,7 +3561,9 @@ Rules:
         const aMsg = _history.find(m => m.id === existingAssistMsgId);
         if (aMsg) {
           if (!aMsg.versions) aMsg.versions = [aMsg.content];
+          if (!aMsg.metaVersions) aMsg.metaVersions = aMsg.versions.map(() => null); // backfill older entries with no meta
           aMsg.versions.push(result.raw);
+          aMsg.metaVersions.push({ sourcesUsed: result.sourcesUsed || [], fallback: !!result.fallback });
           aMsg.currentVersion = aMsg.versions.length - 1;
           aMsg.content = result.raw;
           // Re-render just that message row
@@ -3394,7 +3580,11 @@ Rules:
         }
       } else {
         // New message
-        const aMsg = { id: _genId(), role: 'assistant', content: result.raw, versions: [result.raw], currentVersion: 0 };
+        const aMsg = {
+          id: _genId(), role: 'assistant', content: result.raw,
+          versions: [result.raw], currentVersion: 0,
+          metaVersions: [{ sourcesUsed: result.sourcesUsed || [], fallback: !!result.fallback }],
+        };
         _history.push(aMsg);
         _appendAssistantMsg(aMsg, true);
         // Auto-extract memorable facts from this exchange (non-blocking)
@@ -3428,8 +3618,9 @@ Rules:
       }).join('');
       versionHtml = `<div class="oai-version-strip"><span class="oai-version-label">Versions:</span>${pills}</div>`;
     }
+    const meta = msg.metaVersions ? msg.metaVersions[curIdx] : null;
     row.innerHTML = `
-      <div class="oai-bubble"></div>
+      <div class="${_bubbleClass(meta)}"></div>
       ${versionHtml}
       <div class="oai-msg-toolbar">
         <button class="oai-msg-tb-btn oai-speak-btn" onclick="OasisAIUI.speakMsg('${msg.id}')" title="Play response aloud">
@@ -3445,7 +3636,10 @@ Rules:
           Copy
         </button>
       </div>`;
-    _typeIntoBubble(row.querySelector('.oai-bubble'), content);
+    _typeIntoBubble(row.querySelector('.oai-bubble'), content, () => {
+      const sourcesHtml = _sourcesRowHtml(meta);
+      if (sourcesHtml) row.querySelector('.oai-bubble').insertAdjacentHTML('afterend', sourcesHtml);
+    });
   }
 
   // ── Edit Message ──────────────────────────────────────────
