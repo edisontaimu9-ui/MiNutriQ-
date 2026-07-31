@@ -2592,6 +2592,9 @@ Rules:
   position: relative;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 /* ── Sidebar ── */
@@ -2812,7 +2815,7 @@ Rules:
 #oai-messages {
   flex: 1; overflow-y: auto; padding: 12px 14px;
   display: flex; flex-direction: column; gap: 8px;
-  min-height: 260px; max-height: 560px;
+  min-height: 0;
   scrollbar-width: thin; scrollbar-color: rgba(29,233,212,0.2) transparent;
 }
 #oai-messages::-webkit-scrollbar { width: 4px; }
@@ -2943,6 +2946,15 @@ Rules:
 .oai-send-btn:hover { background: rgba(29,233,212,0.22); }
 .oai-send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
+/* ── Typewriter ── */
+.oai-bubble.oai-typing { cursor: pointer; }
+.oai-caret {
+  display: inline-block; color: var(--teal, #1de9d4);
+  animation: oaiCaretBlink .9s steps(1) infinite;
+  margin-left: 1px;
+}
+@keyframes oaiCaretBlink { 0%,55%{opacity:1} 56%,100%{opacity:0} }
+
 /* ── Animations ── */
 @keyframes oaiFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 @keyframes oaiPulse  { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
@@ -2954,7 +2966,6 @@ Rules:
 
 /* ── Responsive tweaks for small screens ── */
 @media (max-width: 480px) {
-  #oai-messages { max-height: 460px; }
   .oai-bubble { max-width: 95%; font-size: 12px; }
   #oai-sidebar { width: 88vw; }
   #oai-memory-panel { width: 92vw; }
@@ -3041,7 +3052,7 @@ Rules:
   }
 
   function _renderWelcome() {
-    _appendAssistantMsg({ id: 'welcome', content: '**Oasis AI Assistant** — ready.\n\nAsk me anything about clinical nutrition, PES statements, food values, drug-nutrient interactions, or guidelines.', versions: null });
+    _appendAssistantMsg({ id: 'welcome', content: '**Oasis AI Assistant** — ready.\n\nAsk me anything about clinical nutrition, PES statements, food values, drug-nutrient interactions, or guidelines.', versions: null }, true);
   }
 
   // ── Render: User Message ──────────────────────────────────
@@ -3063,7 +3074,10 @@ Rules:
   }
 
   // ── Render: Assistant Message ──────────────────────────────
-  function _appendAssistantMsg(msg) {
+  // Pass animate=true to type the response out with a typewriter
+  // effect (used for freshly-generated replies). History being
+  // reloaded from a saved chat should pass animate=false (default).
+  function _appendAssistantMsg(msg, animate) {
     const el = document.getElementById('oai-messages');
     if (!el) return;
     const row = document.createElement('div');
@@ -3087,7 +3101,7 @@ Rules:
 
     const isWelcome = msg.id === 'welcome';
     row.innerHTML = `
-      <div class="oai-bubble">${_fmt(content)}</div>
+      <div class="oai-bubble">${animate ? '' : _fmt(content)}</div>
       ${versionHtml}
       ${!isWelcome ? `
       <div class="oai-msg-toolbar">
@@ -3105,6 +3119,11 @@ Rules:
         </button>
       </div>` : ''}`;
     el.appendChild(row);
+
+    if (animate) {
+      const bubble = row.querySelector('.oai-bubble');
+      _typeIntoBubble(bubble, content);
+    }
   }
 
   function _scrollBottom() {
@@ -3123,6 +3142,59 @@ Rules:
       .replace(/^[•▸]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:var(--teal,#1de9d4)">▸</span>$1</div>')
       .replace(/^[-]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:rgba(29,233,212,0.5)">–</span>$1</div>')
       .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+  }
+
+  // ── Typewriter effect ───────────────────────────────────────
+  // Reveals the plain (markdown-stripped) text progressively, then
+  // swaps in the fully-formatted HTML once typing completes so bold,
+  // code chips, and bullets render correctly. Tap the bubble to skip.
+  function _stripMdForType(text) {
+    return (text || '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/`(.*?)`/g, '$1')
+      .replace(/^#{1,3}\s/gm, '')
+      .replace(/^[•▸]\s/gm, '▸ ')
+      .replace(/^-\s/gm, '– ');
+  }
+
+  function _typeIntoBubble(bubbleEl, rawContent, onDone) {
+    if (!bubbleEl) { if (onDone) onDone(); return; }
+    const plain = _stripMdForType(rawContent);
+    const CHARS_PER_TICK = 3;
+    const TICK_MS = 12;
+    let i = 0;
+    let finished = false;
+
+    bubbleEl.classList.add('oai-typing');
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+      bubbleEl.classList.remove('oai-typing');
+      bubbleEl.innerHTML = _fmt(rawContent);
+      bubbleEl.removeEventListener('click', skip);
+      _scrollBottom();
+      if (onDone) onDone();
+    }
+
+    function skip() { finish(); }
+    bubbleEl.addEventListener('click', skip);
+
+    const timer = setInterval(() => {
+      i += CHARS_PER_TICK;
+      if (i >= plain.length) {
+        clearInterval(timer);
+        finish();
+        return;
+      }
+      const shown = plain.slice(0, i);
+      bubbleEl.innerHTML = _escHtml(shown).replace(/\n/g, '<br>') + '<span class="oai-caret">▌</span>';
+      // Keep view pinned to bottom while typing, but don't fight a user
+      // who has scrolled up to read earlier messages.
+      const el = document.getElementById('oai-messages');
+      if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 80) _scrollBottom();
+    }, TICK_MS);
   }
 
   // ── Thinking indicator ─────────────────────────────────────
@@ -3324,7 +3396,7 @@ Rules:
         // New message
         const aMsg = { id: _genId(), role: 'assistant', content: result.raw, versions: [result.raw], currentVersion: 0 };
         _history.push(aMsg);
-        _appendAssistantMsg(aMsg);
+        _appendAssistantMsg(aMsg, true);
         // Auto-extract memorable facts from this exchange (non-blocking)
         _autoExtractMemory(userMsg, result.raw).catch(() => {});
       }
@@ -3337,7 +3409,7 @@ Rules:
       _removeThinking();
       const errMsg = { id: _genId(), role: 'assistant', content: `⚠️ **Error:** ${e.message}\n\nPlease check your connection and try again.`, versions: null };
       _history.push(errMsg);
-      _appendAssistantMsg(errMsg);
+      _appendAssistantMsg(errMsg, true);
     } finally {
       _setStatus(false);
     }
@@ -3357,7 +3429,7 @@ Rules:
       versionHtml = `<div class="oai-version-strip"><span class="oai-version-label">Versions:</span>${pills}</div>`;
     }
     row.innerHTML = `
-      <div class="oai-bubble">${_fmt(content)}</div>
+      <div class="oai-bubble"></div>
       ${versionHtml}
       <div class="oai-msg-toolbar">
         <button class="oai-msg-tb-btn oai-speak-btn" onclick="OasisAIUI.speakMsg('${msg.id}')" title="Play response aloud">
@@ -3373,6 +3445,7 @@ Rules:
           Copy
         </button>
       </div>`;
+    _typeIntoBubble(row.querySelector('.oai-bubble'), content);
   }
 
   // ── Edit Message ──────────────────────────────────────────
@@ -3691,14 +3764,14 @@ Rules:
       const raw = `🥗 **FOOD DATABASE ANALYSIS**\n\n${result.raw}`;
       const aMsg = { id: _genId(), role: 'assistant', content: raw, versions: [raw], currentVersion: 0 };
       _history.push(aMsg);
-      _appendAssistantMsg(aMsg);
+      _appendAssistantMsg(aMsg, true);
       _scrollBottom();
       _saveChat(_history).catch(() => {});
     } catch (e) {
       _removeThinking();
       const errMsg = { id: _genId(), role: 'assistant', content: `⚠️ **Error:** ${e.message}` };
       _history.push(errMsg);
-      _appendAssistantMsg(errMsg);
+      _appendAssistantMsg(errMsg, true);
     } finally {
       _setStatus(false);
     }

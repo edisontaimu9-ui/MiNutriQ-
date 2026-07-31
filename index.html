@@ -13072,16 +13072,17 @@ function ntClear(scopeId, resultIds) {
 <div id="oasis-ai-overlay" role="dialog" aria-modal="true" aria-label="Oasis AI Assistant" style="
   display:none;position:fixed;inset:0;z-index:9998;
   background:rgba(2,6,23,0.75);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
-  overflow-y:auto;overscroll-behavior:contain;
+  overscroll-behavior:contain;
 ">
-  <div style="min-height:100%;display:flex;align-items:flex-end;justify-content:center">
+  <div style="height:100%;display:flex;align-items:flex-end;justify-content:center">
     <div id="oasis-ai-panel" style="
       width:100%;max-width:640px;
+      height:94vh;height:94dvh;
+      display:flex;flex-direction:column;
       background:var(--surface2,#0b1526);
       border-radius:20px 20px 0 0;
       border-top:1px solid rgba(29,233,212,0.14);
-      padding-bottom:env(safe-area-inset-bottom,0px);
-      position:relative;
+      position:relative;overflow:hidden;
       animation:oaiPanelUp .28s cubic-bezier(.22,.68,0,1.2);
     ">
       <!-- Drag handle + Close row -->
@@ -13104,7 +13105,7 @@ function ntClear(scopeId, resultIds) {
         ontouchend="this.style.background='rgba(248,113,113,0.08)';this.style.transform='scale(1)'">✕ CLOSE</button>
       </div>
       <!-- AI widget mounts here -->
-      <div id="oasis-ai-mount" style="padding:0 14px 16px"></div>
+      <div id="oasis-ai-mount" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))"></div>
     </div>
   </div>
 </div>
