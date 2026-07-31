@@ -2012,7 +2012,11 @@ function debounce(fn, ms = 300) {
   };
 }
 
-const debouncedEnCalc = debounce(enCalc, 350);
+// enCalc lives in js/modules/enteral-burns-diagnosis.js, which loads AFTER
+// this file — wrapped lazily (matches the pattern used below for the other
+// debounced-* consts) so this line doesn't need enCalc to exist yet at the
+// moment this file executes, only later when the debounced call actually fires.
+const debouncedEnCalc = debounce(function(){ if(typeof enCalc==='function') enCalc(); }, 350);
 
 // Fix 2: Debounced wrappers for all auto-recalculate input handlers
 const debouncedLiveAnthro   = debounce(function(){ if(typeof liveAnthro==='function') liveAnthro(); }, 350);
