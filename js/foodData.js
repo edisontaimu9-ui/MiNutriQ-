@@ -24,37 +24,25 @@
  * `await CuratedFoodData.ready` or listen for the `oasis:curated-food-ready`
  * window event (see bottom of the loader module below).
  *
- * NEW BACKEND ENDPOINTS THIS CLIENT EXPECTS (to be implemented on the
- * Chakudya Cloudflare Worker, same base URL as /packaged, /foods, /formulas):
+ * BACKEND ENDPOINTS ACTUALLY USED — no new endpoints needed. Confirmed
+ * against the real chakudya-api repo (src/index.js + README, v1.6.0):
  *
- *   GET /fct/malawi?limit=&offset=
- *     → { status:'success', data:[
- *          { id, cat, name,
- *            measures:[ { lbl, kcal, pro, cho, fat, kj }, ... ] }, ...
- *        ], next_offset|null }
- *     Paginated wholesale pull, same shape as the retired MALAWI_FCT array.
+ *   GET /foods?limit=&offset=      — this already IS the Malawi FCT table
+ *     server-side (README: "Malawi FCT / Exact SQL Search → foods"). Feeds
+ *     MALAWI_FCT directly. MP_FOODS and BLEND_FOODS are also derived from
+ *     this same pull rather than inventing separate endpoints for them —
+ *     there is no /mealplanner or /blenderized resource on the API, and
+ *     none is needed; see the derivation functions in the loader below.
  *
- *   GET /exchange/uct?limit=&offset=
- *     → { status:'success', data:[
- *          { id, name, exchange_type }, ... ]}
- *     exchange_type ∈ starch|lean|medium|highfat|milk_ff|milk_lf|milk_fc|
- *     veg|fruit|fat|sugar|alcohol|combo (matches UCT_EXCHANGE_TYPE_LABELS
- *     keys, which remain a static client-side config, not food data).
+ *   GET /exchange?limit=&offset=   — this already IS the UCT Exchange List
+ *     table server-side (README: "Diabetes Exchange List → exchange_lists").
+ *     Feeds UCT_EXCHANGE_DB directly.
  *
- *   GET /mealplanner/foods
- *     → { status:'success', data:{
- *          staples:[ { name, portions:[...], kcal:[...], pro:[...],
- *                      cho:[...], fat:[...], kj:[...] }, ... ],
- *          legumes:[...], veg:[...], fruit:[...], protein:[...],
- *          fats:[...], therapeutic:[...] } }
- *     Keys must match MP_FOODS' existing category keys.
- *
- *   GET /blenderized/foods
- *     → { status:'success', data:[
- *          { id, name, unit:'g'|'ml'|'unit', kcal, pro, fat, cho }, ...
- *        ]}
- *     kcal/pro/fat/cho are PER UNIT (per gram / per mL / per whole item),
- *     matching the retired BLEND_FOODS concentration-factor convention.
+ * (Earlier drafts of this loader assumed dedicated /fct/malawi,
+ * /exchange/uct, /mealplanner/foods and /blenderized/foods endpoints —
+ * those don't exist and aren't needed; the router only recognizes
+ * single-segment resources (/foods, /exchange, /renal, /formulas,
+ * /packaged, ...), and /foods + /exchange alone cover all four datasets.)
  *
  * Exports (as globals, compatible with PWA single-file hosting):
  *   MALAWI_FCT              — Malawi Food Composition Table (household measures)
@@ -76,14 +64,16 @@
 // 1. MALAWI FOOD COMPOSITION TABLE (with household measures)
 // ══════════════════════════════════════════════════════════════
 // No longer hardcoded — populated at runtime by CuratedFoodData below from
-// GET /fct/malawi. Mutated in place; do not reassign.
+// GET /foods (this table already IS the Malawi FCT server-side).
+// Mutated in place; do not reassign.
 const MALAWI_FCT = [];
 
 // ══════════════════════════════════════════════════════════════
 // 2. UCT EXCHANGE DATABASE (UCT Division of Human Nutrition, 2014)
 // ══════════════════════════════════════════════════════════════
 // No longer hardcoded — populated at runtime by CuratedFoodData below from
-// GET /exchange/uct. Mutated in place; do not reassign.
+// GET /exchange (this table already IS the UCT Exchange List server-side).
+// Mutated in place; do not reassign.
 const UCT_EXCHANGE_DB = [];
 
 // ══════════════════════════════════════════════════════════════
@@ -130,15 +120,21 @@ const UCT_MACROS = {
 
 // ══════════════════════════════════════════════════════════════
 // 4. MP_FOODS — Meal Planner Food Categories
-// No longer hardcoded — populated at runtime by CuratedFoodData below from
-// GET /mealplanner/foods. Mutated in place (keys assigned); do not reassign.
+// No longer hardcoded. There is no separate /mealplanner endpoint on the
+// Chakudya API — it's derived client-side from the same GET /foods data
+// used for MALAWI_FCT (bucketed by category, portions generated from each
+// food's single base measure). See CuratedFoodData below.
+// Mutated in place (keys assigned); do not reassign.
 // ══════════════════════════════════════════════════════════════
 const MP_FOODS = {};
 
 // ══════════════════════════════════════════════════════════════
 // 5. BLEND_FOODS — Blenderized Feed Ingredient Database
-// No longer hardcoded — populated at runtime by CuratedFoodData below from
-// GET /blenderized/foods. Mutated in place; do not reassign.
+// No longer hardcoded. There is no separate /blenderized endpoint on the
+// Chakudya API either — it's derived client-side from the same GET /foods
+// data (per-gram/per-mL/per-unit concentration factors computed from each
+// food's base kcal/pro/cho/fat and weight_g). See CuratedFoodData below.
+// Mutated in place; do not reassign.
 // ══════════════════════════════════════════════════════════════
 const BLEND_FOODS = [];
 
@@ -150,6 +146,40 @@ const BLEND_FOODS = [];
 // separate from PackagedFoodsDB's "OasisPackagedFoods" database further down
 // this file — that module and its store are untouched by this change.
 //
+// REAL ENDPOINTS USED (confirmed against chakudya-api/src/index.js + README,
+// v1.6.0 — no new backend endpoints needed):
+//
+//   GET /foods?limit=&offset=
+//     → { status:'success', count, limit, offset, data:[
+//          { id, food_name, category, measure, weight_g,
+//            kcal|energy_kcal, kj, protein_g, carbs_g, fat_g, ... }, ... ] }
+//     This IS the Malawi FCT table server-side (README: "Malawi FCT / Exact
+//     SQL Search → foods"). Feeds MALAWI_FCT directly, and MP_FOODS +
+//     BLEND_FOODS are derived from the same pull (see below) rather than
+//     hitting the API three times for the same underlying rows.
+//     NOTE: each row carries exactly ONE measure/weight_g pair (unlike the
+//     old hardcoded MALAWI_FCT, which hand-curated 2-3 household measures
+//     per food). extraMeasures() below synthesizes a couple of scaled
+//     portions (½× / 2×) from that single base measure so the "pick a
+//     portion size" UI still has more than one option — these are
+//     generic ("Half portion", "Double portion"), not the original
+//     hand-labelled ones ("1 cup", "1 plate", etc.), since that labelling
+//     doesn't exist in the API response.
+//
+//   GET /exchange?limit=&offset=
+//     → { status:'success', count, limit, offset, data:[
+//          { id, exchange_type, food_item|food_name|name, ... }, ... ] }
+//     This IS the UCT Exchange List table server-side ("Diabetes Exchange
+//     List → exchange_lists"). Field name for the food's display name isn't
+//     fixed in the API docs (confirmed defensive handling of food_item /
+//     food_name / name elsewhere in the Worker itself), so the normalizer
+//     below checks all three.
+//
+// Pagination uses this API's real list-response shape — { count, limit,
+// offset, data } — advancing offset by data.length until a page returns
+// fewer rows than requested or offset reaches count. (There is no
+// next_offset cursor field.)
+//
 // Pattern mirrors PackagedFoodsDB: paginated wholesale pull on load, cached
 // locally, periodic background refresh while online, and instant reads from
 // cache on subsequent launches (offline-first). Any network/parse failure
@@ -160,53 +190,14 @@ const BLEND_FOODS = [];
   'use strict';
 
   const API_BASE       = 'https://chakudya-api.edisontaimu9.workers.dev';
+  const FOODS_URL       = API_BASE + '/foods';
+  const EXCHANGE_URL    = API_BASE + '/exchange';
   const IDB_DB_NAME    = 'OasisCuratedFoodData';
   const IDB_VERSION    = 1;
   const POLL_INTERVAL  = 60 * 60 * 1000; // re-sync every hour while online
-  const PAGE_SIZE      = 200;
-  const MAX_SYNC_PAGES = 25;              // safety cap against runaway pagination
+  const PAGE_SIZE      = 100;             // API caps /foods at 100 per page
+  const MAX_SYNC_PAGES = 50;              // safety cap against runaway pagination
   const FETCH_TIMEOUT  = 10000;           // ms
-
-  // Each dataset: how to fetch it, how to store it in the target global, and
-  // which IndexedDB object store backs its offline cache.
-  const DATASETS = {
-    malawiFct: {
-      store: 'malawi_fct',
-      paginated: true,
-      endpoint: (limit, offset) => `${API_BASE}/fct/malawi?limit=${limit}&offset=${offset}`,
-      applyToGlobal(rows) {
-        MALAWI_FCT.length = 0;
-        MALAWI_FCT.push(...rows);
-      },
-    },
-    uctExchange: {
-      store: 'uct_exchange',
-      paginated: true,
-      endpoint: (limit, offset) => `${API_BASE}/exchange/uct?limit=${limit}&offset=${offset}`,
-      applyToGlobal(rows) {
-        UCT_EXCHANGE_DB.length = 0;
-        UCT_EXCHANGE_DB.push(...rows);
-      },
-    },
-    mealPlanner: {
-      store: 'mp_foods',
-      paginated: false,
-      endpoint: () => `${API_BASE}/mealplanner/foods`,
-      applyToGlobal(data) {
-        Object.keys(MP_FOODS).forEach(k => delete MP_FOODS[k]);
-        Object.assign(MP_FOODS, data || {});
-      },
-    },
-    blendFoods: {
-      store: 'blend_foods',
-      paginated: false,
-      endpoint: () => `${API_BASE}/blenderized/foods`,
-      applyToGlobal(rows) {
-        BLEND_FOODS.length = 0;
-        BLEND_FOODS.push(...(rows || []));
-      },
-    },
-  };
 
   let _idb = null;
   let _pollTimer = null;
@@ -223,16 +214,11 @@ const BLEND_FOODS = [];
       const req = indexedDB.open(IDB_DB_NAME, IDB_VERSION);
       req.onupgradeneeded = () => {
         const db = req.result;
-        Object.values(DATASETS).forEach(cfg => {
-          if (!db.objectStoreNames.contains(cfg.store)) {
-            db.createObjectStore(cfg.store, { keyPath: cfg.paginated ? 'id' : undefined });
+        ['foods', 'exchange'].forEach(store => {
+          if (!db.objectStoreNames.contains(store)) {
+            db.createObjectStore(store, { keyPath: 'id' });
           }
         });
-        // Non-paginated (object/array-as-single-blob) datasets use a
-        // separate keyless "blob" store since MP_FOODS has no natural id.
-        if (!db.objectStoreNames.contains('blobs')) {
-          db.createObjectStore('blobs');
-        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -265,82 +251,171 @@ const BLEND_FOODS = [];
     });
   }
 
-  function _idbGetBlob(key) {
-    return new Promise((resolve) => {
-      if (!_idb) return resolve(null);
-      try {
-        const tx = _idb.transaction('blobs', 'readonly');
-        const req = tx.objectStore('blobs').get(key);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      } catch (_e) { resolve(null); }
-    });
-  }
-
-  function _idbPutBlob(key, value) {
-    return new Promise((resolve) => {
-      if (!_idb) return resolve();
-      try {
-        const tx = _idb.transaction('blobs', 'readwrite');
-        tx.objectStore('blobs').put(value, key);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => resolve();
-      } catch (_e) { resolve(); }
-    });
-  }
-
-  /** Wholesale paginated pull for MALAWI_FCT / UCT_EXCHANGE_DB-shaped endpoints. */
-  async function _syncPaginated(name, cfg) {
+  /** Paginate a GET /foods or /exchange style endpoint using {count,limit,offset,data}. */
+  async function _fetchAllPages(baseUrl) {
     let offset = 0;
     const all = [];
     for (let page = 0; page < MAX_SYNC_PAGES; page++) {
-      const url = cfg.endpoint(PAGE_SIZE, offset);
+      const url = `${baseUrl}?limit=${PAGE_SIZE}&offset=${offset}`;
       const res = await _fetchWithTimeout(url, FETCH_TIMEOUT);
-      if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`${baseUrl}: HTTP ${res.status}`);
       const json = await res.json();
       if (json.status !== 'success' || !Array.isArray(json.data)) break;
       all.push(...json.data);
-      if (json.data.length < PAGE_SIZE || !json.next_offset) break;
-      offset = json.next_offset;
+      offset += json.data.length;
+      const total = typeof json.count === 'number' ? json.count : null;
+      if (json.data.length < PAGE_SIZE) break;         // short page = last page
+      if (total != null && offset >= total) break;      // reached declared count
     }
-    cfg.applyToGlobal(all);
-    await _idbPutAll(cfg.store, all);
-    status.loaded[name] = true;
-    status.lastSync[name] = new Date().toISOString();
+    return all;
   }
 
-  /** Single-shot pull for MP_FOODS / BLEND_FOODS-shaped endpoints. */
-  async function _syncBlob(name, cfg) {
-    const url = cfg.endpoint();
-    const res = await _fetchWithTimeout(url, FETCH_TIMEOUT);
-    if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
-    const json = await res.json();
-    if (json.status !== 'success') throw new Error(`${name}: bad response`);
-    cfg.applyToGlobal(json.data);
-    await _idbPutBlob(cfg.store, json.data);
-    status.loaded[name] = true;
-    status.lastSync[name] = new Date().toISOString();
+  /** Raw /foods row → MALAWI_FCT shape, with a couple of scaled portions
+   *  synthesized from the single base measure the API actually provides. */
+  function _foodRowToFctEntry(d) {
+    const kcal = d.energy_kcal ?? d.kcal ?? null;
+    const baseLabel = d.measure || (d.weight_g ? `${d.weight_g}g` : 'Base portion');
+    const measures = [{ lbl: baseLabel, kcal, pro: d.protein_g ?? null, cho: d.carbs_g ?? null, fat: d.fat_g ?? null, kj: d.kj ?? null }];
+    if (kcal != null) {
+      const scale = (factor, label) => measures.push({
+        lbl: label,
+        kcal: +(kcal * factor).toFixed(1),
+        pro: d.protein_g != null ? +(d.protein_g * factor).toFixed(2) : null,
+        cho: d.carbs_g   != null ? +(d.carbs_g   * factor).toFixed(2) : null,
+        fat: d.fat_g     != null ? +(d.fat_g     * factor).toFixed(2) : null,
+        kj:  d.kj        != null ? +(d.kj        * factor).toFixed(0) : null,
+      });
+      scale(0.5, 'Half portion');
+      scale(2,   'Double portion');
+    }
+    return { id: 'food_' + d.id, cat: d.category || 'Uncategorized', name: d.food_name, measures };
+  }
+
+  /** Raw /exchange row → UCT_EXCHANGE_DB shape. Name field isn't fixed
+   *  server-side, so check every plausible key (matches the Worker's own
+   *  defensive handling of this table). */
+  function _exchangeRowToEntry(d) {
+    return {
+      id: 'exchange_' + d.id,
+      name: d.food_item ?? d.food_name ?? d.name ?? 'Unnamed exchange item',
+      exchange_type: d.exchange_type,
+    };
+  }
+
+  /** Bucket the fetched foods list into MP_FOODS categories + generate the
+   *  2-3 portion arrays that MP_FOODS' shape expects. Best-effort mapping
+   *  from free-text `category` values to MP_FOODS' fixed keys — categories
+   *  that don't match a known bucket are skipped rather than guessed into
+   *  the wrong group. */
+  const _MP_CATEGORY_MAP = {
+    staples: 'staples', staple: 'staples', starch: 'staples',
+    legumes: 'legumes', legume: 'legumes', beans: 'legumes',
+    veg: 'veg', vegetable: 'veg', vegetables: 'veg',
+    fruit: 'fruit', fruits: 'fruit',
+    protein: 'protein', meat: 'protein', fish: 'protein', dairy: 'protein',
+    fats: 'fats', fat: 'fats', oils: 'fats',
+    therapeutic: 'therapeutic',
+  };
+
+  function _buildMpFoods(foodsRaw) {
+    const buckets = { staples: [], legumes: [], veg: [], fruit: [], protein: [], fats: [], therapeutic: [] };
+    for (const d of foodsRaw) {
+      const key = _MP_CATEGORY_MAP[(d.category || '').toLowerCase().trim()];
+      if (!key) continue;
+      const kcal = d.energy_kcal ?? d.kcal ?? null;
+      if (kcal == null) continue;
+      const baseG = d.weight_g || 100;
+      const portionLabel = d.measure || `${baseG}g`;
+      buckets[key].push({
+        name: d.food_name,
+        portions: [portionLabel, `Double (${baseG * 2}${d.measure && /ml|mL/.test(d.measure) ? 'mL' : 'g'})`],
+        kcal: [kcal, +(kcal * 2).toFixed(1)],
+        pro:  [d.protein_g ?? 0, +((d.protein_g ?? 0) * 2).toFixed(2)],
+        cho:  [d.carbs_g   ?? 0, +((d.carbs_g   ?? 0) * 2).toFixed(2)],
+        fat:  [d.fat_g     ?? 0, +((d.fat_g     ?? 0) * 2).toFixed(2)],
+        kj:   [d.kj ?? null, d.kj != null ? +(d.kj * 2).toFixed(0) : null],
+      });
+    }
+    return buckets;
+  }
+
+  /** BLEND_FOODS: per-gram/per-mL/per-unit concentration factors, derived
+   *  from each food's base kcal/macros ÷ its base weight_g. Foods whose
+   *  measure text implies a liquid get unit:'ml'; a handful of common
+   *  discrete/countable staples get unit:'unit' by name match (mirroring
+   *  the old hand-curated egg/banana/avocado entries); everything else is
+   *  unit:'g'. This is a heuristic, not a curated judgement — flag any
+   *  wrong unit assignments back to the /foods data (e.g. add a proper
+   *  default_unit column server-side) rather than patching it here. */
+  const _UNIT_ENTRIES = new Set(['egg', 'banana', 'avocado']);
+
+  function _buildBlendFoods(foodsRaw) {
+    const out = [];
+    for (const d of foodsRaw) {
+      const kcal = d.energy_kcal ?? d.kcal ?? null;
+      const baseG = d.weight_g;
+      if (kcal == null || !baseG) continue;
+      const nameLower = (d.food_name || '').toLowerCase();
+      const isLiquid = d.measure && /\bml\b/i.test(d.measure);
+      const isUnitFood = [..._UNIT_ENTRIES].some(k => nameLower.includes(k));
+      const unit = isUnitFood ? 'unit' : (isLiquid ? 'ml' : 'g');
+      const perBase = isUnitFood ? 1 : baseG; // unit foods keep the label as one whole item
+      out.push({
+        id: 'blend_' + d.id,
+        name: d.food_name,
+        unit,
+        kcal: isUnitFood ? kcal : +(kcal / perBase).toFixed(3),
+        pro:  isUnitFood ? (d.protein_g ?? 0) : +((d.protein_g ?? 0) / perBase).toFixed(4),
+        fat:  isUnitFood ? (d.fat_g     ?? 0) : +((d.fat_g     ?? 0) / perBase).toFixed(4),
+        cho:  isUnitFood ? (d.carbs_g   ?? 0) : +((d.carbs_g   ?? 0) / perBase).toFixed(4),
+      });
+    }
+    return out;
+  }
+
+  function _applyFoods(rows) {
+    MALAWI_FCT.length = 0;
+    MALAWI_FCT.push(...rows.map(_foodRowToFctEntry));
+
+    Object.keys(MP_FOODS).forEach(k => delete MP_FOODS[k]);
+    Object.assign(MP_FOODS, _buildMpFoods(rows));
+
+    BLEND_FOODS.length = 0;
+    BLEND_FOODS.push(..._buildBlendFoods(rows));
+  }
+
+  function _applyExchange(rows) {
+    UCT_EXCHANGE_DB.length = 0;
+    UCT_EXCHANGE_DB.push(...rows.map(_exchangeRowToEntry));
   }
 
   async function _loadFromCache() {
-    for (const [name, cfg] of Object.entries(DATASETS)) {
-      try {
-        if (cfg.paginated) {
-          const rows = await _idbGetAll(cfg.store);
-          if (rows.length) { cfg.applyToGlobal(rows); status.loaded[name] = true; }
-        } else {
-          const blob = await _idbGetBlob(cfg.store);
-          if (blob) { cfg.applyToGlobal(blob); status.loaded[name] = true; }
-        }
-      } catch (_e) { /* leave empty, live sync will retry */ }
-    }
+    try {
+      const foodsRaw = await _idbGetAll('foods');
+      if (foodsRaw.length) { _applyFoods(foodsRaw); status.loaded.foods = true; }
+    } catch (_e) { /* leave empty, live sync will retry */ }
+    try {
+      const exchangeRaw = await _idbGetAll('exchange');
+      if (exchangeRaw.length) { _applyExchange(exchangeRaw); status.loaded.exchange = true; }
+    } catch (_e) { /* leave empty, live sync will retry */ }
   }
 
   async function syncAll() {
-    const jobs = Object.entries(DATASETS).map(([name, cfg]) =>
-      (cfg.paginated ? _syncPaginated(name, cfg) : _syncBlob(name, cfg))
-        .catch(e => { status.lastError[name] = String(e && e.message || e); })
-    );
+    const jobs = [
+      _fetchAllPages(FOODS_URL).then(rows => {
+        _applyFoods(rows);
+        status.loaded.foods = true;
+        status.lastSync.foods = new Date().toISOString();
+        return _idbPutAll('foods', rows);
+      }).catch(e => { status.lastError.foods = String(e && e.message || e); }),
+
+      _fetchAllPages(EXCHANGE_URL).then(rows => {
+        _applyExchange(rows);
+        status.loaded.exchange = true;
+        status.lastSync.exchange = new Date().toISOString();
+        return _idbPutAll('exchange', rows);
+      }).catch(e => { status.lastError.exchange = String(e && e.message || e); }),
+    ];
     await Promise.all(jobs);
     global.dispatchEvent(new CustomEvent('oasis:curated-food-ready', { detail: status }));
   }
@@ -365,6 +440,7 @@ const BLEND_FOODS = [];
   global.CuratedFoodData = { ready, status, forceSync: syncAll };
 
 })(typeof window !== 'undefined' ? window : globalThis);
+
 
 
 // ══════════════════════════════════════════════════════════════════════════════
