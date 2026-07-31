@@ -148,7 +148,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.4.5';
+  const APP_VERSION = '1.4.6';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -9932,31 +9932,67 @@ function ntClear(scopeId, resultIds) {
 <!-- Fix 2: Rebind auto-recalculate inputs to debounced wrappers -->
 <script>
 (function() {
-  function rebindDebounced() {
+  // These six all live in js/modules/anthropometry-recall.js. That file is
+  // one of 22 deferred script tags (post-modularisation split of the old
+  // monolithic main.js) — on a slow/flaky connection one of those 22
+  // fetches can occasionally fail to complete before DOMContentLoaded,
+  // leaving these undeclared. Resolve them defensively via typeof (never
+  // throws on an undeclared identifier, unlike a direct reference) so a
+  // single dropped module can't take down the whole app.
+  function _resolveDebounced(name) {
+    switch (name) {
+      case 'debouncedLiveAnthro':     return (typeof debouncedLiveAnthro     !== 'undefined') ? debouncedLiveAnthro     : null;
+      case 'debouncedRfAutoAssess':   return (typeof debouncedRfAutoAssess   !== 'undefined') ? debouncedRfAutoAssess   : null;
+      case 'debouncedCalcKH':         return (typeof debouncedCalcKH         !== 'undefined') ? debouncedCalcKH         : null;
+      case 'debouncedCalcNB':         return (typeof debouncedCalcNB         !== 'undefined') ? debouncedCalcNB         : null;
+      case 'debouncedSyncNpo':        return (typeof debouncedSyncNpo        !== 'undefined') ? debouncedSyncNpo        : null;
+      case 'debouncedBurnPreview':    return (typeof debouncedBurnPreview    !== 'undefined') ? debouncedBurnPreview    : null;
+      default: return null;
+    }
+  }
+
+  function rebindDebounced(attempt) {
     var map = {
-      'height':          debouncedLiveAnthro,
-      'weight':          debouncedLiveAnthro,
-      'a-admit-wt':      debouncedLiveAnthro,
-      'a-ubw':           debouncedLiveAnthro,
-      'a-muac':          debouncedLiveAnthro,
-      'a-waist':         debouncedLiveAnthro,
-      'lk':              debouncedRfAutoAssess,
-      'lp':              debouncedRfAutoAssess,
-      'lm':              debouncedRfAutoAssess,
-      'kh-val':          debouncedCalcKH,
-      'kh-age':          debouncedCalcKH,
-      'nb-urvol':        debouncedCalcNB,
-      'nb-urea':         debouncedCalcNB,
-      'nb-prot-in':      debouncedCalcNB,
-      'npo-days':        debouncedSyncNpo,
-      'intake-pct':      debouncedSyncNpo,
-      'tbsa':            debouncedBurnPreview,
-      'core_temp':       debouncedBurnPreview,
-      'burn_days':       debouncedBurnPreview,
-      'burn_bsa':        debouncedBurnPreview,
-      'burn_bsa_burned': debouncedBurnPreview
+      'height':          _resolveDebounced('debouncedLiveAnthro'),
+      'weight':          _resolveDebounced('debouncedLiveAnthro'),
+      'a-admit-wt':      _resolveDebounced('debouncedLiveAnthro'),
+      'a-ubw':           _resolveDebounced('debouncedLiveAnthro'),
+      'a-muac':          _resolveDebounced('debouncedLiveAnthro'),
+      'a-waist':         _resolveDebounced('debouncedLiveAnthro'),
+      'lk':              _resolveDebounced('debouncedRfAutoAssess'),
+      'lp':              _resolveDebounced('debouncedRfAutoAssess'),
+      'lm':              _resolveDebounced('debouncedRfAutoAssess'),
+      'kh-val':          _resolveDebounced('debouncedCalcKH'),
+      'kh-age':          _resolveDebounced('debouncedCalcKH'),
+      'nb-urvol':        _resolveDebounced('debouncedCalcNB'),
+      'nb-urea':         _resolveDebounced('debouncedCalcNB'),
+      'nb-prot-in':      _resolveDebounced('debouncedCalcNB'),
+      'npo-days':        _resolveDebounced('debouncedSyncNpo'),
+      'intake-pct':      _resolveDebounced('debouncedSyncNpo'),
+      'tbsa':            _resolveDebounced('debouncedBurnPreview'),
+      'core_temp':       _resolveDebounced('debouncedBurnPreview'),
+      'burn_days':       _resolveDebounced('debouncedBurnPreview'),
+      'burn_bsa':        _resolveDebounced('debouncedBurnPreview'),
+      'burn_bsa_burned': _resolveDebounced('debouncedBurnPreview')
     };
+
+    // If anthropometry-recall.js genuinely hasn't executed yet (slow
+    // connection, module still in flight), retry shortly instead of
+    // binding nothing / throwing. Give up quietly after a few tries.
+    var anyMissing = Object.keys(map).some(function(id) { return map[id] === null; });
+    if (anyMissing) {
+      attempt = (attempt || 0) + 1;
+      if (attempt <= 5) {
+        setTimeout(function() { rebindDebounced(attempt); }, 400);
+        return;
+      }
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('rebindDebounced: giving up after 5 retries — some auto-recalc inputs may not be live-bound this session. A reload usually fixes this.');
+      }
+    }
+
     Object.keys(map).forEach(function(id) {
+      if (!map[id]) return;
       var el = document.getElementById(id);
       if (!el) return;
       el.removeAttribute('oninput');
