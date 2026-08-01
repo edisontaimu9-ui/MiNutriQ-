@@ -1190,3 +1190,20 @@ function exportHistoryCSV() {
   downloadCSV('nutri_history.csv', headers, rows);
 }
 // ════════════════════════════════════════════════════════════════
+
+// ── Keyboard activation for the tab bars ───────────────────────
+// The top tab bar (.tabs) and bottom nav (.bottom-nav) use
+// <div role="button" tabindex="0" onclick="..."> for their tab
+// items — a real <button> couldn't be used because of the custom
+// flex/underline layout, but that means Enter/Space do nothing by
+// default the way they would on a native button. This delegates
+// keydown on the two nav containers and simulates a click, so the
+// tabs are actually operable from a keyboard or switch device, not
+// just decorated with role="button" for show.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const target = e.target.closest('.tabs [role="button"], .bottom-nav [role="button"]');
+  if (!target) return;
+  e.preventDefault();
+  target.click();
+});

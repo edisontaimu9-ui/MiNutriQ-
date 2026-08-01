@@ -2616,7 +2616,7 @@ header [onclick] {
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  padding: 11px 8px 12px;
+  padding: 13px 8px 14px;
   cursor: pointer;
   color: var(--tab-inactive);
   border-bottom: 2px solid transparent;
@@ -2629,6 +2629,8 @@ header [onclick] {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 .tab .tab-icon  { font-size: 13px; flex-shrink: 0; line-height: 1; display: inline-flex; align-items: center; }
 .tab .tab-label { letter-spacing: 0.7px; }
@@ -2647,8 +2649,8 @@ header [onclick] {
 
 /* Responsive */
 @media (max-width: 480px) {
-  .tab { font-size: 9px; padding: 10px 4px 11px; gap: 4px; }
-  .tab .tab-icon { font-size: 12px; }
+  .tab { font-size: 10px; padding: 13px 6px 14px; gap: 4px; min-height: 44px; }
+  .tab .tab-icon { font-size: 13px; }
 }
 
 /* ── BOTTOM NAVIGATION WRAPPER (contains nav + fade overlays) ── */
@@ -4356,7 +4358,7 @@ input[type="search"],
 
 /* ── KEBAB (THREE-DOT) MENU ── */
 .kebab-wrap{position:relative;flex-shrink:0}
-.kebab-btn{font-size:22px;line-height:1;color:var(--text-dim);border:1px solid var(--border);background:transparent;width:34px;height:34px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s,background .2s;flex-shrink:0;user-select:none;padding:0;letter-spacing:0}
+.kebab-btn{font-size:22px;line-height:1;color:var(--text-dim);border:1px solid var(--border);background:transparent;width:44px;height:44px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s,background .2s;flex-shrink:0;user-select:none;padding:0;letter-spacing:0}
 .kebab-btn:hover,.kebab-btn.open{color:var(--teal);border-color:rgba(29,233,212,0.3);background:rgba(29,233,212,0.05)}
 .kebab-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:195px;background:var(--surface,#0d1626);border:1px solid var(--border,#1e293b);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.6),0 2px 8px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;opacity:0;transform:translateY(-6px) scale(0.97);pointer-events:none;transition:opacity .18s cubic-bezier(.4,0,.2,1),transform .18s cubic-bezier(.4,0,.2,1);transform-origin:top right}
 .kebab-menu.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
