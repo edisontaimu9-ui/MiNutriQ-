@@ -526,12 +526,17 @@ function checkOnboarding() {
     // Let Firebase Auth state determine whether to show the overlay
     auth.onAuthStateChanged((user) => {
       if (user) {
-        // ── Session revocation check ──────────────────────────────
-        // Cross-check sign-in time against the Firestore revocation
-        // registry. If this user was signed out from another session
-        // (or a stale session was revoked on logout), the revokedAt
-        // timestamp will be newer than their lastSignInTime → force
-        // an immediate re-logout so no stale session can persist.
+        // ── Resolve profile FIRST; revocation check runs alongside ──
+        // Previously the revocation Firestore lookup gated _obResolveProfile
+        // behind a network round trip, so an offline (or slow-network)
+        // returning user with a perfectly valid local profile sat staring
+        // at the splash until it timed out and fell back to the sign-in
+        // form. A local profile is trustworthy enough to unlock the app
+        // immediately; revocation (a rare, security-only case) is checked
+        // in the background and can retroactively sign the user out if it
+        // comes back positive, without blocking startup.
+        _obResolveProfile(user);
+
         if (typeof db !== 'undefined' && db) {
           db.collection('session_revocations').doc(user.uid).get()
             .then(rSnap => {
@@ -544,19 +549,13 @@ function checkOnboarding() {
                   try { localStorage.setItem('ob_has_signed_out', '1'); } catch(e) {}
                   auth.signOut().catch(() => {});
                   _showOnboardingOverlay();
-                  return; // Do not proceed with profile load
                 }
               }
-              // Not revoked — proceed with normal profile check
-              _obResolveProfile(user);
             })
             .catch(() => {
-              // Revocation check failed (offline) — proceed normally
-              // (fail-open: don't lock user out when Firestore is unreachable)
-              _obResolveProfile(user);
+              // Revocation check failed (offline/unreachable) — fail open.
+              // _obResolveProfile() above has already unlocked the app.
             });
-        } else {
-          _obResolveProfile(user);
         }
       } else {
         // Not signed in — block home screen and show the sign-in overlay.
@@ -564,7 +563,8 @@ function checkOnboarding() {
       }
     });
   } else {
-    // Firebase auth unavailable — simple localStorage check
+    // Firebase auth SDK unavailable (e.g. blocked/failed to load offline)
+    // — fall back to whatever profile is cached locally.
     if (!getUserProfile()) {
       _showOnboardingOverlay();
     } else {
@@ -587,7 +587,29 @@ function _obResolveProfile(user) {
         } else {
           _showOnboardingOverlay();
         }
-      }).catch(() => _showOnboardingOverlay());
+      }).catch(() => {
+        // Firestore fetch failed. If it's specifically a connectivity
+        // problem, the person IS a signed-in, valid user — the network
+        // just can't confirm their profile details right now. Forcing
+        // them into the sign-in form is a dead end offline (signing in
+        // needs network too), so instead let them into the app with a
+        // minimal profile built from the auth record, and mark it so the
+        // full profile re-syncs from Firestore the next time we're online.
+        if (!navigator.onLine) {
+          saveUserProfile({
+            name: (user.email || 'User').split('@')[0],
+            uid: '', institution: '', role: 'student',
+            email: user.email || '', photoURL: '',
+            createdAt: new Date().toISOString(),
+            firebaseUid: user.uid,
+            _pendingSync: true
+          });
+          try { renderProfileCard(); } catch(e) {}
+          _hideOnboardingOverlay();
+        } else {
+          _showOnboardingOverlay();
+        }
+      });
     } else {
       _showOnboardingOverlay();
     }
@@ -597,12 +619,44 @@ function _obResolveProfile(user) {
   }
 }
 
+// Once back online, quietly replace any offline-built placeholder profile
+// (_pendingSync) with the real one from Firestore.
+window.addEventListener('online', () => {
+  try {
+    const p = getUserProfile();
+    const auth = _getAuth();
+    const user = auth && auth.currentUser;
+    if (p && p._pendingSync && user && typeof db !== 'undefined' && db) {
+      db.collection('users').doc(user.uid).get().then(snap => {
+        if (snap.exists && snap.data().userName) {
+          const d = snap.data();
+          saveUserProfile({ name: d.userName, uid: d.userId || '', institution: d.institution || '', role: d.userRole || 'student', email: user.email || d.email || '', photoURL: d.photoURL || '', createdAt: d.createdAt || new Date().toISOString(), firebaseUid: user.uid });
+          try { renderProfileCard(); } catch(e) {}
+        }
+      }).catch(() => {});
+    }
+  } catch(e) {}
+});
+
 function _showOnboardingOverlay() {
   const overlay = document.getElementById('ob-overlay');
   if (overlay) {
     overlay.classList.remove('hidden');
     document.body.classList.remove('ob-authed');
     document.body.style.overflow = 'hidden';
+  }
+  // Signing in/registering both require a network round trip to Firebase —
+  // if we've landed here with no connection, say so up front rather than
+  // letting the person fill out a form that will fail silently on submit.
+  const errEl = document.getElementById('ob-auth-error');
+  if (errEl) {
+    if (!navigator.onLine) {
+      errEl.textContent = "You're offline — sign-in and registration need an internet connection. Reconnect and try again.";
+      errEl.style.display = 'block';
+    } else if (errEl.textContent && errEl.textContent.indexOf('offline') !== -1) {
+      errEl.textContent = '';
+      errEl.style.display = 'none';
+    }
   }
   // No session found — safe to reveal the sign-in form now.
   _signalAuthReady();

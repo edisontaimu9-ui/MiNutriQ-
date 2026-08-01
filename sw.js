@@ -57,6 +57,15 @@ const CORE_ASSETS = [
   'js/modules/meal-plan-generator-sync.js',
   'js/modules/food-search-fallback-ui.js',
   'manifest.json',
+  // Logo images painted before any auth/network state is known (splash
+  // screen + header) — without these cached, a repeat offline load shows
+  // a broken-image icon in place of the logo while everything else works.
+  'icons/logo-transparent-240.png',
+  'icons/logo-transparent-240.webp',
+  'icons/logo-transparent-96.png',
+  'icons/logo-transparent-96.webp',
+  'icons/favicon.svg',
+  'icons/favicon-96x96.png',
 ];
 const PRECACHE    = [
   self.registration.scope,
