@@ -1132,10 +1132,10 @@ body.theme-amoled {
   --border-base:#222222;
   --input-bg:  #050505;
   --shadow-card: 0 2px 12px rgba(0,0,0,0.9);
-  --text:          #f0f4f8;
-  --text-dim:      #c8d6e5;
+  --text:          #ffffff;
+  --text-dim:      #dde8f4;
   --text-bright:   #ffffff;
-  --text-muted:    #94a3b8;
+  --text-muted:    #b8c4d6;
 }
 body.theme-amoled .card          { background: #0a0a0a; }
 body.theme-amoled .tabs          { background: #000; }
@@ -1204,9 +1204,9 @@ body.intensity-soft {
 /* normal = :root defaults (no class needed) */
 body.intensity-strong {
   --text:        #ffffff;
-  --text-dim:    #dde8f4;
+  --text-dim:    #eef4fb;
   --text-bright: #ffffff;
-  --text-muted:  #a0b4c8;
+  --text-muted:  #d0dae8;
 }
 
 /* ── DESIGN SYSTEM TYPOGRAPHY HIERARCHY ─────────────────────── */
@@ -1884,11 +1884,11 @@ body:not(.ob-authed) .tab-content {
   --blue:        #60a5fa;
   --purple:      #a78bfa;
 
-  /* ── Text hierarchy (ENHANCED — brighter throughout) ── */
-  --text:          #f0f4f8;   /* body text              */
-  --text-dim:      #c8d6e5;   /* secondary / labels     */
+  /* ── Text hierarchy (near-white default — was too dim at 'normal' intensity) ── */
+  --text:          #ffffff;   /* body text              */
+  --text-dim:      #dde8f4;   /* secondary / labels     */
   --text-bright:   #ffffff;   /* headings / values      */
-  --text-muted:    #a8b8cc;   /* placeholders           */
+  --text-muted:    #c2ccdc;   /* placeholders           */
 
   /* ── Semantic aliases ── */
   --text-primary:    var(--text-bright);
