@@ -255,7 +255,7 @@
       '.lib-subnav{display:flex;background:var(--surface2);border-bottom:1px solid var(--border);',
         'overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:20}',
       '.lib-subnav::-webkit-scrollbar{display:none}',
-      '.lib-sntab{flex-shrink:0;padding:13px 18px;font-family:var(--mono);font-size:10px;font-weight:700;',
+      '.lib-sntab{flex-shrink:0;padding:13px 18px;font-family:var(--mono);font-size:11px;font-weight:700;',
         'letter-spacing:.9px;text-transform:uppercase;color:var(--text-dim);cursor:pointer;',
         'border:none;border-bottom:2px solid transparent;background:none;',
         'transition:color .15s,border-color .15s;white-space:nowrap}',
@@ -268,10 +268,10 @@
 
       /* ── Section header row ── */
       '.lib-sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}',
-      '.lib-sec-title{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:1px;',
+      '.lib-sec-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;',
         'text-transform:uppercase;color:var(--text-dim)}',
       '.lib-badge{background:rgba(29,233,212,.1);border:1px solid rgba(29,233,212,.2);border-radius:100px;',
-        'padding:2px 9px;font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal)}',
+        'padding:2px 9px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal)}',
 
       /* ── Search bar ── */
       '.lib-searchbar{display:flex;align-items:center;gap:0;background:var(--surface2);',
@@ -283,7 +283,7 @@
       '.lib-searchbar input::placeholder{color:var(--text-muted)}',
       '.lib-search-icon{color:var(--teal);opacity:.6;font-size:15px;flex-shrink:0;pointer-events:none}',
       '.lib-search-btn{padding:6px 14px;background:var(--teal);border:none;border-radius:7px;',
-        'font-family:var(--mono);font-size:10px;font-weight:700;color:#020617;cursor:pointer;',
+        'font-family:var(--mono);font-size:11px;font-weight:700;color:#020617;cursor:pointer;',
         'transition:opacity .15s;white-space:nowrap}',
       '.lib-search-btn:hover{opacity:.85}',
 
@@ -293,16 +293,16 @@
       '@keyframes libAioFadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}',
       '.lib-aio-header{display:flex;align-items:center;gap:9px;padding:11px 14px 0}',
       '.lib-aio-icon{width:22px;height:22px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,rgba(29,233,212,0.25),rgba(96,165,250,0.18));border:1px solid rgba(29,233,212,0.35);display:flex;align-items:center;justify-content:center}',
-      '.lib-aio-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(29,233,212,0.8);text-transform:uppercase}',
+      '.lib-aio-label{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.2px;color:rgba(29,233,212,0.8);text-transform:uppercase}',
       '.lib-aio-body{padding:8px 14px 6px;font-family:var(--sans);font-size:12.5px;line-height:1.75;color:var(--text,#c9d1d9)}',
       '.lib-aio-body strong{color:var(--text-bright,#f0f6fc)}',
       '.lib-aio-body em{color:rgba(29,233,212,0.85);font-style:normal}',
-      '.lib-aio-loading{display:flex;align-items:center;gap:8px;padding:10px 14px 12px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:.5px}',
+      '.lib-aio-loading{display:flex;align-items:center;gap:8px;padding:10px 14px 12px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:.5px}',
       '.lib-aio-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:rgba(29,233,212,0.5);margin:0 2px;animation:libAioPulse 1.4s ease infinite}',
       '.lib-aio-dots span:nth-child(2){animation-delay:.2s}',
       '.lib-aio-dots span:nth-child(3){animation-delay:.4s}',
       '@keyframes libAioPulse{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}',
-      '.lib-aio-sources-toggle{display:flex;align-items:center;gap:6px;padding:5px 14px 10px;cursor:pointer;font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);letter-spacing:.5px;transition:color .15s;width:100%;background:none;border:none;text-align:left}',
+      '.lib-aio-sources-toggle{display:flex;align-items:center;gap:6px;padding:5px 14px 10px;cursor:pointer;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:.5px;transition:color .15s;width:100%;background:none;border:none;text-align:left}',
       '.lib-aio-sources-toggle:hover{color:rgba(29,233,212,0.7)}',
       '.lib-aio-sources-toggle svg{transition:transform .2s}',
       '.lib-aio-sources-toggle.open svg{transform:rotate(180deg)}',
@@ -310,18 +310,18 @@
       '.lib-aio-sources.open{display:block}',
       '.lib-aio-src-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)}',
       '.lib-aio-src-item:last-child{border-bottom:none}',
-      '.lib-aio-src-badge{flex-shrink:0;font-family:var(--mono);font-size:7.5px;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.5px;white-space:nowrap}',
+      '.lib-aio-src-badge{flex-shrink:0;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.5px;white-space:nowrap}',
       '.lib-aio-src-badge.local{background:rgba(29,233,212,0.12);color:rgba(29,233,212,0.8);border:1px solid rgba(29,233,212,0.25)}',
       '.lib-aio-src-badge.guideline{background:rgba(96,165,250,0.12);color:rgba(96,165,250,0.85);border:1px solid rgba(96,165,250,0.25)}',
       '.lib-aio-src-badge.research{background:rgba(52,211,153,0.1);color:rgba(52,211,153,0.8);border:1px solid rgba(52,211,153,0.2)}',
       '.lib-aio-src-badge.database{background:rgba(251,146,60,0.1);color:rgba(251,146,60,0.75);border:1px solid rgba(251,146,60,0.2)}',
       '.lib-aio-src-title{font-family:var(--sans);font-size:11px;color:rgba(255,255,255,0.6);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}',
-      '.lib-aio-err{padding:8px 14px 12px;font-family:var(--mono);font-size:9px;color:rgba(248,113,113,0.6);letter-spacing:.5px}',
+      '.lib-aio-err{padding:8px 14px 12px;font-family:var(--mono);font-size:11px;color:rgba(248,113,113,0.6);letter-spacing:.5px}',
 
       /* ── Filter chip row ── */
       '.lib-chips{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:1px}',
       '.lib-chips::-webkit-scrollbar{display:none}',
-      '.lib-chip{flex-shrink:0;padding:4px 11px;border-radius:100px;font-family:var(--mono);font-size:9.5px;',
+      '.lib-chip{flex-shrink:0;padding:4px 11px;border-radius:100px;font-family:var(--mono);font-size:11px;',
         'font-weight:700;letter-spacing:.4px;background:var(--surface2);border:1px solid var(--border);',
         'color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap}',
       '.lib-chip:hover,.lib-chip.active{background:rgba(29,233,212,.1);border-color:var(--teal);color:var(--teal)}',
@@ -330,14 +330,14 @@
       '.lib-hist-row{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;',
         'margin:-2px 0 12px;padding-bottom:1px}',
       '.lib-hist-row::-webkit-scrollbar{display:none}',
-      '.lib-hist-lbl{flex-shrink:0;font-family:var(--mono);font-size:8.5px;font-weight:700;',
+      '.lib-hist-lbl{flex-shrink:0;font-family:var(--mono);font-size:11px;font-weight:700;',
         'letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted)}',
       '.lib-hist-chip{flex-shrink:0;padding:3px 10px;border-radius:100px;font-family:var(--mono);',
-        'font-size:9px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);',
+        'font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);',
         'cursor:pointer;transition:all .15s;white-space:nowrap}',
       '.lib-hist-chip:hover{border-color:var(--teal);color:var(--teal)}',
       '.lib-hist-clear{flex-shrink:0;margin-left:auto;padding:3px 8px;border-radius:6px;',
-        'font-family:var(--mono);font-size:8.5px;background:none;border:1px solid transparent;',
+        'font-family:var(--mono);font-size:11px;background:none;border:1px solid transparent;',
         'color:var(--text-muted);cursor:pointer;opacity:.7;transition:opacity .15s,color .15s}',
       '.lib-hist-clear:hover{opacity:1;color:#f87171}',
 
@@ -357,14 +357,14 @@
       '.lib-card-info{flex:1;min-width:0}',
       '.lib-card-title{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-bright);',
         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}',
-      '.lib-card-desc{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.55;',
+      '.lib-card-desc{font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.55;',
         'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}',
       '.lib-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}',
-      '.lib-tag{font-family:var(--mono);font-size:8.5px;padding:2px 7px;border-radius:100px;',
+      '.lib-tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:100px;',
         'background:rgba(29,233,212,.06);border:1px solid rgba(29,233,212,.14);color:var(--teal)}',
       '.lib-card-foot{display:flex;align-items:center;justify-content:flex-start;gap:8px;',
         'margin-top:9px;padding-top:9px;border-top:1px solid rgba(30,41,59,.55)}',
-      '.lib-card-cat{font-family:var(--mono);font-size:8.5px;color:var(--text-muted);',
+      '.lib-card-cat{font-family:var(--mono);font-size:11px;color:var(--text-muted);',
         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}',
       '.lib-card-acts{display:none}',/* hidden — replaced by lib-cta-bar */
 
@@ -381,7 +381,7 @@
       /* Base button */
       '.lib-cta-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;',
         'min-height:48px;padding:9px 4px 8px;border-radius:11px;border:1px solid transparent;',
-        'cursor:pointer;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.6px;',
+        'cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.6px;',
         'text-transform:uppercase;transition:all .2s cubic-bezier(.34,1.56,.64,1);',
         'position:relative;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent;',
         'background:none;outline:none;-webkit-appearance:none}',
@@ -428,7 +428,7 @@
       '.lib-cta-icon svg{width:15px;height:15px}',
 
       /* Text label */
-      '.lib-cta-label{font-size:8px;line-height:1;letter-spacing:.7px;',
+      '.lib-cta-label{font-size:11px;line-height:1;letter-spacing:.7px;',
         'font-family:var(--mono);font-weight:700;transition:opacity .15s}',
 
       /* Completed flash */
@@ -437,7 +437,7 @@
 
       /* ── Status badges ── */
       '.lib-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;',
-        'font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}',
+        'font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}',
       '.ls-pending {background:rgba(240,180,41,.1);color:var(--amber);border:1px solid rgba(240,180,41,.25)}',
       '.ls-approved{background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.25)}',
       '.ls-rejected{background:rgba(251,113,133,.1);color:var(--red);border:1px solid rgba(251,113,133,.25)}',
@@ -447,7 +447,7 @@
       '.lib-form-ttl{font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:1px;',
         'color:var(--teal);margin-bottom:18px}',
       '.lib-row{margin-bottom:14px}',
-      '.lib-lbl{display:block;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.8px;',
+      '.lib-lbl{display:block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.8px;',
         'text-transform:uppercase;color:var(--text-dim);margin-bottom:5px}',
       '.lib-lbl em{color:var(--red);font-style:normal}',
       '.lib-inp{width:100%;background:rgba(2,6,23,.8);border:1px solid var(--border);border-radius:8px;',
@@ -465,12 +465,12 @@
       '.lib-dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}',
       '.lib-drop-ico{font-size:28px;margin-bottom:9px;color:var(--teal);opacity:.55}',
       '.lib-drop-txt{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:3px}',
-      '.lib-drop-sub{font-family:var(--mono);font-size:9.5px;color:var(--text-muted)}',
+      '.lib-drop-sub{font-family:var(--mono);font-size:11px;color:var(--text-muted)}',
       '.lib-file-prev{display:flex;align-items:center;gap:10px;background:var(--surface2);',
         'border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px}',
       '.lib-fp-name{flex:1;font-family:var(--mono);font-size:11px;color:var(--text);',
         'overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.lib-fp-size{font-family:var(--mono);font-size:9.5px;color:var(--text-muted);flex-shrink:0}',
+      '.lib-fp-size{font-family:var(--mono);font-size:11px;color:var(--text-muted);flex-shrink:0}',
 
       /* ── Tags input widget ── */
       '.lib-tags-wrap{display:flex;flex-wrap:wrap;gap:5px;background:rgba(2,6,23,.8);',
@@ -479,7 +479,7 @@
       '.lib-tags-wrap:focus-within{border-color:rgba(29,233,212,.45)}',
       '.lib-tag-pill{display:flex;align-items:center;gap:4px;background:rgba(29,233,212,.1);',
         'border:1px solid rgba(29,233,212,.2);border-radius:100px;padding:2px 8px;',
-        'font-family:var(--mono);font-size:10px;color:var(--teal)}',
+        'font-family:var(--mono);font-size:11px;color:var(--teal)}',
       '.lib-tag-x{background:none;border:none;color:var(--teal);cursor:pointer;',
         'font-size:11px;padding:0;line-height:1;opacity:.7;transition:opacity .1s}',
       '.lib-tag-x:hover{opacity:1}',
@@ -501,7 +501,7 @@
       /* ── Link preview ── */
       '.lib-link-ok{display:flex;align-items:center;gap:8px;background:rgba(52,211,153,.06);',
         'border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px 12px;margin-top:6px;',
-        'font-family:var(--mono);font-size:10px;color:var(--green)}',
+        'font-family:var(--mono);font-size:11px;color:var(--green)}',
       '.lib-link-err{background:rgba(251,113,133,.06);border-color:rgba(251,113,133,.2);color:var(--red)}',
 
       /* ── Empty state ── */
@@ -519,7 +519,7 @@
         'border-radius:12px;padding:13px 14px;margin-bottom:10px}',
       '.lib-my-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}',
       '.lib-my-title{flex:1;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--text-bright)}',
-      '.lib-review-note{font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.55;',
+      '.lib-review-note{font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.55;',
         'padding:6px 10px;border-radius:6px;background:rgba(30,41,59,.5);border-left:2px solid var(--amber)}',
       '.lib-review-note.rn-approved{border-left-color:var(--green)}',
       '.lib-review-note.rn-rejected{border-left-color:var(--red)}',
@@ -541,7 +541,7 @@
         'padding:12px 14px;flex-shrink:0;max-height:220px;overflow-y:auto}',
       '.lib-vacts{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}',
       '.lib-vbtn{display:flex;align-items:center;gap:5px;padding:8px 15px;border-radius:8px;',
-        'font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;',
+        'font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;',
         'cursor:pointer;transition:all .18s cubic-bezier(.34,1.56,.64,1);border:1px solid var(--border);',
         'background:var(--surface2);color:var(--text-dim);text-decoration:none;',
         'min-height:38px;-webkit-tap-highlight-color:transparent}',
@@ -551,26 +551,26 @@
 
       /* ── Citation block ── */
       '.lib-cit-tabs{display:flex;margin-bottom:5px}',
-      '.lib-cit-tab{padding:4px 13px;font-family:var(--mono);font-size:9.5px;font-weight:700;',
+      '.lib-cit-tab{padding:4px 13px;font-family:var(--mono);font-size:11px;font-weight:700;',
         'cursor:pointer;border:1px solid var(--border);color:var(--text-dim);background:var(--surface2);',
         'transition:all .15s}',
       '.lib-cit-tab:first-child{border-radius:6px 0 0 6px}',
       '.lib-cit-tab:last-child{border-radius:0 6px 6px 0;border-left:none}',
       '.lib-cit-tab.active{background:rgba(29,233,212,.1);border-color:var(--teal);color:var(--teal)}',
       '.lib-cit-block{position:relative;background:var(--surface2);border:1px solid var(--border);',
-        'border-radius:8px;padding:10px 60px 10px 12px;font-family:var(--mono);font-size:9.5px;',
+        'border-radius:8px;padding:10px 60px 10px 12px;font-family:var(--mono);font-size:11px;',
         'color:var(--text-dim);line-height:1.65}',
       '.lib-cit-copy{position:absolute;top:7px;right:8px;background:var(--surface);',
         'border:1px solid var(--border);border-radius:5px;padding:2px 9px;',
-        'font-family:var(--mono);font-size:8.5px;color:var(--teal);cursor:pointer;transition:all .15s}',
+        'font-family:var(--mono);font-size:11px;color:var(--teal);cursor:pointer;transition:all .15s}',
       '.lib-cit-copy:hover{background:rgba(29,233,212,.1)}',
 
       /* ── Related resources ── */
-      '.lib-rel-hdr{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.9px;',
+      '.lib-rel-hdr{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.9px;',
         'text-transform:uppercase;color:var(--text-muted);margin:12px 0 7px}',
       '.lib-rel-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);',
         'border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s;',
-        'font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:5px}',
+        'font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:5px}',
       '.lib-rel-item:hover{border-color:rgba(29,233,212,.3);color:var(--text)}',
 
       /* ── Close / small action button (viewer header) ── */
@@ -586,7 +586,7 @@
 
       /* ── Action-link button in my-upload card ── */
       '.lib-act-link{display:inline-flex;align-items:center;gap:5px;margin-top:8px;',
-        'padding:7px 14px;border-radius:7px;font-family:var(--mono);font-size:9.5px;font-weight:700;',
+        'padding:7px 14px;border-radius:7px;font-family:var(--mono);font-size:11px;font-weight:700;',
         'letter-spacing:.5px;background:rgba(29,233,212,.08);border:1px solid rgba(29,233,212,.25);',
         'color:var(--teal);cursor:pointer;transition:all .15s}',
       '.lib-act-link:hover{background:rgba(29,233,212,.15)}',
@@ -594,7 +594,7 @@
       /* ── Research Search panel ── */
       '.rs-source-tabs{display:flex;gap:6px;margin-bottom:12px}',
       '.rs-stab{flex:1;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);',
-        'border-radius:8px;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.5px;',
+        'border-radius:8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;',
         'color:var(--text-dim);cursor:pointer;transition:all .15s;text-align:center;white-space:nowrap}',
       '.rs-stab:hover{border-color:rgba(29,233,212,.35);color:var(--text)}',
       '.rs-stab.active{background:rgba(29,233,212,.1);border-color:rgba(29,233,212,.4);color:var(--teal)}',
@@ -603,25 +603,25 @@
       '.rs-result:hover{border-color:rgba(29,233,212,.3)}',
       '.rs-result-title{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-bright);',
         'margin-bottom:4px;line-height:1.35}',
-      '.rs-result-authors{font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:5px;',
+      '.rs-result-authors{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:5px;',
         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '.rs-result-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}',
-      '.rs-result-journal{font-family:var(--mono);font-size:9px;color:var(--teal);',
+      '.rs-result-journal{font-family:var(--mono);font-size:11px;color:var(--teal);',
         'background:rgba(29,233,212,.06);border:1px solid rgba(29,233,212,.15);',
         'border-radius:100px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}',
-      '.rs-result-year{font-family:var(--mono);font-size:9px;color:var(--text-muted)}',
-      '.rs-result-cite{font-family:var(--mono);font-size:9px;color:var(--text-muted)}',
-      '.rs-result-abstract{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6;',
+      '.rs-result-year{font-family:var(--mono);font-size:11px;color:var(--text-muted)}',
+      '.rs-result-cite{font-family:var(--mono);font-size:11px;color:var(--text-muted)}',
+      '.rs-result-abstract{font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6;',
         'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}',
       '.rs-result-abstract.expanded{-webkit-line-clamp:unset;display:block}',
       '.rs-result-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}',
       '.rs-act-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:6px;',
-        'font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.4px;',
+        'font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.4px;',
         'background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);',
         'cursor:pointer;transition:all .15s;text-decoration:none}',
       '.rs-act-btn:hover{border-color:var(--teal);color:var(--teal)}',
       '.rs-act-btn.primary{background:rgba(29,233,212,.08);border-color:rgba(29,233,212,.25);color:var(--teal)}',
-      '.rs-source-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.5px;',
+      '.rs-source-badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;',
         'padding:2px 7px;border-radius:100px;text-transform:uppercase}',
       '.rs-badge-pubmed{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa}',
       '.rs-badge-openalex{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:#a78bfa}',
@@ -642,38 +642,38 @@
       '.rs-badge-fao{background:rgba(0,107,60,.1);border:1px solid rgba(0,107,60,.3);color:#006b3c}',
       '.rs-badge-moh{background:rgba(196,18,47,.1);border:1px solid rgba(196,18,47,.3);color:#c4122f}',
       '.rs-org-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:100px;',
-        'font-family:var(--mono);font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;',
+        'font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;',
         'background:rgba(29,233,212,.07);border:1px solid rgba(29,233,212,.18);color:var(--teal)}',
       '.lib-gl-divider{color:#34d399!important}',
       '.lib-gl-divider::after{background:rgba(52,211,153,.2)!important}',
       '.rs-filter-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}',
       '.rs-filter-sel{background:var(--surface2);border:1px solid var(--border);border-radius:7px;',
-        'padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);',
+        'padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);',
         'outline:none;cursor:pointer;flex:1;min-width:120px}',
       '.rs-filter-sel:focus{border-color:rgba(29,233,212,.4)}',
-      '.rs-sort-info{font-family:var(--mono);font-size:9px;color:var(--text-muted);',
+      '.rs-sort-info{font-family:var(--mono);font-size:11px;color:var(--text-muted);',
         'margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}',
       '.rs-oa-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;',
-        'border-radius:100px;font-family:var(--mono);font-size:8px;font-weight:700;',
+        'border-radius:100px;font-family:var(--mono);font-size:11px;font-weight:700;',
         'background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--green)}',
       '.rs-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px}',
       '.rs-pg-btn{padding:6px 16px;background:var(--surface2);border:1px solid var(--border);',
-        'border-radius:7px;font-family:var(--mono);font-size:10px;color:var(--text-dim);',
+        'border-radius:7px;font-family:var(--mono);font-size:11px;color:var(--text-dim);',
         'cursor:pointer;transition:all .15s}',
       '.rs-pg-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}',
       '.rs-pg-btn:disabled{opacity:.35;cursor:not-allowed}',
-      '.rs-pg-info{font-family:var(--mono);font-size:9.5px;color:var(--text-dim)}',
+      '.rs-pg-info{font-family:var(--mono);font-size:11px;color:var(--text-dim)}',
 
       /* ── Layer selector tabs (kept for theme compat) ── */
       /* ── Mixed results divider ── */
-      '.lib-src-divider{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.8px;',
+      '.lib-src-divider{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.8px;',
         'text-transform:uppercase;color:var(--text-muted);padding:10px 0 6px;display:flex;align-items:center;gap:8px}',
       '.lib-src-divider::after{content:"";flex:1;height:1px;background:var(--border)}',
       /* ── Oasis Library source badge ── */
       '.rs-badge-oasis{background:rgba(29,233,212,.1);border:1px solid rgba(29,233,212,.25);color:var(--teal)}',
       /* ── Background loading status bar ── */
       '.lib-bg-status{display:flex;align-items:center;gap:8px;padding:8px 12px;',
-        'font-family:var(--mono);font-size:9.5px;color:var(--text-muted);',
+        'font-family:var(--mono);font-size:11px;color:var(--text-muted);',
         'border:1px solid var(--border);border-radius:8px;margin-bottom:8px}',
       '.lib-bg-spin{width:14px;height:14px;border-radius:50%;',
         'border:2px solid var(--border);border-top-color:var(--teal);',
@@ -681,7 +681,7 @@
       /* ── Load-more button ── */
       '.lib-load-more{width:100%;padding:10px;margin-top:8px;background:var(--surface2);',
         'border:1px solid var(--border);border-radius:9px;font-family:var(--mono);',
-        'font-size:10px;color:var(--text-dim);cursor:pointer;transition:all .15s}',
+        'font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .15s}',
       '.lib-load-more:hover{border-color:var(--teal);color:var(--teal)}'
     ].join('');
     document.head.appendChild(s);
@@ -1213,7 +1213,7 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:10.5px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:rgba(29,233,212,0.9)">$1</code>')
+      .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:11px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:rgba(29,233,212,0.9)">$1</code>')
       .replace(/^[-•]\s(.+)$/gm, '<div style="padding-left:13px;position:relative;margin:2px 0"><span style="position:absolute;left:2px;color:rgba(29,233,212,0.6)">▸</span>$1</div>')
       .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   }
@@ -1267,7 +1267,7 @@
         '<div class="lib-aio-header">' +
           '<div class="lib-aio-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' +
           '<span class="lib-aio-label">AI Overview</span>' +
-          '<span style="font-family:var(--mono);font-size:8px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
         '</div>' +
         '<div class="lib-aio-loading"><div class="lib-aio-dots"><span></span><span></span><span></span></div><span>Generating clinical summary…</span></div>' +
       '</div>';
@@ -1282,14 +1282,14 @@
         '<div class="lib-aio-header">' +
           '<div class="lib-aio-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' +
           '<span class="lib-aio-label">AI Overview</span>' +
-          '<span style="font-family:var(--mono);font-size:8px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.2);margin-left:auto;letter-spacing:.5px">Oasis AI · Groq</span>' +
         '</div>' +
         '<div class="lib-aio-body">' + summaryHtml + '</div>' +
         (sourcesHtml
           ? '<button id="lib-aio-src-toggle" class="lib-aio-sources-toggle" onclick="_aioToggleSources()">' +
               '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
               '<span data-aio-count>Show sources</span>' +
-              '<span style="font-family:var(--mono);font-size:8px;margin-left:2px;opacity:.5">(' + sourceCount + ')</span>' +
+              '<span style="font-family:var(--mono);font-size:11px;margin-left:2px;opacity:.5">(' + sourceCount + ')</span>' +
             '</button>' +
             '<div id="lib-aio-src-list" class="lib-aio-sources">' + sourcesHtml + '</div>'
           : '') +
@@ -1791,7 +1791,7 @@
           '<div class="lib-card-icon '+_typeCls(r.fileType)+'" style="width:32px;height:32px;font-size:14px">'+_typeIcon(r.fileType)+'</div>' +
           '<div style="flex:1;min-width:0">' +
             '<div class="lib-my-title">'+_esc(r.title)+'</div>' +
-            '<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-top:2px">'+
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:2px">'+
               _esc(_catLabel(r.category))+' · '+r.fileType.toUpperCase()+' · '+_fmtDate(r.uploadedAt)+
             '</div>' +
           '</div>' +
@@ -2205,7 +2205,7 @@
           'style="gap:6px;font-size:11px;padding:9px 16px;border-radius:9px;background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.35);color:#60a5fa" '+
           'onclick="LibraryModule.shareResource(\''+r.id+'\')">'+_shareSvg+' Share</button>'+
       '</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-bottom:10px;line-height:1.7">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:10px;line-height:1.7">'+
         '<strong style="color:var(--text-dim)">Source:</strong> '+_esc(r.source||'—')+'&nbsp;·&nbsp;'+
         '<strong style="color:var(--text-dim)">Category:</strong> '+_esc(_catLabel(r.category))+'&nbsp;·&nbsp;'+
         '<strong style="color:var(--text-dim)">Added:</strong> '+_fmtDate(r.uploadedAt)+
@@ -3217,9 +3217,9 @@
     var hasAbstract  = !!r.abstract;
     var abstractHtml = hasAbstract
       ? '<div class="rs-result-abstract" id="gl-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
-        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+        '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
           'onclick="LibraryModule.glToggleAbstract(' + idx + ',\'' + r.pmid + '\')">Show more</button>'
-      : '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+      : '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
           'onclick="LibraryModule.glToggleAbstract(' + idx + ',\'' + r.pmid + '\')">Load abstract</button>';
 
     return '<div class="rs-result" id="gl-card-' + idx + '">' +
@@ -3444,7 +3444,7 @@
     var hasAbstract  = !!r.abstract;
     var abstractHtml = hasAbstract
       ? '<div class="rs-result-abstract" id="fr-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
-        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+        '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
           'onclick="LibraryModule.frToggleAbstract(' + idx + ')">Show more</button>'
       : '';
 
@@ -3868,11 +3868,11 @@
     var canLazyFetch = !hasAbstract && r._sub === 'scopus' && !!r._scopusId;
     var abstractHtml = hasAbstract
       ? '<div class="rs-result-abstract" id="el-abs-' + idx + '">' + _esc(r.abstract) + '</div>' +
-        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+        '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
           'onclick="LibraryModule.elToggleAbstract(' + idx + ')">Show more</button>'
       : canLazyFetch
         ? '<div class="rs-result-abstract" id="el-abs-' + idx + '" style="display:none"></div>' +
-          '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+          '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
             'onclick="LibraryModule.elToggleAbstract(' + idx + ')">Load abstract</button>'
         : '';
 
@@ -3960,10 +3960,10 @@
     var hasAbstract = !!r.abstract;
     var abstractHtml = hasAbstract
       ? '<div class="rs-result-abstract" id="rs-abs-'+idx+'">' + _esc(r.abstract) + '</div>' +
-        '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+        '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
           'onclick="LibraryModule.rsToggleAbstract(\''+idx+'\',\'' + (r._src === 'pubmed' ? r.pmid : '') + '\')">Show more</button>'
       : (r._src === 'pubmed'
-        ? '<button class="rs-act-btn" style="font-size:8.5px;padding:3px 8px" ' +
+        ? '<button class="rs-act-btn" style="font-size:11px;padding:3px 8px" ' +
             'onclick="LibraryModule.rsToggleAbstract(\''+idx+'\',\''+r.pmid+'\')">Load abstract</button>'
         : '');
 
@@ -4236,7 +4236,7 @@
             '</div>'+
 
             '<div class="lib-row">'+
-              '<label class="lib-lbl">Tags <em>*</em> <span style="font-weight:400;text-transform:none;font-size:8.5px;opacity:.7">(Type tag → press comma → press backspace to add · max 10)</span></label>'+
+              '<label class="lib-lbl">Tags <em>*</em> <span style="font-weight:400;text-transform:none;font-size:11px;opacity:.7">(Type tag → press comma → press backspace to add · max 10)</span></label>'+
               '<div class="lib-tags-wrap" id="lib-tags-wrap" onclick="document.getElementById(\'lib-tag-input\').focus()">'+
                 '<input type="text" id="lib-tag-input" class="lib-tag-txt" placeholder="Add tag…" '+
                   'onkeydown="LibraryModule.handleTagKey(event)" oninput="LibraryModule.handleTagInput(this.value)">'+
@@ -4277,12 +4277,12 @@
             /* Progress */
             '<div id="lib-prog-wrap" style="display:none">'+
               '<div class="lib-prog-wrap"><div class="lib-prog-bar" id="lib-prog-bar"></div></div>'+
-              '<div id="lib-prog-lbl" style="font-family:var(--mono);font-size:9.5px;color:var(--text-muted);margin-top:5px;text-align:center"></div>'+
+              '<div id="lib-prog-lbl" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:5px;text-align:center"></div>'+
             '</div>'+
 
             '<button class="lib-submit" id="lib-submit-btn" onclick="LibraryModule.submitUpload()">↑ SUBMIT FOR REVIEW</button>'+
 
-            '<div style="margin-top:10px;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--text-muted);line-height:1.55">'+
+            '<div style="margin-top:10px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.55">'+
               'Resources are reviewed by an admin before becoming publicly visible.<br>'+
               'You will receive an in-app notification once your submission is reviewed.'+
             '</div>'+

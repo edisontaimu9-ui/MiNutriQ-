@@ -239,15 +239,15 @@ function _renderMUST() {
   html += `
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button onclick="_mustSaveToHistory()"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
       💾 SAVE
     </button>
     <button onclick="saveToPDF('must-results','Oasis — MUST Screening')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
     <button onclick="_mustClear()"
-      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ↺ CLEAR
     </button>
   </div>`;
@@ -255,7 +255,7 @@ function _renderMUST() {
   // Score card
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+    <div style="background:rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
       📋 MUST SCORE
     </div>
     <div style="padding:12px">
@@ -263,13 +263,13 @@ function _renderMUST() {
       <!-- Overall score badge -->
       <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 14px;margin-bottom:10px">
         <div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">TOTAL MUST SCORE</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">TOTAL MUST SCORE</div>
           <div style="font-size:28px;font-weight:800;color:${result.riskColor};line-height:1.1">${result.total}</div>
         </div>
         <div style="text-align:right">
           <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${result.riskColor}">${result.risk}</div>
-          ${bmi !== null ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">BMI: ${bmi} kg/m²</div>` : ''}
-          ${wtLossPct !== null ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">Wt loss: ${wtLossPct}%</div>` : ''}
+          ${bmi !== null ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">BMI: ${bmi} kg/m²</div>` : ''}
+          ${wtLossPct !== null ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Wt loss: ${wtLossPct}%</div>` : ''}
         </div>
       </div>
 
@@ -282,22 +282,22 @@ function _renderMUST() {
         ].map(function(s){
           var c = s.score===0?'#34d399':s.score===1?'#f0b429':'#fb7185';
           return `<div style="background:var(--surface3);border-radius:8px;padding:9px;text-align:center">
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">${s.label}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">${s.label}</div>
             <div style="font-size:20px;font-weight:700;color:${c}">${s.score}</div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:2px">/ ${s.max}</div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:1px">${s.hint}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">/ ${s.max}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:1px">${s.hint}</div>
           </div>`;
         }).join('')}
       </div>
 
       <!-- Recommended action -->
       <div style="background:rgba(${result.riskColor==='#34d399'?'52,211,153':result.riskColor==='#f0b429'?'240,180,41':'251,113,133'},0.06);border:1px solid rgba(${result.riskColor==='#34d399'?'52,211,153':result.riskColor==='#f0b429'?'240,180,41':'251,113,133'},0.25);border-radius:8px;padding:10px 12px">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${result.riskColor};letter-spacing:1px;margin-bottom:5px">RECOMMENDED ACTION</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7">${result.action}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${result.riskColor};letter-spacing:1px;margin-bottom:5px">RECOMMENDED ACTION</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">${result.action}</div>
       </div>
 
     </div>
-    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:8px;color:var(--text-dim)">
+    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
       Ref: BAPEN / Elia (2003) MUST tool · NICE CG32 (2006) · Malnutrition Advisory Group
     </div>
   </div>`;
@@ -355,15 +355,15 @@ function _renderMNASF() {
   html += `
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button onclick="_mnaSaveToHistory()"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
       💾 SAVE
     </button>
     <button onclick="saveToPDF('mna-results','Oasis — MNA-SF Screening')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
     <button onclick="_mnaClear()"
-      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ↺ CLEAR
     </button>
   </div>`;
@@ -371,7 +371,7 @@ function _renderMNASF() {
   // Score card
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#34d399">
+    <div style="background:rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#34d399">
       🧓 MNA-SF SCORE
     </div>
     <div style="padding:12px">
@@ -379,21 +379,21 @@ function _renderMNASF() {
       <!-- Overall -->
       <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 14px;margin-bottom:10px">
         <div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">MNA-SF TOTAL (max 14)</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">MNA-SF TOTAL (max 14)</div>
           <div style="font-size:28px;font-weight:800;color:${result.statusColor};line-height:1.1">${result.total}</div>
         </div>
         <div style="text-align:right">
           <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${result.statusColor}">${result.status}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">Score ≥12 = Normal · 8–11 = At risk · ≤7 = Malnourished</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Score ≥12 = Normal · 8–11 = At risk · ≤7 = Malnourished</div>
         </div>
       </div>
 
       <!-- Per-question breakdown -->
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px">QUESTION BREAKDOWN</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px">QUESTION BREAKDOWN</div>
         ${Q_LABELS.map(function(ql,i){
           return `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface3);border-radius:6px;padding:6px 10px">
-            <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim)"><span style="color:#34d399;font-weight:700">${ql.q}</span> · ${ql.label}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)"><span style="color:#34d399;font-weight:700">${ql.q}</span> · ${ql.label}</span>
             <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${answers[i]===0?'#fb7185':answers[i]<2?'#f0b429':'#34d399'}">${answers[i]}</span>
           </div>`;
         }).join('')}
@@ -401,12 +401,12 @@ function _renderMNASF() {
 
       <!-- Action -->
       <div style="background:rgba(${result.statusColor==='#34d399'?'52,211,153':result.statusColor==='#f0b429'?'240,180,41':'251,113,133'},0.06);border:1px solid rgba(${result.statusColor==='#34d399'?'52,211,153':result.statusColor==='#f0b429'?'240,180,41':'251,113,133'},0.25);border-radius:8px;padding:10px 12px">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${result.statusColor};letter-spacing:1px;margin-bottom:5px">RECOMMENDED ACTION</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7">${result.action}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${result.statusColor};letter-spacing:1px;margin-bottom:5px">RECOMMENDED ACTION</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">${result.action}</div>
       </div>
 
     </div>
-    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:8px;color:var(--text-dim)">
+    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
       Ref: Rubenstein et al. J Gerontol 2001 · Cederholm / GLIM 2019 · ESPEN Guidelines Older Adults 2020
     </div>
   </div>`;
@@ -502,15 +502,15 @@ function _renderSTAMP() {
   html += `
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button onclick="_stampSaveToHistory()"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
       💾 SAVE
     </button>
     <button onclick="saveToPDF('stamp-results','Oasis — STAMP Screening')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
     <button onclick="_stampClear()"
-      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ↺ CLEAR
     </button>
   </div>`;
@@ -518,14 +518,14 @@ function _renderSTAMP() {
   // Score card
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
+    <div style="background:rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
       🧒 STAMP SCORE
     </div>
     <div style="padding:12px">
 
       <!-- Patient info row -->
       ${(childName || childDOB || childHosp || childDx) ? `
-      <div style="background:rgba(0,0,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.8">
+      <div style="background:rgba(0,0,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         ${childName ? `<span style="color:var(--text);font-weight:700">${childName}</span>` : ''}
         ${childDOB  ? ` · DOB: ${childDOB}` : ''}
         ${childHosp ? ` · Hosp No: ${childHosp}` : ''}
@@ -535,12 +535,12 @@ function _renderSTAMP() {
       <!-- Overall score badge -->
       <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 14px;margin-bottom:10px">
         <div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">TOTAL STAMP SCORE</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">TOTAL STAMP SCORE</div>
           <div style="font-size:28px;font-weight:800;color:${result.riskColor};line-height:1.1">${result.total}</div>
         </div>
         <div style="text-align:right">
           <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${result.riskColor}">${result.risk}</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">≥4 High · 2–3 Medium · 0–1 Low</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">≥4 High · 2–3 Medium · 0–1 Low</div>
         </div>
       </div>
 
@@ -549,23 +549,23 @@ function _renderSTAMP() {
         ${STEP_LABELS.map(function(s){
           var c = s.score===0?'#34d399':s.score===1?'#f0b429':'#fb7185';
           return `<div style="background:var(--surface3);border-radius:8px;padding:9px;text-align:center">
-            <div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);letter-spacing:0.8px;margin-bottom:4px">${s.label}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.8px;margin-bottom:4px">${s.label}</div>
             <div style="font-size:20px;font-weight:700;color:${c}">${s.score}</div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:2px">/ ${s.max}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">/ ${s.max}</div>
           </div>`;
         }).join('')}
       </div>
 
       <!-- Recommended action -->
       <div style="background:rgba(${rgbOf(result.riskColor)},0.06);border:1px solid rgba(${rgbOf(result.riskColor)},0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${result.riskColor};letter-spacing:1px;margin-bottom:5px">CARE PLAN — STEP 5</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7">${result.action}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${result.riskColor};letter-spacing:1px;margin-bottom:5px">CARE PLAN — STEP 5</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">${result.action}</div>
       </div>
 
       <!-- Diagnosis classification reminder -->
       <div style="background:rgba(251,146,60,0.04);border:1px solid rgba(251,146,60,0.15);border-radius:8px;padding:9px 12px">
-        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:#fb923c;letter-spacing:1px;margin-bottom:6px">STAMP DIAGNOSIS TABLE (Step 1 Reference)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:8px;line-height:1.65">
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fb923c;letter-spacing:1px;margin-bottom:6px">STAMP DIAGNOSIS TABLE (Step 1 Reference)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;line-height:1.65">
           <div>
             <div style="color:#fb7185;font-weight:700;margin-bottom:3px">DEFINITE (score 3)</div>
             ${STAMP_DIAGNOSES.definite.map(function(d){ return `<div style="color:var(--text-dim)">· ${d}</div>`; }).join('')}
@@ -580,7 +580,7 @@ function _renderSTAMP() {
       </div>
 
     </div>
-    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:8px;color:var(--text-dim)">
+    <div style="padding:0 12px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
       Ref: McCarthy H et al. (2012) STAMP tool · © 2010 Central Manchester University Hospitals NHS Foundation Trust ·
       Cole SZ &amp; Lanham JS. Am Fam Physician 2011;83(8):943–950.
     </div>
@@ -812,7 +812,7 @@ function _renderNRS2002() {
     // We allow calculation if final screening is filled regardless
     if (nutVal === undefined && disVal === undefined) {
       document.getElementById('nrs-results').innerHTML =
-        '<div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:10px;color:#34d399;line-height:1.7">'
+        '<div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:11px;color:#34d399;line-height:1.7">'
         + '<span style="font-weight:700;letter-spacing:1px;display:block;margin-bottom:6px">✅ INITIAL SCREENING — ALL NO</span>'
         + 'All 4 initial screening questions are answered NO. The patient is <strong>not at obvious nutritional risk</strong> at this time.<br>'
         + 'Re-screen weekly, or proceed to Final Screening below if clinically indicated.'
@@ -851,15 +851,15 @@ function _renderNRS2002() {
   html += `
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button onclick="_nrs2002SaveToHistory()"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(244,114,182,0.4);background:rgba(244,114,182,0.08);color:#f472b6;cursor:pointer">
       💾 SAVE
     </button>
     <button onclick="saveToPDF('nrs-results','Oasis — NRS-2002 Screening')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
     <button onclick="_nrs2002Clear()"
-      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ↺ CLEAR
     </button>
   </div>`;
@@ -871,12 +871,12 @@ function _renderNRS2002() {
     <!-- Header -->
     <div style="background:${result.riskColor}18;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
       <div>
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:${result.riskColor};text-transform:uppercase">🏥 NRS-2002 SCORE</div>
-        <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:2px">Kondrup J et al. Clin Nutr 2003 · ESPEN Guidelines</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:${result.riskColor};text-transform:uppercase">🏥 NRS-2002 SCORE</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">Kondrup J et al. Clin Nutr 2003 · ESPEN Guidelines</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:var(--mono);font-size:40px;font-weight:900;color:${result.riskColor};line-height:1">${result.total}</div>
-        <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1px">/ 7 MAX</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">/ 7 MAX</div>
       </div>
     </div>
 
@@ -891,12 +891,12 @@ function _renderNRS2002() {
         <div style="width:8px;height:8px;border-radius:50%;background:${result.riskColor}"></div>
         <span style="font-family:var(--mono);font-size:12px;font-weight:800;color:${result.riskColor};letter-spacing:2px">${result.atRisk ? 'AT NUTRITIONAL RISK' : 'NOT AT NUTRITIONAL RISK'}</span>
       </div>
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:6px">Re-screen: ${result.rescrInterval}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:6px">Re-screen: ${result.rescrInterval}</div>
     </div>
 
     <!-- Score breakdown -->
     <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">SCORE COMPONENTS</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">SCORE COMPONENTS</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
         ${[
           { label:'NUTRITIONAL STATUS', score:result.nutScore, sub: NUT_LABELS[result.nutScore], max:3, c: result.nutScore===0?'#34d399':result.nutScore===1?'#f0b429':'#fb7185' },
@@ -904,10 +904,10 @@ function _renderNRS2002() {
           { label:'AGE ADJUSTMENT',     score:result.ageBonus, sub: ageAdj?'Age ≥ 70':'Age < 70',  max:1, c: result.ageBonus?'#f0b429':'#34d399' },
         ].map(function(s){
           return '<div style="background:var(--surface3);border-radius:8px;padding:9px;text-align:center">'
-            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);letter-spacing:0.8px;margin-bottom:4px">' + s.label + '</div>'
+            + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.8px;margin-bottom:4px">' + s.label + '</div>'
             + '<div style="font-size:24px;font-weight:800;color:' + s.c + ';line-height:1.1">' + s.score + '</div>'
-            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);margin-top:1px">/ ' + s.max + '</div>'
-            + '<div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);margin-top:2px;line-height:1.3">' + s.sub + '</div>'
+            + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:1px">/ ' + s.max + '</div>'
+            + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px;line-height:1.3">' + s.sub + '</div>'
           + '</div>';
         }).join('')}
       </div>
@@ -915,7 +915,7 @@ function _renderNRS2002() {
 
     <!-- Score equation display -->
     <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.12)">
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);text-align:center">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center">
         Nutritional Status
         <span style="color:var(--text)">${result.nutScore}</span>
         &nbsp;+&nbsp; Disease Severity
@@ -930,14 +930,14 @@ function _renderNRS2002() {
 
     <!-- Recommendation -->
     <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">CLINICAL RECOMMENDATION</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7;background:rgba(${_rgb(result.riskColor)},0.06);border:1px solid rgba(${_rgb(result.riskColor)},0.22);border-radius:8px;padding:10px 12px">${result.recommendation}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">CLINICAL RECOMMENDATION</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7;background:rgba(${_rgb(result.riskColor)},0.06);border:1px solid rgba(${_rgb(result.riskColor)},0.22);border-radius:8px;padding:10px 12px">${result.recommendation}</div>
     </div>
 
     <!-- NRS-2002 quick-reference matrix -->
     <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:7px">NRS-2002 RISK MATRIX (ESPEN)</div>
-      <div style="font-family:var(--mono);font-size:8px;line-height:1.9;color:var(--text-dim)">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:7px">NRS-2002 RISK MATRIX (ESPEN)</div>
+      <div style="font-family:var(--mono);font-size:11px;line-height:1.9;color:var(--text-dim)">
         <span style="color:#fb7185;font-weight:700">● Score ≥ 3</span> — At nutritional risk → initiate nutritional care plan<br>
         <span style="color:#34d399;font-weight:700">● Score &lt; 3</span> — Not at risk → re-screen weekly<br>
         <span style="color:var(--text)">Indication:</span> (1) severely undernourished (nut=3), or (2) severely ill (dis=3),<br>
@@ -947,7 +947,7 @@ function _renderNRS2002() {
 
     <!-- Patient info footer -->
     <div style="padding:10px 14px">
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);line-height:1.9">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9">
         <span style="color:var(--text)">Patient:</span> ${ptName || '—'} &nbsp;|&nbsp;
         <span style="color:var(--text)">DOB:</span> ${ptDOB || '—'} &nbsp;|&nbsp;
         <span style="color:var(--text)">Ward:</span> ${ptWard || '—'} &nbsp;|&nbsp;
@@ -1089,14 +1089,14 @@ function _buildScreeningTab() {
       <span style="font-size:26px">📋</span>
       <div>
         <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Nutrition Screening</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">MUST · MNA-SF · STAMP · STRONGkids · NRS-2002 · IDENTIFY · REFER · MONITOR</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">MUST · MNA-SF · STAMP · STRONGkids · NRS-2002 · IDENTIFY · REFER · MONITOR</div>
       </div>
     </div>
     <div style="height:2px;background:linear-gradient(90deg,#38bdf8,rgba(56,189,248,0));border-radius:2px;margin:10px 0 14px"></div>
   </div>
 
   <!-- Intro banner -->
-  <div style="margin:0 16px 14px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+  <div style="margin:0 16px 14px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
     <span style="color:#38bdf8;font-weight:700">Screening ≠ Assessment. </span>
     Use these tools at admission / first contact to <strong style="color:var(--text)">identify</strong> patients at nutritional risk. A positive screen triggers full dietetic assessment (NCP step 1).
     <br><span style="color:#38bdf8;margin-top:4px;display:inline-block">● MUST</span> — adults in any setting.
@@ -1109,30 +1109,30 @@ function _buildScreeningTab() {
   <!-- Tool selector sub-tabs (2-row grid, mobile-safe) -->
   <div style="margin:0 16px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
     <button id="scr-btn-must" onclick="_scrSwitchTool('must')"
-      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid rgba(56,189,248,0.4);background:rgba(56,189,248,0.12);color:#38bdf8;cursor:pointer;transition:all .15s;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid rgba(56,189,248,0.4);background:rgba(56,189,248,0.12);color:#38bdf8;cursor:pointer;transition:all .15s;white-space:nowrap">
       📋 MUST
     </button>
     <button id="scr-btn-mna" onclick="_scrSwitchTool('mna')"
-      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       🧓 MNA-SF
     </button>
     <button id="scr-btn-stamp" onclick="_scrSwitchTool('stamp')"
-      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       🧒 STAMP
     </button>
     <button id="scr-btn-strongkids" onclick="_scrSwitchTool('strongkids')"
-      style="font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       👶 STRONGkids
     </button>
     <button id="scr-btn-nrs2002" onclick="_scrSwitchTool('nrs2002')"
-      style="grid-column:span 2;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
+      style="grid-column:span 2;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap">
       🏥 NRS-2002
     </button>
   </div>
 
   <!-- ════════════ MUST PANEL ════════════ -->
   <div id="scr-panel-must" style="display:block">
-    <div style="padding:0 16px 12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);background:rgba(56,189,248,0.04);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.1);padding:9px 16px;margin-bottom:12px;line-height:1.7">
+    <div style="padding:0 16px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);background:rgba(56,189,248,0.04);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.1);padding:9px 16px;margin-bottom:12px;line-height:1.7">
       <span style="color:#38bdf8;font-weight:700">MUST (Malnutrition Universal Screening Tool) — </span>
       3 steps: BMI · Unintentional weight loss · Acute disease effect.
       Score 0 = Low · 1 = Medium · ≥2 = High risk. BAPEN 2003.
@@ -1143,61 +1143,61 @@ function _buildScreeningTab() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
 
         <!-- Step 1: BMI -->
-        <div style="background:rgba(56,189,248,0.07);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+        <div style="background:rgba(56,189,248,0.07);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
           STEP 1 — BMI SCORE
         </div>
         <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">BMI (kg/m²) — enter directly</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">BMI (kg/m²) — enter directly</label>
             <input id="must-bmi-direct" type="number" min="10" max="70" step="0.1" placeholder="e.g. 22.5"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
           </div>
-          <div style="display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--text-dim)">— OR derive —</div>
+          <div style="display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">— OR derive —</div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT (kg)</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT (kg)</label>
             <input id="must-weight" type="number" min="1" max="300" step="0.1" placeholder="kg"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HEIGHT (cm)</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HEIGHT (cm)</label>
             <input id="must-height" type="number" min="50" max="250" step="0.5" placeholder="cm"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
           </div>
-          <div style="grid-column:1/-1;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);background:rgba(0,0,0,0.1);border-radius:6px;padding:7px">
+          <div style="grid-column:1/-1;font-family:var(--mono);font-size:11px;color:var(--text-dim);background:rgba(0,0,0,0.1);border-radius:6px;padding:7px">
             Score: &gt;20 = 0 · 18.5–20 = 1 · &lt;18.5 = 2 · If BMI cannot be obtained use MUAC (see BAPEN pocket guide).
           </div>
         </div>
 
         <!-- Step 2: Weight loss -->
-        <div style="background:rgba(56,189,248,0.07);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+        <div style="background:rgba(56,189,248,0.07);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
           STEP 2 — UNINTENTIONAL WEIGHT LOSS (last 3–6 months)
         </div>
         <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT LOST (kg)</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT LOST (kg)</label>
             <input id="must-wt-loss" type="number" min="0" max="100" step="0.1" placeholder="e.g. 4.0"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PREVIOUS WEIGHT (kg)</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PREVIOUS WEIGHT (kg)</label>
             <input id="must-prev-wt" type="number" min="1" max="300" step="0.1" placeholder="optional"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
           </div>
-          <div style="grid-column:1/-1;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);background:rgba(0,0,0,0.1);border-radius:6px;padding:7px">
+          <div style="grid-column:1/-1;font-family:var(--mono);font-size:11px;color:var(--text-dim);background:rgba(0,0,0,0.1);border-radius:6px;padding:7px">
             Score: &lt;5% = 0 · 5–10% = 1 · &gt;10% = 2. Enter kg lost <em>or</em> previous weight (module derives %).
           </div>
         </div>
 
         <!-- Step 3: Acute disease -->
-        <div style="background:rgba(56,189,248,0.07);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+        <div style="background:rgba(56,189,248,0.07);border-top:1px solid rgba(56,189,248,0.1);border-bottom:1px solid rgba(56,189,248,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
           STEP 3 — ACUTE DISEASE EFFECT
         </div>
         <div style="padding:12px">
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;background:rgba(240,180,41,0.05);border:1px solid rgba(240,180,41,0.18);border-radius:7px;padding:10px 12px">
             <input type="checkbox" id="must-acute" style="accent-color:#f0b429;width:14px;height:14px;margin-top:1px;flex-shrink:0">
-            <span style="font-family:var(--mono);font-size:10px;color:#f0b429;font-weight:600;line-height:1.6">
+            <span style="font-family:var(--mono);font-size:11px;color:#f0b429;font-weight:600;line-height:1.6">
               Patient has been / is likely to be nil-by-mouth or has had negligible intake for &gt;5 days
-              <span style="display:block;font-weight:400;color:var(--text-dim);font-size:9px;margin-top:2px">Add 2 to MUST score if checked (Step 3 = +2)</span>
+              <span style="display:block;font-weight:400;color:var(--text-dim);font-size:11px;margin-top:2px">Add 2 to MUST score if checked (Step 3 = +2)</span>
             </span>
           </label>
         </div>
@@ -1224,7 +1224,7 @@ function _buildScreeningTab() {
 
   <!-- ════════════ MNA-SF PANEL ════════════ -->
   <div id="scr-panel-mna" style="display:none">
-    <div style="padding:9px 16px;font-family:var(--mono);font-size:9px;color:var(--text-dim);background:rgba(52,211,153,0.04);border-top:1px solid rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.1);margin-bottom:12px;line-height:1.7">
+    <div style="padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--text-dim);background:rgba(52,211,153,0.04);border-top:1px solid rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.1);margin-bottom:12px;line-height:1.7">
       <span style="color:#34d399;font-weight:700">MNA-SF (Mini Nutritional Assessment – Short Form) — </span>
       6 questions, max 14 points. ≥12 = Normal · 8–11 = At risk · ≤7 = Malnourished. For adults ≥ 65 years.
     </div>
@@ -1232,14 +1232,14 @@ function _buildScreeningTab() {
     <div style="padding:0 16px;margin-bottom:12px">
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
 
-        <div style="background:rgba(52,211,153,0.08);border-bottom:1px solid rgba(52,211,153,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#34d399">
+        <div style="background:rgba(52,211,153,0.08);border-bottom:1px solid rgba(52,211,153,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#34d399">
           MNA-SF QUESTIONS A – F
         </div>
         <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
 
           <!-- Q-A -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:6px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:6px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">A. </span>
               Has food intake declined over the past 3 months due to loss of appetite, digestive problems, chewing or swallowing difficulties?
             </div>
@@ -1253,7 +1253,7 @@ function _buildScreeningTab() {
 
           <!-- Q-B -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:6px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:6px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">B. </span>
               Weight loss during the last 3 months?
             </div>
@@ -1268,7 +1268,7 @@ function _buildScreeningTab() {
 
           <!-- Q-C -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:6px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:6px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">C. </span>
               Mobility?
             </div>
@@ -1282,15 +1282,15 @@ function _buildScreeningTab() {
 
           <!-- Q-D -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:7px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:7px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">D. </span>
               Has the patient suffered psychological stress or acute disease in the past 3 months?
             </div>
             <div style="display:flex;gap:8px">
-              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qD" value="0" style="accent-color:#34d399"> 0 Yes
               </label>
-              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:9px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qD" value="2" style="accent-color:#34d399"> 2 No
               </label>
             </div>
@@ -1298,18 +1298,18 @@ function _buildScreeningTab() {
 
           <!-- Q-E -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:7px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:7px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">E. </span>
               Neuropsychological problems?
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qE" value="0" style="accent-color:#34d399"> 0 Severe dementia / depression
               </label>
-              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qE" value="1" style="accent-color:#34d399"> 1 Mild dementia
               </label>
-              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+              <label style="flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qE" value="2" style="accent-color:#34d399"> 2 No problems
               </label>
             </div>
@@ -1317,22 +1317,22 @@ function _buildScreeningTab() {
 
           <!-- Q-F  (BMI or calf circumference) -->
           <div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text);margin-bottom:7px;line-height:1.5">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:7px;line-height:1.5">
               <span style="color:#34d399;font-weight:700">F1. </span>
               BMI (kg/m²) — enter value; OR use calf circumference (F2) if BMI unavailable.
             </div>
             <input id="mna-bmi" type="number" min="10" max="60" step="0.1" placeholder="BMI e.g. 23.0"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px;margin-bottom:8px">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:7px">— OR calf circumference proxy (select if BMI unknown) —</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:7px">— OR calf circumference proxy (select if BMI unknown) —</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <label style="flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+              <label style="flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qF" value="0" style="accent-color:#34d399"> 0 CC &lt; 31 cm
               </label>
-              <label style="flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+              <label style="flex:1;min-width:90px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
                 <input type="radio" name="mna-qF" value="3" style="accent-color:#34d399"> 3 CC ≥ 31 cm
               </label>
             </div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:5px">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:5px">
               BMI scoring: &lt;19=0 · 19–21=1 · 21–23=2 · ≥23=3. If BMI entered above, calf selection is ignored.
             </div>
           </div>
@@ -1361,7 +1361,7 @@ function _buildScreeningTab() {
 
   <!-- ════════════ STAMP PANEL ════════════ -->
   <div id="scr-panel-stamp" style="display:none">
-    <div style="background:rgba(251,146,60,0.05);border-top:1px solid rgba(251,146,60,0.15);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+    <div style="background:rgba(251,146,60,0.05);border-top:1px solid rgba(251,146,60,0.15);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
       <span style="color:#fb923c;font-weight:700">STAMP (Screening Tool for the Assessment of Malnutrition in Paediatrics) — </span>
       5 steps: Diagnosis · Nutritional intake · Weight &amp; height · Overall risk · Care plan.
       Score ≥4 = High · 2–3 = Medium · 0–1 = Low risk. For in-patient children aged 2–17 years.
@@ -1371,27 +1371,27 @@ function _buildScreeningTab() {
     <!-- Patient demographics (optional) -->
     <div style="padding:0 16px;margin-bottom:12px">
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-        <div style="background:rgba(251,146,60,0.08);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
+        <div style="background:rgba(251,146,60,0.08);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
           PATIENT DETAILS (OPTIONAL)
         </div>
         <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">CHILD'S NAME</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">CHILD'S NAME</label>
             <input id="stamp-name" type="text" placeholder="Name"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
             <input id="stamp-dob" type="date"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HOSPITAL NO.</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HOSPITAL NO.</label>
             <input id="stamp-hosp" type="text" placeholder="Hosp. number"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DIAGNOSIS (Step 1 helper)</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DIAGNOSIS (Step 1 helper)</label>
             <select id="stamp-dx-select"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:11px">
               <option value="" disabled selected>Select diagnosis…</option>
@@ -1415,11 +1415,11 @@ function _buildScreeningTab() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
 
         <!-- Step 1: Diagnosis -->
-        <div style="background:rgba(251,146,60,0.08);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
+        <div style="background:rgba(251,146,60,0.08);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
           STEP 1 — DIAGNOSIS
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.5">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.5">
             Does the child have a diagnosis that has any nutritional implications?
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
@@ -1430,7 +1430,7 @@ function _buildScreeningTab() {
             ].map(function(o){
               return `<label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
                 <input type="radio" name="stamp-diag" value="${o.val}" style="accent-color:#fb923c;width:15px;height:15px;flex-shrink:0">
-                <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">${o.label}</span>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">${o.label}</span>
                 <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${o.color}">${o.score}</span>
               </label>`;
             }).join('')}
@@ -1438,11 +1438,11 @@ function _buildScreeningTab() {
         </div>
 
         <!-- Step 2: Nutritional intake -->
-        <div style="background:rgba(251,146,60,0.08);border-top:1px solid rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
+        <div style="background:rgba(251,146,60,0.08);border-top:1px solid rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
           STEP 2 — NUTRITIONAL INTAKE
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.5">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.5">
             What is the child's nutritional intake?
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
@@ -1453,7 +1453,7 @@ function _buildScreeningTab() {
             ].map(function(o){
               return `<label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
                 <input type="radio" name="stamp-intake" value="${o.val}" style="accent-color:#fb923c;width:15px;height:15px;flex-shrink:0">
-                <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">${o.label}</span>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">${o.label}</span>
                 <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${o.color}">${o.score}</span>
               </label>`;
             }).join('')}
@@ -1461,14 +1461,14 @@ function _buildScreeningTab() {
         </div>
 
         <!-- Step 3: Weight and height -->
-        <div style="background:rgba(251,146,60,0.08);border-top:1px solid rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
+        <div style="background:rgba(251,146,60,0.08);border-top:1px solid rgba(251,146,60,0.1);border-bottom:1px solid rgba(251,146,60,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#fb923c">
           STEP 3 — WEIGHT &amp; HEIGHT (centile comparison)
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:4px;line-height:1.5">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:4px;line-height:1.5">
             Use a growth chart or centile quick-reference tables to determine the child's measurements.
           </div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-bottom:10px;background:rgba(0,0,0,0.1);border-radius:6px;padding:7px;line-height:1.6">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px;background:rgba(0,0,0,0.1);border-radius:6px;padding:7px;line-height:1.6">
             Compare weight centile with height centile. Count the number of centile spaces between them
             (centile lines: 0.4th, 2nd, 9th, 25th, 50th, 75th, 91st, 98th, 99.6th).
           </div>
@@ -1480,7 +1480,7 @@ function _buildScreeningTab() {
             ].map(function(o){
               return `<label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
                 <input type="radio" name="stamp-growth" value="${o.val}" style="accent-color:#fb923c;width:15px;height:15px;flex-shrink:0">
-                <span style="font-family:var(--mono);font-size:9.5px;color:var(--text);flex:1;line-height:1.4">${o.label}</span>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1;line-height:1.4">${o.label}</span>
                 <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${o.color}">${o.score}</span>
               </label>`;
             }).join('')}
@@ -1508,7 +1508,7 @@ function _buildScreeningTab() {
   <!-- /STAMP PANEL -->
   <!-- ════════════ STRONGkids PANEL ════════════ -->
   <div id="scr-panel-strongkids" style="display:none">
-    <div style="background:rgba(167,139,250,0.05);border-top:1px solid rgba(167,139,250,0.15);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+    <div style="background:rgba(167,139,250,0.05);border-top:1px solid rgba(167,139,250,0.15);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
       <span style="color:#a78bfa;font-weight:700">STRONGkids (Screening Tool for Risk On Nutritional status and Growth) — </span>
       4 items, max 5 points. Score ≥4 = High · 1–3 = Medium · 0 = Low risk.
       For hospitalised children aged 1 month – 18 years. Assess &lt;24h after admission, then weekly.
@@ -1518,27 +1518,27 @@ function _buildScreeningTab() {
     <!-- Patient demographics -->
     <div style="padding:0 16px;margin-bottom:12px">
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-        <div style="background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+        <div style="background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
           PATIENT DETAILS (OPTIONAL)
         </div>
         <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">CHILD'S NAME</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">CHILD'S NAME</label>
             <input id="sk-name" type="text" placeholder="Name"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
             <input id="sk-dob" type="date"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HOSPITAL NO.</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HOSPITAL NO.</label>
             <input id="sk-hosp" type="text" placeholder="Hosp. number"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">SCREENING DATE</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">SCREENING DATE</label>
             <input id="sk-date" type="date"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
@@ -1551,64 +1551,64 @@ function _buildScreeningTab() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
 
         <!-- Item 1 -->
-        <div style="background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+        <div style="background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
           ITEM 1 — UNDERLYING ILLNESS / MAJOR SURGERY <span style="font-weight:400;color:var(--text-dim)">(max 2 pts)</span>
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.6">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.6">
             Is there an underlying illness with risk for malnutrition <em>(see list below)</em> or expected major surgery?
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item1" value="0" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">No</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">No</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#34d399">0</span>
             </label>
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item1" value="2" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">Yes → <span style="color:#fb7185">add 2 points</span></span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">Yes → <span style="color:#fb7185">add 2 points</span></span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fb7185">2</span>
             </label>
           </div>
           <!-- Diagnosis reference list -->
           <div style="background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.15);border-radius:7px;padding:9px 12px">
-            <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:#a78bfa;letter-spacing:1px;margin-bottom:6px">DISEASES WITH RISK OF MALNUTRITION (Item 1 reference)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-family:var(--mono);font-size:8px;color:var(--text-dim);line-height:1.7" id="sk-dx-list"></div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:1px;margin-bottom:6px">DISEASES WITH RISK OF MALNUTRITION (Item 1 reference)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7" id="sk-dx-list"></div>
           </div>
         </div>
 
         <!-- Item 2 -->
-        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
           ITEM 2 — NUTRITIONAL STATUS <span style="font-weight:400;color:var(--text-dim)">(max 1 pt)</span>
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.6">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.6">
             Is the patient in a <strong>poor nutritional status</strong> judged by subjective clinical assessment?
-            <span style="display:block;color:var(--text-dim);font-size:9px;margin-top:3px">Loss of subcutaneous fat · and/or loss of muscle mass · and/or hollow face</span>
+            <span style="display:block;color:var(--text-dim);font-size:11px;margin-top:3px">Loss of subcutaneous fat · and/or loss of muscle mass · and/or hollow face</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item2" value="0" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">No — normal nutritional status</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">No — normal nutritional status</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#34d399">0</span>
             </label>
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item2" value="1" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">Yes — poor nutritional status evident</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">Yes — poor nutritional status evident</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fb7185">1</span>
             </label>
           </div>
         </div>
 
         <!-- Item 3 -->
-        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
           ITEM 3 — INTAKE &amp; SYMPTOMS <span style="font-weight:400;color:var(--text-dim)">(max 1 pt)</span>
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.6">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.6">
             Is <strong>one or more</strong> of the following present?
           </div>
-          <div style="background:rgba(0,0,0,0.08);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.8;margin-bottom:10px">
+          <div style="background:rgba(0,0,0,0.08);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8;margin-bottom:10px">
             · Excessive diarrhoea ≥5 per day and/or vomiting &gt;3 times/day (last 1–3 days)<br>
             · Reduced food intake during the last 1–3 days<br>
             · Pre-existing nutritional intervention (e.g. ONS or tube feeding)<br>
@@ -1617,34 +1617,34 @@ function _buildScreeningTab() {
           <div style="display:flex;flex-direction:column;gap:6px">
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item3" value="0" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">No — none of the above</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">No — none of the above</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#34d399">0</span>
             </label>
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item3" value="1" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">Yes — one or more present</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">Yes — one or more present</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fb7185">1</span>
             </label>
           </div>
         </div>
 
         <!-- Item 4 -->
-        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+        <div style="background:rgba(167,139,250,0.08);border-top:1px solid rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
           ITEM 4 — WEIGHT / GROWTH FALTERING <span style="font-weight:400;color:var(--text-dim)">(max 1 pt)</span>
         </div>
         <div style="padding:12px">
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);margin-bottom:8px;line-height:1.6">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:8px;line-height:1.6">
             Is there <strong>weight loss</strong> (all ages) and/or <strong>no increase in weight/height</strong> (infants &lt;1 year) during the last few weeks–months?
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item4" value="0" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">No — weight/growth adequate</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">No — weight/growth adequate</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#34d399">0</span>
             </label>
             <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
               <input type="radio" name="sk-item4" value="1" style="accent-color:#a78bfa;width:15px;height:15px;flex-shrink:0">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text);flex:1">Yes — weight loss or faltering growth</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);flex:1">Yes — weight loss or faltering growth</span>
               <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#fb7185">1</span>
             </label>
           </div>
@@ -1674,7 +1674,7 @@ function _buildScreeningTab() {
   <div id="scr-panel-nrs2002" style="display:none">
 
     <!-- Descriptor banner -->
-    <div style="background:rgba(244,114,182,0.05);border-top:1px solid rgba(244,114,182,0.15);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+    <div style="background:rgba(244,114,182,0.05);border-top:1px solid rgba(244,114,182,0.15);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 16px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
       <span style="color:#f472b6;font-weight:700">NRS-2002 (Nutritional Risk Screening 2002) — </span>
       Two-step screening validated by 128 RCTs. Step 1: Initial Screening (4 questions). Step 2: Final Screening (Nutritional Status + Disease Severity + Age).
       <strong style="color:var(--text)">Score ≥ 3 = At nutritional risk → initiate care plan.</strong>
@@ -1684,22 +1684,22 @@ function _buildScreeningTab() {
     <!-- Patient details (optional) -->
     <div style="padding:0 16px;margin-bottom:12px">
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-        <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">
+        <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#f472b6">
           PATIENT DETAILS (OPTIONAL)
         </div>
         <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PATIENT NAME</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PATIENT NAME</label>
             <input id="nrs-pt-name" type="text" placeholder="Name"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">DATE OF BIRTH</label>
             <input id="nrs-pt-dob" type="date"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WARD / UNIT</label>
+            <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WARD / UNIT</label>
             <input id="nrs-pt-ward" type="text" placeholder="Ward"
               style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:12px">
           </div>
@@ -1712,8 +1712,8 @@ function _buildScreeningTab() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
 
         <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 1 — INITIAL SCREENING</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">If ANY answer is YES → proceed to Final Screening. If ALL NO → re-screen weekly.</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 1 — INITIAL SCREENING</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">If ANY answer is YES → proceed to Final Screening. If ALL NO → re-screen weekly.</div>
         </div>
 
         <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
@@ -1725,13 +1725,13 @@ function _buildScreeningTab() {
           ].map(function(item){
             return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
               + '<input type="checkbox" id="' + item.id + '" style="accent-color:#f472b6;width:15px;height:15px;margin-top:1px;flex-shrink:0">'
-              + '<span style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.5">' + item.q + '</span>'
+              + '<span style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.5">' + item.q + '</span>'
               + '</label>';
           }).join('')}
         </div>
 
         <div style="padding:0 12px 12px">
-          <div style="background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.15);border-radius:7px;padding:8px 12px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.6">
+          <div style="background:rgba(244,114,182,0.05);border:1px solid rgba(244,114,182,0.15);border-radius:7px;padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6">
             <span style="color:#f472b6;font-weight:700">Note: </span>
             If all 4 answers are NO, re-screen at weekly intervals. If a major operation is planned, consider a preventive nutritional care plan.
             If any answer is YES, complete the Final Screening below.
@@ -1746,8 +1746,8 @@ function _buildScreeningTab() {
 
         <!-- Nutritional Status -->
         <div style="background:rgba(244,114,182,0.08);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2A — IMPAIRED NUTRITIONAL STATUS</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2A — IMPAIRED NUTRITIONAL STATUS</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
         </div>
         <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
           ${[
@@ -1775,8 +1775,8 @@ function _buildScreeningTab() {
             return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
               + '<input type="radio" name="nrs-nut" value="' + o.val + '" style="accent-color:' + o.color + ';width:15px;height:15px;margin-top:2px;flex-shrink:0">'
               + '<div style="flex:1">'
-              + '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
-              + '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
+              + '<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
+              + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
               + '</div>'
               + '</label>';
           }).join('')}
@@ -1784,8 +1784,8 @@ function _buildScreeningTab() {
 
         <!-- Disease Severity -->
         <div style="background:rgba(244,114,182,0.08);border-top:1px solid rgba(244,114,182,0.1);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2B — SEVERITY OF DISEASE (= increase in requirements)</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2B — SEVERITY OF DISEASE (= increase in requirements)</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Select the highest applicable score.</div>
         </div>
         <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
           ${[
@@ -1816,9 +1816,9 @@ function _buildScreeningTab() {
             return '<label style="display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">'
               + '<input type="radio" name="nrs-dis" value="' + o.val + '" style="accent-color:' + o.color + ';width:15px;height:15px;margin-top:2px;flex-shrink:0">'
               + '<div style="flex:1">'
-              + '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
-              + '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
-              + (o.proto ? '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:4px;padding:5px 7px;border-left:2px solid rgba(255,255,255,0.1);line-height:1.5;font-style:italic">' + o.proto + '</div>' : '')
+              + '<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + o.color + '">' + o.title + '</div>'
+              + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.5">' + o.detail + '</div>'
+              + (o.proto ? '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px;padding:5px 7px;border-left:2px solid rgba(255,255,255,0.1);line-height:1.5;font-style:italic">' + o.proto + '</div>' : '')
               + '</div>'
               + '</label>';
           }).join('')}
@@ -1826,14 +1826,14 @@ function _buildScreeningTab() {
 
         <!-- Age adjustment -->
         <div style="background:rgba(244,114,182,0.08);border-top:1px solid rgba(244,114,182,0.1);border-bottom:1px solid rgba(244,114,182,0.15);padding:9px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2C — AGE ADJUSTMENT</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#f472b6">STEP 2C — AGE ADJUSTMENT</div>
         </div>
         <div style="padding:12px">
           <label style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:rgba(0,0,0,0.07)">
             <input type="checkbox" id="nrs-age-adj" style="accent-color:#f472b6;width:15px;height:15px;flex-shrink:0">
             <div>
-              <div style="font-family:var(--mono);font-size:10px;color:var(--text)">Patient is aged <strong>≥ 70 years</strong> — add 1 point to total score</div>
-              <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:2px">Age-adjusted total score = Nutritional Status + Disease Severity + 1</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text)">Patient is aged <strong>≥ 70 years</strong> — add 1 point to total score</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">Age-adjusted total score = Nutritional Status + Disease Severity + 1</div>
             </div>
           </label>
         </div>
@@ -1945,15 +1945,15 @@ function _renderSTRONGkids() {
   var html = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <button onclick="_skSaveToHistory()"
-        style="flex:1;min-width:100px;padding:9px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
+        style="flex:1;min-width:100px;padding:9px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
         💾 SAVE TO HISTORY
       </button>
       <button onclick="saveToPDF('sk-results','Oasis — STRONGkids Screening')"
-        style="flex:1;min-width:100px;padding:9px 12px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:#60a5fa;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
+        style="flex:1;min-width:100px;padding:9px 12px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:#60a5fa;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
         📄 SAVE PDF
       </button>
       <button onclick="_skClear()"
-        style="flex:1;min-width:80px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
+        style="flex:1;min-width:80px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-dim);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:7px;cursor:pointer">
         ✕ CLEAR
       </button>
     </div>
@@ -1963,12 +1963,12 @@ function _renderSTRONGkids() {
       <!-- Score header -->
       <div style="background:${result.riskColor}18;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
-          <div style="font-family:var(--cond,var(--mono));font-size:10px;font-weight:700;letter-spacing:2px;color:${result.riskColor};text-transform:uppercase">&#128118; STRONGkids SCORE</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">Ages 1 month – 18 years · Hulst JM et al. 2010</div>
+          <div style="font-family:var(--cond,var(--mono));font-size:11px;font-weight:700;letter-spacing:2px;color:${result.riskColor};text-transform:uppercase">&#128118; STRONGkids SCORE</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">Ages 1 month – 18 years · Hulst JM et al. 2010</div>
         </div>
         <div style="text-align:right">
           <div style="font-family:var(--mono);font-size:36px;font-weight:900;color:${result.riskColor};line-height:1">${result.total}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">/ 5 POINTS</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">/ 5 POINTS</div>
         </div>
       </div>
 
@@ -1987,15 +1987,15 @@ function _renderSTRONGkids() {
 
       <!-- Action / intervention -->
       <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05)">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">RECOMMENDED ACTION</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7">${result.action}</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:${result.riskColor};margin-top:6px;font-weight:600">&#9875; ${result.checkWeight}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">RECOMMENDED ACTION</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">${result.action}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:${result.riskColor};margin-top:6px;font-weight:600">&#9875; ${result.checkWeight}</div>
       </div>
 
       <!-- Risk table quick reference -->
       <div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05)">
-        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">STRONGkids RISK CLASSIFICATION</div>
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-family:var(--mono);font-size:8.5px">
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px">STRONGkids RISK CLASSIFICATION</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-family:var(--mono);font-size:11px">
           <span style="color:#fb7185;font-weight:700">4–5 pts</span><span style="color:var(--text-dim)">HIGH — Consult doctor &amp; dietician; weight 2×/week; re-screen weekly</span>
           <span style="color:#f0b429;font-weight:700">1–3 pts</span><span style="color:var(--text-dim)">MEDIUM — Consider nutritional intervention; weight 2×/week; re-screen weekly</span>
           <span style="color:#34d399;font-weight:700">0 pts</span><span style="color:var(--text-dim)">LOW — No intervention needed; weight per hospital policy; re-screen weekly</span>
@@ -2004,13 +2004,13 @@ function _renderSTRONGkids() {
 
       <!-- Item breakdown -->
       <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05)">
-        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">ITEM BREAKDOWN</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">ITEM BREAKDOWN</div>
         ${itemLabels.map(function(it){
           var scoreColor = it.score > 0 ? '#fb7185' : '#34d399';
           return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dotted rgba(255,255,255,0.05)">
             <div>
-              <span style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--text-dim)">${it.n}</span>
-              <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-left:8px">${it.label}</span>
+              <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim)">${it.n}</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:8px">${it.label}</span>
             </div>
             <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${scoreColor};min-width:30px;text-align:right">${it.score}/${it.max}</span>
           </div>`;
@@ -2019,7 +2019,7 @@ function _renderSTRONGkids() {
 
       <!-- Patient info -->
       <div style="padding:10px 16px">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);line-height:1.8">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
           <span style="color:var(--text)">Patient:</span> ${childName} &nbsp;|&nbsp;
           <span style="color:var(--text)">DOB:</span> ${childDOB} &nbsp;|&nbsp;
           <span style="color:var(--text)">Hosp No.:</span> ${childHosp} &nbsp;|&nbsp;

@@ -922,11 +922,11 @@
         'overflow:hidden;background:rgba(10,22,40,0.55);">' +
       '<div style="padding:7px 13px;border-bottom:1px solid rgba(96,165,250,0.1);' +
         'display:flex;align-items:center;justify-content:space-between;">' +
-        '<span style="font-family:var(--mono,monospace);font-size:8.5px;font-weight:700;' +
+        '<span style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;' +
           'letter-spacing:1.2px;color:var(--blue,#60a5fa);text-transform:uppercase;">' +
           '🤖 AI-Refined PES</span>' +
         '<button onclick="window.SmartPES&&window.SmartPES.triggerRefine()" style="' +
-          'font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+          'font-family:var(--mono,monospace);font-size:11px;font-weight:700;' +
           'letter-spacing:0.4px;padding:3px 9px;border-radius:5px;cursor:pointer;' +
           'border:1px solid rgba(96,165,250,0.28);background:rgba(96,165,250,0.06);' +
           'color:rgba(96,165,250,0.8);transition:opacity .15s;"' +
@@ -945,7 +945,7 @@
         '<span class="spes-refine-dot"></span>' +
         '<span class="spes-refine-dot"></span>' +
         '<span class="spes-refine-dot"></span>' +
-        '<span style="font-family:var(--mono,monospace);font-size:9.5px;' +
+        '<span style="font-family:var(--mono,monospace);font-size:11px;' +
           'color:rgba(96,165,250,0.5);letter-spacing:0.4px;margin-left:4px;">' +
           'Oasis AI is refining PES statements…</span>' +
       '</div>'
@@ -954,7 +954,7 @@
 
   function _buildRefineError(msg) {
     return (
-      '<div style="font-family:var(--mono,monospace);font-size:10px;' +
+      '<div style="font-family:var(--mono,monospace);font-size:11px;' +
         'color:rgba(248,113,113,0.75);padding:4px 0;line-height:1.6;">' +
         '⚠ ' + _esc(msg) + '</div>'
     );
@@ -965,14 +965,14 @@
     var html = rawText
       // Section headers
       .replace(/REFINED (PRIMARY|SECONDARY) PES:/g,
-        '<div style="font-family:var(--mono,monospace);font-size:8.5px;font-weight:700;' +
+        '<div style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;' +
         'letter-spacing:1px;color:var(--blue,#60a5fa);text-transform:uppercase;' +
         'margin:10px 0 5px 0;border-top:1px solid rgba(96,165,250,0.1);padding-top:8px;">✦ Refined $1 PES</div>')
       .replace(/CLINICAL PES SENTENCE:/g,
-        '<div style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+        '<div style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;' +
         'letter-spacing:0.8px;color:rgba(96,165,250,0.65);margin:7px 0 3px;">📌 Clinical PES Sentence</div>')
       .replace(/IMPROVEMENT NOTES?:/g,
-        '<div style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;' +
+        '<div style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;' +
         'letter-spacing:0.8px;color:rgba(148,163,184,0.55);margin:10px 0 3px;' +
         'border-top:1px solid rgba(148,163,184,0.08);padding-top:8px;">📝 Improvement Notes</div>')
       // P / E / S labels
@@ -1063,8 +1063,8 @@
     var html = '<div class="smart-pes-wrapper" style="margin-top:12px;">';
 
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-      '<span style="font-family:var(--mono,monospace);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--teal,#2dd4bf);text-transform:uppercase;">📋 Smart PES Statements</span>' +
-      '<button onclick="window.SmartPES&&window.SmartPES.copy()" style="font-family:var(--mono,monospace);font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:5px;border:1px solid rgba(45,212,191,0.3);background:rgba(45,212,191,0.06);color:var(--teal,#2dd4bf);cursor:pointer;">⎘ COPY ALL</button>' +
+      '<span style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal,#2dd4bf);text-transform:uppercase;">📋 Smart PES Statements</span>' +
+      '<button onclick="window.SmartPES&&window.SmartPES.copy()" style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:5px;border:1px solid rgba(45,212,191,0.3);background:rgba(45,212,191,0.06);color:var(--teal,#2dd4bf);cursor:pointer;">⎘ COPY ALL</button>' +
       '</div>';
 
     var roleColors = { PRIMARY: 'var(--teal,#2dd4bf)', SECONDARY: 'var(--blue,#60a5fa)', TERTIARY: 'var(--amber,#fbbf24)', 'TB-SPECIFIC': '#a78bfa', 'NFPE-ONLY': '#f472b6' };
@@ -1081,7 +1081,7 @@
         'border-left:3px solid ' + roleColor + ';' +
         'border-radius:8px;padding:12px 14px;margin-bottom:10px;">';
 
-      html += '<div style="font-family:var(--mono,monospace);font-size:9px;font-weight:700;letter-spacing:1px;color:' + roleColor + ';margin-bottom:8px;">' +
+      html += '<div style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;letter-spacing:1px;color:' + roleColor + ';margin-bottom:8px;">' +
         'PES #' + s.number + ' — ' + (s.role || 'STATEMENT') + '</div>';
 
       html += '<div class="pes-p" style="margin-bottom:5px;font-size:12px;line-height:1.5;">' +
@@ -1099,10 +1099,10 @@
       // Badges
       html += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">';
       if (s.phaseLabel && s.phaseLabel !== 'General') {
-        html += '<span style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(148,163,184,0.1);color:var(--text-dim,#94a3b8);">⚡ ' + _esc(s.phaseLabel) + '</span>';
+        html += '<span style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(148,163,184,0.1);color:var(--text-dim,#94a3b8);">⚡ ' + _esc(s.phaseLabel) + '</span>';
       }
       if (s.nfpeTag) {
-        html += '<span style="font-family:var(--mono,monospace);font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(244,114,182,0.1);color:#f472b6;border:1px solid rgba(244,114,182,0.3);">🩺 NFPE-Upgraded</span>';
+        html += '<span style="font-family:var(--mono,monospace);font-size:11px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:4px;background:rgba(244,114,182,0.1);color:#f472b6;border:1px solid rgba(244,114,182,0.3);">🩺 NFPE-Upgraded</span>';
       }
       html += '</div>';
 

@@ -47,7 +47,7 @@ function ampShowCondFlags() {
   const msg = flags[cond];
   if (msg) {
     el.style.display = '';
-    el.innerHTML = `<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8">${msg}</div>`;
+    el.innerHTML = `<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8">${msg}</div>`;
   } else {
     el.style.display = 'none';
   }
@@ -286,9 +286,9 @@ function _ampRenderInfoBanner(d, src) {
   if (!disp) return;
   const cond = _ampDiagToCondition(d.diagnosis || d.diag || '');
   const COND_LABELS = { general:'General recovery', malnutrition:'SAM/MAM', hiv:'HIV/TB', renal:'Renal disease', diabetic:'Diabetic', burns:'Burns/High-stress', cardiac:'Cardiac' };
-  const pill = (icon, val, col) => `<span style="font-family:var(--mono);font-size:10px;color:${col||'var(--text-bright)'};background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px">${icon} ${val}</span>`;
+  const pill = (icon, val, col) => `<span style="font-family:var(--mono);font-size:11px;color:${col||'var(--text-bright)'};background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px">${icon} ${val}</span>`;
   disp.innerHTML = `
-    <span style="font-family:var(--mono);font-size:9px;color:var(--green)"> ${src}</span>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--green)"> ${src}</span>
     ${d.patientName ? pill('', d.patientName.split(' ')[0], 'var(--text-bright)') : ''}
     ${d.weight      ? pill('', d.weight+'kg') : ''}
     ${d.age         ? pill('', d.age+'y') : ''}
@@ -355,45 +355,45 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
   const _driLbl = (p, lo, hi) => p===null?'—':p>=lo&&p<=hi?` Within DRI (${lo}–${hi}%E)`:p<lo?` Below ${lo}%E`:` Above ${hi}%E`;
 
   const macroDistHTML = hasMacro ? `
-    <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;margin-top:2px">MACRONUTRIENT DISTRIBUTION (%E) vs WHO/DRI Ranges</div>
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;margin-top:2px">MACRONUTRIENT DISTRIBUTION (%E) vs WHO/DRI Ranges</div>
     <div style="margin-bottom:7px">
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px">
         <span style="color:var(--text-dim);flex-shrink:0"> Carbohydrate</span>
         <span style="color:var(--amber);overflow-wrap:break-word;word-break:break-word;text-align:right">${choPctE}%E · ${totCho}g · ${totCho*4} kcal · ${_driLbl(choPctE,45,65)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(choPctE,100)}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div>
     </div>
     <div style="margin-bottom:7px">
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px">
         <span style="color:var(--text-dim);flex-shrink:0">Protein</span>
         <span style="color:var(--blue);overflow-wrap:break-word;word-break:break-word;text-align:right">${proPctE}%E · ${totPro}g · ${totPro*4} kcal · ${_driLbl(proPctE,10,35)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(proPctE,100)}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div>
     </div>
     <div style="margin-bottom:12px">
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:9.5px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px">
         <span style="color:var(--text-dim);flex-shrink:0"> Fat</span>
         <span style="color:var(--green);overflow-wrap:break-word;word-break:break-word;text-align:right">${fatPctE}%E · ${totFat}g · ${totFat*9} kcal · ${_driLbl(fatPctE,20,35)}</span>
       </div>
       <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:4px"><div style="height:100%;width:${Math.min(fatPctE,100)}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div>
-    </div>` : `<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:12px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">ℹ CHO/Fat breakdown not available for formula-based plans — macro %E distribution requires food-item level data.</div>`;
+    </div>` : `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:12px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">ℹ CHO/Fat breakdown not available for formula-based plans — macro %E distribution requires food-item level data.</div>`;
 
   const gapKcal = targetKcal>0 ? targetKcal - totKcal : 0;
   const gapPro  = targetPro >0 ? targetPro  - totPro  : 0;
   const gapHTML = gapKcal>0 && gapKcal > targetKcal*0.1 ? `
-    <div style="background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--red);line-height:1.8;margin-top:4px">
+    <div style="background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.8;margin-top:4px">
        <strong>Energy gap: ${gapKcal} kcal</strong> below target.
       ${gapPro > targetPro*0.1 ? `&nbsp;|&nbsp; <strong>Protein gap: ${gapPro}g</strong>.` : ''}
       <br>ONS bridge: Fresubin Energy 200mL ×${Math.ceil(gapKcal/300)} = ~${Math.ceil(gapKcal/300)*300} kcal &nbsp;|&nbsp; Ensure Plus 237mL ×${Math.ceil(gapKcal/350)} = ~${Math.ceil(gapKcal/350)*350} kcal
     </div>` : kcalPct!==null && kcalPct>=90 ? `
-    <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--green);line-height:1.8;margin-top:4px">
+    <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--green);line-height:1.8;margin-top:4px">
        Energy target met (${kcalPct}% of ${targetKcal} kcal).
       ${proPct!==null ? proPct>=90 ? '&nbsp;Protein target met ' : `&nbsp; Protein ${proPct}% of target — add protein-rich foods or protein supplement.` : ''}
       ${targetFluid>0?`<br> Fluid target: <strong>${targetFluid} mL/day</strong> — advise 6–8 cups water/oral fluids.`:''}
     </div>` : '';
 
   const fluidOnlyHTML = (!gapHTML || gapKcal<=0) && targetFluid>0 && kcalPct===null ? `
-    <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:8px"> Fluid target: <strong>${targetFluid} mL/day</strong>.</div>` : '';
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px"> Fluid target: <strong>${targetFluid} mL/day</strong>.</div>` : '';
 
   return `<div style="margin-top:16px;background:rgba(5,15,35,0.75);border:1px solid rgba(29,233,212,0.35);border-radius:12px;padding:16px">
     <div style="font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:2px;color:var(--teal);margin-bottom:14px">NUTRITION ANALYSIS — ${source}</div>
@@ -405,7 +405,7 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
     </div>
     ${macroDistHTML}
     ${gapHTML}${fluidOnlyHTML}
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text-muted);margin-top:10px;line-height:1.7">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.7">
       Reference: DRI macronutrient ranges: CHO 45–65%E · Protein 10–35%E · Fat 20–35%E (IOM/WHO). Clinical adequacy: ≥90% of target = adequate. Sources: ASPEN 2016 / ASPEN 2022 · ESPEN 2019 · Malawi FCT.
     </div>
   </div>`;
@@ -414,11 +414,11 @@ function mpBuildAnalysisHTML(totKcal, totPro, totCho, totFat, targetKcal, target
 function _mpAnaCard(label, val, unit, sub, pct, col, statusLabel) {
   const barW = pct!==null ? Math.min(Math.max(pct,0), 100) : 0;
   return `<div style="background:rgba(8,18,36,0.55);border:1px solid rgba(56,100,168,0.2);border-radius:9px;padding:11px 12px">
-    <div style="font-family:var(--mono);font-size:8px;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px">${label}</div>
-    <div style="font-family:var(--mono);font-size:21px;font-weight:800;color:${col};line-height:1.1;margin-bottom:2px">${val}<span style="font-size:10px;font-weight:400;margin-left:3px;color:var(--text-dim)">${unit}</span></div>
-    <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted);margin-bottom:7px;overflow-wrap:break-word;word-break:break-word">${sub}</div>
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:5px">${label}</div>
+    <div style="font-family:var(--mono);font-size:21px;font-weight:800;color:${col};line-height:1.1;margin-bottom:2px">${val}<span style="font-size:11px;font-weight:400;margin-left:3px;color:var(--text-dim)">${unit}</span></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:7px;overflow-wrap:break-word;word-break:break-word">${sub}</div>
     ${pct!==null?`<div style="height:4px;background:rgba(255,255,255,0.06);border-radius:3px;margin-bottom:5px"><div style="height:100%;width:${barW}%;background:${col};border-radius:3px"></div></div>`:''}
-    <div style="font-family:var(--mono);font-size:8px;color:${col}">${statusLabel}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:${col}">${statusLabel}</div>
   </div>`;
 }
 
@@ -470,9 +470,9 @@ function ampGenerate() {
 function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
   // Adjust targets for condition
   let condNote = '';
-  if (cond==='malnutrition') { condNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:12px"> SAM/MAM: Start at 60–80 kcal/kg. Advance slowly. Use F-75/F-100/RUTF per IMAM protocol.</div>'; }
-  if (cond==='renal')       { condNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:12px"> Renal: protein limited. Avoid high-K foods (banana, avocado, sweet potato) if hyperkalaemic.</div>'; }
-  if (cond==='diabetic')    { condNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:12px"> Diabetic: Distribute CHO evenly. No concentrated sweets. Choose moderate-GI starches.</div>'; }
+  if (cond==='malnutrition') { condNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:12px"> SAM/MAM: Start at 60–80 kcal/kg. Advance slowly. Use F-75/F-100/RUTF per IMAM protocol.</div>'; }
+  if (cond==='renal')       { condNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:12px"> Renal: protein limited. Avoid high-K foods (banana, avocado, sweet potato) if hyperkalaemic.</div>'; }
+  if (cond==='diabetic')    { condNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px;font-family:var(--mono);font-size:11px;color:var(--blue);margin-bottom:12px"> Diabetic: Distribute CHO evenly. No concentrated sweets. Choose moderate-GI starches.</div>'; }
 
   // Build meals
   const newMpData = {};
@@ -496,13 +496,13 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(56,100,168,0.08);flex-wrap:wrap;gap:4px">
         <div style="min-width:0;flex:1">
           <div style="font-family:var(--mono);font-size:11.5px;color:var(--text-bright);font-weight:600">${i.name}</div>
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:1px"> ${i.amount}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:1px"> ${i.amount}</div>
         </div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;padding-top:2px">
-          <span style="font-family:var(--mono);font-size:9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:1px 7px;border-radius:8px">${i.kcal}</span>
-          <span style="font-family:var(--mono);font-size:9px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:1px 7px;border-radius:8px">P ${i.pro}g</span>
-          <span style="font-family:var(--mono);font-size:9px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:1px 7px;border-radius:8px">F ${i.fat}g</span>
-          <span style="font-family:var(--mono);font-size:9px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:1px 7px;border-radius:8px">C ${i.cho}g</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:1px 7px;border-radius:8px">${i.kcal}</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:1px 7px;border-radius:8px">P ${i.pro}g</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:1px 7px;border-radius:8px">F ${i.fat}g</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:1px 7px;border-radius:8px">C ${i.cho}g</span>
         </div>
       </div>`).join('');
 
@@ -511,10 +511,10 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
           <div style="font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--text-bright)">${AMP_MEAL_ICONS[mi]} ${AMP_MEAL_LABELS[mi].toUpperCase()}</div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:2px 9px;border-radius:10px">${mKcal} kcal</span>
-            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:var(--blue);padding:2px 9px;border-radius:10px">P ${mPro.toFixed(1)}g</span>
-            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:2px 9px;border-radius:10px">F ${mFat.toFixed(1)}g</span>
-            <span style="font-family:var(--mono);font-size:9.5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:2px 9px;border-radius:10px">C ${mCho.toFixed(1)}g</span>
+            <span style="font-family:var(--mono);font-size:11px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:2px 9px;border-radius:10px">${mKcal} kcal</span>
+            <span style="font-family:var(--mono);font-size:11px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:var(--blue);padding:2px 9px;border-radius:10px">P ${mPro.toFixed(1)}g</span>
+            <span style="font-family:var(--mono);font-size:11px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:2px 9px;border-radius:10px">F ${mFat.toFixed(1)}g</span>
+            <span style="font-family:var(--mono);font-size:11px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:2px 9px;border-radius:10px">C ${mCho.toFixed(1)}g</span>
           </div>
         </div>
         ${itemRows}
@@ -536,25 +536,25 @@ function _ampGenOral(kcalTarget, proTarget, fluidTarget, cond, out) {
   if (!proOk)  flags.push(`<li>Protein ${proOk?'':''} ${totalPro.toFixed(0)}g = <strong>${proPct}%</strong> of ${proTarget}g target${proPct<80?' — <span style="color:var(--red)">BELOW TARGET</span>':''}</li>`);
   if (fluidTarget>0) flags.push(`<li> Hydration reminder: target <strong>${fluidTarget} mL/day</strong> fluid — ensure 6–8 cups water/day in addition to milk and fluids in meals</li>`);
 
-  const flagHtml = flags.length ? `<ul style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:2;padding-left:18px;margin:0">${flags.join('')}</ul>` : '';
+  const flagHtml = flags.length ? `<ul style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding-left:18px;margin:0">${flags.join('')}</ul>` : '';
 
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal)"> DAILY ORAL MEAL PLAN</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
-          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:3px 12px;border-radius:12px">${totalKcal} kcal (${kcalPct}%)</span>
-          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:3px 12px;border-radius:12px">P ${totalPro.toFixed(0)}g (${proPct}%)</span>
-          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:3px 12px;border-radius:12px">F ${totalFat}g</span>
-          <span style="font-family:var(--mono);font-size:9.5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:3px 12px;border-radius:12px">C ${totalCho}g</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.25);color:var(--amber);padding:3px 12px;border-radius:12px">${totalKcal} kcal (${kcalPct}%)</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--blue);padding:3px 12px;border-radius:12px">P ${totalPro.toFixed(0)}g (${proPct}%)</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);color:var(--red);padding:3px 12px;border-radius:12px">F ${totalFat}g</span>
+          <span style="font-family:var(--mono);font-size:11px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:3px 12px;border-radius:12px">C ${totalCho}g</span>
         </div>
       </div>
       ${condNote}
       ${mealHtml.join('')}
       ${flagHtml ? `<div style="background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:8px;padding:12px;margin-top:8px">${flagHtml}</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY TO MEAL PLANNER</button>
-        <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
+        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY TO MEAL PLANNER</button>
+        <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
       </div>
       ${mpBuildAnalysisHTML(totalKcal,totalPro,totalCho,totalFat,kcalTarget,proTarget,fluidTarget,'GENERATED ORAL PLAN')}
     </div>`;
@@ -582,9 +582,9 @@ function _ampGenEnteral(kcalTarget, proTarget, fluidTarget, feedType, delivery, 
   const proPct  = proTarget > 0 ? Math.round(proDay/proTarget*100) : '—';
 
   let specialNote = '';
-  if (cond==='renal')    specialNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:10px"> Renal: Consider renal-specific formula (Fresubin Renal / Nepro). Limit protein to 0.6–0.8g/kg if non-dialysis.</div>';
-  if (cond==='diabetic') specialNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:10px"> Diabetic: Consider Nutrison Diason or Fresubin Diabetes. Spread feeds evenly across 24h.</div>';
-  if (cond==='burns')    specialNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--amber);margin-bottom:10px"> High Stress/Burns: Consider high-protein formula (Supportan / Fresubin HP). Reassess energy needs daily using Curreri formula.</div>';
+  if (cond==='renal')    specialNote='<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:10px"> Renal: Consider renal-specific formula (Fresubin Renal / Nepro). Limit protein to 0.6–0.8g/kg if non-dialysis.</div>';
+  if (cond==='diabetic') specialNote='<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--blue);margin-bottom:10px"> Diabetic: Consider Nutrison Diason or Fresubin Diabetes. Spread feeds evenly across 24h.</div>';
+  if (cond==='burns')    specialNote='<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:7px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:10px"> High Stress/Burns: Consider high-protein formula (Supportan / Fresubin HP). Reassess energy needs daily using Curreri formula.</div>';
 
   const contHtml = `
     <div style="background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:14px;margin-bottom:10px">
@@ -608,21 +608,21 @@ function _ampGenEnteral(kcalTarget, proTarget, fluidTarget, feedType, delivery, 
         ${_ampStatBox('Energy',kcalDel,'kcal/day','var(--amber)')}
         ${_ampStatBox('Protein',proDay.toFixed(0)+'g','/ day ('+proPct+'%)','var(--blue)')}
       </div>
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:8px">Schedule: 06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00 (or adjust to ward routine)</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px">Schedule: 06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00 (or adjust to ward routine)</div>
     </div>`;
 
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
       <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:12px"> ENTERAL TUBE FEEDING PLAN</div>
       ${specialNote}
-      <div style="background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--text)">
+      <div style="background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text)">
         <strong style="color:var(--teal)">Formula:</strong> ${formula.name}<br>
         <strong style="color:var(--teal)">Concentration:</strong> ${formula.kcalMl} kcal/mL · ${formula.proL}g protein/L<br>
         <em style="color:var(--text-dim)">${formula.note}</em>
       </div>
       ${delivery === 'bolus' ? bolusHtml : contHtml}
       ${delivery === 'continuous' ? bolusHtml : contHtml}
-      <div style="background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.25);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9;margin-top:4px">
+      <div style="background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.25);border-radius:8px;padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9;margin-top:4px">
         <strong style="color:var(--amber)"> Tube safety reminders:</strong><br>
         • Flush tube with 30–50 mL clean boiled water before &amp; after each feed<br>
         • Starter rate Day 1–2: <strong>${halfRate} mL/hr</strong> — advance to full rate if tolerating well<br>
@@ -658,7 +658,7 @@ function _ampGenMixed(kcalTarget, proTarget, fluidTarget, feedType, delivery, wt
   out.innerHTML = `
     <div style="border-top:1px solid rgba(29,233,212,0.2);padding-top:16px">
       <div style="font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:6px"> MIXED ORAL + ENTERAL PLAN</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:14px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:14px">
         Oral: <strong style="color:var(--teal)">${oralPct*100}%</strong> (${oralKcal} kcal · ${oralPro}g protein) &nbsp;|&nbsp;
         Enteral: <strong style="color:var(--blue)">${Math.round((1-oralPct)*100)}%</strong> (${enteralKcal} kcal · ${enteralPro}g protein)
       </div>
@@ -669,8 +669,8 @@ function _ampGenMixed(kcalTarget, proTarget, fluidTarget, feedType, delivery, wt
         ${enteralDiv.innerHTML}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY ORAL PART TO PLANNER</button>
-        <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
+        <button onclick="ampApplyToPlanner()" style="flex:1;min-width:140px;padding:10px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:8px;border:2px solid rgba(52,211,153,0.5);background:rgba(52,211,153,0.1);color:var(--green);cursor:pointer"> APPLY ORAL PART TO PLANNER</button>
+        <button onclick="ampGenerate()" style="flex:1;min-width:120px;padding:10px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);color:var(--text-dim);cursor:pointer">↺ REGENERATE</button>
       </div>
       ${mpBuildAnalysisHTML(_mixTotKcal, _mixTotPro, _mixTotCho, _mixTotFat, kcalTarget, proTarget, fluidTarget, 'GENERATED MIXED PLAN (COMBINED)')}
     </div>`;
@@ -679,8 +679,8 @@ function _ampGenMixed(kcalTarget, proTarget, fluidTarget, feedType, delivery, wt
 function _ampStatBox(label, value, unit, col) {
   return `<div style="background:rgba(8,18,36,0.6);border:1px solid rgba(56,100,168,0.15);border-radius:8px;padding:10px;text-align:center">
     <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${col}">${value}</div>
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">${label}</div>
-    <div style="font-family:var(--mono);font-size:8px;color:var(--text-muted);margin-top:1px">${unit}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">${label}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:1px">${unit}</div>
   </div>`;
 }
 

@@ -432,15 +432,15 @@ function dbRender() {
       }[f.cat] || 'var(--text-dim)';
       return `<tr>
         <td style="font-weight:600;color:var(--text-bright)">${f.name}</td>
-        <td><span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${catColor};color:${catColor}">${f.cat}</span></td>
-        <td style="color:var(--text-dim);font-size:10px">${f.isFormula ? 'per 100mL' : 'per 100g'}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${catColor};color:${catColor}">${f.cat}</span></td>
+        <td style="color:var(--text-dim);font-size:11px">${f.isFormula ? 'per 100mL' : 'per 100g'}</td>
         <td style="color:var(--text-dim)">100</td>
         <td style="color:var(--amber);font-weight:700">${v.kcal}</td>
         <td style="color:var(--text-dim)">${v.kj}</td>
         <td style="color:var(--blue);font-weight:600">${v.pro}</td>
         <td style="color:var(--teal)">${v.cho}</td>
         <td style="color:var(--green)">${v.fat}</td>
-        <td style="color:var(--text-dim);font-size:10px">${density}</td>
+        <td style="color:var(--text-dim);font-size:11px">${density}</td>
       </tr>`;
     }).join('');
   } else {
@@ -455,15 +455,15 @@ function dbRender() {
       f.measures.forEach((m, mi) => {
         rows.push(`<tr>
           ${mi===0 ? `<td rowspan="${f.measures.length}" style="font-weight:600;color:var(--text-bright);vertical-align:top;border-right:1px solid var(--border)">${f.name}</td>
-          <td rowspan="${f.measures.length}" style="vertical-align:top"><span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${catColor};color:${catColor}">${f.cat}</span></td>` : ''}
-          <td style="color:var(--teal);font-size:10px">${m.lbl}</td>
+          <td rowspan="${f.measures.length}" style="vertical-align:top"><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${catColor};color:${catColor}">${f.cat}</span></td>` : ''}
+          <td style="color:var(--teal);font-size:11px">${m.lbl}</td>
           <td style="color:var(--text-dim)">${m.weight || (()=>{const wm=(m.lbl||'').match(/[(](\d+(?:\.\d+)?)[\s]*(?:g|mL|ml)[)]/i);return wm?wm[1]:'—'})()}</td>
           <td style="color:var(--amber);font-weight:700">${m.kcal}</td>
           <td style="color:var(--text-dim)">${m.kj}</td>
           <td style="color:var(--blue);font-weight:600">${m.pro}</td>
           <td style="color:var(--teal)">${m.cho}</td>
           <td style="color:var(--green)">${m.fat}</td>
-          <td style="color:var(--text-dim);font-size:10px">${m.kcal>0?(()=>{const wm=(m.lbl||'').match(/[(](\d+(?:\.\d+)?)[\s]*(?:g|mL|ml)[)]/i);const wg=m.weight||(wm?parseFloat(wm[1]):100);return(m.kcal/wg).toFixed(2)})():'—'}</td>
+          <td style="color:var(--text-dim);font-size:11px">${m.kcal>0?(()=>{const wm=(m.lbl||'').match(/[(](\d+(?:\.\d+)?)[\s]*(?:g|mL|ml)[)]/i);const wg=m.weight||(wm?parseFloat(wm[1]):100);return(m.kcal/wg).toFixed(2)})():'—'}</td>
         </tr>`);
       });
     });
@@ -486,7 +486,7 @@ function dbRenderHighlights() {
     const top5 = foods.slice(0,5);
     return `<div class="hscroll-item highlight-card" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
       <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;color:${h.color};text-transform:uppercase;margin-bottom:10px">${h.label}</div>
-      ${top5.map((f,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dotted rgba(255,255,255,.05);font-family:var(--mono);font-size:10px">
+      ${top5.map((f,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dotted rgba(255,255,255,.05);font-family:var(--mono);font-size:11px">
         <span style="color:var(--text)">${i+1}. ${f.name}</span>
         <span style="color:${h.color};font-weight:700">${h.val(f)}</span>
       </div>`).join('')}

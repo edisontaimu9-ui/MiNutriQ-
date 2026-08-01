@@ -192,35 +192,35 @@
     html += '<div style="font-family:var(--mono);font-size:44px;font-weight:900;color:' + rColor + ';line-height:1;letter-spacing:-1px">SGA ' + rating + '</div>';
     html += '<div>';
     html += '<div style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + rColor + '">' + rLabel + '</div>';
-    html += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">' + rDesc + '</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">' + rDesc + '</div>';
     html += '</div></div>';
 
     // Domain breakdown
-    html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Domain Summary</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Domain Summary</div>';
     domainLabels.forEach(function (lbl, i) {
       var s = domainScores[i];
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">';
-      html += '<span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">' + lbl + '</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">' + lbl + '</span>';
       html += '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + scColor(s) + '">' + scLabel(s) + '</span>';
       html += '</div>';
     });
     if (metab === 'B') {
       html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">';
-      html += '<span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">Metabolic Stress</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Metabolic Stress</span>';
       html += '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#f0b429">High</span></div>';
     }
 
     // Contributing factors
     if (cachexia || sarcopenia) {
       html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;border:1px solid rgba(255,255,255,0.07)">';
-      html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">Contributing Factors</div>';
-      if (cachexia)   html += '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);margin-bottom:4px">· Cachexia — fat + muscle wasting secondary to disease/inflammation</div>';
-      if (sarcopenia) html += '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">· Sarcopenia — reduced muscle mass and strength</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">Contributing Factors</div>';
+      if (cachexia)   html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:4px">· Cachexia — fat + muscle wasting secondary to disease/inflammation</div>';
+      if (sarcopenia) html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">· Sarcopenia — reduced muscle mass and strength</div>';
       html += '</div>';
     }
 
     // Disclaimer
-    html += '<div style="margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text-muted);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
+    html += '<div style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
     html += '⚠ This is a computer-assisted rating suggestion. Final SGA rating requires integrated clinical judgement by a qualified clinician. Reference: Baker JP et al. <em>NEJM</em> 1982;306(16):969–972.';
     html += '</div>';
     html += '</div>';
@@ -340,14 +340,14 @@
 
     // ── Screening block ──
     html += '<div style="border:1.5px solid ' + sColor + ';background:rgba(' + bgOf(sColor) + ',0.07);border-radius:12px;padding:14px 16px;margin-bottom:10px">';
-    html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Screening Score (A\u2013F)</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Screening Score (A\u2013F)</div>';
     html += '<div style="display:flex;align-items:baseline;gap:10px">';
     html += '<div style="font-family:var(--mono);font-size:40px;font-weight:900;color:' + sColor + ';line-height:1">' + screenScore + '</div>';
-    html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">/ 14</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">/ 14</div>';
     html += '<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:' + sColor + '">' + sLabel + '</div>';
     html += '</div>';
     if (screenScore <= 11 && !hasAssess) {
-      html += '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:#f0b429;padding:8px 10px;background:rgba(240,180,41,0.06);border-radius:6px;border:1px solid rgba(240,180,41,0.15)">\u2193 Score \u226411 \u2014 complete Assessment questions G\u2013R below for a full Malnutrition Indicator Score.</div>';
+      html += '<div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:#f0b429;padding:8px 10px;background:rgba(240,180,41,0.06);border-radius:6px;border:1px solid rgba(240,180,41,0.15)">\u2193 Score \u226411 \u2014 complete Assessment questions G\u2013R below for a full Malnutrition Indicator Score.</div>';
     }
     html += '</div>';
 
@@ -357,20 +357,20 @@
       var tLabel = totalScore >= 24 ? 'Normal nutritional status' : totalScore >= 17 ? 'At risk of malnutrition' : 'Malnourished';
 
       html += '<div style="border:1.5px solid ' + tColor + ';background:rgba(' + bgOf(tColor) + ',0.07);border-radius:12px;padding:16px 18px;margin-bottom:6px">';
-      html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px">Malnutrition Indicator Score (A\u2013R)</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px">Malnutrition Indicator Score (A\u2013R)</div>';
       html += '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">';
       html += '<div style="font-family:var(--mono);font-size:44px;font-weight:900;color:' + tColor + ';line-height:1">' + totalScore.toFixed(1) + '</div>';
-      html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">/ 30</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">/ 30</div>';
       html += '<div style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + tColor + '">' + tLabel + '</div>';
       html += '</div>';
 
       // Score bars
-      html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Score Breakdown</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Score Breakdown</div>';
       [[screenScore, 14, 'Screening (A\u2013F)'], [assessScore, 16, 'Assessment (G\u2013R)']].forEach(function (row) {
         var pct = (row[0] / row[1]) * 100;
         var bc = pct >= 75 ? '#34d399' : pct >= 50 ? '#f0b429' : '#fb7185';
         html += '<div style="margin-bottom:8px">';
-        html += '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:4px">';
+        html += '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:4px">';
         html += '<span>' + row[2] + '</span><span style="color:' + bc + '">' + row[0].toFixed(1) + ' / ' + row[1] + '</span></div>';
         html += '<div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px">';
         html += '<div style="width:' + pct.toFixed(0) + '%;height:100%;background:' + bc + ';border-radius:2px"></div></div></div>';
@@ -378,14 +378,14 @@
 
       // Threshold reference table
       html += '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;border:1px solid rgba(255,255,255,0.07)">';
-      html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">MIS Reference Thresholds</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">MIS Reference Thresholds</div>';
       [['24\u201330', 'Normal nutritional status', '#34d399'],
        ['17\u201323.5', 'At risk of malnutrition', '#f0b429'],
        ['<17', 'Malnourished', '#fb7185']].forEach(function (th) {
         var cur = (th[2] === tColor);
         html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
-        html += '<span style="font-family:var(--mono);font-size:10px;color:' + (cur ? th[2] : 'var(--text-dim)') + ';font-weight:' + (cur ? '700' : '400') + '">' + th[0] + ' pts</span>';
-        html += '<span style="font-family:var(--mono);font-size:10px;color:' + (cur ? th[2] : 'var(--text-dim)') + ';font-weight:' + (cur ? '700' : '400') + '">' + th[1] + '</span>';
+        html += '<span style="font-family:var(--mono);font-size:11px;color:' + (cur ? th[2] : 'var(--text-dim)') + ';font-weight:' + (cur ? '700' : '400') + '">' + th[0] + ' pts</span>';
+        html += '<span style="font-family:var(--mono);font-size:11px;color:' + (cur ? th[2] : 'var(--text-dim)') + ';font-weight:' + (cur ? '700' : '400') + '">' + th[1] + '</span>';
         html += '</div>';
       });
       html += '</div>';
@@ -393,7 +393,7 @@
     }
 
     // Disclaimer
-    html += '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">';
+    html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">';
     html += '\u26A0 Computer-assisted scoring tool. Interpretation requires clinical judgement. MNA\u00AE \u00A9 Nestl\u00E9 1994, Revision 2009. Validated for populations \u226565 years.';
     html += '</div>';
 
@@ -597,13 +597,13 @@
     html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">';
     html += '<div style="font-family:var(--mono);font-size:42px;font-weight:900;color:' + catColor + ';line-height:1;letter-spacing:-1px">' + total + '</div>';
     html += '<div>';
-    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px">Total PG-SGA Score (A+B+C+D)</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px">Total PG-SGA Score (A+B+C+D)</div>';
     html += '<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:' + catColor + '">Global Category ' + category + ' — ' + catLabel + '</div>';
-    html += '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:3px">' + catDesc + '</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">' + catDesc + '</div>';
     html += '</div></div>';
 
     // Score breakdown
-    html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Score Breakdown</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">Score Breakdown</div>';
     var parts = [
       ['A — Patient History (Boxes 1–4)', A],
       ['B — Disease & Condition (WS2)', B],
@@ -613,26 +613,26 @@
     parts.forEach(function (p) {
       var pc = p[1] >= 3 ? '#fb7185' : p[1] >= 1 ? '#f0b429' : '#34d399';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">';
-      html += '<span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">' + p[0] + '</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">' + p[0] + '</span>';
       html += '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + pc + '">' + p[1] + '</span>';
       html += '</div>';
     });
 
     if (stage) {
       html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">';
-      html += '<span style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim)">Disease Staging</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Disease Staging</span>';
       html += '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright)">Stage ' + stage.value + '</span></div>';
     }
 
     // Triage
     html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;border:1px solid rgba(255,255,255,0.07)">';
-    html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">Nutritional Triage Recommendation</div>';
-    html += '<div style="font-family:var(--mono);font-size:10.5px;color:' + triageColor + '">' + triageLabel + '</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">Nutritional Triage Recommendation</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;color:' + triageColor + '">' + triageLabel + '</div>';
     html += '</div>';
 
     // Triage reference table
     html += '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.02);border-radius:7px;border:1px solid rgba(255,255,255,0.06)">';
-    html += '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">PG-SGA Triage Thresholds (Ottery 2020)</div>';
+    html += '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:7px">PG-SGA Triage Thresholds (Ottery 2020)</div>';
     [['0–1', 'No intervention; routine reassessment', '#34d399'],
      ['2–3', 'Patient & family education by dietitian/nurse/clinician', '#f0b429'],
      ['4–8', 'Dietitian intervention + nurse or physician as indicated', '#f0b429'],
@@ -642,14 +642,14 @@
       // Simpler active check
       var active = (th[0] === '0\u20131' && total <= 1) || (th[0] === '2\u20133' && total >= 2 && total <= 3) || (th[0] === '4\u20138' && total >= 4 && total <= 8) || (th[0] === '\u22659' && total >= 9);
       html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
-      html += '<span style="font-family:var(--mono);font-size:9.5px;color:' + (active ? th[2] : 'var(--text-muted)') + ';font-weight:' + (active ? '700' : '400') + '">' + th[0] + ' pts</span>';
-      html += '<span style="font-family:var(--mono);font-size:9.5px;color:' + (active ? th[2] : 'var(--text-dim)') + ';font-weight:' + (active ? '700' : '400') + ';text-align:right;max-width:220px">' + th[1] + '</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:' + (active ? th[2] : 'var(--text-muted)') + ';font-weight:' + (active ? '700' : '400') + '">' + th[0] + ' pts</span>';
+      html += '<span style="font-family:var(--mono);font-size:11px;color:' + (active ? th[2] : 'var(--text-dim)') + ';font-weight:' + (active ? '700' : '400') + ';text-align:right;max-width:220px">' + th[1] + '</span>';
       html += '</div>';
     });
     html += '</div>';
 
     // Disclaimer
-    html += '<div style="margin-top:12px;font-family:var(--mono);font-size:8.5px;color:var(--text-muted);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
+    html += '<div style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.7;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
     html += '\u26A0 Computer-assisted scoring. Final Global PG-SGA Category (Stage A/B/C per Worksheet 5) requires integrated clinical judgement. PG-SGA\u00AE \u00A9FD Ottery 2005, 2006, 2015, 2020 v4.3.20. Validated for oncology. Category classification based on total score; validate against full Worksheet 5 criteria.';
     html += '</div>';
     html += '</div>';

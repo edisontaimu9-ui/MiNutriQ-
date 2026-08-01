@@ -783,7 +783,7 @@ function renderHomePage() {
   if (list) {
     const recent = history.slice().reverse().slice(0, 5);
     if (recent.length === 0) {
-      list.innerHTML = '<div style="color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:8px 0">No calculations yet.</div>';
+      list.innerHTML = '<div style="color:var(--text-dim);font-family:var(--mono);font-size:11px;padding:8px 0">No calculations yet.</div>';
     } else {
       list.innerHTML = recent.map(entry => {
         const diag = (entry.diagnosis || 'General').replace(/_/g, ' ');
@@ -793,9 +793,9 @@ function renderHomePage() {
           entry.energy ? entry.energy + 'kcal': ''
         ].filter(Boolean).join(' · ');
         const ts = entry.savedAt ? (entry.savedAt.split(',')[0] || entry.savedAt) : '';
-        return `<div style="background:var(--surface2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:10px;display:flex;justify-content:space-between;align-items:center">
+        return `<div style="background:var(--surface2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between;align-items:center">
           <span><span style="color:var(--teal);font-weight:700">${diag}</span>${meta ? ' <span style="color:var(--text-dim)">· ' + meta + '</span>' : ''}</span>
-          ${ts ? '<span style="color:var(--text-dim);font-size:9px">' + ts + '</span>' : ''}
+          ${ts ? '<span style="color:var(--text-dim);font-size:11px">' + ts + '</span>' : ''}
         </div>`;
       }).join('');
     }
@@ -889,7 +889,7 @@ function renderActivityStrip() {
   if (hist.length > 0) {
     // ── RECENT ACTIVITY ──
     const label = document.createElement('span');
-    label.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
+    label.style.cssText = 'font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
     label.textContent = 'RECENT:';
     strip.appendChild(label);
 
@@ -906,7 +906,7 @@ function renderActivityStrip() {
       btn.innerHTML = `
         <span style="color:var(--teal);margin-right:3px">↺</span>
         <span style="font-weight:700">${diagLabel}</span>
-        ${meta ? `<span style="opacity:0.55;font-size:8.5px;margin-left:4px">${meta}</span>` : ''}`;
+        ${meta ? `<span style="opacity:0.55;font-size:11px;margin-left:4px">${meta}</span>` : ''}`;
       btn.onclick = () => loadHistoryItem(hist.length - 1 - i + (DataService.get('history')||[]).length - hist.length);
 
       // Smarter: load by ID
@@ -929,14 +929,14 @@ function renderActivityStrip() {
 
     // Presets label
     const pLabel = document.createElement('span');
-    pLabel.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
+    pLabel.style.cssText = 'font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
     pLabel.textContent = 'PRESETS:';
     strip.appendChild(pLabel);
 
   } else {
     // ── NO HISTORY — show presets only ──
     const label = document.createElement('span');
-    label.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
+    label.style.cssText = 'font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;align-self:center;flex-shrink:0;white-space:nowrap';
     label.textContent = 'QUICK PRESET:';
     strip.appendChild(label);
   }
@@ -1035,7 +1035,7 @@ function renderHistory() {
       <div class="hist-vals">
         <div style="color:var(--teal);font-weight:700">${h.energy != null ? h.energy : '—'} kcal/day</div>
         <div style="color:var(--blue)">${h.protein != null ? h.protein : '—'} g protein</div>
-        <div style="color:var(--text-dim);font-size:9px;margin-top:3px">${h.route || ''} · ${h.icuPhase || ''}</div>
+        <div style="color:var(--text-dim);font-size:11px;margin-top:3px">${h.route || ''} · ${h.icuPhase || ''}</div>
       </div>
       <button class="hist-del" onclick="event.stopPropagation();deleteHistoryItem(${i})" title="Delete entry">✕</button>
     </div>`).join('');
@@ -1090,7 +1090,7 @@ function exportDetailedReport() {
   td,th{padding:7px 10px;border:1px solid #ccd;text-align:left;font-size:11px}
   th{background:#e8f0f8;font-weight:700}
   .warning{background:#fff8e1;border:1px solid #f9a825;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:11px}
-  .disclaimer{background:#fce4ec;border:1px solid #e91e63;border-radius:6px;padding:10px 14px;font-size:10px;margin-top:24px;color:#555}
+  .disclaimer{background:#fce4ec;border:1px solid #e91e63;border-radius:6px;padding:10px 14px;font-size:11px;margin-top:24px;color:#555}
   .val{font-weight:700;color:#005e52;font-size:14px}
   @media print{body{padding:12px}}
 </style></head><body>

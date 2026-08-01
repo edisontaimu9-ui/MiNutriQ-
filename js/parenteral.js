@@ -332,15 +332,15 @@ function _renderPN() {
   html += `
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button onclick="_pnSaveToHistory()"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399;cursor:pointer">
       💾 SAVE
     </button>
     <button onclick="saveToPDF('pn-results','Oasis — PN Prescription')"
-      style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
+      style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 12px;border-radius:7px;border:1px solid rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);color:#60a5fa;cursor:pointer">
       📄 PDF
     </button>
     <button onclick="_pnClear()"
-      style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ↺ CLEAR
     </button>
   </div>`;
@@ -348,45 +348,45 @@ function _renderPN() {
   // ── TPN Calculation ──
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(139,92,246,0.12);border-bottom:1px solid rgba(139,92,246,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+    <div style="background:rgba(139,92,246,0.12);border-bottom:1px solid rgba(139,92,246,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
       ⚗ CUSTOM TPN CALCULATION
     </div>
     <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="grid-column:1/-1;background:rgba(139,92,246,0.07);border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">TOTAL TARGET</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">TOTAL TARGET</span>
         <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:#a78bfa">${totalKcal.toFixed(0)} kcal/day &nbsp;·&nbsp; ${proteinG.toFixed(1)} g protein</span>
       </div>
       <div style="background:var(--surface3);border-radius:8px;padding:9px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">FAT (30%)</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">FAT (30%)</div>
         <div style="font-size:14px;font-weight:700;color:#f0b429">${calc.kcalFromFat.toFixed(0)} kcal</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px">20% IVFE: <b style="color:var(--text)">${calc.ivfeMl} mL</b></div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">20% IVFE: <b style="color:var(--text)">${calc.ivfeMl} mL</b></div>
       </div>
       <div style="background:var(--surface3);border-radius:8px;padding:9px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PROTEIN</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PROTEIN</div>
         <div style="font-size:14px;font-weight:700;color:#34d399">${calc.kcalFromProt.toFixed(0)} kcal</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px">AA: <b style="color:var(--text)">${proteinG.toFixed(1)} g/day</b></div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">AA: <b style="color:var(--text)">${proteinG.toFixed(1)} g/day</b></div>
       </div>
       <div style="background:var(--surface3);border-radius:8px;padding:9px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">DEXTROSE</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">DEXTROSE</div>
         <div style="font-size:14px;font-weight:700;color:#60a5fa">${calc.kcalDex} kcal</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px"><b style="color:var(--text)">${calc.gDextrose} g/day</b>${firstDay?' <span style="color:#f0b429">(capped)</span>':''}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px"><b style="color:var(--text)">${calc.gDextrose} g/day</b>${firstDay?' <span style="color:#f0b429">(capped)</span>':''}</div>
       </div>
       <div style="background:var(--surface3);border-radius:8px;padding:9px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">GIR</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">GIR</div>
         <div style="font-size:14px;font-weight:700;color:${girColor}">${calc.girVal ?? '—'} mg/kg/min</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px">Target ≤ 7 mg/kg/min</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">Target ≤ 7 mg/kg/min</div>
       </div>
       <div style="grid-column:1/-1;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.15);border-radius:8px;padding:10px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">INFUSION — ${mode==='3in1'?'3-IN-1':'2-IN-1 + IVFE separate'}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">INFUSION — ${mode==='3in1'?'3-IN-1':'2-IN-1 + IVFE separate'}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-          <div><div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">BAG RATE</div><div style="font-size:13px;font-weight:700;color:var(--text)">${calc.baseRate} mL/hr</div></div>
-          <div><div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">TOTAL VOL</div><div style="font-size:13px;font-weight:700;color:var(--text)">${calc.totalVol} mL</div></div>
-          ${mode==='2in1'?`<div><div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">IVFE RATE</div><div style="font-size:13px;font-weight:700;color:#f0b429">${calc.ivfeRate} mL/hr×12h</div></div>`:'<div></div>'}
+          <div><div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">BAG RATE</div><div style="font-size:13px;font-weight:700;color:var(--text)">${calc.baseRate} mL/hr</div></div>
+          <div><div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">TOTAL VOL</div><div style="font-size:13px;font-weight:700;color:var(--text)">${calc.totalVol} mL</div></div>
+          ${mode==='2in1'?`<div><div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">IVFE RATE</div><div style="font-size:13px;font-weight:700;color:#f0b429">${calc.ivfeRate} mL/hr×12h</div></div>`:'<div></div>'}
         </div>
       </div>
       <div style="grid-column:1/-1;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:8px;padding:9px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PHARMACY ORDER</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PHARMACY ORDER</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
           AA: <b>${(proteinG/calc.totalVol*10).toFixed(2)}%</b> &nbsp;|&nbsp; Dex: <b>${(calc.gDextrose/calc.totalVol*10).toFixed(2)}%</b>
           ${mode==='3in1'?` &nbsp;|&nbsp; Lipid: <b>${(calc.ivfeMl/calc.totalVol*100).toFixed(1)}%</b>`:`<br>IVFE 20%: <b>${calc.ivfeMl} mL over 12 hrs</b>`}
           <br>Rate: <b>${calc.baseRate} mL/hr × 24 hr</b>
@@ -398,7 +398,7 @@ function _renderPN() {
   // ── Best-match bags ──
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#34d399">
+    <div style="background:rgba(52,211,153,0.1);border-bottom:1px solid rgba(52,211,153,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#34d399">
       💊 CLOSEST COMMERCIAL BAGS
     </div>
     <div style="padding:10px;display:flex;flex-direction:column;gap:7px">
@@ -406,16 +406,16 @@ function _renderPN() {
       <div style="background:${i===0?'rgba(52,211,153,0.05)':'var(--surface3)'};border:1px solid ${i===0?'rgba(52,211,153,0.22)':'var(--border)'};border-radius:8px;padding:9px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <div>
-            ${i===0?'<span style="font-family:var(--mono);font-size:8px;background:rgba(52,211,153,0.18);color:#34d399;padding:1px 6px;border-radius:4px;letter-spacing:1px;margin-right:5px">BEST</span>':''}
+            ${i===0?'<span style="font-family:var(--mono);font-size:11px;background:rgba(52,211,153,0.18);color:#34d399;padding:1px 6px;border-radius:4px;letter-spacing:1px;margin-right:5px">BEST</span>':''}
             <b style="font-size:12px;color:var(--text-bright)">${b.brand}</b>
-            <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:5px">${b.manufacturer}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:5px">${b.manufacturer}</span>
           </div>
-          <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${b.pct<15?'#34d399':b.pct<30?'#f0b429':'#fb7185'}">${b.pct<0.5?'exact':b.pct.toFixed(0)+'% off'}</span>
+          <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${b.pct<15?'#34d399':b.pct<30?'#f0b429':'#fb7185'}">${b.pct<0.5?'exact':b.pct.toFixed(0)+'% off'}</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px">
           ${[['Vol',b.vol+'mL'],['Energy',b.energy_total+'kcal'],['AA',b.aa+'g'],['Dex',b.glucose+'g'],
              b.fat>0?['Fat',b.fat+'g']:['Type',b.type],['Route',b.route],['Osm',(b.osmolarity||'—')+(b.osmolarity?'mOsm':'')],['Na/K',b.na+'/'+b.k]
-          ].map(function(p){ return `<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:4px;text-align:center"><div style="font-family:var(--mono);font-size:8px;color:var(--text-dim)">${p[0]}</div><div style="font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text)">${p[1]}</div></div>`; }).join('')}
+          ].map(function(p){ return `<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:4px;text-align:center"><div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${p[0]}</div><div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)">${p[1]}</div></div>`; }).join('')}
         </div>
       </div>`; }).join('')}
     </div>
@@ -424,7 +424,7 @@ function _renderPN() {
   // ── Monitoring checklist ──
   html += `
   <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="background:rgba(96,165,250,0.08);border-bottom:1px solid rgba(96,165,250,0.2);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#60a5fa">
+    <div style="background:rgba(96,165,250,0.08);border-bottom:1px solid rgba(96,165,250,0.2);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#60a5fa">
       📋 MONITORING CHECKLIST
     </div>
     <div style="padding:10px;display:flex;flex-direction:column;gap:5px">
@@ -432,9 +432,9 @@ function _renderPN() {
          ['Daily','Electrolytes: Na, K, PO₄, Mg'],['Day 1–3','Triglycerides (if lipid given)'],
          ['Weekly','LFTs, albumin, pre-albumin'],['Weekly','FBC + coagulation (long-term fat)'],
          ['Weekly','Weight & nitrogen balance'],['PRN','Blood cultures if febrile']
-      ].map(function(r){ return `<div style="display:flex;align-items:center;gap:8px;background:var(--surface3);border-radius:6px;padding:7px 10px"><span style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);white-space:nowrap;min-width:46px;flex-shrink:0">${r[0]}</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4">${r[1]}</span></div>`; }).join('')}
+      ].map(function(r){ return `<div style="display:flex;align-items:center;gap:8px;background:var(--surface3);border-radius:6px;padding:7px 10px"><span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);white-space:nowrap;min-width:46px;flex-shrink:0">${r[0]}</span><span style="font-size:11px;color:var(--text-dim);line-height:1.4">${r[1]}</span></div>`; }).join('')}
     </div>
-    <div style="padding:0 10px 10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.6">
+    <div style="padding:0 10px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6">
       Ref: ASPEN/SCCM 2016 · ESPEN PN Guidelines 2018 · Kabiven PI (Fresenius Kabi) · NuTRIflex PI (B. Braun) · Clinimix E PI (Baxter 2010)
     </div>
   </div>`;
@@ -443,9 +443,9 @@ function _renderPN() {
   if (document.getElementById('pn-firstday')?.checked) {
     html += `
   <div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-    <span style="font-family:var(--mono);font-size:10px;color:#fb7185;font-weight:600">⚠ First-day protocol — check refeeding risk</span>
+    <span style="font-family:var(--mono);font-size:11px;color:#fb7185;font-weight:600">⚠ First-day protocol — check refeeding risk</span>
     <button onclick="switchTab('calculator');setTimeout(function(){var el=document.getElementById('cb-refeeding');el&&el.previousElementSibling?.click();el?.scrollIntoView({behavior:'smooth'});},300)"
-      style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:6px;border:1px solid rgba(251,113,133,0.4);background:rgba(251,113,133,0.08);color:#fb7185;cursor:pointer;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:6px;border:1px solid rgba(251,113,133,0.4);background:rgba(251,113,133,0.08);color:#fb7185;cursor:pointer;white-space:nowrap">
       → REFEEDING PROTOCOL
     </button>
   </div>`;
@@ -469,13 +469,13 @@ function _buildPNBagPanel() {
   groups.forEach(function(g) {
     html += `
     <div>
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;color:#a78bfa;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(167,139,250,0.2)">${g.label}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:#a78bfa;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(167,139,250,0.2)">${g.label}</div>
       <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px;min-width:560px">
+      <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;min-width:560px">
         <thead>
           <tr style="border-bottom:1px solid var(--border)">
             ${['Vol (mL)','AA (g)','N₂ (g)','Glucose (g)','Fat (g)','Energy (kcal)','Na (mmol)','K (mmol)','Mg (mmol)','Ca (mmol)','PO₄ (mmol)','Osm (mOsm/L)','pH','Route']
-              .map(function(c){ return `<th style="text-align:right;padding:5px 8px;color:var(--text-dim);font-weight:600;white-space:nowrap;font-size:9px">${c}</th>`; }).join('')}
+              .map(function(c){ return `<th style="text-align:right;padding:5px 8px;color:var(--text-dim);font-weight:600;white-space:nowrap;font-size:11px">${c}</th>`; }).join('')}
           </tr>
         </thead>
         <tbody>
@@ -495,7 +495,7 @@ function _buildPNBagPanel() {
               <td style="text-align:right;padding:5px 8px;color:var(--text-dim)">${b.phosphate||'—'}</td>
               <td style="text-align:right;padding:5px 8px;color:var(--text-dim)">${b.osmolarity||'—'}</td>
               <td style="text-align:right;padding:5px 8px;color:var(--text-dim)">${b.ph||'—'}</td>
-              <td style="text-align:right;padding:5px 8px;color:${b.route==='peripheral'?'#34d399':'#60a5fa'};font-size:9px;white-space:nowrap">${b.route}</td>
+              <td style="text-align:right;padding:5px 8px;color:${b.route==='peripheral'?'#34d399':'#60a5fa'};font-size:11px;white-space:nowrap">${b.route}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -503,7 +503,7 @@ function _buildPNBagPanel() {
       </div>
     </div>`;
   });
-  html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;padding-top:4px">Sources: Kabiven Summary of Product Characteristics (Fresenius Kabi 2006) · NuTRIflex Lipid composition chart (B. Braun July 2015) · Clinimix E sulfite-free Prescribing Information (Baxter 2010). Osmolarity: Kabiven ≈1060 mOsm/L after mixing · NuTRIflex Peri 840, Plus 1215, Special 1545 mOsm/L. 20% IVFE = 2 kcal/mL.</div>';
+  html += '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;padding-top:4px">Sources: Kabiven Summary of Product Characteristics (Fresenius Kabi 2006) · NuTRIflex Lipid composition chart (B. Braun July 2015) · Clinimix E sulfite-free Prescribing Information (Baxter 2010). Osmolarity: Kabiven ≈1060 mOsm/L after mixing · NuTRIflex Peri 840, Plus 1215, Special 1545 mOsm/L. 20% IVFE = 2 kcal/mL.</div>';
   html += '</div>';
   return html;
 }
@@ -534,7 +534,7 @@ function _injectPNDatabasePanel() {
           <span style="font-size:22px">💉</span>
           <div>
             <div style="font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">PN Bag Database</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">20 products · Kabiven · NuTRIflex Lipid · Clinimix E</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">20 products · Kabiven · NuTRIflex Lipid · Clinimix E</div>
           </div>
         </div>
         <div style="height:1px;background:linear-gradient(90deg,rgba(167,139,250,0.3),transparent);margin:10px 0 0"></div>
@@ -556,7 +556,7 @@ function _injectPNDatabasePanel() {
       if (pnBtn)   pnBtn.classList.toggle('dbtab-active', tab === 'parenteral');
 
       // Update header subtitle
-      var sub = document.querySelector('#tab-database .\\-dim, #tab-database [style*="font-size:10px"][style*="color:var(--text-dim)"]');
+      var sub = document.querySelector('#tab-database .\\-dim, #tab-database [style*="font-size:11px"][style*="color:var(--text-dim)"]');
 
       if (tab !== 'parenteral') {
         _origSwitch(tab);
@@ -621,7 +621,7 @@ function _buildPNTab() {
       <span style="font-size:26px">💉</span>
       <div>
         <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Parenteral Nutrition</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">CUSTOM TPN CALCULATOR · BAG SELECTOR · MONITORING</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">CUSTOM TPN CALCULATOR · BAG SELECTOR · MONITORING</div>
       </div>
     </div>
     <div style="height:2px;background:linear-gradient(90deg,#a78bfa,rgba(167,139,250,0));border-radius:2px;margin:10px 0 14px"></div>
@@ -630,22 +630,22 @@ function _buildPNTab() {
   <!-- Sync from calculator -->
   <div style="padding:0 16px;margin-bottom:12px">
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">SYNC REQUIREMENTS FROM</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px">SYNC REQUIREMENTS FROM</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="_pnSyncFrom('adult')"
-          style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(29,233,212,0.35);background:rgba(29,233,212,0.06);color:var(--teal);cursor:pointer;min-width:120px">
+          style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(29,233,212,0.35);background:rgba(29,233,212,0.06);color:var(--teal);cursor:pointer;min-width:120px">
           ↻ ADULT CALCULATOR
         </button>
         <button onclick="_pnSyncFrom('pedi')"
-          style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(96,165,250,0.35);background:rgba(96,165,250,0.06);color:#60a5fa;cursor:pointer;min-width:120px">
+          style="flex:1;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(96,165,250,0.35);background:rgba(96,165,250,0.06);color:#60a5fa;cursor:pointer;min-width:120px">
           ↻ PEDI CALCULATOR
         </button>
         <button onclick="switchTab('database');setTimeout(function(){dbSwitchTab('parenteral');},300)"
-          style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.35);background:rgba(167,139,250,0.06);color:#a78bfa;cursor:pointer">
+          style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:9px 12px;border-radius:8px;border:1px solid rgba(167,139,250,0.35);background:rgba(167,139,250,0.06);color:#a78bfa;cursor:pointer">
           📦 BAG DB
         </button>
       </div>
-      <div id="pn-sync-badge" style="display:none;margin-top:8px;font-family:var(--mono);font-size:9px;color:#34d399;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:6px;padding:5px 10px"></div>
+      <div id="pn-sync-badge" style="display:none;margin-top:8px;font-family:var(--mono);font-size:11px;color:#34d399;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:6px;padding:5px 10px"></div>
     </div>
   </div>
 
@@ -659,7 +659,7 @@ function _buildPNTab() {
         <input type="radio" name="pn-pop" value="pedi" style="accent-color:#60a5fa" onchange="document.getElementById('pn-pedi-note').style.display='block';document.getElementById('pn-kcal-kg').value='80';document.getElementById('pn-prot-kg').value='2.5';if(typeof pnUpdateFluid==='function')pnUpdateFluid()"> 👶 Pediatric
       </label>
     </div>
-    <div id="pn-pedi-note" style="display:none;margin-top:6px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:9px;color:#60a5fa;line-height:1.6">
+    <div id="pn-pedi-note" style="display:none;margin-top:6px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:11px;color:#60a5fa;line-height:1.6">
       ℹ Defaults set to neonatal/infant range (adjust per age). Max GIR: Neonate ≤12 · Infant ≤15 · Child ≤7–8 mg/kg/min. Kabiven approved ≥2 yr. Clinimix E peripheral osm ≤718 mOsm/L in paediatrics.
     </div>
   </div>
@@ -667,42 +667,42 @@ function _buildPNTab() {
   <!-- Input card -->
   <div style="padding:0 16px;margin-bottom:12px">
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      <div style="background:rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.18);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
+      <div style="background:rgba(167,139,250,0.1);border-bottom:1px solid rgba(167,139,250,0.18);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#a78bfa">
         PATIENT & NUTRITION PARAMETERS
       </div>
       <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:9px">
         <div>
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT (kg)</label>
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">WEIGHT (kg)</label>
           <input id="pn-weight" type="number" min="1" max="300" step="0.1" placeholder="kg"
             style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px"
             oninput="if(typeof pnUpdateFluid==='function')pnUpdateFluid()">
         </div>
         <div>
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HEIGHT (cm) <span style="opacity:0.5">optional</span></label>
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">HEIGHT (cm) <span style="opacity:0.5">optional</span></label>
           <input id="pn-height" type="number" min="30" max="220" step="0.5" placeholder="cm"
             style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
         </div>
         <div>
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">ENERGY (kcal/kg/day)</label>
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">ENERGY (kcal/kg/day)</label>
           <input id="pn-kcal-kg" type="number" min="10" max="120" step="0.5" value="25"
             style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
         </div>
         <div>
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PROTEIN (g/kg/day)</label>
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:4px">PROTEIN (g/kg/day)</label>
           <input id="pn-prot-kg" type="number" min="0.5" max="5" step="0.05" value="1.2"
             style="width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px">
         </div>
         <div style="grid-column:1/-1">
-          <label style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:6px">TOTAL FLUID NEEDS (mL/day)</label>
+          <label style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;display:block;margin-bottom:6px">TOTAL FLUID NEEDS (mL/day)</label>
           <!-- Auto-calculated row -->
           <div id="pn-fluid-auto-row" style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.18);border-radius:7px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
             <div>
-              <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">AUTO · </span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">AUTO · </span>
               <span id="pn-fluid-auto-val" style="font-family:var(--mono);font-size:14px;font-weight:700;color:#60a5fa">—</span>
-              <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:4px">mL/day</span>
-              <span id="pn-fluid-auto-note" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:8px"></span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:4px">mL/day</span>
+              <span id="pn-fluid-auto-note" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:8px"></span>
             </div>
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
               <input type="checkbox" id="pn-fluid-manual" style="accent-color:#60a5fa" onchange="if(typeof pnUpdateFluid==='function')pnUpdateFluid()"> Override
             </label>
           </div>
@@ -712,31 +712,31 @@ function _buildPNTab() {
               <input id="pn-fluid-override" type="number" min="50" max="8000" step="10" placeholder="Enter mL/day"
                 style="flex:1;box-sizing:border-box;background:var(--input-bg,var(--surface3));border:1.5px solid rgba(96,165,250,0.5);border-radius:7px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:13px"
                 oninput="if(typeof pnUpdateFluid==='function')pnUpdateFluid()">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap">mL/day</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:nowrap">mL/day</span>
             </div>
-            <div id="pn-fluid-mlkg-display" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;padding-left:2px"></div>
+            <div id="pn-fluid-mlkg-display" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px;padding-left:2px"></div>
           </div>
           <!-- Active fluid display (shown in both modes) -->
-          <div id="pn-fluid-active-display" style="font-family:var(--mono);font-size:9px;color:var(--teal);margin-top:5px;min-height:14px;padding-left:2px"></div>
+          <div id="pn-fluid-active-display" style="font-family:var(--mono);font-size:11px;color:var(--teal);margin-top:5px;min-height:14px;padding-left:2px"></div>
         </div>
         <div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">PN TYPE</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">PN TYPE</div>
           <div style="display:flex;gap:6px">
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
               <input type="radio" name="pn-mode" value="3in1" checked style="accent-color:#a78bfa"> 3-in-1
             </label>
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
               <input type="radio" name="pn-mode" value="2in1" style="accent-color:#a78bfa"> 2-in-1
             </label>
           </div>
         </div>
         <div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">ROUTE</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">ROUTE</div>
           <div style="display:flex;gap:6px">
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
               <input type="radio" name="pn-route" value="central" checked style="accent-color:#a78bfa"> Central
             </label>
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
               <input type="radio" name="pn-route" value="peripheral" style="accent-color:#a78bfa"> Peripheral
             </label>
           </div>
@@ -744,7 +744,7 @@ function _buildPNTab() {
         <div style="grid-column:1/-1">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(240,180,41,0.05);border:1px solid rgba(240,180,41,0.18);border-radius:7px;padding:9px 12px">
             <input type="checkbox" id="pn-firstday" style="accent-color:#f0b429;width:14px;height:14px">
-            <span style="font-family:var(--mono);font-size:10px;color:#f0b429;font-weight:600">First TPN day — cap dextrose at 200 g/day (GIR ≈ 1.5)</span>
+            <span style="font-family:var(--mono);font-size:11px;color:#f0b429;font-weight:600">First TPN day — cap dextrose at 200 g/day (GIR ≈ 1.5)</span>
           </label>
         </div>
       </div>

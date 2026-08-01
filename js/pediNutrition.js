@@ -838,52 +838,52 @@ function buildHCPanel(R) {
         '<span style="font-size:26px;line-height:1">🧠</span>' +
         '<div>' +
           '<div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);letter-spacing:1.8px">HEAD CIRCUMFERENCE INTERPRETATION</div>' +
-          '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">Fenton 2013 HC-for-GA · WHO/AAP Microcephaly Thresholds · Krause &amp; Mahan 16th Ed., Ch.43</div>' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Fenton 2013 HC-for-GA · WHO/AAP Microcephaly Thresholds · Krause &amp; Mahan 16th Ed., Ch.43</div>' +
         '</div>' +
         '<div style="margin-left:auto;padding:5px 14px;background:' + bgAlert + ';border:1.5px solid ' + bdAlert + ';border-radius:20px;font-family:var(--mono);font-size:11px;font-weight:700;color:' + hcI.color + '">' + hcI.label + '</div>' +
       '</div>' +
       '<div style="padding:16px 18px">' +
         '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">' +
           '<div style="flex:1;min-width:110px;padding:12px 14px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:10px;text-align:center">' +
-            '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">MEASURED</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">MEASURED</div>' +
             '<div style="font-family:var(--mono);font-size:24px;font-weight:700;color:var(--blue)">' + R.hcResult.displayVal + '</div>' +
-            '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">50th: ' + R.hcResult.median.toFixed(1) + ' cm</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">50th: ' + R.hcResult.median.toFixed(1) + ' cm</div>' +
           '</div>' +
           '<div style="flex:1;min-width:110px;padding:12px 14px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:10px;text-align:center">' +
-            '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">Z-SCORE</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">Z-SCORE</div>' +
             '<div style="font-family:var(--mono);font-size:24px;font-weight:700;color:' + hcI.color + '">' + zSign + R.hcResult.z.toFixed(2) + '</div>' +
-            '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">SD from median</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">SD from median</div>' +
           '</div>' +
           '<div style="flex:1;min-width:110px;padding:12px 14px;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:10px;text-align:center">' +
-            '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">PERCENTILE</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1.2px;margin-bottom:5px">PERCENTILE</div>' +
             '<div style="font-family:var(--mono);font-size:24px;font-weight:700;color:' + hcI.color + '">' + R.hcResult.p.toFixed(1) + '<sup style="font-size:13px">th</sup></div>' +
-            '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">Fenton 2013</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Fenton 2013</div>' +
           '</div>' +
           '<div style="flex:2;min-width:180px;padding:14px 16px;background:' + bgAlert + ';border:2px solid ' + bdAlert + ';border-radius:10px;display:flex;flex-direction:column;justify-content:center;gap:6px">' +
             '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:' + hcI.color + '">' + hcI.label + '</div>' +
-            '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.7">' + hcI.detail + '</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">' + hcI.detail + '</div>' +
           '</div>' +
         '</div>' +
         '<div style="margin-bottom:14px">' +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-bottom:6px;letter-spacing:1px">HC PERCENTILE POSITION</div>' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:6px;letter-spacing:1px">HC PERCENTILE POSITION</div>' +
           '<div style="position:relative;height:14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;overflow:hidden">' +
             '<div style="position:absolute;left:0;top:0;height:100%;width:' + fill + '%;background:' + hcI.color + ';border-radius:7px;opacity:0.7"></div>' +
             '<div style="position:absolute;left:' + fill + '%;top:-3px;height:20px;width:2px;background:' + hcI.color + ';border-radius:1px"></div>' +
           '</div>' +
-          '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px">' +
+          '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px">' +
             '<span>3rd</span><span>10th</span><span>50th</span><span>90th</span><span>97th</span>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px">' +
-          '<span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);align-self:center;letter-spacing:1px">THRESHOLDS:</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.4);border-radius:5px;color:#fca5a5">Z &lt; −3 Severe Microcephaly</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:5px;color:#fca5a5">Z −2 to −3 Microcephaly</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:5px;color:#fbbf24">Z −1 to −2 Below Average</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:5px;color:#34d399">Z −1 to +1 Normal</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:5px;color:#fbbf24">Z +2 to +3 Macrocephaly</span>' +
-          '<span style="font-family:var(--mono);font-size:9px;padding:3px 9px;background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.4);border-radius:5px;color:#fca5a5">Z &gt; +3 Severe Macrocephaly</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);align-self:center;letter-spacing:1px">THRESHOLDS:</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.4);border-radius:5px;color:#fca5a5">Z &lt; −3 Severe Microcephaly</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);border-radius:5px;color:#fca5a5">Z −2 to −3 Microcephaly</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:5px;color:#fbbf24">Z −1 to −2 Below Average</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:5px;color:#34d399">Z −1 to +1 Normal</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);border-radius:5px;color:#fbbf24">Z +2 to +3 Macrocephaly</span>' +
+          '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.4);border-radius:5px;color:#fca5a5">Z &gt; +3 Severe Macrocephaly</span>' +
         '</div>' +
-        '<div style="padding:11px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:9px;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.9">' +
+        '<div style="padding:11px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:9px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">' +
           '🎯 <strong style="color:var(--blue)">Target gain:</strong> <strong>0.7–1.0 cm/week</strong> · Monitor weekly on Fenton HC-for-GA chart · Krause &amp; Mahan 16th Ed., Ch.43<br>' +
           '📐 <strong style="color:var(--blue)">Technique:</strong> Non-stretchable tape · Largest circumference across occiput + supraorbital ridges · Same time each week<br>' +
           actionNote +
@@ -930,7 +930,7 @@ function fentonRenderResults(R) {
         <span>3rd</span><span>10th</span><span>50th</span><span>90th</span><span>97th</span>
       </div>
       <span class="fenton-badge ${interp.badgeClass}" style="margin-top:8px">${interp.label}</span>
-      <div style="font-family:var(--mono);font-size:9.5px;color:${interp.color};margin-top:4px;line-height:1.6">${interp.detail}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:${interp.color};margin-top:4px;line-height:1.6">${interp.detail}</div>
     </div>`;
   }
 
@@ -957,8 +957,8 @@ function fentonRenderResults(R) {
             <span>3rd</span><span>10th</span><span>50th</span><span>90th</span><span>97th</span>
           </div>
           <span class="fenton-badge ${interp.badgeClass}" style="margin-top:8px">${interp.label}</span>
-          <div style="font-family:var(--mono);font-size:9.5px;color:${interp.color};margin-top:4px;line-height:1.6">${interp.detail}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:5px;line-height:1.7">
+          <div style="font-family:var(--mono);font-size:11px;color:${interp.color};margin-top:4px;line-height:1.6">${interp.detail}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:5px;line-height:1.7">
             🎯 Target gain: <strong>0.7–1.0 cm/week</strong> (Fenton 2013 · Krause &amp; Mahan 16th Ed., Ch.43)<br>
             Thresholds: Z &lt; −2 = Microcephaly · Z &gt; +2 = Macrocephaly (WHO/AAP)
           </div>
@@ -1001,8 +1001,8 @@ function fentonRenderResults(R) {
         </div>
 
         <!-- Interpretation key (compact, inline) -->
-        <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:10px;padding:8px 12px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.12);border-radius:8px;margin-bottom:16px">
-          <span style="color:var(--text-dim);font-size:9px;letter-spacing:1px;align-self:center">FENTON 2013 CUTOFFS:</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:11px;padding:8px 12px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.12);border-radius:8px;margin-bottom:16px">
+          <span style="color:var(--text-dim);font-size:11px;letter-spacing:1px;align-self:center">FENTON 2013 CUTOFFS:</span>
           <span><span style="color:var(--red);font-weight:700">SGA</span> &lt;10th pctile</span>
           <span><span style="color:var(--green);font-weight:700">AGA</span> 10th–90th</span>
           <span><span style="color:var(--amber);font-weight:700">LGA</span> &gt;90th pctile</span>
@@ -1011,7 +1011,7 @@ function fentonRenderResults(R) {
 
         <!-- Growth chart (weight-for-GA) -->
         <div class="fenton-chart-wrap" style="margin-bottom:8px">${chartSvg}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.8;margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8;margin-bottom:20px">
           Lines: 3rd · 10th · 50th · 90th · 97th percentile (weight, Fenton 2013).
           Patient point: ${R.sex === 'male' ? '🔵 male' : '🩷 female'}.
           ${R.dateInfo && R.dateInfo.gaAtBirthStr ? `GA at birth: <strong>${R.dateInfo.gaAtBirthStr}</strong>.` : ''}
@@ -1807,7 +1807,7 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out infinite"></div>
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out 0.4s infinite"></div>
         <div style="width:6px;height:6px;border-radius:50%;background:${accentColor};animation:ni-pulse 1.2s ease-in-out 0.8s infinite"></div>
-        <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.5px">Composing clinical narrative…</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.5px">Composing clinical narrative…</span>
       </div>` : '';
 
     return `
@@ -1820,12 +1820,12 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
           justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">
-            <span style="font-family:var(--mono);font-size:8.5px;font-weight:800;letter-spacing:2px;
+            <span style="font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:2px;
               color:${accentColor};background:rgba(${accentRgb},0.13);
               border:1px solid rgba(${accentRgb},0.28);padding:2px 7px;border-radius:4px">${code}</span>
             <span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:${accentColor}">${title}</span>
           </div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">${subtitle}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${subtitle}</div>
         </div>
       </div>
       <div id="${id}" style="padding:0 2px;font-family:var(--sans);font-size:12.5px;color:var(--text);line-height:1.7;transition:opacity 0.4s">
@@ -1857,20 +1857,20 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
           <div class="card-title" style="color:#60a5fa;font-size:13px;letter-spacing:1.8px;margin-bottom:4px">
             🩺 NUTRITION INTERVENTION PLAN
           </div>
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
             Neonatal Nutrition Care Process · Domains ND / E / C / RC ·
             Feeding Route · Fluid Strategy · Electrolyte Management · Monitoring ·
             ESPGHAN 2022 · ASPEN Neonatal 2021 · Krause &amp; Mahan 16th Ed.
           </div>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">
-          <span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;
+          <span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;
             background:rgba(96,165,250,0.11);border:1px solid rgba(96,165,250,0.28);color:#60a5fa;font-weight:700">${bwLabel2}</span>
-          <span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;
+          <span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;
             background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.22);color:#60a5fa">${gaWk} wk GA</span>
-          <span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;
+          <span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;
             background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);color:#34d399">${routeLabel}</span>
-          <span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;
+          <span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;
             background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:#a78bfa">${phaseLabel}</span>
         </div>
       </div>
@@ -1898,7 +1898,7 @@ function buildNutritionInterventionCard(N, gaDec, bwtG, phase, route, stress, se
       <!-- Reference footer -->
       <div style="padding:8px 12px;background:rgba(96,165,250,0.04);
         border:1px solid rgba(96,165,250,0.11);border-radius:7px;
-        font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.85">
+        font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.85">
         <strong style="color:var(--text)">References:</strong>
         Embleton ND et al. ESPGHAN 2022 Neonatal Nutrition Guidelines. JPGN 2023;76(2):248–272 ·
         ASPEN Neonatal &amp; Pediatric Nutrition Support Guidelines 2021 ·
@@ -2040,7 +2040,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
     return `<div class="mc" style="min-width:110px">
       <div class="m-lbl">${lbl}</div>
       <div class="m-val" style="font-size:15px;color:${col}">${val}</div>
-      ${sub ? `<div class="m-unit" style="font-size:10px">${sub}</div>` : ''}
+      ${sub ? `<div class="m-unit" style="font-size:11px">${sub}</div>` : ''}
     </div>`;
   };
 
@@ -2049,7 +2049,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
     return `<tr style="border-bottom:1px solid rgba(56,100,168,0.12);${warn?'background:rgba(251,113,133,0.05)':''}">
       <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">${lbl}</td>
       <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:${warn?'var(--red)':'var(--text-bright)'}">${val}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">${note}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${note}</td>
     </tr>`;
   };
 
@@ -2069,7 +2069,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       <div style="font-family:var(--cond);font-size:22px;font-weight:900;color:${col};line-height:1;min-width:28px">${letter}</div>
       <div>
         <div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:${col};text-transform:uppercase">${title}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:${col};opacity:0.7;margin-top:2px">${icon}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:${col};opacity:0.7;margin-top:2px">${icon}</div>
       </div>
     </div>`;
 
@@ -2175,7 +2175,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
     sArr.push(`GA ${gaWk} wk, ${bwStr} — nutritional requirements elevated above term-infant norms per ESPGHAN 2022; energy and protein targets require active management`);
   }
 
-  const pesStatement = `<strong style="color:var(--teal)">${P_label}</strong> <span style="color:var(--text-dim);font-size:10px">(${P_code})</span> related to <em>${E}</em>, as evidenced by ${sArr.join('; ')}.`;
+  const pesStatement = `<strong style="color:var(--teal)">${P_label}</strong> <span style="color:var(--text-dim);font-size:11px">(${P_code})</span> related to <em>${E}</em>, as evidenced by ${sArr.join('; ')}.`;
 
   // ── Clinical insights ──────────────────────────────────────────────────────────
   const ins = [];
@@ -2219,7 +2219,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
   }
 
   const insightHtml = ins.map(i =>
-    `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.65">
+    `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.65">
       <span style="flex-shrink:0;font-size:13px;margin-top:1px">${i.icon}</span>
       <span>${i.text}</span>
     </div>`
@@ -2249,14 +2249,14 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
     </div>
     <div class="card-body">
       <div style="padding:10px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);border-radius:8px;margin-bottom:12px">
-        <div style="font-family:var(--mono);font-size:10px;color:#34d399;font-weight:700;margin-bottom:6px">PURPOSE — Trophic feeds are for intestinal priming, NOT nutritional support</div>
-        <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">
+        <div style="font-family:var(--mono);font-size:11px;color:#34d399;font-weight:700;margin-bottom:6px">PURPOSE — Trophic feeds are for intestinal priming, NOT nutritional support</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
           Primary energy source: <strong style="color:var(--amber)">${N.dexSol}</strong> IV dextrose · GIR start <strong>${N.tpnGIRInitial.lo}–${N.tpnGIRInitial.hi} mg/kg/min</strong> → max <strong>${N.tpnGIRMax.lo}–${N.tpnGIRMax.hi} mg/kg/min</strong><br>
           Protein &amp; fat delivery: <strong style="color:var(--red)">NONE</strong> at trophic volumes — document cumulative deficit
         </div>
       </div>
       <!-- Trophic EN metrics -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍼 ENTERAL COMPONENT — Trophic / Gut-Priming</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍼 ENTERAL COMPONENT — Trophic / Gut-Priming</div>
       <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px">
         ${mc('Trophic Volume', trophicVol+' mL/kg/day', 'gut priming dose', 'var(--green)')}
         ${mc('Rate', '~'+trophicRate+' mL/hr', 'continuous NGT', 'var(--blue)')}
@@ -2264,7 +2264,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         ${mc('Advance to', N.enStart+' mL/kg/d', 'min feed → then escalate', 'var(--amber)')}
       </div>
       <!-- IV Dextrose escalation protocol -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--amber);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE — GIR ESCALATION PROTOCOL (Krause &amp; Mahan 16th Ed., Ch.43)</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE — GIR ESCALATION PROTOCOL (Krause &amp; Mahan 16th Ed., Ch.43)</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(240,180,41,0.05);border:1px solid rgba(240,180,41,0.2);border-radius:8px">
         ${mc('Solution', N.dexSol, 'central line if >D12.5', 'var(--amber)')}
         ${mc('GIR — Start', N.tpnGIRInitial.lo+'–'+N.tpnGIRInitial.hi+' mg/kg/min', N.tpnDexRateInitLo+'–'+N.tpnDexRateInitHi+' mL/hr = '+N.tpnDexGKgInit+' g/kg/d', 'var(--teal)')}
@@ -2273,7 +2273,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         ${mc('Max Dex Energy', N.tpnDexKcalKgMax+' kcal/kg/d', N.tpnDexGMax+' g/day at GIR max', 'var(--amber)')}
       </div>
       <!-- Protein deficit warning -->
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8;padding:8px 10px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.2);border-radius:7px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8;padding:8px 10px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.2);border-radius:7px">
         ⚠️ <strong style="color:${N.deficitSeverityEbm.color}">Protein deficit — ${N.deficitSeverityEbm.label}:</strong>
         ~${N.protDeficitEbm} g/kg/day at trophic volumes (target <strong>${N.protTarget.lo}–${N.protTarget.hi} g/kg/day</strong> ESPGHAN 2022 for ${N.bwCat}).
         7-day cumulative estimate: <strong style="color:var(--red)">${N.cumDeficitEbm} g/kg</strong>.
@@ -2343,7 +2343,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- ENTERAL SECTION -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍼 ENTERAL COMPONENT — EBM / Lactogen 1</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍼 ENTERAL COMPONENT — EBM / Lactogen 1</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px">
         ${mc('EN Volume', N.enVolTarget+' mL/kg/d', 'current EN target', 'var(--green)')}
         ${mc('EN Energy', enEnergy+' kcal/kg/d', 'from EN feed at '+N.enVolTarget+' mL/kg', enEnergy<60?'var(--amber)':'var(--green)')}
@@ -2354,7 +2354,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- IV AMINO ACIDS -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">💊 IV AMINO ACIDS — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">💊 IV AMINO ACIDS — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px">
         ${mc('IV AA Initial', N.tpnAAInitial.lo+'–'+N.tpnAAInitial.hi+' g/kg/d', '(full PN start dose)', 'var(--teal)')}
         ${mc('IV AA Gap Needed', pnAALo+'–'+pnAAHi+' g/kg/d', pnAAGLo+'–'+pnAAGHi+' g/day for '+N.wtKg.toFixed(3)+' kg', parseFloat(pnAALo)>0?'var(--amber)':'var(--green)')}
@@ -2363,7 +2363,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- IV LIPID -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🫙 IV LIPID EMULSION — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🫙 IV LIPID EMULSION — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:8px">
         ${mc('IV Lipid Initial', pnLipidInit+' g/kg/d', 'reduced by EN fat contribution', 'var(--blue)')}
         ${mc('IV Lipid Target', pnLipidKg+' g/kg/d', pnLipidGDay+' g/day · '+pnLipidKcal+' kcal/kg · infuse over 24h', 'var(--amber)')}
@@ -2372,7 +2372,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- IV DEXTROSE -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE / GIR — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE / GIR — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.2);border-radius:8px">
         ${mc('Solution', N.dexSol, 'reduce rate as EN ↑', 'var(--amber)')}
         ${mc('GIR Range', pnGIRLo+'–'+pnGIRHi+' mg/kg/min', pnDexRateLo+'–'+pnDexRateHi+' mL/hr · '+pnDexGKg+' g/kg/d', 'var(--teal)')}
@@ -2382,14 +2382,14 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- Combined prescription table -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">📋 FULL PRESCRIPTION SUMMARY TABLE</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">📋 FULL PRESCRIPTION SUMMARY TABLE</div>
       <div class="hscroll-table">
         <table style="width:100%;border-collapse:collapse;min-width:520px">
           <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">COMPONENT</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">ENTERAL (EN)</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">IV SUPPORT</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">COMBINED</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">COMPONENT</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">ENTERAL (EN)</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">IV SUPPORT</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">COMBINED</th>
           </tr></thead>
           <tbody>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(240,180,41,0.04)">
@@ -2398,31 +2398,31 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
               <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${pnDexKcalKg} (dex) + ${pnLipidKcal} (lipid) kcal/kg</td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:${energyMet?'var(--green)':'var(--red)'}">
                 ${totalEnergyDelivered} kcal/kg<br>
-                <span style="font-size:10px;color:var(--text-dim)">Target: ${totalEnergyTarget} kcal/kg — ${energyMet?'✓ Met':'⚠ Gap ~'+energyGap}</span>
+                <span style="font-size:11px;color:var(--text-dim)">Target: ${totalEnergyTarget} kcal/kg — ${energyMet?'✓ Met':'⚠ Gap ~'+energyGap}</span>
               </td>
             </tr>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(52,211,153,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--green);font-weight:700">Protein (AA)</td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)">${enProt} g/kg/d</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">${pnAALo}–${pnAAHi} g/kg/d IV AA<br><span style="font-size:10px;color:var(--text-dim)">${pnAAGLo}–${pnAAGHi} g/day · advance to target</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">${pnAALo}–${pnAAHi} g/kg/d IV AA<br><span style="font-size:11px;color:var(--text-dim)">${pnAAGLo}–${pnAAGHi} g/day · advance to target</span></td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:${protMet?'var(--green)':'var(--red)'}">
                 ${totalProtDelivered} g/kg/d<br>
-                <span style="font-size:10px;color:var(--text-dim)">Target: ${N.protTarget.lo}–${N.protTarget.hi} g/kg — ${protMet?'✓ Met':'⚠ Below'}</span>
+                <span style="font-size:11px;color:var(--text-dim)">Target: ${N.protTarget.lo}–${N.protTarget.hi} g/kg — ${protMet?'✓ Met':'⚠ Below'}</span>
               </td>
             </tr>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(96,165,250,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--blue);font-weight:700">Lipid / Fat</td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue)">${enFatKg.toFixed?enFatKg.toFixed(2):enFatKg} g/kg/d (EBM)</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${pnLipidKg} g/kg/d IV lipid<br><span style="font-size:10px;color:var(--text-dim)">${pnLipidGDay} g/day · ${pnLipidKcal} kcal/kg · 24h infusion</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${pnLipidKg} g/kg/d IV lipid<br><span style="font-size:11px;color:var(--text-dim)">${pnLipidGDay} g/day · ${pnLipidKcal} kcal/kg · 24h infusion</span></td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">
                 ${(enFatKg + parseFloat(pnLipidKg)).toFixed(2)} g/kg/d<br>
-                <span style="font-size:10px;color:var(--text-dim)">Target: ${N.tpnLipidTargetKg.toFixed(1)} g/kg — ${(enFatKg + parseFloat(pnLipidKg)) >= N.tpnLipidTargetKg ? '✓ Met' : 'Partial'}</span>
+                <span style="font-size:11px;color:var(--text-dim)">Target: ${N.tpnLipidTargetKg.toFixed(1)} g/kg — ${(enFatKg + parseFloat(pnLipidKg)) >= N.tpnLipidTargetKg ? '✓ Met' : 'Partial'}</span>
               </td>
             </tr>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(29,233,212,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--teal);font-weight:700">Dextrose / GIR</td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">Via EN carbohydrate</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">GIR ${pnGIRLo}–${pnGIRHi} mg/kg/min<br><span style="font-size:10px;color:var(--text-dim)">${pnDexRateLo}–${pnDexRateHi} mL/hr · ${pnDexGDay} g/day dextrose</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">GIR ${pnGIRLo}–${pnGIRHi} mg/kg/min<br><span style="font-size:11px;color:var(--text-dim)">${pnDexRateLo}–${pnDexRateHi} mL/hr · ${pnDexGDay} g/day dextrose</span></td>
               <td style="padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">Monitor BGL q2–4h · Target 2.5–10 mmol/L</td>
             </tr>
             ${row('Fluid Total', N.fluidTarget+' mL/kg/day', 'Subtract PN bag + drug volumes from dextrose allowance. Recheck as EN advances.')}
@@ -2432,12 +2432,12 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         </table>
       </div>
       <!-- Weaning guidance -->
-      <div style="margin-top:10px;padding:10px 14px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
         <strong style="color:var(--blue)">PN weaning rule (as EN advances):</strong><br>
         Decrease IV dextrose rate proportionally as EN volume ↑ every 12–24h.<br>
         Reduce IV AA when EN protein &gt;2.5 g/kg/day. Reduce IV lipid when EN fat sufficient.<br>
         Target full EN (${N.enFull} mL/kg/day) to wean PN completely. Wean PN over 24–48h — do not abrupt stop (rebound hypoglycaemia).<br>
-        <span style="color:var(--text-dim);font-size:9.5px">Source: Anderson DM. Krause &amp; Mahan's Food &amp; the Nutrition Care Process, 16th Ed., Ch.43 · AA: 2–3 → 3–4 g/kg/d · Lipid: 2–3 → 3 g/kg/d over 24h · GIR: 5–7 → 11–12 mg/kg/min</span>
+        <span style="color:var(--text-dim);font-size:11px">Source: Anderson DM. Krause &amp; Mahan's Food &amp; the Nutrition Care Process, 16th Ed., Ch.43 · AA: 2–3 → 3–4 g/kg/d · Lipid: 2–3 → 3 g/kg/d over 24h · GIR: 5–7 → 11–12 mg/kg/min</span>
       </div>
     </div>
   </div>`;
@@ -2461,15 +2461,15 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         ${mc('Current EN Volume', N.enVolTarget+' mL/kg/d', '= '+N.enVolDay+' mL/day', 'var(--teal)')}
       </div>
       <!-- Formula comparison -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">FORMULA COMPARISON — AT CURRENT VOLUME (${N.enVolTarget} mL/kg/day)</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">FORMULA COMPARISON — AT CURRENT VOLUME (${N.enVolTarget} mL/kg/day)</div>
       <div class="hscroll-table">
         <table style="width:100%;border-collapse:collapse;min-width:540px">
           <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">FORMULA</th>
-            <th style="padding:6px 10px;text-align:center;color:var(--amber);font-size:10px">kcal/kg/day</th>
-            <th style="padding:6px 10px;text-align:center;color:var(--green);font-size:10px">Protein g/kg</th>
-            <th style="padding:6px 10px;text-align:center;color:var(--amber);font-size:10px">Fat g/kg</th>
-            <th style="padding:6px 10px;text-align:center;color:var(--blue);font-size:10px">Protein gap</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">FORMULA</th>
+            <th style="padding:6px 10px;text-align:center;color:var(--amber);font-size:11px">kcal/kg/day</th>
+            <th style="padding:6px 10px;text-align:center;color:var(--green);font-size:11px">Protein g/kg</th>
+            <th style="padding:6px 10px;text-align:center;color:var(--amber);font-size:11px">Fat g/kg</th>
+            <th style="padding:6px 10px;text-align:center;color:var(--blue);font-size:11px">Protein gap</th>
           </tr></thead>
           <tbody>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(29,233,212,0.04)">
@@ -2498,12 +2498,12 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
       <!-- Protein deficit summary -->
       ${N.protDeficitEbm>0?`
-      <div style="margin-top:10px;padding:10px 14px;background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.25);border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.9">
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.25);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9">
         <strong style="color:var(--red)">7-day cumulative protein deficit</strong> with EBM alone: <strong style="color:var(--red)">${N.cumDeficitEbm} g/kg</strong> ·
         with Lactogen 1 std: <strong style="color:var(--amber)">${N.cumDeficitLag1} g/kg</strong> ·
         Advance EN as quickly as safe. Prioritise EBM. Fortify if available.
       </div>`:''}
-      <div style="margin-top:10px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.8">
+      <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         EBM = gold standard · Start trophic feeds Day 1 (0.5–1 mL/kg/h or q2–3h bolus) ·
         Concentrate Lactogen 1 only if EBM unavailable · KMC promotes milk production
       </div>
@@ -2532,7 +2532,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- AMINO ACIDS SECTION -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">💊 IV AMINO ACIDS (PROTEIN) — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">💊 IV AMINO ACIDS (PROTEIN) — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px">
         ${mc('Initial Dose', N.tpnAAInitial.lo+'–'+N.tpnAAInitial.hi+' g/kg/d', '= '+N.tpnAAInitialG+' g/day for '+N.wtKg.toFixed(3)+' kg', 'var(--teal)')}
         ${mc('Target / Max', N.tpnAATarget.lo+'–'+N.tpnAATarget.hi+' g/kg/d', '= '+N.tpnAATargetG+' g/day for '+N.wtKg.toFixed(3)+' kg', 'var(--green)')}
@@ -2541,7 +2541,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- LIPID EMULSION SECTION -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🫙 IV LIPID EMULSION — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🫙 IV LIPID EMULSION — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:8px">
         ${mc('Initial Dose', N.tpnLipidInitial.lo+'–'+N.tpnLipidInitial.hi+' g/kg/d', '= '+N.tpnLipidInitialG+' g/day · infuse over 24h', 'var(--blue)')}
         ${mc('Target Dose', N.tpnLipidTargetKg.toFixed(1)+' g/kg/d', '= '+N.tpnLipidTargetG+' g/day for '+N.wtKg.toFixed(3)+' kg', 'var(--amber)')}
@@ -2550,7 +2550,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- DEXTROSE / GLUCOSE LOAD SECTION -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE / GLUCOSE LOAD (GIR) — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">🍬 IV DEXTROSE / GLUCOSE LOAD (GIR) — Anderson DM. Krause &amp; Mahan 16th Ed., Ch.43</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding:10px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.2);border-radius:8px">
         ${mc('Solution', N.dexSol, 'Central line preferred >D12.5', 'var(--amber)')}
         ${mc('GIR — Start', N.tpnGIRInitial.lo+'–'+N.tpnGIRInitial.hi+' mg/kg/min', N.tpnDexRateInitLo+'–'+N.tpnDexRateInitHi+' mL/hr = '+N.tpnDexGKgInit+' g/kg/d', 'var(--teal)')}
@@ -2560,33 +2560,33 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
 
       <!-- Full component table -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">📋 COMPLETE TPN PRESCRIPTION SUMMARY</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1.5px;font-weight:700;margin-bottom:6px">📋 COMPLETE TPN PRESCRIPTION SUMMARY</div>
       <div class="hscroll-table">
         <table style="width:100%;border-collapse:collapse;min-width:520px">
           <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">COMPONENT</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">INITIAL DOSE</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">TARGET / MAX</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">NOTES</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">COMPONENT</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">INITIAL DOSE</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">TARGET / MAX</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">NOTES</th>
           </tr></thead>
           <tbody>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(52,211,153,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--green);font-weight:700">Amino Acids (IV protein)</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">${N.tpnAAInitial.lo}–${N.tpnAAInitial.hi} g/kg/d<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnAAInitialG} g/day</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">${N.tpnAATarget.lo}–${N.tpnAATarget.hi} g/kg/d<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnAATargetG} g/day</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">Advance to target by Day 3–5. Monitor BUN/urea, ammonia. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">${N.tpnAAInitial.lo}–${N.tpnAAInitial.hi} g/kg/d<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnAAInitialG} g/day</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">${N.tpnAATarget.lo}–${N.tpnAATarget.hi} g/kg/d<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnAATargetG} g/day</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Advance to target by Day 3–5. Monitor BUN/urea, ammonia. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
             </tr>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(96,165,250,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--blue);font-weight:700">Lipid Emulsion (SMOF/Intralipid)</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">${N.tpnLipidInitial.lo}–${N.tpnLipidInitial.hi} g/kg/d<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnLipidInitialG} g/day</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber)">${N.tpnLipidTargetKg.toFixed(1)} g/kg/d<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnLipidTargetG} g/day · ${N.tpnLipidKcalKg} kcal/kg</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">Infuse over 24h. Provides essential fatty acids + fat-soluble vitamins. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">${N.tpnLipidInitial.lo}–${N.tpnLipidInitial.hi} g/kg/d<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnLipidInitialG} g/day</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber)">${N.tpnLipidTargetKg.toFixed(1)} g/kg/d<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnLipidTargetG} g/day · ${N.tpnLipidKcalKg} kcal/kg</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Infuse over 24h. Provides essential fatty acids + fat-soluble vitamins. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
             </tr>
             <tr style="border-bottom:1px solid rgba(56,100,168,0.12);background:rgba(29,233,212,0.04)">
               <td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--teal);font-weight:700">Dextrose (${N.dexSol})</td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">GIR ${N.tpnGIRInitial.lo}–${N.tpnGIRInitial.hi} mg/kg/min<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnDexRateInitLo}–${N.tpnDexRateInitHi} mL/hr · ${N.tpnDexGKgInit} g/kg/d · ${N.tpnDexGInit} g/day</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">GIR ${N.tpnGIRMax.lo}–${N.tpnGIRMax.hi} mg/kg/min<br><span style="font-size:10px;color:var(--text-dim)">${N.tpnDexRateMaxLo}–${N.tpnDexRateMaxHi} mL/hr · ${N.tpnDexGKgMax} g/kg/d · ${N.tpnDexGMax} g/day · ${N.tpnDexKcalKgMax} kcal/kg</span></td>
-              <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">Advance GIR by ${N.tpnGIRIncrement.lo}–${N.tpnGIRIncrement.hi} mg/kg/min/day. Check glucose q2–4h. Target 2.5–10 mmol/L. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal)">GIR ${N.tpnGIRInitial.lo}–${N.tpnGIRInitial.hi} mg/kg/min<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnDexRateInitLo}–${N.tpnDexRateInitHi} mL/hr · ${N.tpnDexGKgInit} g/kg/d · ${N.tpnDexGInit} g/day</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">GIR ${N.tpnGIRMax.lo}–${N.tpnGIRMax.hi} mg/kg/min<br><span style="font-size:11px;color:var(--text-dim)">${N.tpnDexRateMaxLo}–${N.tpnDexRateMaxHi} mL/hr · ${N.tpnDexGKgMax} g/kg/d · ${N.tpnDexGMax} g/day · ${N.tpnDexKcalKgMax} kcal/kg</span></td>
+              <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Advance GIR by ${N.tpnGIRIncrement.lo}–${N.tpnGIRIncrement.hi} mg/kg/min/day. Check glucose q2–4h. Target 2.5–10 mmol/L. Source: Krause &amp; Mahan 16th Ed., Ch.43.</td>
             </tr>
             ${row('Fluid Total', N.fluidTarget+' mL/kg/day', N.therm==='radiant'?'⚠ Radiant warmer — +20–30 mL/kg/day IWL applied. Recheck totals.':'IV only. Subtract drug infusion volumes from dextrose allowance.')}
             ${row('Calcium (IV gluconate 10%)', N.elec.ca.lo+'–'+N.elec.ca.hi+' mmol/kg/day', 'Add to PN bag. Critical for cardiac function + bone mineralisation.')}
@@ -2597,14 +2597,14 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         </table>
       </div>
       <!-- Energy summary box -->
-      <div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
         <strong style="color:var(--amber)">TPN energy summary for ${N.wtKg.toFixed(3)} kg (at target doses):</strong><br>
         Dextrose: GIR ${N.tpnGIRMax.lo}–${N.tpnGIRMax.hi} mg/kg/min = <strong>${N.tpnDexGKgMax} g/kg/day</strong> → <strong>${N.tpnDexKcalKgMax} kcal/kg/day</strong><br>
         Lipid emulsion: <strong>${N.tpnLipidTargetKg.toFixed(1)} g/kg/day</strong> → <strong>${N.tpnLipidKcalKg} kcal/kg/day</strong><br>
         Amino acids (protein): <strong>${N.tpnAATarget.lo}–${N.tpnAATarget.hi} g/kg/day</strong> (${N.tpnAATargetG} g/day for this patient)<br>
         Non-protein energy total: <strong style="color:var(--green)">${N.tpnTotalKcalKgTarget} kcal/kg/day</strong> · Full caloric total (incl. AA): <strong style="color:var(--green)">${N.tpnTotalKcalFull} kcal/kg/day</strong>
         vs target ${tpnTotalKcal} kcal/kg/day<br>
-        <span style="color:var(--text-dim);font-size:9.5px">Source: Anderson DM. Krause &amp; Mahan's Food &amp; the Nutrition Care Process, 16th Ed., Ch.43. · Protein initiation: 2–3 g/kg/d → advance to 3–4 g/kg/d · Lipid: 2–3 g/kg/d → 3 g/kg/d over 24h · GIR: 5–7 → 1–2 mg/kg/min/day increments → max 11–12 mg/kg/min</span>
+        <span style="color:var(--text-dim);font-size:11px">Source: Anderson DM. Krause &amp; Mahan's Food &amp; the Nutrition Care Process, 16th Ed., Ch.43. · Protein initiation: 2–3 g/kg/d → advance to 3–4 g/kg/d · Lipid: 2–3 g/kg/d → 3 g/kg/d over 24h · GIR: 5–7 → 1–2 mg/kg/min/day increments → max 11–12 mg/kg/min</span>
       </div>
     </div>
   </div>`;
@@ -2630,13 +2630,13 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
         ${(()=>{
           const dexPct = N.ivPct;
           const enPct  = N.enPct;
-          return '<div style="width:'+dexPct+'%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#000">IV '+dexPct+'%</div>'+
-                  '<div style="width:'+enPct+'%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#000">EN '+enPct+'%</div>';
+          return '<div style="width:'+dexPct+'%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#000">IV '+dexPct+'%</div>'+
+                  '<div style="width:'+enPct+'%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#000">EN '+enPct+'%</div>';
         })()}
       </div>
-      ${N.fluidIVAlert ? '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;font-family:var(--mono);font-size:10.5px;color:var(--red);font-weight:700">🔄 Enteral feeds should be prioritised — consider advancing EN if tolerated. IV dextrose ('+N.ivPct+'%) currently exceeds EN ('+N.enPct+'%) in '+phaseLabel.toLowerCase()+' phase.</div>' : ''}
+      ${N.fluidIVAlert ? '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:7px;font-family:var(--mono);font-size:11px;color:var(--red);font-weight:700">🔄 Enteral feeds should be prioritised — consider advancing EN if tolerated. IV dextrose ('+N.ivPct+'%) currently exceeds EN ('+N.enPct+'%) in '+phaseLabel.toLowerCase()+' phase.</div>' : ''}
       `:''}
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         ${N.therm==='radiant'?'<strong style="color:var(--amber)">⚠ Radiant warmer: +20–30 mL/kg/day IWL applied — recheck fluid totals</strong> · ':''}
         ${route==='tpn'?'All fluid IV — account for drug infusion volumes.':'Reduce IV dextrose rate as EN volume increases · Always account for drug infusion volumes in fluid budget.'}
       </div>
@@ -2654,9 +2654,9 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       <div class="hscroll-table">
         <table style="width:100%;border-collapse:collapse;min-width:480px">
           <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">ELECTROLYTE</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">TARGET</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:10px">NOTES</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">ELECTROLYTE</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">TARGET</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-size:11px">NOTES</th>
           </tr></thead>
           <tbody>
             ${row('Sodium (Na⁺)', N.elec.na.lo+'–'+N.elec.na.hi+' mEq/kg/day', 'Restrict Day 1–2 (prerenal); supplement via IV once UO established. Monitor for hypernatraemia from IWL.')}
@@ -2667,7 +2667,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
           </tbody>
         </table>
       </div>
-      <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:2">
+      <div style="margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2">
         <strong style="color:var(--text)">Supplements (enteral route):</strong><br>
         ${N.vit.vitD}<br>
         Iron: ${N.vit.iron}<br>
@@ -2715,9 +2715,9 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       ${fentonChartHtml ? `
       <!-- Fenton Weight-for-GA Chart — embedded in Assessment -->
       <div style="margin-top:16px">
-        <div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">📈 FENTON 2013 WEIGHT-FOR-GESTATIONAL-AGE CHART</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">📈 FENTON 2013 WEIGHT-FOR-GESTATIONAL-AGE CHART</div>
         <div class="fenton-chart-wrap">${fentonChartHtml}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:8px;line-height:1.8">
+        <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.8">
           <span>Lines: 3rd · 10th · 50th · 90th · 97th percentile</span>
           <span style="color:var(--red);font-weight:700">SGA</span><span>&lt;10th pctile</span>
           <span style="color:var(--green);font-weight:700">AGA</span><span>10th–90th</span>
@@ -2742,12 +2742,12 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       <div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.08)">ESPGHAN 2022 · ASPEN 2021</div>
     </div>
     <div class="card-body">
-      <div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:8px">PROBLEM (P) — ETIOLOGY (E) — SIGNS &amp; SYMPTOMS (S)</div>
+      <div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:8px">PROBLEM (P) — ETIOLOGY (E) — SIGNS &amp; SYMPTOMS (S)</div>
       <div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.8;padding:12px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:8px">${pesStatement}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
-        <div style="font-family:var(--mono);font-size:9px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">IDNT Code: ${P_code}</div>
-        <div style="font-family:var(--mono);font-size:9px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">Phase: ${phaseLabel}</div>
-        <div style="font-family:var(--mono);font-size:9px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">${bwLabel}</div>
+        <div style="font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">IDNT Code: ${P_code}</div>
+        <div style="font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">Phase: ${phaseLabel}</div>
+        <div style="font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa">${bwLabel}</div>
       </div>
     </div>
   </div>
@@ -2784,16 +2784,16 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       </div>
       <!-- Energy Source Breakdown -->
       <div style="margin-bottom:10px;padding:10px 12px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.25);border-radius:8px">
-        <div style="font-family:var(--mono);font-size:8.5px;color:var(--amber);letter-spacing:1.5px;font-weight:700;margin-bottom:7px">⚡ ENERGY DELIVERY — SOURCE BREAKDOWN</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:1.5px;font-weight:700;margin-bottom:7px">⚡ ENERGY DELIVERY — SOURCE BREAKDOWN</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
           ${mc('EN Energy', N.enEnergyKcalKg+' kcal/kg/d', 'from enteral at '+N.enVolTarget+' mL/kg', N.enEnergyKcalKg < 50 ? 'var(--red)' : 'var(--green)')}
           ${mc('IV Dextrose', N.dexKcalKgCalc+' kcal/kg/d', 'GIR '+N.girMid.toFixed(1)+' mg/kg/min → '+N.dexGKgDay+' g/kg × 3.4', 'var(--amber)')}
           ${mc('Total Delivered', N.totalEnergyDeliveredKg+' kcal/kg/d', N.energyMet ? '✓ Within target (110–130)' : '⚠ Below 110 kcal/kg/day target', N.energyMet ? 'var(--green)' : 'var(--red)')}
           ${N.isFullFeeds ? mc('Full Feeds Energy', N.enEnergyKcalKgFull+' kcal/kg/d', '✓ EN ≥120 mL/kg — full feeds', 'var(--green)') : mc('Full Feeds (not yet)', N.enEnergyKcalKgFull+' kcal/kg/d', '⚠ EN <120 mL/kg — not full feeds', 'var(--text-dim)')}
         </div>
-        ${!N.energyMet && N.energyGapKg > 0 ? `<div style="font-family:var(--mono);font-size:10px;color:var(--red);padding:6px 8px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:6px">⚠ Energy gap: <strong>${N.energyGapKg} kcal/kg/day</strong> below minimum target (110 kcal/kg/day). Advance EN or optimise GIR.</div>` : ''}
+        ${!N.energyMet && N.energyGapKg > 0 ? `<div style="font-family:var(--mono);font-size:11px;color:var(--red);padding:6px 8px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.2);border-radius:6px">⚠ Energy gap: <strong>${N.energyGapKg} kcal/kg/day</strong> below minimum target (110 kcal/kg/day). Advance EN or optimise GIR.</div>` : ''}
       </div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);padding:8px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:7px;line-height:1.9">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:8px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:7px;line-height:1.9">
         <strong style="color:var(--teal)">Micronutrients (ESPGHAN 2022):</strong>
         Ca ${N.elec.ca.lo}–${N.elec.ca.hi} mmol/kg/d · P ${N.elec.phos.lo}–${N.elec.phos.hi} mmol/kg/d ·
         Vit D 400–1000 IU/kg/d · Iron ${N.vit.iron} · Vit A ${N.vit.vitA} ·
@@ -2821,7 +2821,7 @@ function renderPretermNutrition(N, gaDec, bwtG, phase, route, stress, sex, wtRes
       <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:4px 0">
         ${monSummary}
       </div>
-      <div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;padding:8px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:7px">
+      <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;padding:8px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:7px">
         ⚠️ Targets adapted for Malawi resource-limited NICU. Document all limitations and nutritional deficits in the patient record.
         Consult neonatology for all escalations. · ESPGHAN 2022 · AAP COFN 2020 · ASPEN Neonatal 2021
       </div>
@@ -2875,7 +2875,7 @@ function buildPretermPES(N, gaDec, bwtG, phase, route, stress) {
   if (stress !== 'none') sArr.push('stress factor: ' + stressLabel);
   if (N.therm === 'radiant') sArr.push('radiant warmer -- increased insensible water loss');
 
-  const pesStatement = '<strong style="color:var(--teal)">' + P_label + '</strong> <span style="color:var(--text-dim);font-size:10px">(' + P_code + ')</span> related to <em>' + E + '</em>, as evidenced by ' + sArr.join('; ') + '.';
+  const pesStatement = '<strong style="color:var(--teal)">' + P_label + '</strong> <span style="color:var(--text-dim);font-size:11px">(' + P_code + ')</span> related to <em>' + E + '</em>, as evidenced by ' + sArr.join('; ') + '.';
 
   const ins = [];
   ins.push({ icon:'🇲🇼', col:'#fcd34d', text:'Malawi NICU context: No IV amino acids or lipid emulsion available. <strong style="color:var(--amber)">ENTERAL NUTRITION IS THE ONLY SOURCE OF PROTEIN AND FAT.</strong> Prioritise EBM -- request milk expression support q2-3h. Early EN advancement and KMC are the primary clinical tools.' });
@@ -2913,10 +2913,10 @@ function buildPretermPES(N, gaDec, bwtG, phase, route, stress) {
   }
 
   const insHtml = ins.map(function(i) {
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ' + i.col + ';border-radius:5px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.65"><span style="flex-shrink:0;font-size:13px;margin-top:1px">' + i.icon + '</span><span>' + i.text + '</span></div>';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ' + i.col + ';border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.65"><span style="flex-shrink:0;font-size:13px;margin-top:1px">' + i.icon + '</span><span>' + i.text + '</span></div>';
   }).join('');
 
-  return '<div class="card" style="margin-bottom:14px;border-color:rgba(29,233,212,0.22)"><div class="card-header" style="background:rgba(29,233,212,0.05);border-bottom-color:rgba(29,233,212,0.15)"><div class="card-title" style="color:var(--teal)">📋 PES STATEMENT &amp; CLINICAL NUTRITION INSIGHTS</div><div class="card-badge" style="color:var(--teal);border-color:rgba(29,233,212,0.3);background:rgba(29,233,212,0.08)">NCP · ESPGHAN 2022 · ASPEN 2021</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px"><div><div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;margin-bottom:6px">SUGGESTED NUTRITION DIAGNOSIS (PES)</div><div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75;padding:10px 14px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.18);border-radius:6px">' + pesStatement + '</div></div><div><div style="font-family:var(--mono);font-size:8.5px;color:#ddeeff;letter-spacing:1.5px;margin-bottom:6px">CLINICAL NUTRITION INSIGHTS</div><div style="display:flex;flex-direction:column;gap:6px">' + insHtml + '</div></div></div></div>';
+  return '<div class="card" style="margin-bottom:14px;border-color:rgba(29,233,212,0.22)"><div class="card-header" style="background:rgba(29,233,212,0.05);border-bottom-color:rgba(29,233,212,0.15)"><div class="card-title" style="color:var(--teal)">📋 PES STATEMENT &amp; CLINICAL NUTRITION INSIGHTS</div><div class="card-badge" style="color:var(--teal);border-color:rgba(29,233,212,0.3);background:rgba(29,233,212,0.08)">NCP · ESPGHAN 2022 · ASPEN 2021</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px"><div><div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;margin-bottom:6px">SUGGESTED NUTRITION DIAGNOSIS (PES)</div><div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75;padding:10px 14px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.18);border-radius:6px">' + pesStatement + '</div></div><div><div style="font-family:var(--mono);font-size:11px;color:#ddeeff;letter-spacing:1.5px;margin-bottom:6px">CLINICAL NUTRITION INSIGHTS</div><div style="display:flex;flex-direction:column;gap:6px">' + insHtml + '</div></div></div></div>';
 }
 
 
@@ -3178,18 +3178,18 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
     const dailyProt = dailyVol ? +(dailyVol * f.protein_g / 100).toFixed(1) : null;
     return `
     <div style="border:1.5px solid ${isRec?'rgba(29,233,212,0.5)':'rgba(56,100,168,0.25)'};border-radius:12px;padding:14px 16px;margin-bottom:10px;background:${isRec?'rgba(29,233,212,0.04)':'rgba(10,20,38,0.5)'}">
-      ${f.malawi_note ? `<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--amber);background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.35);border-radius:5px;padding:4px 10px;margin-bottom:8px">🇲🇼 MALAWI RESOURCE-LIMITED SETTING — PRIMARY AVAILABLE FORMULA · USE WITH CAUTION IN PRETERM</div>` : ''}
+      ${f.malawi_note ? `<div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--amber);background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.35);border-radius:5px;padding:4px 10px;margin-bottom:8px">🇲🇼 MALAWI RESOURCE-LIMITED SETTING — PRIMARY AVAILABLE FORMULA · USE WITH CAUTION IN PRETERM</div>` : ''}
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
         <div style="flex:1">
           <div style="font-family:var(--cond);font-size:12px;font-weight:700;color:${isRec?'var(--teal)':'var(--text)'};margin-bottom:3px">${isRec?'⭐ ':''} ${f.name}</div>
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--green);margin-bottom:5px">${f.indication}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:5px">${f.indication}</div>
         </div>
         <div style="text-align:center;background:rgba(29,233,212,0.08);border-radius:8px;padding:6px 10px;flex-shrink:0">
           <div style="font-family:var(--cond);font-size:18px;font-weight:800;color:var(--teal)">${f.kcal_per_100ml}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">kcal/100mL</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">kcal/100mL</div>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:8px">
         <span>Protein <strong style="color:var(--green)">${f.protein_g} g</strong></span>
         <span>Fat <strong style="color:var(--amber)">${f.fat_g} g</strong></span>
         <span>CHO <strong style="color:var(--blue)">${f.cho_g} g</strong></span>
@@ -3198,7 +3198,7 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
         ${f.phos_mg?`<span>Phos <strong>${f.phos_mg} mg</strong></span>`:''}
       </div>
       ${wtKg && dailyVol ? `
-      <div style="background:rgba(96,165,250,0.07);border-radius:6px;padding:7px 10px;margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--text)">
+      <div style="background:rgba(96,165,250,0.07);border-radius:6px;padding:7px 10px;margin-bottom:8px;font-family:var(--mono);font-size:11px;color:var(--text)">
         At ${volTarget} mL/kg/day for ${wtKg.toFixed(2)} kg: <strong>${dailyVol} mL/day</strong> →
         <strong style="color:var(--amber)">${dailyKcal} kcal/day</strong> ·
         <strong style="color:var(--green)">${dailyProt} g protein/day</strong>
@@ -3211,8 +3211,8 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
         const stdScoops  = Math.round(dailyVol / 60 * 2 * 10) / 10;
         const concScoops = Math.round(dailyVol / 90 * 3 * 10) / 10;
         return `<div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.35);border-radius:8px;padding:10px 12px;margin-bottom:8px">
-          <div style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--amber);font-weight:700;margin-bottom:7px">🇲🇼 CONCENTRATION GUIDE — PRETERM USE (LAST RESORT)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:var(--mono);font-size:10px">
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--amber);font-weight:700;margin-bottom:7px">🇲🇼 CONCENTRATION GUIDE — PRETERM USE (LAST RESORT)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:var(--mono);font-size:11px">
             <div style="background:rgba(0,0,0,0.2);border-radius:6px;padding:8px">
               <div style="color:var(--text-dim);margin-bottom:4px">STANDARD DILUTION (term)</div>
               <div>2 scoops / 60 mL · 67 kcal/100 mL</div>
@@ -3225,12 +3225,12 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
               <div style="color:var(--green)">→ ${concKcalDay} kcal/day · ${concProtDay} g prot/day</div>
             </div>
           </div>
-          <div style="margin-top:7px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+          <div style="margin-top:7px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
             ⚠️ Osmolality ~390 mOsm/L concentrated — advance slowly · Monitor for NEC signs · Ca/Phos supplementation essential
           </div>
         </div>`;
       })() : ''}
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">${f.notes}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">${f.notes}</div>
     </div>`;
   };
 
@@ -3239,14 +3239,14 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
   const showTherapeutic = ageMo >= 6; // No therapeutic milks for <6 months except under specialist supervision
   const showRutf        = ageMo >= 6 && ageMo <= 180; // 6 mo–15 yr
   const therapeuticHtml = showTherapeutic ? `
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--red);margin:16px 0 8px;font-weight:700">🍽️ THERAPEUTIC FOODS — SAM ONLY</div>
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--red);margin:16px 0 8px;font-weight:700">🍽️ THERAPEUTIC FOODS — SAM ONLY</div>
     <div style="background:rgba(251,113,133,0.05);border:1px solid rgba(251,113,133,0.2);border-radius:10px;padding:12px 16px;margin-bottom:10px">
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:10px;line-height:1.8">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.8">
         ⚠️ Therapeutic milks and RUTF are indicated <strong style="color:var(--text)">only for confirmed SAM (6 months–15 years)</strong>.
         They are NOT suitable as routine nutrition for well-fed children.
         Always confirm SAM diagnosis and phase (stabilisation vs. rehabilitation) before use.
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:var(--mono);font-size:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:var(--mono);font-size:11px">
         <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:10px">
           <div style="color:var(--red);font-weight:700;margin-bottom:4px">F-75 — Stabilisation Phase</div>
           <div style="color:var(--text)">75 kcal/100 mL · 0.9 g protein/100 mL</div>
@@ -3267,12 +3267,12 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
           <div style="color:var(--text)">~520 kcal/100 g · ~13.5 g protein/100 g</div>
           <div style="color:var(--text-dim);margin-top:4px">~200 kcal/kg/day · Standard dose: 1 sachet (92 g) per ~5 kg</div>
           <div style="color:var(--text-dim)">Age: 6 months – 5 years (primary); up to 15 years under guidance</div>
-          ${ageMo > 60 ? `<div style="color:var(--amber);margin-top:5px;font-size:9px">⚠ RUTF use in children >5 years is off-label CMAM — use under paediatric supervision only. Dosing: ~200 kcal/kg/day adjusted to weight.</div>` : ''}
+          ${ageMo > 60 ? `<div style="color:var(--amber);margin-top:5px;font-size:11px">⚠ RUTF use in children >5 years is off-label CMAM — use under paediatric supervision only. Dosing: ~200 kcal/kg/day adjusted to weight.</div>` : ''}
           ${wtKg ? `<div style="color:var(--green);margin-top:4px">→ ${Math.round(200*wtKg)} kcal/day → ≈${(200*wtKg/500).toFixed(1)} sachets/day</div>` : ''}
         </div>` : ''}
       </div>
     </div>` : `
-    <div style="background:rgba(251,113,133,0.05);border:1px dashed rgba(251,113,133,0.3);border-radius:8px;padding:10px 14px;margin:14px 0 8px;font-family:var(--mono);font-size:10px;color:var(--red)">
+    <div style="background:rgba(251,113,133,0.05);border:1px dashed rgba(251,113,133,0.3);border-radius:8px;padding:10px 14px;margin:14px 0 8px;font-family:var(--mono);font-size:11px;color:var(--red)">
       ⛔ Therapeutic milks (F-75, F-100) and RUTF are <strong>NOT indicated</strong> for infants under 6 months.
       SAM management in this age group requires specialist supervision (breastfeeding support, NGT feeding if needed, hospital admission).
     </div>`;
@@ -3294,19 +3294,19 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
       <div class="card-badge">${ageBanner}</div>
     </div>
     <div class="card-body">
-      <div style="background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">
+      <div style="background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
         🧭 <strong style="color:var(--teal)">Feeding principle for this age:</strong> ${feedingPrinciple}
       </div>`;
 
   if (allowed.length === 0) {
     html += `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:12px">No infant/medical formulas are indicated for children in this age group — a full family diet is appropriate. Refer to a dietitian for therapeutic oral nutritional supplements if clinically needed.</div>`;
   } else {
-    html += `<div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:8px">⭐ = Recommended for this profile (${bwCat||'this patient'}${wtKg?' · '+wtKg.toFixed(2)+' kg':''})</div>`;
+    html += `<div style="font-family:var(--mono);font-size:11px;color:var(--teal);margin-bottom:8px">⭐ = Recommended for this profile (${bwCat||'this patient'}${wtKg?' · '+wtKg.toFixed(2)+' kg':''})</div>`;
     categories.forEach(cat => {
       const formulasInCat = Object.entries(ENTERAL_FORMULA_DB)
         .filter(([k, v]) => v.category === cat.key && allowed.includes(k));
       if (!formulasInCat.length) return;
-      html += `<div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:${cat.col};margin:14px 0 8px;font-weight:700">${cat.label}</div>`;
+      html += `<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:${cat.col};margin:14px 0 8px;font-weight:700">${cat.label}</div>`;
       formulasInCat.forEach(([k]) => { html += fCard(k); });
     });
   }
@@ -3314,7 +3314,7 @@ function renderFormulaDatabase(wtKg, ageMo, bwCat, isPreterm) {
   html += therapeuticHtml;
 
   html += `
-      <div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(56,100,168,0.07);border:1px solid rgba(56,100,168,0.2);font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.8">
+      <div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(56,100,168,0.07);border:1px solid rgba(56,100,168,0.2);font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         All composition values per 100 mL as prepared. Data from manufacturer prescribing information 2023–2024.
         Always verify current product formulation. Human milk values are averages — actual milk varies between mothers and lactation stages.
         Age-gating is based on WHO/UNICEF/ESPGHAN 2023 feeding guidelines. Individual clinical decisions may override these guidelines — always apply clinical judgment.
@@ -3354,12 +3354,12 @@ function renderAgeSpecificInterventions(D) {
       <div style="flex:1">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${col}">${label}</div>
         <div style="font-family:var(--mono);font-size:11px;color:var(--text)">${value}</div>
-        ${note?`<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:2px">${note}</div>`:''}
+        ${note?`<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">${note}</div>`:''}
       </div>
     </div>`;
 
   const warn = (msg) =>
-    `<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:8px 12px;margin:6px 0;font-family:var(--mono);font-size:10px;color:var(--red)">⛔ ${msg}</div>`;
+    `<div style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);border-radius:8px;padding:8px 12px;margin:6px 0;font-family:var(--mono);font-size:11px;color:var(--red)">⛔ ${msg}</div>`;
 
   // ──────────────────────────────────────────────────────────────
   // 1. Feeding route / mode
@@ -3525,7 +3525,7 @@ function renderAgeSpecificInterventions(D) {
     </div>
     <div class="card-body">
       ${rows.join('')}
-      <div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+      <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
         WHO/UNICEF Infant &amp; Young Child Feeding guidelines 2023 · ESPGHAN 2022 · IOM DRI 2020 · Malawi CMAM 2016 · ASPEN Pedi 2024.
         All recommendations are age-gated — interventions shown are appropriate for this child's specific age group only. Always apply clinical judgment.
       </div>
@@ -3601,9 +3601,9 @@ function calcTransitionSchedule({ wtKg, bwCat, gaDec, fluidTarget, energyTarget,
   // Build HTML table
   const rowColor = s => s.stopPN ? 'rgba(52,211,153,0.07)' : s.fortify ? 'rgba(29,233,212,0.04)' : 'transparent';
   const badge = s => s.stopPN
-    ? `<span style="font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(52,211,153,0.15);border-radius:4px;padding:1px 5px">STOP IV DEXTROSE</span>`
+    ? `<span style="font-family:var(--mono);font-size:11px;color:var(--green);background:rgba(52,211,153,0.15);border-radius:4px;padding:1px 5px">STOP IV DEXTROSE</span>`
     : s.fortify
-    ? `<span style="font-family:var(--mono);font-size:9px;color:var(--teal);background:rgba(29,233,212,0.12);border-radius:4px;padding:1px 5px">FORTIFY</span>`
+    ? `<span style="font-family:var(--mono);font-size:11px;color:var(--teal);background:rgba(29,233,212,0.12);border-radius:4px;padding:1px 5px">FORTIFY</span>`
     : '';
 
   const tableHtml = `
@@ -3613,13 +3613,13 @@ function calcTransitionSchedule({ wtKg, bwCat, gaDec, fluidTarget, energyTarget,
       <div class="card-badge">🇲🇼 Malawi Protocol · Custom for ${bwCat} · ${wtKg.toFixed(3)} kg</div>
     </div>
     <div class="card-body">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:12px;line-height:1.8">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:12px;line-height:1.8">
         Total fluid budget: <strong style="color:var(--text)">${totalFluid} mL/kg/day</strong> (IV dextrose + enteral) ·
         EN advance: <strong>${enAdvance} mL/kg/day</strong> every 24h when tolerating ·
         🇲🇼 <strong style="color:var(--amber)">Reduce IV dextrose rate as EN increases</strong> · Fortify EBM at ≥100 mL/kg/day if HMF available · Stop IV when full EN established
       </div>
       <div class="hscroll-table">
-        <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px;min-width:680px">
+        <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;min-width:680px">
           <thead>
             <tr style="border-bottom:2px solid var(--border)">
               <th style="padding:7px 8px;text-align:left;color:var(--text-dim)">Day</th>
@@ -3636,18 +3636,18 @@ function calcTransitionSchedule({ wtKg, bwCat, gaDec, fluidTarget, energyTarget,
             ${absSteps.map(s => `
             <tr style="border-bottom:1px solid rgba(56,100,168,0.1);background:${rowColor(s)}">
               <td style="padding:6px 8px;color:var(--text)">${s.day}</td>
-              <td style="padding:6px 8px;text-align:center;color:var(--teal);font-weight:700">${s.enVol}<br><span style="font-size:9px;color:var(--text-dim)">${s.enVolAbs} mL</span></td>
+              <td style="padding:6px 8px;text-align:center;color:var(--teal);font-weight:700">${s.enVol}<br><span style="font-size:11px;color:var(--text-dim)">${s.enVolAbs} mL</span></td>
               <td style="padding:6px 8px;text-align:center;color:var(--teal)">${s.enRateAbs}</td>
-              <td style="padding:6px 8px;text-align:center;color:${s.pnVol>0?'var(--purple)':'var(--text-dim)'};font-weight:${s.pnVol>0?700:400}">${s.pnVol > 0 ? s.pnVol : '—'}<br><span style="font-size:9px;color:var(--text-dim)">${s.pnVol>0?s.pnVolAbs+' mL':''}</span></td>
+              <td style="padding:6px 8px;text-align:center;color:${s.pnVol>0?'var(--purple)':'var(--text-dim)'};font-weight:${s.pnVol>0?700:400}">${s.pnVol > 0 ? s.pnVol : '—'}<br><span style="font-size:11px;color:var(--text-dim)">${s.pnVol>0?s.pnVolAbs+' mL':''}</span></td>
               <td style="padding:6px 8px;text-align:center;color:var(--purple)">${s.pnVol > 0 ? s.pnRateAbs : '—'}</td>
-              <td style="padding:6px 8px;text-align:center;color:var(--amber)">${s.totalKcal}<br><span style="font-size:9px;color:var(--text-dim)">${(s.totalKcal/wtKg).toFixed(0)} kcal/kg</span></td>
-              <td style="padding:6px 8px;text-align:center;color:var(--green)">${s.totalProt} g<br><span style="font-size:9px;color:var(--text-dim)">${(s.totalProt/wtKg).toFixed(1)} g/kg</span></td>
+              <td style="padding:6px 8px;text-align:center;color:var(--amber)">${s.totalKcal}<br><span style="font-size:11px;color:var(--text-dim)">${(s.totalKcal/wtKg).toFixed(0)} kcal/kg</span></td>
+              <td style="padding:6px 8px;text-align:center;color:var(--green)">${s.totalProt} g<br><span style="font-size:11px;color:var(--text-dim)">${(s.totalProt/wtKg).toFixed(1)} g/kg</span></td>
               <td style="padding:6px 8px">${badge(s)}</td>
             </tr>`).join('')}
           </tbody>
         </table>
       </div>
-      <div style="margin-top:12px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.9">
+      <div style="margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9">
         <strong style="color:var(--text)">Tolerance criteria before advancing EN:</strong>
         No abdominal distension · No bilious aspirates · No vomiting · Assess clinically for discomfort before each feed (routine GRV monitoring not recommended — ASPEN/SCCM 2016) ·
         No blood in stool · Haemodynamically stable · <br>
@@ -3810,10 +3810,10 @@ function renderRefeedingScreen(R) {
         <span style="color:${col};flex-shrink:0;font-size:11px">▸</span>
         <div>
           <span style="font-family:var(--mono);font-size:11px;color:var(--text)">${i.item}</span>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-left:8px">[${i.src}]</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:8px">[${i.src}]</span>
         </div>
       </div>`).join('')
-    : `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">None identified</div>`;
+    : `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">None identified</div>`;
 
   return `
   <div class="card" style="margin-bottom:14px">
@@ -3837,18 +3837,18 @@ function renderRefeedingScreen(R) {
       <!-- Criteria -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div>
-          <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px;font-weight:700">MAJOR CRITERIA</div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--red);margin-bottom:8px;font-weight:700">MAJOR CRITERIA</div>
           ${critHTML(majorItems, 'var(--red)', 'Major')}
         </div>
         <div>
-          <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--amber);margin-bottom:8px;font-weight:700">MINOR CRITERIA</div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--amber);margin-bottom:8px;font-weight:700">MINOR CRITERIA</div>
           ${critHTML(minorItems, 'var(--amber)', 'Minor')}
         </div>
       </div>
 
       <!-- Recommendations -->
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--teal);margin-bottom:10px;font-weight:700">RECOMMENDED ACTIONS</div>
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--teal);margin-bottom:10px;font-weight:700">RECOMMENDED ACTIONS</div>
         ${R.recs.map(r => `<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.08)">
           <span style="color:var(--teal);flex-shrink:0">▸</span>
           <span style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7">${r}</span>
@@ -3857,8 +3857,8 @@ function renderRefeedingScreen(R) {
 
       <!-- Monitoring checklist -->
       <div style="margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(56,100,168,0.07);border:1px solid rgba(56,100,168,0.2)">
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--blue);margin-bottom:8px;font-weight:700">MONITORING CHECKLIST — REFEEDING WINDOW</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--blue);margin-bottom:8px;font-weight:700">MONITORING CHECKLIST — REFEEDING WINDOW</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
           <div>☐ Phosphate (serum) — q4–8h initially</div>
           <div>☐ Potassium (serum) — q4–8h initially</div>
           <div>☐ Magnesium — q4–8h initially</div>
@@ -3870,7 +3870,7 @@ function renderRefeedingScreen(R) {
           <div>☐ ECG monitoring if severe K⁺/Mg²⁺ low</div>
           <div>☐ Urine electrolytes if overhydration suspected</div>
         </div>
-        <div style="margin-top:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.8">
+        <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
           Classic refeeding electrolyte shifts occur within <strong style="color:var(--text)">24–72 hours</strong> of initiating nutrition.
           Most dangerous: rapid phosphate shift into cells → hypophosphataemia → cardiac arrhythmia, respiratory failure, haemolytic anaemia.
           Target serum phosphate ≥ 0.65 mmol/L throughout refeeding.
@@ -4296,14 +4296,14 @@ function ucRender(D) {
     `<div class="mc" style="min-width:130px">
       <div class="m-lbl">${lbl}</div>
       <div class="m-val" style="font-size:17px;color:${col}">${val}</div>
-      ${sub ? `<div class="m-unit" style="font-size:10px">${sub}</div>` : ''}
+      ${sub ? `<div class="m-unit" style="font-size:11px">${sub}</div>` : ''}
     </div>`;
 
   const zRow = (lbl, res, indicator) => {
     if (!res || res.error)
       return `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid rgba(56,100,168,0.12)">
         <div style="flex:1;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${lbl}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${res?.error||'N/A / Out of range'}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${res?.error||'N/A / Out of range'}</div>
       </div>`;
     const z   = res.z;
     const col = ucZColour(z);
@@ -4312,15 +4312,15 @@ function ucRender(D) {
     if (indicator) {
       const cls  = PediGrowth.classifyZ(z, indicator);
       const info = PediGrowth.labelFor(cls);
-      interpBadge = `<div style="margin-top:3px"><span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;background:${info.color}22;color:${info.color};border:1px solid ${info.color}44;white-space:nowrap">${info.label}</span></div>`;
+      interpBadge = `<div style="margin-top:3px"><span style="font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;background:${info.color}22;color:${info.color};border:1px solid ${info.color}44;white-space:nowrap">${info.label}</span></div>`;
     }
     return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(56,100,168,0.12)">
       <div style="width:160px;font-family:var(--mono);font-size:11px;color:var(--text)">${lbl}</div>
       <div style="flex:1">${ucZGauge(z)}</div>
       <div style="text-align:right;min-width:110px">
         <div style="font-family:var(--cond);font-size:18px;font-weight:700;color:${col}">${z>=0?'+':''}${z.toFixed(2)}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">${res.percentile!=null?res.percentile.toFixed(1)+'th %ile':''}</div>
-        ${res.median!=null?`<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">Median: ${res.median.toFixed(2)}</div>`:''}
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${res.percentile!=null?res.percentile.toFixed(1)+'th %ile':''}</div>
+        ${res.median!=null?`<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Median: ${res.median.toFixed(2)}</div>`:''}
         ${interpBadge}
       </div>
     </div>`;
@@ -4354,8 +4354,8 @@ function ucRender(D) {
   // Preterm: g/kg/day call-out banner
   if (D.isPreterm) {
     growthBody += `<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3)">
-      <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:6px">PRETERM GROWTH STANDARD — Fenton 2013</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8">
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:6px">PRETERM GROWTH STANDARD — Fenton 2013</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8">
         WHO z-scores (WAZ/HAZ/WHZ) are <strong>not applicable</strong> for preterm infants until corrected age ≥ 40 weeks PMA.
         Use <strong>Fenton 2013 charts</strong> (weight-for-GA, length-for-GA, HC-for-GA) for growth monitoring.
         Primary growth metric: <strong style="color:var(--amber)">g/kg/day weight gain velocity</strong>
@@ -4377,7 +4377,7 @@ function ucRender(D) {
         <span style="color:var(--text-dim)">Δ ${D.vel.diffG>0?'+':''}${D.vel.diffG.toFixed(0)} g over ${D.vel.days} days</span>
         ${!D.isPreterm?`<span style="color:var(--text-dim)">${velLabel}</span>`:''}
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:5px">${D.vel.targetLabel}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:5px">${D.vel.targetLabel}</div>
     </div>`;
   } else {
     growthBody += `<div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Enter previous weight + days interval to compute weight gain velocity.</div>`;
@@ -4389,8 +4389,8 @@ function ucRender(D) {
       growthBody += `<div style="margin-top:14px">${_hcCard(D.hcCm, D.ageMo, D.hcfaR)}</div>`;
     } else {
       growthBody += `<div style="margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.25)">
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--blue);margin-bottom:5px">🧠 HEAD CIRCUMFERENCE — WHO 2006</div>
-        <div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);line-height:1.7">
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--blue);margin-bottom:5px">🧠 HEAD CIRCUMFERENCE — WHO 2006</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
           HC entered: <strong style="color:var(--text)">${D.hcCm} cm</strong> — HC-for-Age z-score not computed. Ensure age is 0–60 months.
         </div>
       </div>`;
@@ -4411,7 +4411,7 @@ function ucRender(D) {
     growthStandardBody = `
       <div style="background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.25);border-radius:10px;padding:14px;margin-bottom:12px">
         <div style="font-family:var(--cond);font-size:11px;font-weight:700;color:var(--amber);letter-spacing:2px;margin-bottom:8px">FENTON 2013 — APPLICABLE STANDARD</div>
-        <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
           For this preterm infant (GA ${D.gaBirthDec ? D.gaBirthDec.toFixed(1) : '?'} wks), growth is assessed using <strong>Fenton 2013 preterm growth charts</strong>, not WHO z-scores.<br>
           • <strong>Weight-for-GA</strong> · Length-for-GA · HC-for-GA<br>
           • <strong>Growth velocity target: 15–20 g/kg/day</strong> (ESPGHAN 2022 · Embleton et al.)<br>
@@ -4424,12 +4424,12 @@ function ucRender(D) {
   } else if (D.ageGroup === 'neonate' || D.ageGroup === 'infant_early' || D.ageGroup === 'infant_late' || D.ageGroup === 'child_2to5') {
     // WHO 2006 z-scores
     growthStandardBody = `
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px">
         WHO 2006 Growth Standards (0–5 yr) · Interpretation: 🔴&lt;−3 SD (Severe) · 🟡−3 to −2 (Moderate) · 🔵−2 to −1 (Mild) · 🟢−1 to +2 (Normal) · 🟠&gt;+2 (Overweight)
         ${D.ageGroup === 'neonate' ? ' · <em>MUAC and CMAM not applicable &lt;6 months</em>' : ''}
         ${D.ageGroup === 'infant_early' ? ' · <em>CMAM not applicable &lt;6 months</em>' : ''}
       </div>
-      ${D.wazR ? zRow('Weight-for-Age (WAZ) — WHO 2006', D.wazR, 'waz') : '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:6px 0">WAZ: out of range or not computed</div>'}
+      ${D.wazR ? zRow('Weight-for-Age (WAZ) — WHO 2006', D.wazR, 'waz') : '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:6px 0">WAZ: out of range or not computed</div>'}
       ${D.hazR ? zRow('Height/Length-for-Age (HAZ/LAZ) — WHO 2006', D.hazR, 'haz') : ''}
       ${D.whzR ? zRow('Weight-for-Height (WHZ) — WHO 2006', D.whzR, 'whz') : ''}
       ${(D.wlzR && !D.whzR) ? zRow('Weight-for-Length (WLZ) — WHO 2006', D.wlzR, 'whz') : ''}
@@ -4441,13 +4441,13 @@ function ucRender(D) {
     // WHO 2007 BMI-for-Age — WAZ/HAZ/WHZ do not apply
     const ageRangeLabel = D.ageGroup === 'child_5to10' ? '5–10 years' : '10–17 years';
     growthStandardBody = `
-      <div style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.8">
+      <div style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8">
         <strong style="color:var(--blue)">📐 Growth Standard for ${ageRangeLabel}: WHO 2007 BMI-for-Age</strong><br>
         WAZ, HAZ, and WHZ (WHO 2006) are <strong>not applicable</strong> above 5 years — they do not extend to this age group.<br>
         Primary tool: <strong>BMI-for-Age z-score</strong> (WHO 2007 reference, 5–19 yr).
         ${muacMm ? ` MUAC extended CMAM thresholds apply.` : ''}
       </div>
-      ${D.bmiazR ? zRow('BMI-for-Age (BMIAZ) — WHO 2007 (5–19 yr)', D.bmiazR, 'bmiaz') : '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">BMI-for-Age: not computed — provide age and height.</div>'}`;
+      ${D.bmiazR ? zRow('BMI-for-Age (BMIAZ) — WHO 2007 (5–19 yr)', D.bmiazR, 'bmiaz') : '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">BMI-for-Age: not computed — provide age and height.</div>'}`;
   }
 
   // ── 4. MUAC & BMI card (age-aware) ───────────────────────────
@@ -4463,8 +4463,8 @@ function ucRender(D) {
       <span style="font-size:22px">${D.muacBand.icon}</span>
       <div>
         <div style="font-family:var(--mono);font-size:12px;color:${D.muacBand.colour};font-weight:700">${D.muacBand.label}</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:2px">${D.muacBand.note||''}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">CMAM 2016 · Always verify clinically</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">${D.muacBand.note||''}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">CMAM 2016 · Always verify clinically</div>
       </div>
     </div>`;
   }
@@ -4490,12 +4490,12 @@ function ucRender(D) {
     cmamBody = `<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
       <div style="text-align:center;padding:16px 28px;border-radius:10px;background:${cColor}22;border:2.5px solid ${cColor};flex-shrink:0">
         <div style="font-family:var(--cond);font-size:30px;font-weight:800;color:${cColor}">${cc}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:4px">${D.cmamClass.label||''}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px">${D.cmamClass.label||''}</div>
       </div>
       <div style="flex:1;min-width:200px;font-family:var(--mono);font-size:11px;line-height:2;color:var(--text)">
         ${reasons.map(r=>`<div>• ${r}</div>`).join('')}
         ${D.oedema?`<div style="color:var(--red)">• Bilateral pitting oedema → automatic SAM (kwashiorkor)</div>`:''}
-        <div style="margin-top:8px;font-size:10px;color:var(--text-dim)">${D.cmamClass.standard||'CMAM 2016/2023'} · Always verify clinically</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-dim)">${D.cmamClass.standard||'CMAM 2016/2023'} · Always verify clinically</div>
       </div>
     </div>`;
   } else {
@@ -4521,9 +4521,9 @@ function ucRender(D) {
       <td style="padding:7px 8px;color:var(--text);font-family:var(--sans)">${name}</td>
       <td style="padding:7px 8px;font-family:var(--mono);font-size:14px;font-weight:700;color:${val?'var(--text-bright)':'var(--text-dim)'}">
         ${val !== null && !isNaN(val) ? val : '—'}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">${unit}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${unit}</td>
       <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${flag.col}">${flag.icon}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">${ref}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${ref}</td>
     </tr>`;
   const labBody = `<div class="hscroll-table">
     <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">
@@ -4551,19 +4551,19 @@ function ucRender(D) {
   const s2p = ((f.seg2/f.total)*100).toFixed(1);
   const s3p = ((f.seg3/f.total)*100).toFixed(1);
   const fluidBody = `
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">Holliday-Segar · 1st 10kg: 100 mL/kg · 2nd 10kg: 50 mL/kg · >20kg: 20 mL/kg</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px">Holliday-Segar · 1st 10kg: 100 mL/kg · 2nd 10kg: 50 mL/kg · >20kg: 20 mL/kg</div>
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       ${mc('Daily Total', f.total+' mL', 'mL/day', 'var(--blue)')}
       ${mc('Hourly Rate', f.hr+' mL',   'mL/hr',  'var(--teal)')}
       ${mc('Per kg/d',    f.perKg+' mL','mL/kg/day')}
     </div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:6px">SEGMENT BREAKDOWN</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:6px">SEGMENT BREAKDOWN</div>
     <div style="display:flex;height:26px;border-radius:6px;overflow:hidden;gap:2px">
-      ${f.seg1?`<div style="width:${s1p}%;background:rgba(29,233,212,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">${Math.round(f.seg1)} mL</div>`:''}
-      ${f.seg2?`<div style="width:${s2p}%;background:rgba(96,165,250,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">${Math.round(f.seg2)} mL</div>`:''}
-      ${f.seg3?`<div style="width:${s3p}%;background:rgba(167,139,250,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">${Math.round(f.seg3)} mL</div>`:''}
+      ${f.seg1?`<div style="width:${s1p}%;background:rgba(29,233,212,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">${Math.round(f.seg1)} mL</div>`:''}
+      ${f.seg2?`<div style="width:${s2p}%;background:rgba(96,165,250,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">${Math.round(f.seg2)} mL</div>`:''}
+      ${f.seg3?`<div style="width:${s3p}%;background:rgba(167,139,250,0.65);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">${Math.round(f.seg3)} mL</div>`:''}
     </div>
-    <div style="display:flex;gap:16px;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+    <div style="display:flex;gap:16px;margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
       <span style="color:rgba(29,233,212,0.9)">■ 1st 10 kg (100×)</span>
       ${f.seg2?`<span style="color:rgba(96,165,250,0.9)">■ 2nd 10 kg (50×)</span>`:''}
       ${f.seg3?`<span style="color:rgba(167,139,250,0.9)">■ >20 kg (20×)</span>`:''}
@@ -4578,7 +4578,7 @@ function ucRender(D) {
   if (D.iomData)           eRows.push(mc('DRI/IOM TEE',   Math.round(D.iomData.tee)+'', 'kcal/day'));
   const energyBody = `
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px">${eRows.join('')}</div>
-    ${D.iomData?`<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:6px 0">${D.iomData.note}</div>`:''}
+    ${D.iomData?`<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:6px 0">${D.iomData.note}</div>`:''}
     ${D.bestTee?`<div style="padding:10px 14px;border-radius:8px;background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.3);font-family:var(--mono);font-size:11px;margin-top:6px">
       <span style="color:var(--teal)">▶ Recommended TEE</span>:
       <strong style="color:var(--text-bright);font-size:15px"> ${D.bestTee} kcal/day</strong>
@@ -4591,16 +4591,16 @@ function ucRender(D) {
     const mid = s => { const p=s.split('–'); return Math.round((parseFloat(p[0])+parseFloat(p[1]))/2); };
     const cW = mid(D.macros.cho.pct), fW = mid(D.macros.fat.pct), pW = mid(D.macros.pro.pct);
     macroBody = `
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:10px">${D.macros.label} · IOM AMDR · Based on TEE ${D.bestTee} kcal/day</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px">${D.macros.label} · IOM AMDR · Based on TEE ${D.bestTee} kcal/day</div>
       <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px">
         ${mc('Carbohydrate', D.macros.cho.g+' g/d', D.macros.cho.pct+'% of kcal', 'var(--blue)')}
         ${mc('Fat',          D.macros.fat.g+' g/d', D.macros.fat.pct+'% of kcal', 'var(--amber)')}
         ${mc('Protein',      D.macros.pro.g+' g/d', D.macros.pro.pct+'% of kcal', 'var(--green)')}
       </div>
       <div style="display:flex;height:22px;border-radius:5px;overflow:hidden;gap:2px">
-        <div style="width:${cW}%;background:rgba(96,165,250,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">CHO ${D.macros.cho.pct}%</div>
-        <div style="width:${fW}%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">FAT ${D.macros.fat.pct}%</div>
-        <div style="width:${pW}%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">PRO ${D.macros.pro.pct}%</div>
+        <div style="width:${cW}%;background:rgba(96,165,250,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">CHO ${D.macros.cho.pct}%</div>
+        <div style="width:${fW}%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">FAT ${D.macros.fat.pct}%</div>
+        <div style="width:${pW}%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">PRO ${D.macros.pro.pct}%</div>
       </div>`;
   } else {
     macroBody = `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Macronutrient estimates require a valid TEE (provide height for IOM calculation).</div>`;
@@ -4614,7 +4614,7 @@ function ucRender(D) {
       ${mc('ASPEN Sick', `${p.aspen[0]}–${p.aspen[1]} g/kg`, `= ${p.aspenLo}–${p.aspenHi} g/day`)}
       ${p.preterm ? mc('Preterm', p.preterm, D.bwtG?`BW ${D.bwtG}g`:'') : ''}
     </div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">
       ${D.status==='sick'?'⚠ ASPEN sick-child values applied · ':''}${p.iomNote}
     </div>`;
 
@@ -4634,11 +4634,11 @@ function ucRender(D) {
     <div style="font-size:22px;line-height:1">${_agm.icon}</div>
     <div style="flex:1">
       <div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:2px;color:${_agm.col};text-transform:uppercase">${_agm.label}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px">${_agm.sub}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">${_agm.sub}</div>
     </div>
     <div style="text-align:right">
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;color:${_agm.col};text-transform:uppercase;margin-bottom:3px">APPLICABLE CHART</div>
-      <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);font-weight:600">${_agm.chart}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:${_agm.col};text-transform:uppercase;margin-bottom:3px">APPLICABLE CHART</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);font-weight:600">${_agm.chart}</div>
     </div>
   </div>`;
 
@@ -5098,27 +5098,27 @@ function renderPrescription(D, R) {
 
   const row = (label, lo, target, hi, unit, note, col='var(--text)') => `
     <tr style="border-bottom:1px solid rgba(56,100,168,0.1)">
-      <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);width:120px">${label}</td>
+      <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);width:120px">${label}</td>
       <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text)">${lo}</td>
       <td style="padding:8px 10px;font-family:var(--cond);font-size:14px;font-weight:700;color:${col}">${target}</td>
       <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text)">${hi}</td>
-      <td style="padding:8px 10px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">${unit}</td>
-      <td style="padding:8px 10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);max-width:220px;white-space:normal">${note}</td>
+      <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${unit}</td>
+      <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);max-width:220px;white-space:normal">${note}</td>
     </tr>`;
 
   const microRow = (name, val, note) => `
     <div style="display:flex;align-items:flex-start;gap:10px;padding:5px 0;border-bottom:1px dotted rgba(56,100,168,0.15)">
-      <div style="width:90px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);flex-shrink:0">${name}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700;width:160px;flex-shrink:0">${val}</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">${note}</div>
+      <div style="width:90px;font-family:var(--mono);font-size:11px;color:var(--text-dim);flex-shrink:0">${name}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);font-weight:700;width:160px;flex-shrink:0">${val}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${note}</div>
     </div>`;
 
   const monRow = (m) => `
     <tr style="border-bottom:1px solid rgba(56,100,168,0.08)">
-      <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700">${m.param}</td>
-      <td style="padding:6px 10px;font-family:var(--mono);font-size:9.5px;color:var(--teal)">${m.freq}</td>
-      <td style="padding:6px 10px;font-family:var(--mono);font-size:9.5px;color:var(--text)">${m.target}</td>
-      <td style="padding:6px 10px;font-family:var(--mono);font-size:9px;color:var(--text-dim);white-space:normal;max-width:200px">${m.action}</td>
+      <td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text);font-weight:700">${m.param}</td>
+      <td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--teal)">${m.freq}</td>
+      <td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text)">${m.target}</td>
+      <td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:normal;max-width:200px">${m.action}</td>
     </tr>`;
 
   return `
@@ -5128,43 +5128,43 @@ function renderPrescription(D, R) {
       
       <div style="flex:1">
         <div class="card-title" style="color:${color}">INDIVIDUALIZED NUTRITION PRESCRIPTION</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">${D.name} · ${D.ageLabel} · ${D.wt} kg · ${D.ht} cm</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">${D.name} · ${D.ageLabel} · ${D.wt} kg · ${D.ht} cm</div>
       </div>
       <div class="card-badge" style="border-color:${color}44;color:${color}">${cfg.label||D.ageGroup}</div>
     </div>
     <div class="card-body">
 
       <!-- Date / Diagnosis bar -->
-      <div style="display:flex;gap:16px;flex-wrap:wrap;padding:10px 14px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:14px;font-family:var(--mono);font-size:10px">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;padding:10px 14px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:14px;font-family:var(--mono);font-size:11px">
         <div>📅 <strong>${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</strong></div>
         <div><strong>${D.dx||'—'}</strong></div>
         ${isSAM?`<div style="color:var(--red)">⚠️ SAM — Phase: <strong>${samP==='phase1'?'1 Stabilisation':samP==='transition'?'Transition':samP==='phase2'?'2 Rehabilitation':samP==='followup'?'Follow-up/OTP':'—'}</strong></div>`:''}
         ${R.rfRisk?`<div style="color:var(--amber)">⚠️ Refeeding risk</div>`:''}
       </div>
 
-      ${R.rfRisk?`<div style="padding:10px 14px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.4);border-radius:8px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--amber)">${R.rfNote}</div>`:''}
+      ${R.rfRisk?`<div style="padding:10px 14px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.4);border-radius:8px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--amber)">${R.rfNote}</div>`:''}
 
       ${R.diagMod && R.diagMod.badge ? `
       <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.4);border-radius:10px;padding:12px 14px;margin-bottom:14px">
         <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--purple);margin-bottom:6px">${R.diagMod.badge} — DIAGNOSIS MODIFIER APPLIED TO TARGETS</div>
-        ${R.diagMod.notes.map(n=>`<div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7;margin-bottom:3px">▸ ${n}</div>`).join('')}
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:7px;padding-top:7px;border-top:1px solid rgba(167,139,250,0.2)">
+        ${R.diagMod.notes.map(n=>`<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7;margin-bottom:3px">▸ ${n}</div>`).join('')}
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:7px;padding-top:7px;border-top:1px solid rgba(167,139,250,0.2)">
           ✅ Energy ×${R.diagMod.energyFactor.toFixed(2)} · Protein ×${R.diagMod.proteinFactor.toFixed(2)} · Stress ×${R.diagMod.stressFactor.toFixed(2)} — <strong style="color:var(--purple)">factors wired into all targets below</strong>
         </div>
       </div>` : ''}
 
       <!-- Requirements table -->
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Nutrition Requirements</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Nutrition Requirements</div>
       <div style="overflow-x:auto;margin-bottom:14px">
-      <table style="width:100%;border-collapse:collapse;font-size:10px;min-width:600px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:600px">
         <thead>
           <tr style="border-bottom:2px solid rgba(56,100,168,0.2)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Parameter</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Minimum</th>
-            <th style="padding:6px 10px;text-align:left;color:${color};font-family:var(--mono);font-size:9px">★ Target</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Maximum</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Per kg/day</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Notes</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Parameter</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Minimum</th>
+            <th style="padding:6px 10px;text-align:left;color:${color};font-family:var(--mono);font-size:11px">★ Target</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Maximum</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Per kg/day</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -5180,38 +5180,38 @@ function renderPrescription(D, R) {
       </div>
 
       <!-- Feeding route -->
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Feeding Route &amp; Schedule</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Feeding Route &amp; Schedule</div>
       <div style="padding:12px 14px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:14px">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};margin-bottom:6px">🍽️ ${R.route}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8;margin-bottom:6px">${R.routeDetail}</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">${R.routeNote}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.8;margin-bottom:6px">${R.routeDetail}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">${R.routeNote}</div>
       </div>
 
       <!-- Macronutrient visual bar -->
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:6px">Macronutrient Distribution</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:6px">Macronutrient Distribution</div>
       <div style="display:flex;height:24px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:6px">
-        <div style="width:${R.choPct}%;background:rgba(96,165,250,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">CHO ${R.choPct}%</div>
-        <div style="width:${R.fatPct}%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">FAT ${R.fatPct}%</div>
-        <div style="width:${R.proPct}%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:#000;font-weight:700">PRO ${R.proPct}%</div>
+        <div style="width:${R.choPct}%;background:rgba(96,165,250,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">CHO ${R.choPct}%</div>
+        <div style="width:${R.fatPct}%;background:rgba(240,180,41,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">FAT ${R.fatPct}%</div>
+        <div style="width:${R.proPct}%;background:rgba(52,211,153,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#000;font-weight:700">PRO ${R.proPct}%</div>
       </div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:14px">Total energy: ${R.eTarget} kcal/day · CHO ${R.choG}g · Fat ${R.fatG}g · Protein ${R.pTarget}g</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:14px">Total energy: ${R.eTarget} kcal/day · CHO ${R.choG}g · Fat ${R.fatG}g · Protein ${R.pTarget}g</div>
 
       <!-- Key micronutrients -->
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Key Micronutrients (Age-Specific DRI)</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Key Micronutrients (Age-Specific DRI)</div>
       <div style="padding:10px 14px;background:rgba(0,0,0,0.12);border-radius:8px;margin-bottom:14px">
         ${Object.entries(R.micros).map(([k,v])=>microRow(k,v.val,v.note)).join('')}
       </div>
 
       <!-- Monitoring plan -->
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Monitoring Plan</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">Monitoring Plan</div>
       <div style="overflow-x:auto;margin-bottom:14px">
-      <table style="width:100%;border-collapse:collapse;font-size:10px;min-width:500px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px">
         <thead>
           <tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Parameter</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Frequency</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Target</th>
-            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Action if not met</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Parameter</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Frequency</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Target</th>
+            <th style="padding:6px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Action if not met</th>
           </tr>
         </thead>
         <tbody>${R.monitorRows.map(monRow).join('')}</tbody>
@@ -5219,7 +5219,7 @@ function renderPrescription(D, R) {
       </div>
 
       <!-- Guidelines footer -->
-      <div style="padding:8px 12px;background:rgba(56,100,168,0.07);border-radius:6px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.8">
+      <div style="padding:8px 12px;background:rgba(56,100,168,0.07);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         📚 <strong style="color:var(--text)">References:</strong> ${R.guidelines}
         <br>⚠ <em>This prescription is individualized based on entered clinical data. Always verify with clinical team. Adjust as clinical condition changes.</em>
       </div>
@@ -5250,12 +5250,12 @@ function ucLoadSaved() {
         <div style="font-family:var(--mono);font-size:11px;flex:1;min-width:220px">
           <span style="color:var(--text-bright);font-weight:700">${p.name||'—'}</span>
           <span style="color:var(--text-dim);margin-left:8px">${p.sex==='male'?'♂':'♀'} · ${parseFloat(p.ageMo||0).toFixed(1)} mo · ${p.wtKg}kg · BMI ${p.bmi}</span>
-          ${p.dx&&p.dx!=='—'?`<span style="color:var(--text-dim);margin-left:8px;font-size:10px">${p.dx}</span>`:''}
+          ${p.dx&&p.dx!=='—'?`<span style="color:var(--text-dim);margin-left:8px;font-size:11px">${p.dx}</span>`:''}
         </div>
         <div style="display:flex;gap:6px;align-items:center">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">${p.ts?new Date(p.ts).toLocaleDateString():''}</span>
-          <button onclick="ucLoadRecord(${i})" style="background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.35);color:var(--teal);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer">↩ Load</button>
-          <button onclick="ucDeleteRecord(${i})" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);color:var(--red);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer">✕</button>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">${p.ts?new Date(p.ts).toLocaleDateString():''}</span>
+          <button onclick="ucLoadRecord(${i})" style="background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.35);color:var(--teal);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer">↩ Load</button>
+          <button onclick="ucDeleteRecord(${i})" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);color:var(--red);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer">✕</button>
         </div>
       </div>`).join('');
   } catch(e) {}
@@ -7679,7 +7679,7 @@ const PediOutput = (() => {
         border:1px solid ${a.level==='critical'?'rgba(251,113,133,0.45)':a.level==='warning'?'rgba(240,180,41,0.4)':'rgba(96,165,250,0.3)'}">
         <span style="font-size:15px;flex-shrink:0">${a.level==='critical'?'🚨':a.level==='warning'?'⚠️':'ℹ️'}</span>
         <div>
-          <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:1.5px;
+          <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;
             color:${a.level==='critical'?'var(--red)':a.level==='warning'?'var(--amber)':'var(--blue)'};
             margin-bottom:3px">${a.code}</div>
           <div style="font-family:var(--mono);font-size:11px;
@@ -7697,9 +7697,9 @@ const PediOutput = (() => {
       <span style="font-size:22px">${ui.icon}</span>
       <div>
         <div style="font-family:var(--cond);font-size:13px;font-weight:800;color:${ui.color};letter-spacing:2px">${ui.label}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">${classification.decision}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">${classification.decision}</div>
       </div>
-      <div style="margin-left:auto;font-family:var(--mono);font-size:9px;font-weight:700;
+      <div style="margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;
         padding:4px 10px;border-radius:6px;background:${ui.color}20;color:${ui.color}">${ui.urgency}</div>
     </div>`;
   }
@@ -7722,10 +7722,10 @@ function _renderResourceBanner() {
       '<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">' +
       '<span style="color:var(--red);font-weight:700">❌ TPN (amino acids + IV lipid): Not available in current setting</span><br>' +
       '<span style="color:var(--green);font-weight:700">✅ Available: Dextrose IV (glucose support) · EN feeds</span><br>' +
-      '<span style="color:var(--text-dim);font-size:10px">Protein and fat via enteral route only. Advancing enteral feeds is the clinical priority.</span>' +
+      '<span style="color:var(--text-dim);font-size:11px">Protein and fat via enteral route only. Advancing enteral feeds is the clinical priority.</span>' +
       '</div></div>';
   }
-  return '<div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-family:var(--mono);font-size:10px;color:var(--text)">' +
+  return '<div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--text)">' +
     '✅ <strong style="color:var(--green)">Standard Resource Mode</strong> — Full TPN/PN support available.' +
     '</div>';
 }
@@ -7861,9 +7861,9 @@ function _diagBadge(label, color, decision, urgency) {
   return `<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:12px;border:2px solid ${color}44;background:${color}10">
     <div style="flex:1">
       <div style="font-family:var(--cond);font-size:14px;font-weight:800;color:${color};letter-spacing:2px">${label}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">${decision}</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">${decision}</div>
     </div>
-    <div style="font-family:var(--mono);font-size:9px;font-weight:700;padding:5px 12px;border-radius:6px;background:${color}22;color:${color};white-space:nowrap">${urgency}</div>
+    <div style="font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;background:${color}22;color:${color};white-space:nowrap">${urgency}</div>
   </div>`;
 }
 
@@ -8005,9 +8005,9 @@ function _hcCard(hcCm, ageMo, hcfaObj) {
       ${pct ? `<span class="pedi-z-detail-label">Percentile</span><span class="pedi-z-detail-val">${pct}</span>` : ''}
     </div>
     <div style="background:${cls.bg};border:1px solid ${cls.border};border-radius:8px;padding:10px 12px">
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${cls.color};letter-spacing:1px;margin-bottom:5px">CLINICAL INTERPRETATION</div>
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);line-height:1.75">${cls.interp}</div>
-      ${cls.action ? `<div style="margin-top:7px;font-family:var(--mono);font-size:8.5px;font-weight:700;color:${cls.color};letter-spacing:1px">→ ${cls.action}</div>` : ''}
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${cls.color};letter-spacing:1px;margin-bottom:5px">CLINICAL INTERPRETATION</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.75">${cls.interp}</div>
+      ${cls.action ? `<div style="margin-top:7px;font-family:var(--mono);font-size:11px;font-weight:700;color:${cls.color};letter-spacing:1px">→ ${cls.action}</div>` : ''}
     </div>
   </div>`;
 }
@@ -8368,9 +8368,9 @@ function calcAdolescent10to17Tab() {
     ins.push({ icon:'💊', col:'#34d399', text:`Micronutrients (IOM DRI 2023): Iron ${ironMg} · Calcium 1300 mg/day (peak bone mass — most critical adolescent nutrient) · Vitamin D 600 IU/day (supplement 1000–2000 IU if deficient) · Zinc ${isLate ? (isFemale ? '9' : '11') : (isFemale ? '8' : '9')} mg/day · Folate ${isLate && preg === 'pregnant' ? '600' : '400'} µg/day${isLate ? ' · Magnesium ' + (isFemale ? '360' : '410') + ' mg/day' : ''}. Multi-micronutrient supplement if dietary diversity is poor.` });
     ins.push({ icon:'📈', col:'#818cf8', text:`${isLate ? `Tanner ${tanner} note: ${tanner >= 5 ? 'Adult BMI cut-offs (18.5/25/30) become applicable at age 18. Transition nutrition plan to adult parameters. Consolidate peak bone mass.' : 'Still within adolescent growth parameters. Adult BMI cut-offs NOT valid until age 18. Continue WHO 2007 BMI-for-age Z-score monitoring.'}` : 'Pubertal note: Adolescent growth spurts increase energy and protein requirements by 15–25% above pre-pubertal values (FAO/WHO/UNU 2004). Peak bone mass accrual requires adequate calcium, vitamin D and protein. Screen for eating disorders (SCOFF questionnaire) and Low Energy Availability (LEA/RED-S) in athletes.'}` });
     const insightHtml = ins.map(i =>
-      `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.65"><span style="flex-shrink:0;font-size:13px;margin-top:1px">${i.icon}</span><span>${i.text}</span></div>`
+      `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.65"><span style="flex-shrink:0;font-size:13px;margin-top:1px">${i.icon}</span><span>${i.text}</span></div>`
     ).join('');
-    return `<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.22)"><div class="card-header" style="background:rgba(96,165,250,0.05);border-bottom-color:rgba(96,165,250,0.15)"><div class="card-title" style="color:#60a5fa">📋 PES STATEMENT &amp; CLINICAL NUTRITION INSIGHTS</div><div class="card-badge" style="color:#60a5fa;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08)">NCP · IDNT 2006 · WHO 2007 · IOM DRI 2023</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px"><div><div style="font-family:var(--mono);font-size:8.5px;color:#60a5fa;letter-spacing:1.5px;margin-bottom:6px">NUTRITION DIAGNOSIS (PES)</div><div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75;padding:10px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-radius:6px">${pesStatement}</div></div><div><div style="font-family:var(--mono);font-size:8.5px;color:#ddeeff;letter-spacing:1.5px;margin-bottom:6px">CLINICAL NUTRITION INSIGHTS</div><div style="display:flex;flex-direction:column;gap:6px">${insightHtml}</div></div></div></div>`;
+    return `<div class="card" style="margin-bottom:14px;border-color:rgba(96,165,250,0.22)"><div class="card-header" style="background:rgba(96,165,250,0.05);border-bottom-color:rgba(96,165,250,0.15)"><div class="card-title" style="color:#60a5fa">📋 PES STATEMENT &amp; CLINICAL NUTRITION INSIGHTS</div><div class="card-badge" style="color:#60a5fa;border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.08)">NCP · IDNT 2006 · WHO 2007 · IOM DRI 2023</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px"><div><div style="font-family:var(--mono);font-size:11px;color:#60a5fa;letter-spacing:1.5px;margin-bottom:6px">NUTRITION DIAGNOSIS (PES)</div><div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75;padding:10px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.18);border-radius:6px">${pesStatement}</div></div><div><div style="font-family:var(--mono);font-size:11px;color:#ddeeff;letter-spacing:1.5px;margin-bottom:6px">CLINICAL NUTRITION INSIGHTS</div><div style="display:flex;flex-direction:column;gap:6px">${insightHtml}</div></div></div></div>`;
   })();
 
   el.style.display = '';
@@ -8379,8 +8379,8 @@ function calcAdolescent10to17Tab() {
 
     ${diagMod && diagMod.badge ? `<div style="background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px">
       <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--purple);margin-bottom:8px">${diagMod.badge} — DIAGNOSIS-SPECIFIC ADJUSTMENTS</div>
-      ${diagMod.notes.map(n=>`<div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.7;margin-bottom:4px">▸ ${n}</div>`).join('')}
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px">Energy ×${diagMod.energyFactor.toFixed(2)} · Protein ×${diagMod.proteinFactor.toFixed(2)} · Stress ×${(diagMod.stressFactor||1).toFixed(2)}</div>
+      ${diagMod.notes.map(n=>`<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7;margin-bottom:4px">▸ ${n}</div>`).join('')}
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:6px">Energy ×${diagMod.energyFactor.toFixed(2)} · Protein ×${diagMod.proteinFactor.toFixed(2)} · Stress ×${(diagMod.stressFactor||1).toFixed(2)}</div>
     </div>` : ''}
 
     ${pregNote && isLate ? _alert('warning', pregNote) : ''}
@@ -8401,15 +8401,15 @@ function calcAdolescent10to17Tab() {
       <div class="pedi-grid-2">
         ${bmiaz && !bmiaz.error
           ? _zCard('BMI-for-Age Z (WHO 2007)', bmi.toFixed(1), 'kg/m²', bmiaz, 'bmiaz', isLate ? 'Primary anthropometric tool for adolescents' : 'Primary tool 5–19yr')
-          : `<div style="font-family:var(--mono);font-size:10px;color:var(--amber);padding:10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:6px">
+          : `<div style="font-family:var(--mono);font-size:11px;color:var(--amber);padding:10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:6px">
                ⚠️ BMI-for-Age Z-score unavailable — ${bmiaz && bmiaz.error ? bmiaz.error : 'check age and measurements'}.
                Growth status cannot be determined from Z-score alone; use MUAC and clinical assessment.
              </div>`
         }
       </div>
       <div style="margin-top:10px;padding:10px;border-radius:8px;background:${isLate ? 'rgba(167,139,250,0.06)' : 'rgba(96,165,250,0.07)'};border:1px solid ${isLate ? 'rgba(167,139,250,0.2)' : 'rgba(96,165,250,0.2)'}">
-        <div style="font-family:var(--mono);font-size:10px;color:${isLate ? 'var(--purple)' : 'var(--blue)'};font-weight:700;margin-bottom:4px">📈 ${isLate ? 'Tanner Context' : 'Pubertal Growth Note'}</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">
+        <div style="font-family:var(--mono);font-size:11px;color:${isLate ? 'var(--purple)' : 'var(--blue)'};font-weight:700;margin-bottom:4px">📈 ${isLate ? 'Tanner Context' : 'Pubertal Growth Note'}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
           ${isLate ? tannerNote + '<br>16–17yr straddles the late adolescent / early adult transition. <strong>Adult BMI cut-offs (18.5/25/30) are not valid until age 18</strong> — WHO 2007 BMI-for-age Z-scores remain the standard.' : 'Adolescence involves rapid growth spurts (8–12 cm/yr peak; girls 10–11yr · boys 12–13yr). Energy and protein requirements are highest during pubertal growth acceleration. Sex differences in body composition emerge. BMI-for-age must always be interpreted against pubertal stage.'}
         </div>
       </div>
@@ -8424,7 +8424,7 @@ function calcAdolescent10to17Tab() {
         ${isLate && pregKcal ? _metric('Preg/Lact add', `+${pregKcal}`, 'kcal/day', 'var(--purple)') : ''}
         ${_metric('Fluid', `${fluidMl}`, 'mL/day', 'var(--teal)')}
       </div>
-      <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">
+      <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
         ${teeRangeLo ? `<strong style="color:var(--amber)">Energy range (±10%):</strong> ${teeRangeLo}–${teeRangeHi} kcal/day<br>` : ''}
         <strong style="color:var(--teal)">Fluid note:</strong> ${fluidNote}<br>
         ${!isLate ? 'Boys 10–15yr (moderate activity): ~2200–2800 kcal/day. Girls: ~1900–2400 kcal/day.' : ''}
@@ -8439,7 +8439,7 @@ function calcAdolescent10to17Tab() {
       ${_row('Carbohydrate', `${carbG} g/day`, `${cde.carbPct}% of TEE (IOM: 45–65%)`)}
       ${_row('Fat', `${fatG} g/day`, `${cde.fatPct}% of TEE (IOM: 20–35%)`)}
       ${isLate ? _row('Fibre', isFemale ? '26 g/day' : '38 g/day', 'AI, IOM DRI 2005 (14–18yr)') : ''}
-      <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+      <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);font-family:var(--mono);font-size:11px;color:var(--text-dim)">
         <strong style="color:var(--teal)">Protein basis:</strong> ${cde.protLabel}
       </div>
     `)}
@@ -8488,7 +8488,7 @@ function calcAdolescent10to17Tab() {
         <div class="card-header"><div class="card-title">ENERGY & MACRONUTRIENTS</div><div class="card-badge">Schofield 1985 · IOM DRI 2023 · CDE</div></div>
         <div class="card-body" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
           ${VisualEngine.renderNutritionDonut(donutId, { energyKcal: totalKcal || tee || 2200, proteinG: protG, carbG, fatG })}
-          <div style="flex:1;min-width:140px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:2">
+          <div style="flex:1;min-width:140px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2">
             <div>TEE: <strong style="color:var(--amber)">${totalKcal} kcal/day</strong></div>
             <div>Protein: <strong style="color:var(--green)">${protG} g/day (${protRdaPerKg.toFixed(2)} g/kg)</strong></div>
             <div>Fluid: <strong style="color:var(--blue)">${fluidMl} mL/day</strong></div>
@@ -8721,7 +8721,7 @@ function savePediToHistory(sectionId, label) {
       '.pedi-back-btn{',
         'display:flex;align-items:center;gap:5px;',
         'background:none;border:1px solid var(--border);border-radius:8px;',
-        'color:var(--text-dim);font-family:var(--mono);font-size:10px;',
+        'color:var(--text-dim);font-family:var(--mono);font-size:11px;',
         'font-weight:600;letter-spacing:0.5px;padding:5px 11px;cursor:pointer;',
         'transition:color .15s,border-color .15s,background .15s;',
       '}',

@@ -467,15 +467,15 @@ window.NTClinicalDecision = {
     var nInfo    = alerts.filter(function(a){ return a.level==='info'; }).length;
 
     var headerBadges = '';
-    if (nDanger)  headerBadges += '<span style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.5);border-radius:20px;padding:2px 9px;font-size:8px;font-weight:700;letter-spacing:1px;margin-right:5px">' + nDanger + ' CRITICAL</span>';
-    if (nWarning) headerBadges += '<span style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.5);border-radius:20px;padding:2px 9px;font-size:8px;font-weight:700;letter-spacing:1px;margin-right:5px">' + nWarning + ' WARNING</span>';
-    if (nInfo)    headerBadges += '<span style="background:rgba(29,233,212,0.1);color:#1de9d4;border:1px solid rgba(29,233,212,0.35);border-radius:20px;padding:2px 9px;font-size:8px;font-weight:700;letter-spacing:1px">' + nInfo + ' INFO</span>';
+    if (nDanger)  headerBadges += '<span style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.5);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;letter-spacing:1px;margin-right:5px">' + nDanger + ' CRITICAL</span>';
+    if (nWarning) headerBadges += '<span style="background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.5);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;letter-spacing:1px;margin-right:5px">' + nWarning + ' WARNING</span>';
+    if (nInfo)    headerBadges += '<span style="background:rgba(29,233,212,0.1);color:#1de9d4;border:1px solid rgba(29,233,212,0.35);border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;letter-spacing:1px">' + nInfo + ' INFO</span>';
 
     var html = '<div style="background:rgba(10,22,40,0.7);border:1px solid rgba(56,100,168,0.3);border-radius:12px;padding:16px;margin:12px 0">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">'
       + '<div style="display:flex;align-items:center;gap:8px">'
       + '<span style="font-size:16px">🩺</span>'
-      + '<span style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:9.5px;font-weight:700;letter-spacing:2px;color:rgba(148,174,208,0.8);text-transform:uppercase">Clinical Decision Support</span>'
+      + '<span style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(148,174,208,0.8);text-transform:uppercase">Clinical Decision Support</span>'
       + '</div>'
       + '<div style="display:flex;align-items:center;gap:4px">' + headerBadges + '</div>'
       + '</div>';
@@ -486,15 +486,15 @@ window.NTClinicalDecision = {
         + '<div style="display:flex;align-items:flex-start;gap:10px">'
         + '<span style="font-size:15px;flex-shrink:0;margin-top:1px">' + c.ic + '</span>'
         + '<div style="flex:1;min-width:0">'
-        + '<div style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:' + c.lft + ';margin-bottom:3px">' + (a.category||'') + '</div>'
+        + '<div style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:' + c.lft + ';margin-bottom:3px">' + (a.category||'') + '</div>'
         + '<div style="font-family:-apple-system,system-ui,sans-serif;font-size:12.5px;font-weight:700;color:#f0f6ff;margin-bottom:5px;line-height:1.35">' + (a.title||'') + '</div>'
         + '<div style="font-family:-apple-system,system-ui,sans-serif;font-size:11px;color:rgba(148,174,208,0.85);line-height:1.65;margin-bottom:' + (a.action?'7px':'0') + '">' + (a.message||'') + '</div>';
       if (a.action) {
-        html += '<div style="background:rgba(0,0,0,0.25);border:1px solid rgba(56,100,168,0.25);border-radius:6px;padding:8px 11px;font-family:ui-monospace,\'SF Mono\',monospace;font-size:9.5px;color:rgba(200,220,240,0.85);line-height:1.65;margin-bottom:' + (a.guideline?'5px':'0') + '">'
+        html += '<div style="background:rgba(0,0,0,0.25);border:1px solid rgba(56,100,168,0.25);border-radius:6px;padding:8px 11px;font-family:ui-monospace,\'SF Mono\',monospace;font-size:11px;color:rgba(200,220,240,0.85);line-height:1.65;margin-bottom:' + (a.guideline?'5px':'0') + '">'
           + '<span style="color:' + c.lft + ';font-weight:800">→ ACTION: </span>' + a.action + '</div>';
       }
       if (a.guideline) {
-        html += '<div style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:7.5px;color:rgba(100,130,165,0.55);letter-spacing:0.5px;margin-top:5px">📚 ' + a.guideline + '</div>';
+        html += '<div style="font-family:ui-monospace,\'SF Mono\',monospace;font-size:11px;color:rgba(100,130,165,0.55);letter-spacing:0.5px;margin-top:5px">📚 ' + a.guideline + '</div>';
       }
       html += '</div></div></div>';
     });

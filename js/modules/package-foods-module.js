@@ -71,16 +71,16 @@ function pkgRender() {
   tbody.innerHTML = slice.map(f => {
     const safeId = (f.id || '').replace(/'/g, "\\'");
     const submittedBadge = f.submittedBy
-      ? `<span style="font-size:9px;color:var(--text-dim);display:block;margin-top:2px">by ${f.submittedBy}</span>`
+      ? `<span style="font-size:11px;color:var(--text-dim);display:block;margin-top:2px">by ${f.submittedBy}</span>`
       : '';
     const flagBadge = f.nutritionFlag?.type === 'kcal_mismatch'
       ? `<span title="kcal doesn't match protein/carbs/fat (≈${f.nutritionFlag.expectedKcal} kcal expected)"
-           style="font-size:9px;color:#fbbf24;display:block;margin-top:2px">⚠ kcal mismatch</span>`
+           style="font-size:11px;color:#fbbf24;display:block;margin-top:2px">⚠ kcal mismatch</span>`
       : '';
     return `<tr>
       <td style="font-weight:500;color:var(--text)">${f.name || '—'}${submittedBadge}${flagBadge}</td>
       <td style="color:var(--text-dim)">${f.brand || '—'}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.barcode || '—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${f.barcode || '—'}</td>
       <td style="text-align:center;color:var(--text-dim)">${f.servingSize != null ? f.servingSize + 'g' : '—'}</td>
       <td style="color:var(--amber);font-weight:600;text-align:right">${fmt(f.kcal)}</td>
       <td style="color:var(--blue);text-align:right">${fmt(f.pro)}</td>
@@ -102,7 +102,7 @@ function pkgRenderPagination(page, pages) {
 
   const btn = (label, n, active) =>
     `<button onclick="pkgGoPage(${n})"
-      style="font-family:var(--mono);font-size:10px;padding:5px 11px;border-radius:5px;cursor:pointer;
+      style="font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:5px;cursor:pointer;
              border:1px solid ${active ? 'var(--teal)' : 'var(--border)'};
              background:${active ? 'var(--teal)' : 'transparent'};
              color:${active ? '#0d1117' : 'var(--text-dim)'};font-weight:${active ? '700' : '400'}">

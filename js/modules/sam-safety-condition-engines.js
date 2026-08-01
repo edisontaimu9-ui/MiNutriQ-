@@ -116,7 +116,7 @@ function admCheck() {
       <div style="font-family:var(--mono);font-size:11px;color:var(--text);text-align:left;max-width:560px;margin:0 auto">
         ${reasons.map(r=>`<div style="padding:4px 0;border-bottom:1px dotted rgba(255,255,255,.08)">• ${r}</div>`).join('')}
       </div>
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:12px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:12px">
          Refer to inpatient therapeutic care. Stabilisation phase (F-75) applies. Always confirm with clinical team.
       </div>`;
     // Sync into inline results panel
@@ -130,7 +130,7 @@ function admCheck() {
       ? `<div style="font-family:var(--cond);font-size:16px;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:8px">
            ✓ No Inpatient Admission Criteria Met
          </div>
-         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">
+         <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">
            Based on criteria ticked. Continue outpatient / OTP management if SAM diagnosed. Reassess if clinical condition changes.
          </div>`
       : `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">

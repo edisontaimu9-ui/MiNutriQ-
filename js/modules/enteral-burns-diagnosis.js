@@ -130,7 +130,7 @@ function renderFormulaBanner(rec, diagnosis, renal) {
   if (panel && panelContent) {
     panel.style.display = '';
     panelContent.innerHTML = `
-      <span style="background:${rec.color};color:#fff;padding:1px 7px;border-radius:3px;font-size:8px;font-weight:700;letter-spacing:1px;margin-right:8px">${rec.badge}</span>
+      <span style="background:${rec.color};color:#fff;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:1px;margin-right:8px">${rec.badge}</span>
       <strong style="color:var(--text-bright)">${formulaLabel}</strong>
       <span style="color:var(--text-dim);margin-left:8px">${rec.reason}</span>`;
   }
@@ -149,7 +149,7 @@ function renderFormulaBanner(rec, diagnosis, renal) {
   if (autoBadge) autoBadge.style.display = 'inline';
 
   banner.innerHTML = `
-    <div style="margin-top:5px;padding:5px 10px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.18);border-left:3px solid ${rec.color};border-radius:0 var(--r-sm) var(--r-sm) 0;font-family:var(--mono);font-size:8.5px;color:var(--teal)">
+    <div style="margin-top:5px;padding:5px 10px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.18);border-left:3px solid ${rec.color};border-radius:0 var(--r-sm) var(--r-sm) 0;font-family:var(--mono);font-size:11px;color:var(--teal)">
       ✓ Auto-selected · tap Formula dropdown to override
     </div>`;
 }
@@ -286,7 +286,7 @@ function enCalc() {
     <tr><td>Protein provided</td><td style="color:${proColor};font-weight:700">${proProvided} g/day</td></tr>
     <tr><td>Protein target</td><td>${proNeed} g/day</td></tr>
     <tr><td>Protein gap</td><td style="color:${proGap>0?'var(--red)':'var(--green)'}">${proGap > 0 ? '+'+proGap+'g deficit — consider protein modular or adjust formula' : 'Met ✓'}</td></tr>
-    ${proGap > 0 ? '<tr><td colspan="2" style="color:var(--amber);font-size:10px"> Add protein modular (e.g. Protifar) OR switch to higher-protein formula and recalculate</td></tr>' : ''}
+    ${proGap > 0 ? '<tr><td colspan="2" style="color:var(--amber);font-size:11px"> Add protein modular (e.g. Protifar) OR switch to higher-protein formula and recalculate</td></tr>' : ''}
   `;
 
   // Fluid table
@@ -303,15 +303,15 @@ function enCalc() {
   const rfWarning = isRefeeding ? '<div style="color:var(--amber)"> REFEEDING PROTOCOL: Start at 10–20 kcal/kg. IV Thiamine 200–300mg BEFORE feeding. Increase slowly. Monitor electrolytes 2–3× daily.</div>' : '';
   document.getElementById('en-prescription').innerHTML = `
     <div>Formula: <strong style="color:var(--teal)">${formulaName}</strong> · ${conc} kcal/mL · ${proPerL}g protein/L${formulaOsm ? ' · ' + formulaOsm + ' mOsm/L' : ''}</div>
-    ${formulaNote ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">ℹ ${formulaNote}</div>` : ''}
-    ${formulaFibre !== null ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">Fibre: <strong>${formulaFibre === 0 ? 'Fibre-free' : formulaFibre + ' g/L → ' + (formulaFibre*(volDay/1000)).toFixed(1) + ' g/day total'}</strong></div>` : ''}
+    ${formulaNote ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">ℹ ${formulaNote}</div>` : ''}
+    ${formulaFibre !== null ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Fibre: <strong>${formulaFibre === 0 ? 'Fibre-free' : formulaFibre + ' g/L → ' + (formulaFibre*(volDay/1000)).toFixed(1) + ' g/day total'}</strong></div>` : ''}
     ${mode !== 'volume' ? `<div>Rate: <strong style="color:var(--amber)">${rate} mL/hr × ${hours} hrs/day</strong></div>` : `<div>Volume: <strong style="color:var(--amber)">${volDay} mL/day</strong> (volume-based — nursing to adjust rate to meet daily volume)</div>`}
     ${mode !== 'volume' ? `<div>Starting rate (Day 1): ${rateStart} mL/hr, advance to ${rate} mL/hr by Day 2–3</div>` : ''}
     <div>Total formula volume: ${volDay} mL/day → ${actualKcal} kcal/day | ${proProvided}g protein/day</div>
     <div>Free water flushes: <strong style="color:var(--blue)">${fwfQ4} mL Q4 hours</strong> (6 times/day = ${fwfActual} mL/day)</div>
     <div>Total fluid: ${totalFluid} mL/day</div>
     ${rfWarning}
-    <div style="color:var(--text-dim);font-size:10px;margin-top:8px">Assess EN tolerance clinically (nausea, vomiting, distension) · Routine GRV monitoring not recommended (ASPEN/SCCM 2016) · BGL target 6.1–10.0 mmol/L · Reassess every 24–48h</div>
+    <div style="color:var(--text-dim);font-size:11px;margin-top:8px">Assess EN tolerance clinically (nausea, vomiting, distension) · Routine GRV monitoring not recommended (ASPEN/SCCM 2016) · BGL target 6.1–10.0 mmol/L · Reassess every 24–48h</div>
   `;
 
   // Alerts
@@ -539,7 +539,7 @@ function burnEquationPreview() {
   const selectedVal = eqMap[selectedEq] || curreri;
 
   tableEl.innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:10px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
       <thead>
         <tr style="background:rgba(255,99,20,.1)">
           <th style="padding:7px 10px;text-align:left;color:#ff6314;font-weight:700;letter-spacing:1px">EQUATION</th>
@@ -554,20 +554,20 @@ function burnEquationPreview() {
           const isSelected = r.name.toLowerCase().includes(selectedEq) || (selectedEq==='curreri'&&r.name==='Curreri (1974)') || (selectedEq==='davies'&&r.name.includes('Davies')) || (selectedEq==='toronto'&&r.name.includes('Toronto')) || (selectedEq==='iretojones'&&r.name.includes('Ireton')) || (selectedEq==='espen'&&r.name.includes('ESPEN')) || (selectedEq==='galveston'&&r.name.includes('Galveston'));
           const diff = r.val - espen;
           const diffPct = espen>0 ? Math.round(diff/espen*100) : 0;
-          const diffStr = diff>0 ? `<span style="color:var(--amber);font-size:9px">+${diffPct}% vs ESPEN</span>` : diff<0 ? `<span style="color:var(--blue);font-size:9px">${diffPct}% vs ESPEN</span>` : '<span style="color:var(--green);font-size:9px">ESPEN ✓</span>';
+          const diffStr = diff>0 ? `<span style="color:var(--amber);font-size:11px">+${diffPct}% vs ESPEN</span>` : diff<0 ? `<span style="color:var(--blue);font-size:11px">${diffPct}% vs ESPEN</span>` : '<span style="color:var(--green);font-size:11px">ESPEN ✓</span>';
           const rowBg = isSelected ? 'rgba(255,99,20,.12)' : r.isRecommended ? 'rgba(0,212,184,.05)' : '';
           const border = isSelected ? 'border-left:3px solid #ff6314' : r.isRecommended ? 'border-left:3px solid var(--teal)' : 'border-left:3px solid transparent';
           return `<tr style="background:${rowBg};${border};border-bottom:1px solid rgba(255,99,20,.1)">
             <td style="padding:8px 10px;font-weight:700;color:${isSelected?'#ff9060':r.isRecommended?'var(--teal)':'var(--text-bright)'}">${r.name}${isSelected?' ✓':r.isRecommended?' ★':''}</td>
-            <td style="padding:8px 10px;color:var(--text-dim);font-size:9px">${r.ref}</td>
+            <td style="padding:8px 10px;color:var(--text-dim);font-size:11px">${r.ref}</td>
             <td style="padding:8px 10px;text-align:right;font-size:14px;font-weight:700;color:${isSelected?'#ff9060':r.isRecommended?'var(--teal)':'var(--text-bright)'}">${r.val}<br>${diffStr}</td>
-            <td style="padding:8px 10px;color:var(--text-dim);font-size:9px;font-style:italic">${r.formula}</td>
-            <td style="padding:8px 10px;color:var(--text);font-size:9px">${r.note}</td>
+            <td style="padding:8px 10px;color:var(--text-dim);font-size:11px;font-style:italic">${r.formula}</td>
+            <td style="padding:8px 10px;color:var(--text);font-size:11px">${r.note}</td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>
-    <div style="margin-top:10px;padding:8px 12px;background:rgba(0,212,184,.05);border:1px solid rgba(0,212,184,.2);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7">
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(0,212,184,.05);border:1px solid rgba(0,212,184,.2);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">
       ESPEN Burns 2013 — recommended (Rousseau et al., Clin Nutr 2013;32:497–502) = current evidence-based recommendation. ✓ = your selected equation (used in main calculation).<br>
       Toronto is most validated for dynamic day-by-day energy targets. Galveston requires BSA — for paediatric patients only.<br>
       Curreri may overestimate by 30–50% in large burns — consider capping or using ESPEN Burns 2013 weight-based approach.<br>

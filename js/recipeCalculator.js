@@ -247,17 +247,17 @@
 
       row.innerHTML =
         '<div style="flex:1;min-width:0">' +
-          '<div style="font-family:var(--mono);font-size:10.5px;font-weight:600;' +
+          '<div style="font-family:var(--mono);font-size:11px;font-weight:600;' +
             'color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
             _escHtml(item.name) +
           '</div>' +
-          '<div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:2px">' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">' +
             '<span style="color:#e2e8f0">' + (item.nutrition.kcal || 0) + ' kcal</span>' +
             ' · P <span style="color:#60a5fa">' + (item.nutrition.pro || 0) + 'g</span>' +
             ' · C <span style="color:#f0b429">' + (item.nutrition.cho || 0) + 'g</span>' +
             ' · F <span style="color:#fb7185">' + (item.nutrition.fat || 0) + 'g</span>' +
             ' <em style="color:' + srcColor + ';margin-left:4px;font-style:normal;' +
-              'font-size:7px;border:1px solid ' + srcColor + '30;padding:1px 4px;border-radius:3px">' +
+              'font-size:11px;border:1px solid ' + srcColor + '30;padding:1px 4px;border-radius:3px">' +
               _escHtml(item.source) + '</em>' +
           '</div>' +
         '</div>' +
@@ -422,7 +422,7 @@
 
     if (_state.ingredients.length === 0) {
       list.innerHTML = `
-        <div id="rc-ing-empty" style="font-family:var(--mono);font-size:10px;color:var(--text-muted);
+        <div id="rc-ing-empty" style="font-family:var(--mono);font-size:11px;color:var(--text-muted);
           text-align:center;padding:18px 0">
           No ingredients yet — click <strong style="color:var(--teal)">+ Add Ingredient</strong>
         </div>`;
@@ -433,7 +433,7 @@
       <div class="rc-ing-row" id="rc-row-${ing.id}" data-idx="${idx}">
         <!-- Row header: index + remove -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-family:var(--mono);font-size:9px;font-weight:700;
+          <span style="font-family:var(--mono);font-size:11px;font-weight:700;
             color:var(--teal);letter-spacing:1px;min-width:18px">#${idx + 1}</span>
           <div style="flex:1">
             <!-- Ingredient name + lookup -->
@@ -455,7 +455,7 @@
                 title="Lookup nutrition"
                 style="flex-shrink:0;height:38px;padding:0 10px;border-radius:6px;
                   border:1px solid rgba(29,233,212,0.35);background:rgba(29,233,212,0.06);
-                  color:var(--teal);font-family:var(--mono);font-size:10px;cursor:pointer;
+                  color:var(--teal);font-family:var(--mono);font-size:11px;cursor:pointer;
                   white-space:nowrap;transition:background .15s"
                 id="rc-lookup-btn-${ing.id}">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -486,7 +486,7 @@
         <!-- Amount + Unit -->
         <div style="display:grid;grid-template-columns:1fr 110px;gap:8px">
           <div>
-            <label style="font-family:var(--mono);font-size:8.5px;letter-spacing:1px;
+            <label style="font-family:var(--mono);font-size:11px;letter-spacing:1px;
               color:var(--text-dim);display:block;margin-bottom:3px">AMOUNT</label>
             <input
               type="number"
@@ -501,7 +501,7 @@
             >
           </div>
           <div>
-            <label style="font-family:var(--mono);font-size:8.5px;letter-spacing:1px;
+            <label style="font-family:var(--mono);font-size:11px;letter-spacing:1px;
               color:var(--text-dim);display:block;margin-bottom:3px">UNIT</label>
             <select
               class="inp sel"
@@ -553,17 +553,17 @@
     return `
       <!-- Per-100g headline + serving estimate + source badge -->
       <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted)">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">
           per 100g: <strong style="color:var(--text-bright)">${ing.kcal} kcal</strong>
           · P <strong style="color:#60a5fa">${ing.pro||0}g</strong>
           · C <strong style="color:#f0b429">${ing.cho||0}g</strong>
           · F <strong style="color:#fb7185">${ing.fat||0}g</strong>
         </span>
         ${kcalPerServing != null ? `
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted)">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">
           → this serving: <strong style="color:var(--teal)">${kcalPerServing} kcal</strong>
         </span>` : ''}
-        <span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:4px;
+        <span style="font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:4px;
           background:rgba(0,0,0,0.25);border:1px solid ${srcColor}20;color:${srcColor};
           letter-spacing:0.5px">${ing.source}</span>
       </div>`;
@@ -703,7 +703,7 @@
       btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
       btn.style.animation = 'rc-spin 0.7s linear infinite';
     }
-    if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted)">Searching…</span>`;
+    if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">Searching…</span>`;
 
     try {
       const result = await _lookupNutrition(name);
@@ -717,10 +717,10 @@
         if (badge) badge.innerHTML = _renderNutriBadge(ing);
         _updateLiveTotals();
       } else {
-        if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:#fb923c">Not found — enter values manually or try a different name</span>`;
+        if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:11px;color:#fb923c">Not found — enter values manually or try a different name</span>`;
       }
     } catch (err) {
-      if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:8.5px;color:#fb7185">Lookup error — check connection</span>`;
+      if (badge) badge.innerHTML = `<span style="font-family:var(--mono);font-size:11px;color:#fb7185">Lookup error — check connection</span>`;
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -810,10 +810,10 @@
 
       return `
         <tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
-          <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text-bright)">${i+1}. ${_escHtml(ing.name) || '<em style="color:var(--text-muted)">unnamed</em>'}</td>
-          <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--teal);text-align:right;white-space:nowrap">${scaledAmt} ${_unitLabel(ing.unit)}</td>
-          <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right">${ingKcal != null ? ingKcal + ' kcal' : '—'}</td>
-          <td style="padding:7px 8px;font-family:var(--mono);font-size:9.5px;color:var(--text-muted);text-align:right;white-space:nowrap">
+          <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-bright)">${i+1}. ${_escHtml(ing.name) || '<em style="color:var(--text-muted)">unnamed</em>'}</td>
+          <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--teal);text-align:right;white-space:nowrap">${scaledAmt} ${_unitLabel(ing.unit)}</td>
+          <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:right">${ingKcal != null ? ingKcal + ' kcal' : '—'}</td>
+          <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-muted);text-align:right;white-space:nowrap">
             ${ingPro != null ? 'P:'+ingPro+'g' : ''} ${ingCho != null ? 'C:'+ingCho+'g' : ''} ${ingFat != null ? 'F:'+ingFat+'g' : ''}
           </td>
         </tr>`;
@@ -823,7 +823,7 @@
       ? `<span style="color:${wc >= 0 ? '#34d399' : '#fb7185'};font-weight:700">
           ${wc >= 0 ? '+' : ''}${wc}%
          </span>
-         <span style="font-size:9px;color:var(--text-muted)">
+         <span style="font-size:11px;color:var(--text-muted)">
            (${_num(_state.initialWeight)}g → ${_num(_state.finalWeight)}g)
          </span>`
       : '<span style="color:var(--text-muted)">—</span>';
@@ -836,18 +836,18 @@
         border:2px solid rgba(29,233,212,0.3);border-radius:14px;padding:18px 20px;margin-bottom:16px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
           <div>
-            <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;
+            <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;
               color:var(--teal);margin-bottom:4px">RECIPE SUMMARY</div>
             <div style="font-family:var(--cond);font-size:20px;font-weight:800;color:var(--text-bright);
               line-height:1.2">${_escHtml(_state.recipeName)}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">Generated by</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Generated by</div>
             <div id="rc-generated-by-name" style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright)">${_escHtml(_state.userName || '—')}</div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text-muted);margin-top:2px">${now}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:2px">${now}</div>
           </div>
         </div>
-        ${sf !== 1 ? `<div style="margin-top:8px;display:inline-block;font-family:var(--mono);font-size:9px;
+        ${sf !== 1 ? `<div style="margin-top:8px;display:inline-block;font-family:var(--mono);font-size:11px;
           padding:3px 8px;border-radius:5px;background:rgba(240,180,41,0.1);
           border:1px solid rgba(240,180,41,0.3);color:var(--amber)">
           Scale factor: ×${sf} (${_state.servings} serving${_num(_state.servings) !== 1 ? 's' : ''})
@@ -867,7 +867,7 @@
           <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;
             padding:10px 10px 8px;text-align:center">
             <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${s.color}">${s.val}</div>
-            <div style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim);
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);
               letter-spacing:1px;margin-top:3px">${s.label}</div>
           </div>`).join('')}
       </div>
@@ -877,41 +877,41 @@
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;
         padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div>
-          <div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;
             color:var(--text-muted);margin-bottom:4px">WEIGHT CHANGE</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:700">${wcHtml}</div>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);flex:1">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);flex:1">
           Formula: ((Final − Initial) ÷ Initial) × 100
         </div>
       </div>` : ''}
 
       <!-- ── Ingredient table ── -->
       <div style="margin-bottom:16px">
-        <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;
           color:var(--text-muted);margin-bottom:8px">INGREDIENT LIST</div>
         <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
           <table style="width:100%;border-collapse:collapse">
             <thead>
               <tr style="background:rgba(29,233,212,0.06)">
-                <th style="padding:8px 8px;font-family:var(--mono);font-size:8.5px;font-weight:700;
+                <th style="padding:8px 8px;font-family:var(--mono);font-size:11px;font-weight:700;
                   letter-spacing:1px;color:var(--teal);text-align:left">INGREDIENT</th>
-                <th style="padding:8px 8px;font-family:var(--mono);font-size:8.5px;font-weight:700;
+                <th style="padding:8px 8px;font-family:var(--mono);font-size:11px;font-weight:700;
                   letter-spacing:1px;color:var(--teal);text-align:right">AMOUNT</th>
-                <th style="padding:8px 8px;font-family:var(--mono);font-size:8.5px;font-weight:700;
+                <th style="padding:8px 8px;font-family:var(--mono);font-size:11px;font-weight:700;
                   letter-spacing:1px;color:var(--teal);text-align:right">ENERGY</th>
-                <th style="padding:8px 8px;font-family:var(--mono);font-size:8.5px;font-weight:700;
+                <th style="padding:8px 8px;font-family:var(--mono);font-size:11px;font-weight:700;
                   letter-spacing:1px;color:var(--teal);text-align:right">MACRO</th>
               </tr>
             </thead>
             <tbody>${ingsHtml}</tbody>
             <tfoot>
               <tr style="background:rgba(29,233,212,0.04);border-top:2px solid rgba(29,233,212,0.2)">
-                <td colspan="2" style="padding:9px 8px;font-family:var(--mono);font-size:10px;
+                <td colspan="2" style="padding:9px 8px;font-family:var(--mono);font-size:11px;
                   font-weight:700;color:var(--text-bright)">TOTAL (×${sf})</td>
                 <td style="padding:9px 8px;font-family:var(--mono);font-size:11px;font-weight:700;
                   color:var(--amber);text-align:right">${tot.kcal.toFixed(0)} kcal</td>
-                <td style="padding:9px 8px;font-family:var(--mono);font-size:9.5px;
+                <td style="padding:9px 8px;font-family:var(--mono);font-size:11px;
                   color:var(--text-dim);text-align:right">
                   P:${tot.pro.toFixed(1)}g C:${tot.cho.toFixed(1)}g F:${tot.fat.toFixed(1)}g
                 </td>
@@ -922,7 +922,7 @@
       </div>
 
       <!-- ── Footer note ── -->
-      <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-muted);line-height:1.8;
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.8;
         padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.02);
         border:1px dashed rgba(255,255,255,0.08)">
         Data sources: Malawi Food Composition Table (2019) · USDA FoodData Central · Open Food Facts<br>
@@ -1089,7 +1089,7 @@
     /* Watermark footer */
     .rc-pdf-footer {
       margin-top: 18px;
-      font-size: 8px;
+      font-size: 11px;
       color: #94a3b8;
       text-align: center;
       border-top: 1px solid #e2e8f0;

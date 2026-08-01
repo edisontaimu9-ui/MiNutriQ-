@@ -176,7 +176,7 @@ function calcNB() {
     `<div>Stress Level: <strong style="color:${un>=10?'var(--red)':un>=5?'var(--amber)':'var(--green)'}">Level ${stressLvl}</strong></div>`,
     nIn !== null ? `<div>N Intake from protein: <strong style="color:var(--blue)">${nIn.toFixed(2)} g/24h</strong></div>` : '',
     nb !== null ? `<div>Nitrogen Balance: <strong style="color:${nb>0?'var(--green)':'var(--red)'}">${nb>0?'+':''}${nb.toFixed(2)} g/24h (${nb>0?'Anabolic':'Catabolic'})</strong></div>` : '',
-    nb !== null ? `<div style="color:var(--text-dim);font-size:9px">NPE:N₂ ratio: ${nIn>0?Math.round(pIn*4/nIn):' — '} (>150:1 normal · 100–150 moderate · 80–100 severe stress)</div>` : '',
+    nb !== null ? `<div style="color:var(--text-dim);font-size:11px">NPE:N₂ ratio: ${nIn>0?Math.round(pIn*4/nIn):' — '} (>150:1 normal · 100–150 moderate · 80–100 severe stress)</div>` : '',
   ].join('');
 }
 
@@ -514,7 +514,7 @@ function renderRecallMeals() {
     div.innerHTML = `
       <div class="meal-header">
         <div class="meal-title">${['','','','','',''][mi]} ${meal}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)" id="meal-${mi}-kcal">0 kcal</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)" id="meal-${mi}-kcal">0 kcal</div>
       </div>
       <!-- Exchange mode (hidden — UCT Exchange removed from 24-Hour Recall) -->
       <div id="meal-${mi}-exchange-row" class="recall-add-row" style="display:none">
@@ -530,7 +530,7 @@ function renderRecallMeals() {
         </div>
         <div class="field-group">
           <label class="field-lbl"> UCT Food Lookup</label>
-          <select class="field-inp" id="meal-${mi}-uct-food" onchange="uctFoodSelect(${mi})" style="font-size:10px;color:var(--text-dim)">
+          <select class="field-inp" id="meal-${mi}-uct-food" onchange="uctFoodSelect(${mi})" style="font-size:11px;color:var(--text-dim)">
             <option value="">— Pick from UCT Exchange List —</option>
           </select>
         </div>
@@ -548,7 +548,7 @@ function renderRecallMeals() {
             border-radius:9px;
             cursor:pointer;
             font-family:var(--mono);
-            font-size:10px;
+            font-size:11px;
             font-weight:700;
             letter-spacing:2px;
             white-space:nowrap;
@@ -564,9 +564,9 @@ function renderRecallMeals() {
       </div>
       <!-- Mode toggle: MALAWI FCT | COMMERCIAL FORMULA | CHAKUDYA API (internal mode key stays 'fdc') -->
       <div style="display:flex;gap:0;margin-bottom:10px;background:var(--surface3);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content">
-        <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:var(--amber);color:#000;cursor:pointer;letter-spacing:1px;font-weight:700" id="meal-${mi}-btn-fct">MALAWI FCT</button>
-        <button onclick="setMealMode(${mi},'formula',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-formula">COMMERCIAL FORMULA</button>
-        <button onclick="setMealMode(${mi},'fdc',this)" style="font-family:var(--mono);font-size:9px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fdc">🌐 Chakudya API</button>
+        <button onclick="setMealMode(${mi},'fct',this)" style="font-family:var(--mono);font-size:11px;padding:5px 12px;border:none;background:var(--amber);color:#000;cursor:pointer;letter-spacing:1px;font-weight:700" id="meal-${mi}-btn-fct">MALAWI FCT</button>
+        <button onclick="setMealMode(${mi},'formula',this)" style="font-family:var(--mono);font-size:11px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-formula">COMMERCIAL FORMULA</button>
+        <button onclick="setMealMode(${mi},'fdc',this)" style="font-family:var(--mono);font-size:11px;padding:5px 12px;border:none;background:none;color:var(--text-dim);cursor:pointer;letter-spacing:1px" id="meal-${mi}-btn-fdc">🌐 Chakudya API</button>
       </div>
       <!-- FCT mode — default active -->
       <div id="meal-${mi}-fct-row" style="display:block;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(56,100,168,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
@@ -598,7 +598,7 @@ function renderRecallMeals() {
             <label class="field-lbl">✕ Servings</label>
             <input class="field-inp" id="meal-${mi}-fct-qty" type="number" value="1" min="0.5" step="0.5" style="font-size:11px">
           </div>
-          <div id="meal-${mi}-fct-info" style="font-family:var(--mono);font-size:9px;color:var(--teal);line-height:1.5;padding-bottom:4px"></div>
+          <div id="meal-${mi}-fct-info" style="font-family:var(--mono);font-size:11px;color:var(--teal);line-height:1.5;padding-bottom:4px"></div>
           <div class="field-group" style="padding-top:18px">
             <button onclick="addRecallFct(${mi})" style="
               display:flex;align-items:center;justify-content:center;gap:6px;
@@ -609,7 +609,7 @@ function renderRecallMeals() {
               border-radius:9px;
               cursor:pointer;
               font-family:var(--mono);
-              font-size:10px;
+              font-size:11px;
               font-weight:700;
               letter-spacing:2px;
               white-space:nowrap;
@@ -651,7 +651,7 @@ function renderRecallMeals() {
             <label class="field-lbl"> Description</label>
             <input class="field-inp" id="meal-${mi}-formula-desc" placeholder="e.g. Ensure Plus 200 mL" style="font-size:11px">
           </div>
-          <div id="meal-${mi}-formula-info" style="font-family:var(--mono);font-size:9px;color:var(--blue);line-height:1.6;padding-bottom:4px"></div>
+          <div id="meal-${mi}-formula-info" style="font-family:var(--mono);font-size:11px;color:var(--blue);line-height:1.6;padding-bottom:4px"></div>
           <div class="field-group" style="padding-top:18px">
             <button onclick="addRecallFormula(${mi})" style="
               display:flex;align-items:center;justify-content:center;gap:6px;
@@ -662,7 +662,7 @@ function renderRecallMeals() {
               border-radius:9px;
               cursor:pointer;
               font-family:var(--mono);
-              font-size:10px;
+              font-size:11px;
               font-weight:700;
               letter-spacing:2px;
               white-space:nowrap;
@@ -680,14 +680,14 @@ function renderRecallMeals() {
       <!-- Chakudya API Online Search mode -->
       <div id="meal-${mi}-fdc-row" style="display:none;padding:16px 18px;background:rgba(6,14,32,0.7);border:1px solid rgba(96,165,250,0.22);border-radius:12px;margin-bottom:12px;position:relative;">
         <div style="position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(96,165,250,0.25),transparent)"></div>
-        <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px">🌐 Chakudya Nutrition Registry (CNR) — Live Search</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#60a5fa;margin-bottom:10px">🌐 Chakudya Nutrition Registry (CNR) — Live Search</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <input class="field-inp" id="meal-${mi}-fdc-q" placeholder="Search Chakudya database (e.g. avocado, oatmeal)…"
             style="flex:1;font-size:11px"
             onkeydown="if(event.key==='Enter')recallFdcSearch(${mi})">
-          <button onclick="recallFdcSearch(${mi})" style="font-family:var(--mono);font-size:9px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);letter-spacing:1px">SEARCH</button>
+          <button onclick="recallFdcSearch(${mi})" style="font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;background:rgba(96,165,250,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.35);letter-spacing:1px">SEARCH</button>
         </div>
-        <div id="meal-${mi}-fdc-status" style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:6px;min-height:14px"></div>
+        <div id="meal-${mi}-fdc-status" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:6px;min-height:14px"></div>
         <div id="meal-${mi}-fdc-results"></div>
       </div>
       <div id="meal-${mi}-items"></div>
@@ -1055,7 +1055,7 @@ async function recallFdcSearch(mi) {
     stEl.textContent = `${foods.length} result${foods.length > 1 ? 's' : ''} · per 100 g · select grams then ADD`;
     resEl.innerHTML  =
       `<div style="display:flex;justify-content:flex-end;margin-bottom:6px">` +
-      `<button onclick="clearRecallFdcResults(${mi})" style="font-family:var(--mono);font-size:8px;font-weight:700;padding:3px 10px;border-radius:5px;cursor:pointer;background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.3);letter-spacing:.5px">✕ CLOSE RESULTS</button>` +
+      `<button onclick="clearRecallFdcResults(${mi})" style="font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;cursor:pointer;background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.3);letter-spacing:.5px">✕ CLOSE RESULTS</button>` +
       `</div>` +
       foods.map((f, i) => _recallFdcCard(f, i, mi)).join('');
     window[`_recallFdcHits_${mi}`] = foods;
@@ -1086,39 +1086,39 @@ function _recallFdcCard(food, i, mi) {
     <div style="padding:8px 12px 5px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
       <div style="flex:1;min-width:0">
         <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(food.name)}">${esc(food.name)}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:1px">${esc(food.cat)}</div>
       </div>
-      <span style="font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">Chakudya API</span>
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap;flex-shrink:0;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25)">Chakudya API</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border)">
       <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
         <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--teal)" id="rfv_${mi}_${i}_kcal">${fmt(food.kcal, 0)}</span>
-        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">kcal</span>
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">kcal</span>
       </div>
       <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
         <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:#60a5fa" id="rfv_${mi}_${i}_pro">${fmt(food.pro)}g</span>
-        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">pro</span>
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">pro</span>
       </div>
       <div style="padding:6px 4px;text-align:center;border-right:1px solid var(--border)">
         <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--amber,#f0b429)" id="rfv_${mi}_${i}_cho">${fmt(food.cho)}g</span>
-        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">carbs</span>
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">carbs</span>
       </div>
       <div style="padding:6px 4px;text-align:center">
         <span style="font-family:var(--mono);font-size:12px;font-weight:500;color:var(--orange,#fb923c)" id="rfv_${mi}_${i}_fat">${fmt(food.fat)}g</span>
-        <span style="display:block;font-size:8px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">fat</span>
+        <span style="display:block;font-size:11px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.07em">fat</span>
       </div>
     </div>
-    ${extras.length ? `<div style="padding:4px 12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text-dim)">${extras.join(' · ')}</div>` : ''}
+    ${extras.length ? `<div style="padding:4px 12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text-dim)">${extras.join(' · ')}</div>` : ''}
     <div style="border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-      <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">per</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">per</span>
       <input type="number" min="1" max="2000" value="100" id="rfg_${mi}_${i}"
         style="width:54px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);outline:none;text-align:center"
         oninput="recallFdcRecalc(${mi},${i})"
         onfocus="this.style.borderColor='rgba(29,233,212,.5)'"
         onblur="this.style.borderColor='var(--border)'"/>
-      <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim)">g</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">g</span>
       <button onclick="addRecallFdcFood(${mi},${i})"
-        style="font-family:var(--mono);font-size:8.5px;font-weight:700;padding:3px 11px;border-radius:5px;cursor:pointer;margin-left:auto;background:rgba(29,233,212,.1);color:var(--teal,#1de9d4);border:1px solid rgba(29,233,212,.3);letter-spacing:.5px"
+        style="font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 11px;border-radius:5px;cursor:pointer;margin-left:auto;background:rgba(29,233,212,.1);color:var(--teal,#1de9d4);border:1px solid rgba(29,233,212,.3);letter-spacing:.5px"
         id="rfadd_${mi}_${i}">+ ADD TO RECALL</button>
     </div>
   </div>`;
@@ -1214,12 +1214,12 @@ function renderMealItems(mi) {
     const qty     = item.qty || 1;
     const isFdc   = item.source === 'chakudya';
     const qtyCtrl = isFdc
-      ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);white-space:nowrap">fixed g</span>`
+      ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:nowrap">fixed g</span>`
       : `<button onclick="adjRecallQty(${mi},${idx},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">−</button>
         <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:22px;text-align:center">${qty}</span>
         <button onclick="adjRecallQty(${mi},${idx},0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center">+</button>`;
     const fdcBadge = isFdc
-      ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);flex-shrink:0;white-space:nowrap">CNR</span>`
+      ? `<span style="font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);flex-shrink:0;white-space:nowrap">CNR</span>`
       : '';
     return `<div class="recall-item-row" id="rrow-${mi}-${idx}">
       <div style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
@@ -1353,8 +1353,8 @@ function updateRecallTotals() {
           </div>
         </td>
         <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:${status[1]}">${status[0]}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">${deficit > 0 ? '−'+deficit+' '+unit : deficit < -10 ? '+'+(Math.abs(deficit))+' '+unit+' excess' : '✓'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);font-style:italic">${note}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${deficit > 0 ? '−'+deficit+' '+unit : deficit < -10 ? '+'+(Math.abs(deficit))+' '+unit+' excess' : '✓'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);font-style:italic">${note}</td>
       </tr>`;
     };
 
@@ -1370,14 +1370,14 @@ function updateRecallTotals() {
       <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;min-width:600px">
         <thead>
           <tr style="border-bottom:2px solid rgba(56,100,168,0.25)">
-            <th style="padding:7px 10px;text-align:left;color:var(--text-dim);font-size:9px;letter-spacing:1px">NUTRIENT</th>
-            <th style="padding:7px 10px;text-align:right;color:var(--text-dim);font-size:9px">INTAKE</th>
-            <th style="padding:7px 10px;text-align:right;color:var(--text-dim);font-size:9px">TARGET</th>
-            <th style="padding:7px 10px;text-align:center;color:var(--text-dim);font-size:9px">%</th>
-            <th style="padding:7px 10px;color:var(--text-dim);font-size:9px">BAR</th>
-            <th style="padding:7px 10px;text-align:center;color:var(--text-dim);font-size:9px">STATUS</th>
-            <th style="padding:7px 10px;color:var(--text-dim);font-size:9px">DEFICIT / EXCESS</th>
-            <th style="padding:7px 10px;color:var(--text-dim);font-size:9px">NOTE</th>
+            <th style="padding:7px 10px;text-align:left;color:var(--text-dim);font-size:11px;letter-spacing:1px">NUTRIENT</th>
+            <th style="padding:7px 10px;text-align:right;color:var(--text-dim);font-size:11px">INTAKE</th>
+            <th style="padding:7px 10px;text-align:right;color:var(--text-dim);font-size:11px">TARGET</th>
+            <th style="padding:7px 10px;text-align:center;color:var(--text-dim);font-size:11px">%</th>
+            <th style="padding:7px 10px;color:var(--text-dim);font-size:11px">BAR</th>
+            <th style="padding:7px 10px;text-align:center;color:var(--text-dim);font-size:11px">STATUS</th>
+            <th style="padding:7px 10px;color:var(--text-dim);font-size:11px">DEFICIT / EXCESS</th>
+            <th style="padding:7px 10px;color:var(--text-dim);font-size:11px">NOTE</th>
           </tr>
         </thead>
         <tbody>
@@ -1391,7 +1391,7 @@ function updateRecallTotals() {
         </tbody>
       </table>
       </div>
-      <div style="margin-top:10px;padding:10px 12px;background:rgba(56,100,168,0.07);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8">
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(56,100,168,0.07);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
         <strong style="color:var(--text)">Energy source breakdown:</strong>
         CHO ${choPctEnergy}% · Protein ${proPctEnergy}% · Fat ${fatPctEnergy}% of total macro kcal (${totalMacroKcal2} kcal) ·
         Reference: 45–65% CHO · 10–35% protein · 20–35% fat (DRI/IOM AMDR) ·
@@ -1422,11 +1422,11 @@ function updateRecallTotals() {
 
   // Exchange count grid
   document.getElementById('exchange-count-grid').innerHTML = Object.entries(exchangeCounts).map(([k,v])=>{
-    if (k==='fct') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--amber);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">MALAWI FCT ITEMS</div></div>`;
-    if (k==='formula') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--blue);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">FORMULA ITEMS</div></div>`;
+    if (k==='fct') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--amber);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:11px;letter-spacing:1px">MALAWI FCT ITEMS</div></div>`;
+    if (k==='formula') return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:var(--blue);font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:11px;letter-spacing:1px">FORMULA ITEMS</div></div>`;
     const ex = EXCHANGE_TYPES[k];
     if (!ex) return '';
-    return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:${ex.color};font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px">${ex.label.toUpperCase()}</div></div>`;
+    return `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:8px 10px"><div style="color:${ex.color};font-size:14px;font-weight:700">${v}</div><div style="color:var(--text-dim);font-size:11px;letter-spacing:1px">${ex.label.toUpperCase()}</div></div>`;
   }).join('');
 }
 
@@ -1855,17 +1855,17 @@ function renderMpMeals() {
       </div>
       <div class="card-body" style="padding:10px 14px">
         ${items.length === 0
-          ? '<div style="color:var(--text-dim);font-family:var(--mono);font-size:10px;padding:6px 0">No items added yet</div>'
+          ? '<div style="color:var(--text-dim);font-family:var(--mono);font-size:11px;padding:6px 0">No items added yet</div>'
           : items.map((item, ii) => {
               const isFdc  = item.source === 'chakudya';
               const q      = item.qty || 1;
               const kcal   = isFdc ? (item.kcal || 0) : Math.round((item.baseKcal||item.kcal||0) * q);
               const pro    = isFdc ? (item.pro  || 0) : parseFloat(((item.basePro||item.pro||0) * q).toFixed(1));
               const badge  = isFdc
-                ? `<span style="font-family:var(--mono);font-size:7.5px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);white-space:nowrap;flex-shrink:0">CNR</span>`
+                ? `<span style="font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:100px;background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.25);white-space:nowrap;flex-shrink:0">CNR</span>`
                 : '';
               const qtyCtrl = isFdc
-                ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);min-width:76px;text-align:center">fixed g</span>`
+                ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);min-width:76px;text-align:center">fixed g</span>`
                 : `<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
                     <button onclick="adjMpQty(${mi},${ii},-0.5)" style="width:22px;height:22px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center">−</button>
                     <span style="font-family:var(--mono);font-size:11px;color:var(--teal);min-width:28px;text-align:center">${q}</span>
@@ -1937,9 +1937,9 @@ function updateMpTotals() {
     const proPct=Math.round(totPro*4/mpMacroKcal*100);
     const fatPct=Math.round(totFat*9/mpMacroKcal*100);
     mpDistEl.innerHTML=`
-      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0">Carbohydrate</span><span style="color:var(--amber);overflow-wrap:break-word;word-break:break-word;text-align:right">${choPct}% (${totCho}g · ${totCho*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${choPct}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div></div>
-      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0">Protein</span><span style="color:var(--blue);overflow-wrap:break-word;word-break:break-word;text-align:right">${proPct}% (${totPro}g · ${totPro*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${proPct}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div></div>
-      <div><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:10px"><span style="color:var(--text-dim);flex-shrink:0"> Fat</span><span style="color:var(--green);overflow-wrap:break-word;word-break:break-word;text-align:right">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
+      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px"><span style="color:var(--text-dim);flex-shrink:0">Carbohydrate</span><span style="color:var(--amber);overflow-wrap:break-word;word-break:break-word;text-align:right">${choPct}% (${totCho}g · ${totCho*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${choPct}%;background:var(--amber);border-radius:4px;transition:width .5s"></div></div></div>
+      <div style="margin-bottom:8px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px"><span style="color:var(--text-dim);flex-shrink:0">Protein</span><span style="color:var(--blue);overflow-wrap:break-word;word-break:break-word;text-align:right">${proPct}% (${totPro}g · ${totPro*4} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${proPct}%;background:var(--blue);border-radius:4px;transition:width .5s"></div></div></div>
+      <div><div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 6px;margin-bottom:3px;font-family:var(--mono);font-size:11px"><span style="color:var(--text-dim);flex-shrink:0"> Fat</span><span style="color:var(--green);overflow-wrap:break-word;word-break:break-word;text-align:right">${fatPct}% (${totFat}g · ${totFat*9} kcal)</span></div><div style="height:7px;background:var(--surface3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${fatPct}%;background:var(--green);border-radius:4px;transition:width .5s"></div></div></div>
     `;
   }
   // Gap alert

@@ -322,18 +322,18 @@ function enRender() {
 
     return `<tr>
       <td style="font-weight:600;color:var(--text-bright)">${f.name}</td>
-      <td><span style="font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${col};color:${col}">${f.cat}</span></td>
-      <td style="font-size:10px;color:var(--text-dim)">${f.route}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid;border-color:${col};color:${col}">${f.cat}</span></td>
+      <td style="font-size:11px;color:var(--text-dim)">${f.route}</td>
       <td style="color:var(--amber);font-weight:700">${f.kcalML}</td>
       <td style="color:var(--amber)">${kcal500}</td>
       <td style="color:var(--blue);font-weight:600">${f.pro ?? '—'}</td>
-      <td style="color:var(--blue);font-size:10px">${proPctE}%</td>
+      <td style="color:var(--blue);font-size:11px">${proPctE}%</td>
       <td style="color:var(--teal)">${f.cho ?? '—'}</td>
       <td style="color:var(--green)">${f.fat ?? '—'}</td>
       <td style="color:var(--purple)">${f.osm ?? '—'}</td>
       <td style="color:var(--green);font-weight:${(f.fibre||0)>=2?'700':'400'}">${fibreL}</td>
       <td style="max-width:220px"><div style="display:flex;flex-wrap:wrap;gap:3px">${tagHtml}</div></td>
-      <td style="font-size:10px;color:var(--text-dim);max-width:220px;white-space:normal">${f.note}</td>
+      <td style="font-size:11px;color:var(--text-dim);max-width:220px;white-space:normal">${f.note}</td>
     </tr>`;
   }).join('');
 }
@@ -344,7 +344,7 @@ function enInitPresets() {
   if (!el) return;
   el.innerHTML = CLINICAL_PRESETS.map((p, i) => `
     <div class="hscroll-item preset-pill">
-      <button onclick="enApplyPreset(${i})" style="font-family:var(--mono);font-size:10px;padding:5px 11px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap" id="en-preset-${i}"
+      <button onclick="enApplyPreset(${i})" style="font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap" id="en-preset-${i}"
         title="${p.note}">${p.label}</button>
     </div>`).join('');
   requestAnimationFrame(hscrollReinit);
@@ -401,10 +401,10 @@ function enRenderHighlights() {
   el.innerHTML = hs.map(h => `
     <div class="hscroll-item highlight-card" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
       <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;color:${h.color};text-transform:uppercase;margin-bottom:10px">${h.label}</div>
-      ${h.list.length ? h.list.map((f,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted rgba(255,255,255,.05);font-family:var(--mono);font-size:10px">
+      ${h.list.length ? h.list.map((f,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted rgba(255,255,255,.05);font-family:var(--mono);font-size:11px">
         <span style="color:var(--text)">${i+1}. ${f.name}</span>
         <span style="color:${h.color};font-weight:700">${h.val(f)}</span>
-      </div>`).join('') : '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">No formulas in this category.</div>'}
+      </div>`).join('') : '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">No formulas in this category.</div>'}
     </div>`).join('');
   requestAnimationFrame(hscrollReinit);
 }

@@ -88,8 +88,8 @@ function uctRender() {
     const portions  = f.portions.join(' / ');
     return `<tr>
       <td style="font-weight:600">${f.name}</td>
-      <td><span style="background:rgba(29,233,212,.12);color:var(--teal);padding:2px 7px;border-radius:4px;font-size:9px;font-family:var(--mono);letter-spacing:.5px">${typeLabel}</span></td>
-      <td style="font-family:var(--mono);font-size:10px">${portions}</td>
+      <td><span style="background:rgba(29,233,212,.12);color:var(--teal);padding:2px 7px;border-radius:4px;font-size:11px;font-family:var(--mono);letter-spacing:.5px">${typeLabel}</span></td>
+      <td style="font-family:var(--mono);font-size:11px">${portions}</td>
       <td style="color:var(--amber);font-weight:700">${f.kcal[0] ?? '—'}</td>
       <td style="color:var(--amber)">${f.kj[0] ?? '—'}</td>
       <td style="color:var(--blue)">${f.pro[0] ?? '—'}</td>
@@ -259,7 +259,7 @@ function rnRender() {
     if (tag === 'Low Potassium')      { color = 'var(--green)'; bg = 'rgba(0,230,118,.10)';    border = 'rgba(0,230,118,.25)'; }
     if (tag === 'High Sodium')        { color = 'var(--blue)';  bg = 'rgba(96,165,250,.12)';   border = 'rgba(96,165,250,.3)'; }
     if (tag === 'Low Sodium')         { color = 'var(--green)'; bg = 'rgba(0,230,118,.10)';    border = 'rgba(0,230,118,.25)'; }
-    return `<span style="font-family:var(--mono);font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:100px;white-space:nowrap;color:${color};background:${bg};border:1px solid ${border};display:inline-block;margin:1px 2px 1px 0">${tag}</span>`;
+    return `<span style="font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 6px;border-radius:100px;white-space:nowrap;color:${color};background:${bg};border:1px solid ${border};display:inline-block;margin:1px 2px 1px 0">${tag}</span>`;
   };
 
   const _elCell = (val, type) => {

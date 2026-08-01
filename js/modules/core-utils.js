@@ -83,18 +83,18 @@ if (typeof calculateBMI !== 'function') {
       'box-shadow:0 8px 48px rgba(0,0,0,.7)}',
       '#nt-error-overlay .nt-eh{display:flex;align-items:center;gap:12px;margin-bottom:16px}',
       '#nt-error-overlay .nt-ei{font-size:26px;flex-shrink:0}',
-      '#nt-error-overlay .nt-et{font-family:ui-monospace,"SF Mono",monospace;font-size:10px;',
+      '#nt-error-overlay .nt-et{font-family:ui-monospace,"SF Mono",monospace;font-size:11px;',
       'font-weight:700;letter-spacing:2px;color:rgba(239,68,68,.9);text-transform:uppercase}',
       '#nt-error-overlay .nt-em{font-size:13px;color:#e2e8f0;line-height:1.6;margin-bottom:4px}',
-      '#nt-error-overlay .nt-es{font-family:ui-monospace,"SF Mono",monospace;font-size:9.5px;',
+      '#nt-error-overlay .nt-es{font-family:ui-monospace,"SF Mono",monospace;font-size:11px;',
       'color:rgba(148,163,184,.7);line-height:1.5;word-break:break-all}',
       '#nt-error-overlay .nt-ed{background:rgba(0,0,0,.4);border:1px solid rgba(56,100,168,.3);',
       'border-radius:8px;padding:10px 12px;margin:14px 0 0;',
-      'font-family:ui-monospace,"SF Mono",monospace;font-size:8.5px;',
+      'font-family:ui-monospace,"SF Mono",monospace;font-size:11px;',
       'color:rgba(100,130,165,.8);line-height:1.6;max-height:100px;overflow:auto;',
       'white-space:pre-wrap;word-break:break-all}',
       '#nt-error-overlay .nt-ebtns{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}',
-      '#nt-error-overlay .nt-btn{font-family:ui-monospace,"SF Mono",monospace;font-size:10px;',
+      '#nt-error-overlay .nt-btn{font-family:ui-monospace,"SF Mono",monospace;font-size:11px;',
       'font-weight:700;letter-spacing:1.2px;padding:9px 18px;border-radius:8px;',
       'cursor:pointer;border:none;transition:opacity .15s;text-transform:uppercase}',
       '#nt-error-overlay .nt-btn-p{background:#1de9d4;color:#020617}',
@@ -110,12 +110,12 @@ if (typeof calculateBMI !== 'function') {
       '    </div>',
       '  </div>',
       entry.src ? '<div class="nt-es"> ' + _esc(entry.src) + (entry.line ? ' : ' + entry.line : '') + '</div>' : '',
-      entry.stack ? '<details><summary style="font-family:ui-monospace,monospace;font-size:9px;color:rgba(100,130,165,.6);cursor:pointer;margin-top:8px">Show stack trace</summary><div class="nt-ed">' + _esc(entry.stack) + '</div></details>' : '',
+      entry.stack ? '<details><summary style="font-family:ui-monospace,monospace;font-size:11px;color:rgba(100,130,165,.6);cursor:pointer;margin-top:8px">Show stack trace</summary><div class="nt-ed">' + _esc(entry.stack) + '</div></details>' : '',
       '  <div class="nt-ebtns">',
       '    <button class="nt-btn nt-btn-p" onclick="location.reload()">↺ Reload App</button>',
       '    <button class="nt-btn nt-btn-s" onclick="document.getElementById(\'nt-error-overlay\').remove()">Dismiss</button>',
       '  </div>',
-      '  <div style="margin-top:14px;font-family:ui-monospace,monospace;font-size:8px;color:rgba(100,130,165,.45);letter-spacing:1px">',
+      '  <div style="margin-top:14px;font-family:ui-monospace,monospace;font-size:11px;color:rgba(100,130,165,.45);letter-spacing:1px">',
       '    OASIS · ERROR · ' + new Date().toISOString(),
       '  </div>',
       '</div>',
@@ -486,7 +486,7 @@ const appState = {
     chip.innerHTML = '⬇&nbsp;Install';
     chip.setAttribute('aria-label', 'Install Oasis');
     chip.style.cssText = [
-      'font-family:var(--mono)', 'font-size:10px', 'font-weight:700', 'letter-spacing:.8px',
+      'font-family:var(--mono)', 'font-size:11px', 'font-weight:700', 'letter-spacing:.8px',
       'color:var(--teal)', 'background:rgba(29,233,212,0.08)',
       'border:1px solid rgba(29,233,212,0.35)', 'border-radius:20px',
       'padding:5px 13px', 'cursor:pointer', 'white-space:nowrap', 'flex-shrink:0',
@@ -562,7 +562,7 @@ const appState = {
     const stepRow = (n, html) => `
       <div style="display:flex;align-items:center;gap:12px;background:rgba(8,18,36,0.6);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
         <div style="width:32px;height:32px;background:rgba(29,233,212,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-family:var(--mono);font-weight:700;color:var(--teal);flex-shrink:0">${n}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.6">${html}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.6">${html}</div>
       </div>`;
 
     let stepsHtml;
@@ -595,7 +595,7 @@ const appState = {
           <div style="width:44px;height:44px;border-radius:12px;background:rgba(29,233,212,0.1);border:1px solid rgba(29,233,212,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"></div>
           <div>
             <div style="font-family:var(--cond);font-size:15px;font-weight:800;color:var(--text-bright);letter-spacing:1px">Oasis</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">INSTALL AS APP</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">INSTALL AS APP</div>
           </div>
           <button onclick="document.getElementById('pwa-install-modal').remove()" aria-label="Close" style="margin-left:auto;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .15s">✕</button>
         </div>

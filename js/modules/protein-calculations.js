@@ -513,7 +513,7 @@ function calculate() {
   const macroBarsEl = document.getElementById('r-macro-bars');
   if (macroBarsEl) {
     if (isRefeeding && rfRiskLevel === 'HIGH') {
-      macroBarsEl.innerHTML = `<div style="grid-column:1/-1;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--red);line-height:1.6">
+      macroBarsEl.innerHTML = `<div style="grid-column:1/-1;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.6">
          Macronutrient percentage targets are not displayed during high-refeeding-risk phase. Energy delivery is intentionally restricted (≤5 kcal/kg/day). Protein is prioritised over total energy. Macro distribution becomes clinically relevant once energy is advanced to ≥15 kcal/kg/day (Day 5–7 onwards).
       </div>`;
     } else {
@@ -546,7 +546,7 @@ function calculate() {
     ];
     macroBarsEl.innerHTML =
       // Protein-first banner
-      `<div style="grid-column:1/-1;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:8px 14px;font-family:var(--mono);font-size:9px;color:#93c5fd;line-height:1.7">
+      `<div style="grid-column:1/-1;background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:8px 14px;font-family:var(--mono);font-size:11px;color:#93c5fd;line-height:1.7">
         <strong style="color:var(--blue)">⬡ Protein-First Allocation</strong> &nbsp;·&nbsp;
         Protein target (<strong>${Math.round(protein)} g</strong> · <strong>${_protPctDisplay}%</strong> energy) is determined by clinical condition and allocated first.
         Remaining <strong>${Math.round(_nonProtKcal)} kcal</strong> (${100-_protPctDisplay}%) distributed between CHO and fat using ${diagnosis.toUpperCase()} condition-specific AMDR ratios.
@@ -556,8 +556,8 @@ function calculate() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:0;overflow:hidden">
         <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 6px;margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:5px;min-width:0">
-            <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:1px;color:${m.color};text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.label}</div>
-            ${m.badge ? `<span style="font-family:var(--mono);font-size:7px;font-weight:700;color:var(--blue);background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);border-radius:3px;padding:1px 5px;letter-spacing:.5px">${m.badge}</span>` : ''}
+            <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1px;color:${m.color};text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.label}</div>
+            ${m.badge ? `<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);border-radius:3px;padding:1px 5px;letter-spacing:.5px">${m.badge}</span>` : ''}
           </div>
           <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${m.color};white-space:nowrap;flex-shrink:0">${m.lo}${m.lo !== m.hi ? '–'+m.hi : ''}%</div>
         </div>
@@ -565,15 +565,15 @@ function calculate() {
           <div style="position:absolute;left:${Math.min(m.lo,97)}%;width:${Math.max(m.hi-m.lo,2)}%;height:100%;background:${m.color};opacity:0.7;border-radius:5px;transition:all .6s ease"></div>
           <div style="position:absolute;left:${Math.min(m.lo + (m.hi-m.lo)*0.5, 96)}%;transform:translateX(-50%);top:0;width:3px;height:100%;background:${m.color};border-radius:1px"></div>
         </div>
-        <div style="display:grid;grid-template-columns:auto 1fr auto;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-bottom:6px;gap:2px;align-items:center">
+        <div style="display:grid;grid-template-columns:auto 1fr auto;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:6px;gap:2px;align-items:center">
           <span>0%</span>
-          <span style="color:${m.color};font-weight:700;text-align:center;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.lo}${m.lo !== m.hi ? '–'+m.hi : ''}% total kcal</span>
+          <span style="color:${m.color};font-weight:700;text-align:center;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.lo}${m.lo !== m.hi ? '–'+m.hi : ''}% total kcal</span>
           <span style="text-align:right">100%</span>
         </div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-bright);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.gLo}${m.gLo !== m.gHi ? '–'+m.gHi : ''} g/day</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.5;word-break:break-word">${m.note}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-bright);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.gLo}${m.gLo !== m.gHi ? '–'+m.gHi : ''} g/day</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.5;word-break:break-word">${m.note}</div>
       </div>`).join('') +
-      (macroRanges.limitNote ? `<div style="grid-column:1/-1;background:rgba(255,184,48,.07);border:1px solid rgba(255,184,48,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--amber);line-height:1.6"> ${macroRanges.limitNote}</div>` : '');
+      (macroRanges.limitNote ? `<div style="grid-column:1/-1;background:rgba(255,184,48,.07);border:1px solid rgba(255,184,48,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.6"> ${macroRanges.limitNote}</div>` : '');
     } // end else (not HIGH refeeding)
   }
 
@@ -643,24 +643,24 @@ function calculate() {
     if (!_pesRows.length) _pesRows.push('No specific lab-triggered PES — apply standard CVD dietary modification per Krause 16th ed. Ch. 33');
 
     rMicros.innerHTML = `
-      <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#f97316;text-transform:uppercase;margin-bottom:10px">CVD Nutrition Prescription</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#f97316;text-transform:uppercase;margin-bottom:10px">CVD Nutrition Prescription</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px;margin-bottom:14px">
         ${_cvdRows.map(([k,cls,v])=>`<div class="pi"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`).join('')}
       </div>
       ${_cvdTriggers.length ? `
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:8px">Lab-Triggered Interventions</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:8px">Lab-Triggered Interventions</div>
         <div style="display:grid;gap:6px;margin-bottom:14px">
           ${_cvdTriggers.map(t=>`
             <div style="background:rgba(255,64,96,.06);border:1px solid rgba(255,64,96,.25);border-radius:8px;padding:9px 12px">
-              <div style="font-family:var(--cond);font-size:10px;font-weight:700;color:var(--red);margin-bottom:3px">${t.label}</div>
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.5">${t.action}</div>
+              <div style="font-family:var(--cond);font-size:11px;font-weight:700;color:var(--red);margin-bottom:3px">${t.label}</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.5">${t.action}</div>
             </div>`).join('')}
         </div>` : ''}
-      <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px">Auto PES Statements</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px">Auto PES Statements</div>
       <div style="background:rgba(56,100,168,.08);border:1px solid rgba(56,100,168,.2);border-radius:8px;padding:10px 12px;margin-bottom:14px">
-        ${_pesRows.map(p=>`<div style="font-family:var(--mono);font-size:9.5px;color:var(--text);line-height:1.7;border-bottom:1px solid rgba(56,100,168,.1);padding-bottom:4px;margin-bottom:4px">${p}</div>`).join('')}
+        ${_pesRows.map(p=>`<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.7;border-bottom:1px solid rgba(56,100,168,.1);padding-bottom:4px;margin-bottom:4px">${p}</div>`).join('')}
       </div>
-      <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px">Lifestyle Intervention Plan</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:8px">Lifestyle Intervention Plan</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px">
         <div class="pi"><span class="k">Omega-3 Fatty Acids</span><span class="v c-t">${_tgHigh ? ' 2–4 g/day EPA+DHA (supplement) + oily fish ≥2×/week' : 'Oily fish ≥2 servings/week (salmon, sardines, mackerel)'}</span></div>
         <div class="pi"><span class="k">Dietary Fibre</span><span class="v c-t">${_ldlHigh ? '≥30 g/day — prioritise soluble fibre (psyllium, oats, legumes)' : '25–30 g/day total'}</span></div>
@@ -675,7 +675,7 @@ function calculate() {
       </div>`;
   } else {
     if (rMicros) rMicros.innerHTML = `
-    <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:10px">Micronutrient Considerations</div>
+    <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#ddeeff;text-transform:uppercase;margin-bottom:10px">Micronutrient Considerations</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--mono);font-size:11px">
       <div class="pi"><span class="k">Thiamine (B1)</span><span class="v c-t">${isRefeeding?' IV 200–300 mg BEFORE feeds':diagnosis==='pernicious_anemia'?'Adequate — B12 & folate priority':'1–2 mg/day'}</span></div>
       <div class="pi"><span class="k">Iron</span><span class="v ${diagnosis==='iron_overload'?'c-r':diagnosis==='anemia_chronic_dis'?'c-r':diagnosis==='sickle_cell'?'c-r':diagnosis==='iron_def_anemia'?'c-t':''}">${
@@ -733,13 +733,13 @@ function calculate() {
     const nonProtKcalCalc = energy > 0 && protein > 0 ? energy - (protein * 4) : null;
     proBreakdown.innerHTML = `
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase">Applied Guideline</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase">Applied Guideline</div>
         <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">${primaryGuideline}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:#ddeeff;margin-left:auto">Range: ${pRange}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:#ddeeff;margin-left:auto">Range: ${pRange}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:#ddeeff;margin-bottom:${showProteinEnergyGuidance?'8px':'0'}">Basis: ${pBasis} (${pWt.toFixed(1)} kg)</div>
+      <div style="font-family:var(--mono);font-size:11px;color:#ddeeff;margin-bottom:${showProteinEnergyGuidance?'8px':'0'}">Basis: ${pBasis} (${pWt.toFixed(1)} kg)</div>
       ${showProteinEnergyGuidance ? `
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);border-left:2px solid rgba(96,165,250,0.4);padding-left:10px;line-height:1.7">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);border-left:2px solid rgba(96,165,250,0.4);padding-left:10px;line-height:1.7">
           <div>Ensure total energy intake is sufficient to support protein utilization and prevent use of protein for energy. Adjust total kcal to meet estimated energy requirements.</div>
           ${nonProtKcalCalc !== null && nonProtKcalCalc > 0 ? `<div style="margin-top:4px">Maintain adequate non-protein energy (from carbohydrates and fats) to support protein-sparing.</div>` : ''}
         </div>` : ''}`;
@@ -1017,12 +1017,12 @@ function calculate() {
     labRows.forEach(r => { if(!groups[r.g]) groups[r.g]=[];  groups[r.g].push(r); });
     const groupColors = {FBC:'var(--green)',Electrolytes:'var(--teal)',Nutrition:'var(--blue)',Metabolic:'var(--amber)',Renal:'var(--purple)','Hepatic / LFT':'#ff9f43'};
     document.getElementById('r-labs').innerHTML = Object.entries(groups).map(([grp, rows]) =>
-      `<tr><td colspan="5" style="background:rgba(0,0,0,.15);padding:6px 14px;font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:${groupColors[grp]||'var(--text-dim)'};text-transform:uppercase">${grp}</td></tr>` +
+      `<tr><td colspan="5" style="background:rgba(0,0,0,.15);padding:6px 14px;font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${groupColors[grp]||'var(--text-dim)'};text-transform:uppercase">${grp}</td></tr>` +
       rows.map(r=>{
         const st=r.v<r.lo?'LOW':r.v>r.hi?'HIGH':'NORMAL';
         const col=st==='NORMAL'?'var(--green)':st==='LOW'?'var(--blue)':'var(--red)';
         const icon=st==='NORMAL'?'✓':st==='LOW'?'▼':'▲';
-        return`<tr><td>${r.n}</td><td style="color:${col};font-family:var(--mono);font-weight:700">${r.v} ${r.u}</td><td style="color:var(--text-dim)">${r.lo}–${r.hi} ${r.u}</td><td style="color:${col}">${icon} ${st}</td><td style="font-size:10px;color:var(--text)">${r.note}</td></tr>`;
+        return`<tr><td>${r.n}</td><td style="color:${col};font-family:var(--mono);font-weight:700">${r.v} ${r.u}</td><td style="color:var(--text-dim)">${r.lo}–${r.hi} ${r.u}</td><td style="color:${col}">${icon} ${st}</td><td style="font-size:11px;color:var(--text)">${r.note}</td></tr>`;
       }).join('')
     ).join('');
 
@@ -1278,7 +1278,7 @@ function calculate() {
       const border = isSecondary ? 'rgba(167,139,250,0.35)'  : 'rgba(29,233,212,0.18)';
       const numCol = isSecondary ? '#a78bfa' : 'var(--teal)';
       return `<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.75;padding:10px 14px;background:${accent};border:1px solid ${border};border-radius:6px">
-        <strong style="color:${numCol}">${label}</strong> <span style="color:var(--text-dim);font-size:10px">(${code})</span> related to <em>${etiology}</em>, as evidenced by ${signs}.
+        <strong style="color:${numCol}">${label}</strong> <span style="color:var(--text-dim);font-size:11px">(${code})</span> related to <em>${etiology}</em>, as evidenced by ${signs}.
       </div>`;
     }
 
@@ -1697,7 +1697,7 @@ function calculate() {
     const insEl = document.getElementById('pes-insights');
     if (insEl) {
       insEl.innerHTML = insights.map(i =>
-        `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.65">
+        `<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${i.col};border-radius:5px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.65">
           <span style="flex-shrink:0;font-size:13px;margin-top:1px">${i.icon}</span>
           <span>${i.text}</span>
         </div>`
@@ -1966,7 +1966,7 @@ function calculate() {
       if (!ndEl || !eEl || !cEl || !rcEl) return;
 
       // Loading state
-      const _loadingHTML = `<span style="font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,0.3);letter-spacing:0.5px">Generating<span class="_oai-dots"></span></span>`;
+      const _loadingHTML = `<span style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.5px">Generating<span class="_oai-dots"></span></span>`;
       [ndEl, eEl, cEl, rcEl].forEach(el => { el.innerHTML = _loadingHTML; });
 
       // Inject dot animation once
@@ -2001,7 +2001,7 @@ function calculate() {
         return text.split('\n').filter(l => l.trim()).map(line => {
           const clean = line.replace(/^[•\-\*]\s*/, '');
           return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px;line-height:1.6">
-              <span style="flex-shrink:0;color:${accentColor};font-size:10px;margin-top:2px">▸</span>
+              <span style="flex-shrink:0;color:${accentColor};font-size:11px;margin-top:2px">▸</span>
               <span>${clean}</span>
             </div>`;
         }).join('');
@@ -2009,7 +2009,7 @@ function calculate() {
 
       function _renderOffline(result) {
         // Subtle badge so clinician knows this is the static fallback
-        const badge = `<div style="font-family:var(--mono);font-size:8.5px;color:rgba(251,191,36,0.55);margin-bottom:6px;letter-spacing:0.4px">⚡ offline — evidence-based fallback</div>`;
+        const badge = `<div style="font-family:var(--mono);font-size:11px;color:rgba(251,191,36,0.55);margin-bottom:6px;letter-spacing:0.4px">⚡ offline — evidence-based fallback</div>`;
         ndEl.innerHTML = badge + _renderBullets(result.nd, '#1de9d4');
         eEl.innerHTML  = badge + _renderBullets(result.e,  '#60a5fa');
         cEl.innerHTML  = badge + _renderBullets(result.c,  '#a78bfa');

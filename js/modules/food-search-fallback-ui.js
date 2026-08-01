@@ -27,10 +27,10 @@ function _dbRenderGlobalResult(food) {
   }[food.sourceUsed] || food.sourceUsed;
 
   const confidence = Math.round((food.confidenceScore ?? 0) * 100);
-  const updated    = food.lastUpdated ? `<span style="color:var(--text-dim);font-size:9px">Updated: ${food.lastUpdated}</span>` : '';
-  const fiber      = food.fiber  != null ? `<div style="font-size:10px;color:var(--text-dim)">Fiber: <b>${food.fiber}g</b></div>` : '';
-  const sugar      = food.sugar  != null ? `<div style="font-size:10px;color:var(--text-dim)">Sugar: <b>${food.sugar}g</b></div>` : '';
-  const sodium     = food.sodium != null ? `<div style="font-size:10px;color:var(--text-dim)">Sodium: <b>${(food.sodium*1000).toFixed(0)}mg</b></div>` : '';
+  const updated    = food.lastUpdated ? `<span style="color:var(--text-dim);font-size:11px">Updated: ${food.lastUpdated}</span>` : '';
+  const fiber      = food.fiber  != null ? `<div style="font-size:11px;color:var(--text-dim)">Fiber: <b>${food.fiber}g</b></div>` : '';
+  const sugar      = food.sugar  != null ? `<div style="font-size:11px;color:var(--text-dim)">Sugar: <b>${food.sugar}g</b></div>` : '';
+  const sodium     = food.sodium != null ? `<div style="font-size:11px;color:var(--text-dim)">Sodium: <b>${(food.sodium*1000).toFixed(0)}mg</b></div>` : '';
 
   const panel = document.createElement('div');
   panel.id    = _GS_PANEL_ID;
@@ -45,31 +45,31 @@ function _dbRenderGlobalResult(food) {
       </div>
       <div class="card-body" style="padding:14px">
         <div style="font-weight:700;font-size:14px;color:var(--text-bright);margin-bottom:6px">${food.name}</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:10px">${food.cat || ''} ${updated}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">${food.cat || ''} ${updated}</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center;margin-bottom:10px">
           <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
             <div style="font-size:18px;font-weight:700;color:var(--amber)">${food.kcal ?? '—'}</div>
-            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">kcal</div>
+            <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">kcal</div>
           </div>
           <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
             <div style="font-size:18px;font-weight:700;color:var(--blue)">${food.pro ?? '—'}</div>
-            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">PRO g</div>
+            <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">PRO g</div>
           </div>
           <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
             <div style="font-size:18px;font-weight:700;color:var(--teal)">${food.cho ?? '—'}</div>
-            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">CHO g</div>
+            <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">CHO g</div>
           </div>
           <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
             <div style="font-size:18px;font-weight:700;color:var(--green)">${food.fat ?? '—'}</div>
-            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">FAT g</div>
+            <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">FAT g</div>
           </div>
           <div style="background:var(--surface2);border-radius:6px;padding:10px 4px">
             <div style="font-size:18px;font-weight:700;color:var(--text-dim)">${food.kj ?? '—'}</div>
-            <div style="font-size:8px;color:var(--text-dim);letter-spacing:1px">kJ</div>
+            <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">kJ</div>
           </div>
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap">${fiber}${sugar}${sodium}</div>
-        <div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+        <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
           Values per 100g · Source: ${srcLabel} · Confidence: ${confidence}%
         </div>
       </div>
@@ -95,7 +95,7 @@ function _dbShowGlobalLoading(query) {
     <div class="card" style="border:1px solid rgba(100,200,255,.2)">
       <div class="card-body" style="padding:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
          Searching global databases for "<b style="color:var(--teal)">${query}</b>"…
-        <div style="margin-top:6px;font-size:9px">Chakudya Nutrition Registry (CNR)</div>
+        <div style="margin-top:6px;font-size:11px">Chakudya Nutrition Registry (CNR)</div>
       </div>
     </div>`;
   const noRes = document.getElementById('db-no-results');

@@ -2761,7 +2761,7 @@ Rules:
 }
 .oai-sb-title {
   font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-size: 10px; font-weight: 700; color: rgba(29,233,212,0.8);
+  font-size: 11px; font-weight: 700; color: rgba(29,233,212,0.8);
   letter-spacing: 1px; text-transform: uppercase;
 }
 .oai-sb-close {
@@ -2781,7 +2781,7 @@ Rules:
 .oai-sb-search:focus { border-color: rgba(29,233,212,0.4); }
 .oai-sb-search::placeholder { color: rgba(255,255,255,0.3); }
 .oai-chat-list { flex: 1; overflow-y: auto; padding: 4px 6px; scrollbar-width: thin; scrollbar-color: rgba(29,233,212,0.15) transparent; }
-.oai-chat-list-empty { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; padding: 24px 0; }
+.oai-chat-list-empty { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 24px 0; }
 .oai-chat-item {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 8px; border-radius: 8px; cursor: pointer;
@@ -2797,7 +2797,7 @@ Rules:
 }
 .oai-chat-item.active .oai-chat-item-text { color: rgba(29,233,212,0.9); }
 .oai-chat-item-time {
-  font-family: var(--mono); font-size: 8.5px; color: rgba(255,255,255,0.25);
+  font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.25);
   flex-shrink: 0;
 }
 .oai-chat-actions { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity .15s; }
@@ -2816,7 +2816,7 @@ Rules:
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 9px; border-radius: 9px; cursor: pointer;
   background: rgba(29,233,212,0.08); border: 1px solid rgba(29,233,212,0.25);
-  color: rgba(29,233,212,0.85); font-family: var(--mono); font-size: 10px;
+  color: rgba(29,233,212,0.85); font-family: var(--mono); font-size: 11px;
   font-weight: 700; letter-spacing: 0.8px; transition: all .15s;
 }
 .oai-new-chat-btn:hover { background: rgba(29,233,212,0.18); }
@@ -2846,7 +2846,7 @@ Rules:
 }
 .oai-mp-title {
   display: flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
   color: rgba(96,165,250,0.85); letter-spacing: 1px; text-transform: uppercase;
 }
 .oai-mp-close {
@@ -2865,7 +2865,7 @@ Rules:
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 12px; border-radius: 8px; cursor: pointer;
   background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.25);
-  color: rgba(248,113,113,0.8); font-family: var(--mono); font-size: 9.5px;
+  color: rgba(248,113,113,0.8); font-family: var(--mono); font-size: 11px;
   font-weight: 700; letter-spacing: 0.5px; transition: all .15s;
 }
 .oai-mp-clear-all-btn:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.5); }
@@ -2881,7 +2881,7 @@ Rules:
 .oai-mp-add-btn {
   background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.3);
   border-radius: 8px; padding: 7px 12px; cursor: pointer;
-  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
   color: rgba(96,165,250,0.9); letter-spacing: 0.5px; white-space: nowrap;
   transition: all .15s;
 }
@@ -2902,7 +2902,7 @@ Rules:
   transition: color .15s; line-height: 1;
 }
 .oai-mem-del:hover { color: rgba(248,113,113,0.9); }
-.oai-mem-empty { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; padding: 24px 0; }
+.oai-mem-empty { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 24px 0; }
 
 /* ── Main Chat ── */
 #oai-main {
@@ -2925,11 +2925,11 @@ Rules:
 }
 .oai-brand-name {
   font-family: var(--mono, 'JetBrains Mono', monospace);
-  font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px;
+  font-size: 11px; font-weight: 800; letter-spacing: 1.4px;
   color: var(--teal, #1de9d4); text-transform: uppercase;
 }
 .oai-brand-sub {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size: 11px;
   color: rgba(255,255,255,0.3); letter-spacing: 0.5px; margin-top: 1px;
 }
 .oai-icon-btn {
@@ -2945,7 +2945,7 @@ Rules:
   box-shadow: 0 0 6px rgba(34,197,94,0.6);
 }
 .oai-status-lbl {
-  font-family: var(--mono); font-size: 8.5px;
+  font-family: var(--mono); font-size: 11px;
   color: rgba(255,255,255,0.35); letter-spacing: 0.5px;
 }
 
@@ -2991,11 +2991,11 @@ Rules:
   margin-top: 5px; max-width: 88%;
 }
 .oai-sources-label {
-  font-family: var(--mono); font-size: 8px; letter-spacing: .5px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .5px;
   text-transform: uppercase; color: rgba(255,255,255,0.3); margin-right: 1px;
 }
 .oai-source-chip {
-  font-family: var(--mono); font-size: 8px; padding: 2px 7px; border-radius: 100px;
+  font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 100px;
   background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25);
   color: rgba(147,197,253,0.9); white-space: nowrap;
 }
@@ -3013,7 +3013,7 @@ Rules:
 .oai-msg-tb-btn {
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 6px; cursor: pointer; padding: 3px 8px;
-  font-family: var(--mono); font-size: 8.5px; color: rgba(255,255,255,0.45);
+  font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.45);
   display: flex; align-items: center; gap: 4px; transition: all .12s; white-space: nowrap;
 }
 .oai-msg-tb-btn:hover { background: rgba(29,233,212,0.1); border-color: rgba(29,233,212,0.3); color: rgba(29,233,212,0.9); }
@@ -3024,7 +3024,7 @@ Rules:
   display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; align-items: center;
 }
 .oai-version-pill {
-  font-family: var(--mono); font-size: 8px; padding: 2px 7px; border-radius: 100px;
+  font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 100px;
   cursor: pointer; border: 1px solid rgba(29,233,212,0.2);
   background: rgba(29,233,212,0.05); color: rgba(29,233,212,0.55); transition: all .12s;
 }
@@ -3034,7 +3034,7 @@ Rules:
 }
 .oai-version-pill:hover:not(.active) { background: rgba(29,233,212,0.1); }
 .oai-version-label {
-  font-family: var(--mono); font-size: 8px; color: rgba(255,255,255,0.3);
+  font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.3);
 }
 
 /* ── Thinking indicator ── */
@@ -3053,7 +3053,7 @@ Rules:
 .oai-dot:nth-child(2) { animation: oaiPulse 1.4s ease .2s infinite; }
 .oai-dot:nth-child(3) { animation: oaiPulse 1.4s ease .4s infinite; }
 .oai-thinking-txt {
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size: 11px;
   color: rgba(255,255,255,0.3); letter-spacing: 0.5px; margin-left: 2px;
 }
 
@@ -3063,7 +3063,7 @@ Rules:
   padding: 0 14px 8px; flex-shrink: 0;
 }
 .oai-quick-btn {
-  font-family: var(--mono); font-size: 8.5px; padding: 4px 10px;
+  font-family: var(--mono); font-size: 11px; padding: 4px 10px;
   border-radius: 100px; background: rgba(29,233,212,0.06);
   border: 1px solid rgba(29,233,212,0.18); color: rgba(29,233,212,0.7);
   cursor: pointer; white-space: nowrap; transition: all .15s;
@@ -3079,12 +3079,12 @@ Rules:
   display: flex; align-items: center; gap: 8px;
   background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.25);
   border-radius: 8px; padding: 6px 10px; margin-bottom: 8px;
-  font-family: var(--mono); font-size: 9.5px; color: rgba(251,146,60,0.85);
+  font-family: var(--mono); font-size: 11px; color: rgba(251,146,60,0.85);
 }
 .oai-edit-cancel-btn {
   margin-left: auto; background: none; border: 1px solid rgba(251,146,60,0.3);
   border-radius: 6px; cursor: pointer; padding: 2px 8px;
-  font-family: var(--mono); font-size: 8.5px; color: rgba(251,146,60,0.75);
+  font-family: var(--mono); font-size: 11px; color: rgba(251,146,60,0.75);
   transition: all .12s;
 }
 .oai-edit-cancel-btn:hover { background: rgba(251,146,60,0.1); color: rgba(251,146,60,1); }
@@ -3132,7 +3132,7 @@ Rules:
   #oai-sidebar { width: 88vw; }
   #oai-memory-panel { width: 92vw; }
   .oai-quick-wrap { gap: 4px; }
-  .oai-quick-btn { font-size: 8px; padding: 3px 8px; }
+  .oai-quick-btn { font-size: 11px; padding: 3px 8px; }
 }
     `;
     document.head.appendChild(s);
@@ -3322,7 +3322,7 @@ Rules:
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-bright,#f0f6fc)">$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:11px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:var(--teal,#1de9d4)">$1</code>')
-      .replace(/^#{1,3} (.+)$/gm, '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--teal,#1de9d4);letter-spacing:1px;text-transform:uppercase;margin:8px 0 4px">$1</div>')
+      .replace(/^#{1,3} (.+)$/gm, '<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal,#1de9d4);letter-spacing:1px;text-transform:uppercase;margin:8px 0 4px">$1</div>')
       .replace(/^[•▸]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:var(--teal,#1de9d4)">▸</span>$1</div>')
       .replace(/^[-]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:rgba(29,233,212,0.5)">–</span>$1</div>')
       .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
@@ -3877,15 +3877,15 @@ Rules:
     const el = document.getElementById('oai-food-results');
     if (!el) return;
     if (!results.length) {
-      el.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.3);padding:8px 0;text-align:center">No matches found in database</div>`;
+      el.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.3);padding:8px 0;text-align:center">No matches found in database</div>`;
       return;
     }
     el.innerHTML = results.map((r, i) => `
       <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:8px;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(29,233,212,0.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
         <div style="flex:1;min-width:0">
           <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-bright,#f0f6fc);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,0.35);margin-top:2px"><span style="color:rgba(29,233,212,0.6)">${r.source}</span>${r.cat ? ` · ${r.cat}` : ''} · ${r.unit}</div>
-          <div style="display:flex;gap:10px;margin-top:4px;font-family:var(--mono);font-size:9.5px">
+          <div style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px"><span style="color:rgba(29,233,212,0.6)">${r.source}</span>${r.cat ? ` · ${r.cat}` : ''} · ${r.unit}</div>
+          <div style="display:flex;gap:10px;margin-top:4px;font-family:var(--mono);font-size:11px">
             <span style="color:rgba(250,204,21,0.85)">⚡ ${r.kcal} kcal</span>
             <span style="color:rgba(96,165,250,0.85)">P ${r.pro}g</span>
             <span style="color:rgba(52,211,153,0.85)">C ${r.cho}g</span>
@@ -3920,7 +3920,7 @@ Rules:
     if (count) count.textContent = `(${_foodIntake.length} item${_foodIntake.length !== 1 ? 's' : ''})`;
     list.innerHTML = _foodIntake.map((f, i) => `
       <div style="display:flex;align-items:center;gap:7px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.12);border-radius:7px;padding:5px 8px">
-        <div style="flex:1;min-width:0"><span style="font-family:var(--sans);font-size:11px;color:var(--text-bright,#f0f6fc)">${f.name}</span><span style="font-family:var(--mono);font-size:8.5px;color:rgba(250,204,21,0.7);margin-left:8px">${f.kcal} kcal</span></div>
+        <div style="flex:1;min-width:0"><span style="font-family:var(--sans);font-size:11px;color:var(--text-bright,#f0f6fc)">${f.name}</span><span style="font-family:var(--mono);font-size:11px;color:rgba(250,204,21,0.7);margin-left:8px">${f.kcal} kcal</span></div>
         <button onclick="OasisAIUI.removeFromIntake(${i})" style="width:20px;height:20px;border-radius:5px;border:none;background:none;cursor:pointer;color:rgba(248,113,113,0.5);font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;transition:color .15s" onmouseover="this.style.color='rgba(248,113,113,0.9)'" onmouseout="this.style.color='rgba(248,113,113,0.5)'">×</button>
       </div>
     `).join('');

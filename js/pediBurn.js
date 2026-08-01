@@ -161,12 +161,12 @@ function _burnResultCard(B, ageLabel) {
   var alertsHtml = B.alerts.map(function(a) {
     var c = levelCfg[a.level] || levelCfg.info;
     return '<div style="padding:10px 14px;margin-bottom:8px;border-radius:9px;background:'+c.bg+
-           ';border:1px solid '+c.border+';font-family:var(--mono);font-size:10.5px;color:'+
+           ';border:1px solid '+c.border+';font-family:var(--mono);font-size:11px;color:'+
            c.color+';line-height:1.7">'+a.msg+'</div>';
   }).join('');
 
   var microHtml = B.microNotes.map(function(n) {
-    return '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.85;padding:2px 0">▸ '+n+'</div>';
+    return '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.85;padding:2px 0">▸ '+n+'</div>';
   }).join('');
 
   // Fluid note — prefer Galveston fluid for <30 kg patients
@@ -199,7 +199,7 @@ function _burnResultCard(B, ageLabel) {
         '</div>',
         // Energy
         '<div style="padding:12px 14px;border-radius:10px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.25);margin-bottom:12px">',
-          '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:#fb7185;margin-bottom:10px">🔋 BURN-ADJUSTED ENERGY REQUIREMENTS</div>',
+          '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:#fb7185;margin-bottom:10px">🔋 BURN-ADJUSTED ENERGY REQUIREMENTS</div>',
           _pbDataRow('🏆 Galveston (Primary)',
             '<span style="font-size:15px;font-weight:700;color:#fb7185">'+B.galvestonKcal+' kcal/day</span> · <span style="color:var(--amber)">'+B.energyPerKg+' kcal/kg/day</span>',
             '1800 kcal/m² BSA + 2200 kcal/m² burned — Shriners Hospital 1978'),
@@ -210,12 +210,12 @@ function _burnResultCard(B, ageLabel) {
             B.schofieldKcal+' kcal/day',
             'BMR ('+B.bmr+' kcal) × '+B.sf.toFixed(2)+' — resource-limited fallback'),
           (B.largeDivergence
-            ? '<div style="margin-top:8px;font-family:var(--mono);font-size:9.5px;color:var(--amber)">⚠️ Galveston and Curreri Jr diverge >25% — consider indirect calorimetry if available.</div>'
+            ? '<div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--amber)">⚠️ Galveston and Curreri Jr diverge >25% — consider indirect calorimetry if available.</div>'
             : ''),
         '</div>',
         // Protein
         '<div style="padding:12px 14px;border-radius:10px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);margin-bottom:12px">',
-          '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--green);margin-bottom:10px">🥩 BURN-ADJUSTED PROTEIN</div>',
+          '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--green);margin-bottom:10px">🥩 BURN-ADJUSTED PROTEIN</div>',
           _pbDataRow('Target',
             '<span style="font-size:15px;font-weight:700;color:var(--green)">'+B.protG+' g/day</span> · '+B.protTarget+' g/kg/day',
             B.protSrc),
@@ -225,19 +225,19 @@ function _burnResultCard(B, ageLabel) {
         '</div>',
         // Fluid
         '<div style="padding:12px 14px;border-radius:10px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.25);margin-bottom:12px">',
-          '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--blue);margin-bottom:10px">💧 FLUID RESUSCITATION — FIRST 24h</div>',
-          '<div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2.1">'+fluidNote+'</div>',
-          '<div style="margin-top:7px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">After 24h: switch to maintenance + ongoing wound losses. Titrate to haemodynamics, urine output, and electrolytes.</div>',
+          '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--blue);margin-bottom:10px">💧 FLUID RESUSCITATION — FIRST 24h</div>',
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2.1">'+fluidNote+'</div>',
+          '<div style="margin-top:7px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">After 24h: switch to maintenance + ongoing wound losses. Titrate to haemodynamics, urine output, and electrolytes.</div>',
         '</div>',
         // Micronutrients
         '<div style="padding:12px 14px;border-radius:10px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);margin-bottom:12px">',
-          '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--purple);margin-bottom:8px">💊 MICRONUTRIENT SUPPLEMENTATION — ESPEN Burns 2013</div>',
+          '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--purple);margin-bottom:8px">💊 MICRONUTRIENT SUPPLEMENTATION — ESPEN Burns 2013</div>',
           microHtml,
         '</div>',
         // Feeding route & monitoring
         '<div style="padding:12px 14px;border-radius:10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25)">',
-          '<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:1.5px;color:var(--amber);margin-bottom:7px">📋 FEEDING ROUTE &amp; MONITORING</div>',
-          '<div style="font-family:var(--mono);font-size:10px;color:var(--text);line-height:2.0">',
+          '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--amber);margin-bottom:7px">📋 FEEDING ROUTE &amp; MONITORING</div>',
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2.0">',
             '▸ <strong>Route:</strong> Nasogastric EN — start within 6–12h of injury. Use high-protein formula (≥18% protein calories).<br>',
             '▸ <strong>Advancement:</strong> Target full energy and protein within 48–72h, tolerance permitting.<br>',
             '▸ <strong>Temperature:</strong> Maintain ward at 28–30°C to reduce thermoregulatory energy loss.<br>',
@@ -253,16 +253,16 @@ function _burnResultCard(B, ageLabel) {
 // Metric card helper
 function _pbMc(label, val, sub, col) {
   return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">' +
-    '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">'+label+'</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">'+label+'</div>'+
     '<div style="font-family:var(--cond);font-size:14px;font-weight:700;color:'+col+'">'+val+'</div>'+
-    (sub ? '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:2px">'+sub+'</div>' : '')+
+    (sub ? '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">'+sub+'</div>' : '')+
   '</div>';
 }
 // Data row helper
 function _pbDataRow(label, val, note) {
-  return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--text)">'+
-    '<span style="color:var(--text-dim);font-size:9px">'+label+'</span><br>'+val+
-    (note ? '<br><span style="font-size:9px;color:var(--text-dim)">'+note+'</span>' : '')+
+  return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text)">'+
+    '<span style="color:var(--text-dim);font-size:11px">'+label+'</span><br>'+val+
+    (note ? '<br><span style="font-size:11px;color:var(--text-dim)">'+note+'</span>' : '')+
   '</div>';
 }
 
@@ -327,9 +327,9 @@ window.calcPretab = function() {
     var ok  = val>=lo && val<=hi;
     var col = ok ? 'var(--green)' : '#f87171';
     var flg = ok ? '✓ Normal' : (warnMsg || '⚠ Abnormal');
-    return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10.5px;display:flex;justify-content:space-between;align-items:center">'+
+    return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between;align-items:center">'+
       '<span style="color:var(--text-dim)">'+label+'</span>'+
-      '<span><strong style="color:'+col+'">'+val+' '+unit+'</strong> <span style="font-size:9px;color:'+col+'">'+flg+'</span></span>'+
+      '<span><strong style="color:'+col+'">'+val+' '+unit+'</strong> <span style="font-size:11px;color:'+col+'">'+flg+'</span></span>'+
       '</div>';
   }
   var labRows = '';
@@ -408,17 +408,17 @@ function buildNeonateInterventionCard(P) {
   function reqBadge(label, val, sub, color, rgb) {
     return '<div style="flex:1;min-width:118px;padding:10px 13px;border-radius:9px;' +
       'background:rgba(' + rgb + ',0.08);border:1px solid rgba(' + rgb + ',0.28)">' +
-      '<div style="font-family:var(--mono);font-size:7.5px;letter-spacing:1.5px;font-weight:800;' +
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;font-weight:800;' +
         'color:' + color + ';margin-bottom:4px;text-transform:uppercase;opacity:0.85">' + label + '</div>' +
       '<div style="font-family:var(--mono);font-size:18px;font-weight:900;color:' + color + ';line-height:1">' + val + '</div>' +
-      (sub ? '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:3px;line-height:1.4">' + sub + '</div>' : '') +
+      (sub ? '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px;line-height:1.4">' + sub + '</div>' : '') +
     '</div>';
   }
 
   var reqRow =
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:14px;' +
       'background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.14);border-radius:10px">' +
-      '<div style="font-family:var(--mono);font-size:7.5px;letter-spacing:2px;font-weight:800;' +
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;font-weight:800;' +
         'color:var(--text-dim);width:100%;margin-bottom:7px">▸ CALCULATED REQUIREMENTS — IOM 2005 · AAP 2004 · DoL ' + P.ageDays + '</div>' +
       reqBadge('Energy', P.energyKcal + ' kcal', energyKgStr + ' kcal/kg/day', '#f59e0b', '245,158,11') +
       reqBadge('Protein', P.protG + ' g', P.baseProtFact.toFixed(1) + ' g/kg/day', '#34d399', '52,211,153') +
@@ -436,7 +436,7 @@ function buildNeonateInterventionCard(P) {
         '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out infinite"></div>' +
         '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out 0.4s infinite"></div>' +
         '<div style="width:6px;height:6px;border-radius:50%;background:' + accent + ';animation:nic-pulse 1.2s ease-in-out 0.8s infinite"></div>' +
-        '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.5px">Composing clinical narrative\u2026</span>' +
+        '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.5px">Composing clinical narrative\u2026</span>' +
       '</div>';
     return (
       '<div style="margin-bottom:22px">' +
@@ -449,12 +449,12 @@ function buildNeonateInterventionCard(P) {
             'justify-content:center;font-size:17px;flex-shrink:0">' + icon + '</div>' +
           '<div style="flex:1">' +
             '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">' +
-              '<span style="font-family:var(--mono);font-size:8.5px;font-weight:800;letter-spacing:2px;' +
+              '<span style="font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:2px;' +
                 'color:' + accent + ';background:rgba(' + rgb + ',0.13);' +
                 'border:1px solid rgba(' + rgb + ',0.28);padding:2px 7px;border-radius:4px">' + code + '</span>' +
               '<span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:' + accent + '">' + title + '</span>' +
             '</div>' +
-            '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">' + subtitle + '</div>' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">' + subtitle + '</div>' +
           '</div>' +
         '</div>' +
         (extraHeader || '') +
@@ -655,20 +655,20 @@ function buildNeonateInterventionCard(P) {
             '<div class="card-title" style="color:var(--teal);font-size:13px;letter-spacing:1.8px;margin-bottom:4px">' +
               '\ud83e\ude7a NUTRITION INTERVENTION PLAN' +
             '</div>' +
-            '<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.7">' +
+            '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7">' +
               'Neonatal Nutrition Care Process \xb7 Domains ND / E / C / RC \xb7 ' +
               'Feeding Plan \xb7 Requirements \xb7 Clinical Adjustments \xb7 ' +
               'IOM 2005 \xb7 AAP 2004 \xb7 WHO 2006' +
             '</div>' +
           '</div>' +
           '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
-            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+            '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;' +
               'background:rgba(29,233,212,0.11);border:1px solid rgba(29,233,212,0.28);color:var(--teal);font-weight:700">Term Neonate</span>' +
-            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+            '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;' +
               'background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.22);color:var(--teal)">DoL ' + P.ageDays + '</span>' +
-            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+            '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;' +
               'background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);color:#34d399">' + routeTag + '</span>' +
-            '<span style="font-family:var(--mono);font-size:8.5px;padding:3px 9px;border-radius:11px;' +
+            '<span style="font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;' +
               'background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);color:#a78bfa">' + P.statusLabel + '</span>' +
           '</div>' +
         '</div>' +
@@ -696,7 +696,7 @@ function buildNeonateInterventionCard(P) {
         /* ── References ── */
         '<div style="padding:8px 12px;background:rgba(29,233,212,0.04);' +
           'border:1px solid rgba(29,233,212,0.11);border-radius:7px;' +
-          'font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.85">' +
+          'font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.85">' +
           '<strong style="color:var(--text)">References:</strong> ' +
           'IOM Dietary Reference Intakes 2005 \xb7 ' +
           'AAP Breastfeeding and the Use of Human Milk 2012 \xb7 ' +
@@ -1015,14 +1015,14 @@ window.calcNeonatab = function() {
       'background:'+bgCol+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">' +
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+letter+'</div>' +
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>' +
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+subtitle+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+subtitle+'</div></div></div>';
   }
   function nnMc(lbl, val, sub, col) {
     sub = sub||''; col = col||'var(--teal)';
     return '<div class="mc" style="min-width:110px">' +
       '<div class="m-lbl">'+lbl+'</div>' +
       '<div class="m-val" style="font-size:15px;color:'+col+'">'+val+'</div>' +
-      (sub?'<div class="m-unit" style="font-size:10px">'+sub+'</div>':'')+
+      (sub?'<div class="m-unit" style="font-size:11px">'+sub+'</div>':'')+
     '</div>';
   }
   function nnRow(lbl, val, note, warn) {
@@ -1030,16 +1030,16 @@ window.calcNeonatab = function() {
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(warn?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+lbl+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(warn?'var(--red)':'var(--text-bright)')+'">'+val+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+note+'</td></tr>';
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+note+'</td></tr>';
   }
   function nnBullet(text, col) {
     col = col||'var(--text-dim)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+col+';line-height:1.65">' +
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+col+';line-height:1.65">' +
       '<span style="flex-shrink:0;color:var(--teal);font-weight:700">▸</span><span>'+text+'</span></div>';
   }
   function nnPes(problem, etiology, signs, idnt) {
     return '<div style="margin-bottom:14px;padding:14px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.22);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:9px;color:#a78bfa;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;opacity:0.8">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;opacity:0.8">'+
         'IDNT CODE: <span style="background:rgba(167,139,250,0.15);padding:1px 7px;border-radius:4px;border:1px solid rgba(167,139,250,0.3)">'+idnt+'</span>'+
       '</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.85">'+
@@ -1082,15 +1082,15 @@ window.calcNeonatab = function() {
     }
     var pct = Math.min(Math.max((z+4)/8*100,2),98);
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:9px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:11px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:visible">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.3)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px"><span>−4</span><span>−3</span><span>−2</span><span>−1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span></div>'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px"><span>−4</span><span>−3</span><span>−2</span><span>−1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span></div>'+
     '</div>';
   }
 
@@ -1297,9 +1297,9 @@ window.calcNeonatab = function() {
   out += '<div style="background:linear-gradient(135deg,rgba(29,233,212,.1),rgba(96,165,250,.07));border:1px solid rgba(29,233,212,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
     '<div>' +
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--teal);font-weight:900">👶 TERM NEONATE</div>' +
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · IOM 2005 · AAP 2004 · WHO 2006</div>' +
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · IOM 2005 · AAP 2004 · WHO 2006</div>' +
     '</div>' +
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--teal);border:1px solid rgba(29,233,212,0.3);padding:4px 12px;border-radius:16px">DoL '+ageDays+' · '+wtKg.toFixed(3)+' kg</div>' +
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--teal);border:1px solid rgba(29,233,212,0.3);padding:4px 12px;border-radius:16px">DoL '+ageDays+' · '+wtKg.toFixed(3)+' kg</div>' +
   '</div>';
 
   // ══ A — ASSESSMENT ══════════════════════════════════════════════════════════
@@ -1319,11 +1319,11 @@ window.calcNeonatab = function() {
         (lenCm?nnMc('Length', lenCm+' cm', 'recumbent', 'var(--purple)'):'') +
         (hcCm?nnMc('Head Circumference', hcCm+' cm', 'OFC', 'var(--blue)'):'') +
       '</div>' +
-      '<div style="padding:10px 14px;background:rgba('+( excessLoss?'251,113,133':'240,180,41')+',0.07);border:1px solid rgba('+(excessLoss?'251,113,133':'240,180,41')+',0.3);border-radius:8px;margin-bottom:12px;font-family:var(--mono);font-size:10.5px;line-height:1.8">' +
+      '<div style="padding:10px 14px;background:rgba('+( excessLoss?'251,113,133':'240,180,41')+',0.07);border:1px solid rgba('+(excessLoss?'251,113,133':'240,180,41')+',0.3);border-radius:8px;margin-bottom:12px;font-family:var(--mono);font-size:11px;line-height:1.8">' +
         'Weight change interpretation: <strong style="color:'+wtInterpCol+'">'+wtInterpText+'</strong>' +
       '</div>' +
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">CLINICAL &amp; NUTRITION CONTEXT</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2">' +
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;font-weight:700;margin-bottom:8px">CLINICAL &amp; NUTRITION CONTEXT</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2">' +
         '<span>Stage: <strong>Early neonatal period (Day '+ageDays+')</strong></span>' +
         '<span>Feeding: <strong>'+feedLabel+'</strong></span>' +
         '<span>Clinical status: <strong>'+statusLabel+'</strong></span>' +
@@ -1349,7 +1349,7 @@ window.calcNeonatab = function() {
         nnZBar('WAZ — Weight-for-Age', wazR, 'waz') +
         nnZBar('HAZ — Length-for-Age', hazR, 'haz') +
         (hcfaR && !hcfaR.error ? '<div style="margin-top:12px">' + (typeof _hcCard==='function' ? _hcCard(hcCm, ageMo, hcfaR) : '') + '</div>' : '') +
-        '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:6px">' +
+        '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:6px">' +
           'Normal: −2 to +2 SD · Underweight/stunted: &lt;−2 SD · Severely: &lt;−3 SD · '+
           'WHO Child Growth Standards 2006 · Reference: 0 months for neonates'+
         '</div>' +
@@ -1366,7 +1366,7 @@ window.calcNeonatab = function() {
       '<div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">IOM 2005 · WHO 2006 · AAP 2004</div>' +
     '</div>' +
     '<div class="card-body">' +
-      '<div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) — ETIOLOGY (E) — SIGNS &amp; SYMPTOMS (S)</div>' +
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) — ETIOLOGY (E) — SIGNS &amp; SYMPTOMS (S)</div>' +
       pes1 + pes2 + pes3 +
     '</div>' +
   '</div>';
@@ -1536,30 +1536,30 @@ window.calcInfantEarlyTab = function() {
   }
 
   var malHtml = malnutr==='SAM'
-    ? '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.7">🚨 SAM DETECTED — WLZ &lt;−3 SD. Manage per WHO SAM guidelines. Inpatient care if any danger sign or age &lt;6 months. F-75 → F-100 / RUTF transition.</div>'
-    : malnutr==='MAM' ? '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7">⚠️ MAM — WLZ −2 to −3 SD. Enrol in SFP. Review feeding practices. Monitor MUAC q2wk.</div>' : '';
+    ? '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.7">🚨 SAM DETECTED — WLZ &lt;−3 SD. Manage per WHO SAM guidelines. Inpatient care if any danger sign or age &lt;6 months. F-75 → F-100 / RUTF transition.</div>'
+    : malnutr==='MAM' ? '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.7">⚠️ MAM — WLZ −2 to −3 SD. Enrol in SFP. Review feeding practices. Monitor MUAC q2wk.</div>' : '';
 
   // ── ADIME helpers (inline, scoped) ─────────────────────────────────────────
   function ieHdr(letter, title, col, bgCol, sub) {
     return '<div style="display:flex;align-items:center;gap:12px;margin:18px 0 10px;padding:10px 16px;background:'+bgCol+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">' +
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+letter+'</div>' +
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>' +
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
   }
   function ieMc(lbl,val,sub,col){
     sub=sub||'';col=col||'var(--blue)';
-    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+lbl+'</div><div class="m-val" style="font-size:15px;color:'+col+'">'+val+'</div>'+(sub?'<div class="m-unit" style="font-size:10px">'+sub+'</div>':'')+'</div>';
+    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+lbl+'</div><div class="m-val" style="font-size:15px;color:'+col+'">'+val+'</div>'+(sub?'<div class="m-unit" style="font-size:11px">'+sub+'</div>':'')+'</div>';
   }
   function ieRow(lbl,val,note,warn){
     note=note||'';warn=warn||false;
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(warn?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+lbl+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(warn?'var(--red)':'var(--text-bright)')+'">'+val+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+note+'</td></tr>';
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+note+'</td></tr>';
   }
   function ieBullet(text,col){
     col=col||'var(--text)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+col+';line-height:1.65">'+
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+col+';line-height:1.65">'+
       '<span style="flex-shrink:0;color:var(--blue);font-weight:700">&#9658;</span><span>'+text+'</span></div>';
   }
   function ieZBar(label,zObj,indicator){
@@ -1576,21 +1576,21 @@ window.calcInfantEarlyTab = function() {
     }
     var pct=Math.min(Math.max((z+4)/8*100,2),98);
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:9px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:11px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.25)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">'+
         '<span>&#8722;4</span><span>&#8722;3</span><span>&#8722;2</span><span>&#8722;1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span>'+
       '</div></div>';
   }
   function iePes(problem,etiology,signs,idnt){
     return '<div style="margin-bottom:14px;padding:14px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.22);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:9px;color:#a78bfa;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;opacity:0.8">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;opacity:0.8">'+
         'IDNT CODE: <span style="background:rgba(167,139,250,0.15);padding:1px 7px;border-radius:4px;border:1px solid rgba(167,139,250,0.3)">'+idnt+'</span>'+
       '</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.85">'+
@@ -1621,12 +1621,12 @@ window.calcInfantEarlyTab = function() {
   // ── SAM/MAM alert banner ───────────────────────────────────────────────────
   var malBanner2 = '';
   if (malnutr==='SAM') {
-    malBanner2 = '<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    malBanner2 = '<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>SAM DETECTED -- WLZ less than -3 SD</strong><br>'+
       'Infants under 6 months with SAM: inpatient stabilisation mandatory if any danger sign present. Manage per WHO SAM inpatient protocol. F-75 stabilisation; therapeutic breastfeeding preferred. Refer immediately.'+
     '</div>';
   } else if (malnutr==='MAM') {
-    malBanner2 = '<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    malBanner2 = '<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>MAM -- WLZ -2 to -3 SD</strong><br>'+
       'Enrol in SFP. Promote EBF if under 6 months. Monitor MUAC every 2 weeks. Reassess if deteriorates.'+
     '</div>';
@@ -1829,9 +1829,9 @@ window.calcInfantEarlyTab = function() {
   out2+='<div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(29,233,212,.07));border:1px solid rgba(96,165,250,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
     '<div>'+
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--blue);font-weight:900">INFANT 0-6 MONTHS</div>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record -- FAO/WHO 2004 -- IOM DRI 2005 -- WHO 2006</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record -- FAO/WHO 2004 -- IOM DRI 2005 -- WHO 2006</div>'+
     '</div>'+
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--blue);border:1px solid rgba(96,165,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr+' -- '+wtKg.toFixed(2)+' kg</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);border:1px solid rgba(96,165,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr+' -- '+wtKg.toFixed(2)+' kg</div>'+
   '</div>';
 
   out2+=malBanner2;
@@ -1852,7 +1852,7 @@ window.calcInfantEarlyTab = function() {
         (hcCm?ieMc('Head Circ.',hcCm+' cm','OFC','var(--blue)'):'') +
         (bwtG?ieMc('Birth Wt',bwtG+' g','reference','var(--text-dim)'):'') +
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px">'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px">'+
         '<span>Stage: <strong>'+ageGroup2+'</strong></span>'+
         '<span>Feeding: <strong>'+feedLabel2+'</strong></span>'+
         '<span>Nutrition status: <strong style="color:'+malnutrCol+'">'+malnutrLabel+'</strong></span>'+
@@ -1875,12 +1875,12 @@ window.calcInfantEarlyTab = function() {
       ieZBar('WAZ -- Weight-for-Age',wazR,'waz')+
       ieZBar('HAZ -- Length-for-Age',hazR,'haz')+
       ieZBar('WLZ -- Weight-for-Length',wlzR,'whz')+
-      '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.1);border-radius:6px">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.1);border-radius:6px">'+
         'Normal: &#8722;2 to +2 SD &bull; Wasted/stunted: &lt;&#8722;2 SD &bull; Severely: &lt;&#8722;3 SD &bull; WHO 2006 Child Growth Standards &bull; WLZ: primary malnutrition indicator &lt;6 months'+
       '</div>'+
       (hcfaR && !hcfaR.error && typeof _hcCard==="function"
         ? '<div style="margin-top:14px">' + _hcCard(hcCm, ageMo, hcfaR) + '</div>'
-        : (hcCm ? '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:6px 10px;background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.1);border-radius:6px">&#129504; HC: <strong>' + hcCm + ' cm</strong> &mdash; HCFA z-score not computable. Check age (0&ndash;60 months).</div>' : ''))+
+        : (hcCm ? '<div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:6px 10px;background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.1);border-radius:6px">&#129504; HC: <strong>' + hcCm + ' cm</strong> &mdash; HCFA z-score not computable. Check age (0&ndash;60 months).</div>' : ''))+
     '</div>'+
   '</div>';
 
@@ -1892,7 +1892,7 @@ window.calcInfantEarlyTab = function() {
       '<div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">FAO/WHO 2004 -- WHO 2006 -- IOM DRI 2005</div>'+
     '</div>'+
     '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) -- ETIOLOGY (E) -- SIGNS and SYMPTOMS (S)</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) -- ETIOLOGY (E) -- SIGNS and SYMPTOMS (S)</div>'+
       pes1ie+pes2ie+pes3ie+
     '</div>'+
   '</div>';
@@ -1903,22 +1903,22 @@ window.calcInfantEarlyTab = function() {
   // ── Requirement summary badges (static, always visible) ───────────────────
   function ieReqBadge(label, val, sub, col, bg, border) {
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
-      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
       '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
     '</div>';
   }
 
   var ieReqSummary =
     '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 IOM DRI 2005 \xb7 '+ageStr+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 IOM DRI 2005 \xb7 '+ageStr+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
         ieReqBadge('Energy',energyKcal+' kcal',(energyKcal/wtKg).toFixed(0)+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
         ieReqBadge('Protein',protG+' g',protFact.toFixed(2)+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
         ieReqBadge('Fluid',fluidML+' mL',fluidFact+' mL/kg\xb7day','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
         ieReqBadge('Per Feed',volPerFeed+' mL',feedFreq+'x/day','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.3)')+
       '</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">'+baseEFact+' kcal/kg base \xd7 '+stressFact.toFixed(2)+' stress factor</span>'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+protFact.toFixed(2)+' g/kg/day IOM DRI EAR 2005'+(stressFact>1?' \u2191 stress-elevated':'')+' </span>'+
         (ageMo>=4?'<span style="padding:2px 8px;border-radius:5px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);color:#a78bfa">Iron: 2 mg/kg/day elemental from 4 months</span>':'')+
@@ -1935,13 +1935,13 @@ window.calcInfantEarlyTab = function() {
           '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
           '<div>'+
             '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
-            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+            '<div style="font-family:var(--mono);font-size:11px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
       '<div class="card-body">'+
         (reqSummaryHtml||'')+
-        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
@@ -2225,22 +2225,22 @@ window.calcInfantLateTab = function() {
     return '<div style="display:flex;align-items:center;gap:12px;margin:18px 0 10px;padding:10px 16px;background:'+bgCol+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">'+
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+letter+'</div>'+
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
   }
   function ilMc(lbl,val,sub,col){
     sub=sub||'';col=col||'var(--green)';
-    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+lbl+'</div><div class="m-val" style="font-size:15px;color:'+col+'">'+val+'</div>'+(sub?'<div class="m-unit" style="font-size:10px">'+sub+'</div>':'')+'</div>';
+    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+lbl+'</div><div class="m-val" style="font-size:15px;color:'+col+'">'+val+'</div>'+(sub?'<div class="m-unit" style="font-size:11px">'+sub+'</div>':'')+'</div>';
   }
   function ilRow(lbl,val,note,warn){
     note=note||'';warn=warn||false;
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(warn?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+lbl+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(warn?'var(--red)':'var(--text-bright)')+'">'+val+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+note+'</td></tr>';
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+note+'</td></tr>';
   }
   function ilBullet(text,col){
     col=col||'var(--text)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+col+';line-height:1.65">'+
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+col+';line-height:1.65">'+
       '<span style="flex-shrink:0;color:var(--green);font-weight:700">&#9658;</span><span>'+text+'</span></div>';
   }
   function ilZBar(label,zObj,indicator){
@@ -2257,21 +2257,21 @@ window.calcInfantLateTab = function() {
     }
     var pct=Math.min(Math.max((z+4)/8*100,2),98);
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:9px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:11px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.25)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">'+
         '<span>&#8722;4</span><span>&#8722;3</span><span>&#8722;2</span><span>&#8722;1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span>'+
       '</div></div>';
   }
   function ilPes(problem,etiology,signs,idnt){
     return '<div style="margin-bottom:12px;padding:12px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:10px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.8">'+
         '<strong style="color:#a78bfa">'+problem+'</strong><br>'+
         '<span style="color:var(--text-dim)">related to</span> '+etiology+'<br>'+
@@ -2282,7 +2282,7 @@ window.calcInfantLateTab = function() {
   // ── SAM/MAM alert banner ────────────────────────────────────────────────────
   var ilMalBanner = '';
   if (isSAM) {
-    ilMalBanner='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    ilMalBanner='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>SAM DETECTED</strong>'+(muac?' -- MUAC '+muac+' mm':'')+
       (wlzR&&!wlzR.error?' -- WLZ '+(wlzR.z>=0?'+':'')+wlzR.z.toFixed(2)+' SD':'')+
       (hasOedema?' -- Bilateral oedema '+oedStr:'')+
@@ -2290,7 +2290,7 @@ window.calcInfantLateTab = function() {
       ' Stabilise before rehabilitation. No RUTF in Phase 1. Treat all medical complications first.'+
     '</div>';
   } else if (isMAM) {
-    ilMalBanner='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    ilMalBanner='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>MAM</strong>'+(muac?' -- MUAC '+muac+' mm':'')+' -- Enrol in Supplementary Feeding Programme (SFP). Monitor MUAC every 2 weeks. Reassess if MUAC falls below 115 mm.'+
     '</div>';
   }
@@ -2450,20 +2450,20 @@ window.calcInfantLateTab = function() {
   var samProtocol = '';
   if (isSAM) {
     if (samPhase==='phase1') {
-      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:#f87171">Phase 1 -- Stabilisation (F-75)</strong><br>'+
         'F-75 (75 kcal/100 mL): '+(Math.round(finalFluid/10)).toFixed(0)+' mL/kg/day in '+Math.ceil(finalFluid*wt/200)+' feeds over 24h. '+
         'Feed every 2-3h (day and night). Treat hypoglycaemia (D10W 5 mL/kg IV stat if BGL &lt;3 mmol/L). Treat hypothermia. Correct dehydration with ReSoMal (5 mL/kg/30 min) -- NOT standard ORS. '+
         'No RUTF in Phase 1. Introduce F-100 only when oedema resolving and appetite returns. Antibiotics (amoxicillin/co-amoxiclav) for all SAM regardless of infection signs.'+
       '</div>';
     } else if (samPhase==='transition') {
-      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:var(--amber)">Transition Phase -- F-100 Introduction</strong><br>'+
         'Gradually replace F-75 with F-100 over 2-3 days. Target F-100 at 100 kcal/100 mL -- same volume as F-75 initially. Monitor for refeeding syndrome (hypoK, hypoP, hypoMg). '+
         'Advance only if good appetite, oedema resolving, no complications.'+
       '</div>';
     } else if (samPhase==='phase2') {
-      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProtocol='<div style="margin-top:10px;padding:10px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:var(--green)">Phase 2 -- Rehabilitation</strong><br>'+
         'RUTF prescription (energy-first): ' +
         (rutfIl&&rutfIl.rutfIndicated
@@ -2531,9 +2531,9 @@ window.calcInfantLateTab = function() {
   outIl+='<div style="background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(96,165,250,.07));border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
     '<div>'+
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--green);font-weight:900">INFANT 6-24 MONTHS</div>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record -- FAO/WHO 2004 -- WHO 2006 -- Malawi SAM Protocol</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record -- FAO/WHO 2004 -- WHO 2006 -- Malawi SAM Protocol</div>'+
     '</div>'+
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--green);border:1px solid rgba(52,211,153,0.3);padding:4px 12px;border-radius:16px">'+ageStr3+' -- '+wt.toFixed(2)+' kg</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--green);border:1px solid rgba(52,211,153,0.3);padding:4px 12px;border-radius:16px">'+ageStr3+' -- '+wt.toFixed(2)+' kg</div>'+
   '</div>';
 
   outIl+=ilMalBanner;
@@ -2555,7 +2555,7 @@ window.calcInfantLateTab = function() {
         (muac?ilMc('MUAC',muac+' mm',muac<115?'SAM threshold':muac<125?'MAM threshold':'Normal',muac<115?'#f87171':muac<125?'var(--amber)':'var(--green)'):'')  +
         (hcCm?ilMc('Head Circ.',hcCm+' cm','OFC','var(--blue)'):'') +
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);border-radius:8px">'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.15);border-radius:8px">'+
         '<span>Stage: <strong>'+ageGroup3+'</strong></span>'+
         '<span>Breastfeeding: <strong>'+bfStr+'</strong></span>'+
         '<span>Oedema: <strong style="color:'+oedCol+'">'+oedStr+'</strong></span>'+
@@ -2578,12 +2578,12 @@ window.calcInfantLateTab = function() {
       ilZBar('WAZ -- Weight-for-Age',wazR,'waz')+
       ilZBar('HAZ -- Height-for-Age',hazR,'haz')+
       ilZBar('WLZ -- Weight-for-Length',wlzR,'whz')+
-      '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:6px">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:6px">'+
         'SAM: WLZ &lt;&#8722;3 SD or MUAC &lt;115 mm &bull; MAM: WLZ &#8722;2 to &#8722;3 SD or MUAC 115&#8211;125 mm &bull; Stunting: HAZ &lt;&#8722;2 SD &bull; WHO 2006'+
       '</div>'+
       (hcfaR && !hcfaR.error && typeof _hcCard==="function"
         ? '<div style="margin-top:14px">' + _hcCard(hcCm, ageMo, hcfaR) + '</div>'
-        : (hcCm ? '<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:6px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:6px">&#129504; HC: <strong>' + hcCm + ' cm</strong> &mdash; HCFA z-score not computable. Check age (0&ndash;60 months).</div>' : ''))+
+        : (hcCm ? '<div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:6px 10px;background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.1);border-radius:6px">&#129504; HC: <strong>' + hcCm + ' cm</strong> &mdash; HCFA z-score not computable. Check age (0&ndash;60 months).</div>' : ''))+
     '</div>'+
   '</div>';
 
@@ -2599,7 +2599,7 @@ window.calcInfantLateTab = function() {
         ilMc('Food Groups',fgroups+' groups',ddScore.label,ddScore.col)+
         ilMc('Breastfeeding',bf==='yes'?'Yes':'No',ageMo<24?'Continue until 24 months':'Age-appropriate','var(--teal)')+
       '</div>'+
-      (fgroups<4?'<div style="font-family:var(--mono);font-size:10px;color:#f87171;padding:6px 10px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.2);border-radius:6px">'+
+      (fgroups<4?'<div style="font-family:var(--mono);font-size:11px;color:#f87171;padding:6px 10px;background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.2);border-radius:6px">'+
         'Dietary diversity below WHO minimum (4 food groups/day). High risk for vitamin A, iron, zinc, and B12 deficiency. Counsel caregiver on food group variety at every visit.'+
       '</div>':'')  +
     '</div>'+
@@ -2613,7 +2613,7 @@ window.calcInfantLateTab = function() {
       '<div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">FAO/WHO 2004 -- WHO 2006 -- Malawi SAM Protocol</div>'+
     '</div>'+
     '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) -- ETIOLOGY (E) -- SIGNS and SYMPTOMS (S)</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) -- ETIOLOGY (E) -- SIGNS and SYMPTOMS (S)</div>'+
       pes1il+pes2il+pes3il+pes4il+
     '</div>'+
   '</div>';
@@ -2627,21 +2627,21 @@ window.calcInfantLateTab = function() {
   // ── Requirement summary badges ─────────────────────────────────────────────
   function ilReqBadge(label, val, sub, col, bg, border) {
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
-      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
       '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
     '</div>';
   }
 
   var ilReqSummary =
     '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(52,211,153,0.05);border:1.5px solid rgba(52,211,153,0.22);border-radius:12px">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--green);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 Holliday-Segar \xb7 '+ageStr3+(isBurn?' \xb7 Galveston Burns':'')+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 FAO/WHO 2004 \xb7 Holliday-Segar \xb7 '+ageStr3+(isBurn?' \xb7 Galveston Burns':'')+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
         ilReqBadge('Energy',finalEnergy+' kcal',energyKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
         ilReqBadge('Protein',finalProt+' g',protKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
         ilReqBadge('Fluid',finalFluid+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
       '</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">'+baseFact+' kcal/kg base \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein '+(isSAM?'3.5 g/kg (SAM)':isMAM?'2.5 g/kg (MAM)':(ageMo<12?'1.8':'1.6')+' g/kg baseline')+(stressMult>1?' \u2191 stress-adjusted':'')+' </span>'+
         (isSAM&&samPhase==='phase2'&&rutfIl&&rutfIl.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#f87171">RUTF: '+rutfIl.sachets+' sachets/day (Plumpy\'Nut '+rutfIl.sachetWt+'g)</span>':'')+
@@ -2659,13 +2659,13 @@ window.calcInfantLateTab = function() {
           '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
           '<div>'+
             '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
-            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+            '<div style="font-family:var(--mono);font-size:11px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
       '<div class="card-body">'+
         (reqSummaryHtml||'')+
-        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
@@ -2932,8 +2932,8 @@ window.calcChild2to5Tab = function() {
   var B=isBurn?window._pediBurnCDE({ageGroup:'child_2to5',ageMo:ageMo,wtKg:wt,htCm:ht,sex:'male'}):null;
   var fE=B?B.energyKcal:baseEnergy, fP=B?B.protG:baseProt, fF=B?B.totalFluid24h:Math.round(baseFluid);
   var samHtml=sam==='SAM'
-    ?'<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.7">🚨 SAM DETECTED — MUAC &lt;115mm or WHZ &lt;−3SD. Appetite test required. F-75 phase 1: '+Math.round(100*wt)+' mL/day. RUTF phase 2: '+((200*wt/500).toFixed(1))+' sachets/day. Vitamin A 200,000 IU stat.</div>'
-    :sam==='MAM'?'<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7">⚠️ MAM — MUAC 115–124mm. Enrol in SFP (RUSF or Super Cereal Plus). Review MUAC every 2 weeks.</div>':'';
+    ?'<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.7">🚨 SAM DETECTED — MUAC &lt;115mm or WHZ &lt;−3SD. Appetite test required. F-75 phase 1: '+Math.round(100*wt)+' mL/day. RUTF phase 2: '+((200*wt/500).toFixed(1))+' sachets/day. Vitamin A 200,000 IU stat.</div>'
+    :sam==='MAM'?'<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.7">⚠️ MAM — MUAC 115–124mm. Enrol in SFP (RUSF or Super Cereal Plus). Review MUAC every 2 weeks.</div>':'';
   function zLine(label,zObj){
     if(!zObj||zObj.error)return '';
     var col=zObj.z<-3?'#f87171':zObj.z<-2?'var(--amber)':'var(--green)';
@@ -3006,17 +3006,17 @@ window.calcChild2to5Tab = function() {
     return '<div style="display:flex;align-items:center;gap:12px;margin:18px 0 10px;padding:10px 16px;background:'+bg+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">'+
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+L+'</div>'+
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
   }
   function c5Mc(l,v,s,c){s=s||'';c=c||'var(--purple)';
-    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:10px">'+s+'</div>':'')+'</div>';}
+    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:11px">'+s+'</div>':'')+'</div>';}
   function c5Row(l,v,n,w){n=n||'';w=w||false;
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(w?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+l+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(w?'var(--red)':'var(--text-bright)')+'">'+v+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+n+'</td></tr>';}
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+n+'</td></tr>';}
   function c5Bul(t,c){c=c||'var(--text)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+c+';line-height:1.65">'+
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+c+';line-height:1.65">'+
       '<span style="flex-shrink:0;color:var(--purple);font-weight:700">&#9658;</span><span>'+t+'</span></div>';}
   function c5ZBar(label,zObj,indicator){
     if(!zObj||zObj.error) return '';
@@ -3032,20 +3032,20 @@ window.calcChild2to5Tab = function() {
     }
     var pct=Math.min(Math.max((z+4)/8*100,2),98);
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:9px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="padding:1px 6px;border-radius:4px;background:'+col+'22;color:'+col+';font-size:11px;font-weight:700;border:1px solid '+col+'44">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.25)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">'+
         '<span>&#8722;4</span><span>&#8722;3</span><span>&#8722;2</span><span>&#8722;1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span>'+
       '</div></div>';}
   function c5Pes(problem,etiology,signs,idnt){
     return '<div style="margin-bottom:12px;padding:12px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:10px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.8">'+
         '<strong style="color:#a78bfa">'+problem+'</strong><br>'+
         '<span style="color:var(--text-dim)">related to</span> '+etiology+'<br>'+
@@ -3055,7 +3055,7 @@ window.calcChild2to5Tab = function() {
   // ── SAM/MAM banner ─────────────────────────────────────────────────────────
   var banner5='';
   if(isSAM){
-    banner5='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    banner5='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>SAM DETECTED</strong>'+(muac?' — MUAC '+muac+' mm':'')+
       (whzR&&!whzR.error?' — WHZ '+(whzR.z>=0?'+':'')+whzR.z.toFixed(2)+' SD':'')+
       (hasOed?' — Bilateral oedema '+oedStr5:'')+
@@ -3063,7 +3063,7 @@ window.calcChild2to5Tab = function() {
       (starvDays>0?' Starvation '+starvDays+' days — refeeding risk; advance calories cautiously.':'')+
     '</div>';
   } else if(isMAM){
-    banner5='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    banner5='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>MAM</strong>'+(muac?' — MUAC '+muac+' mm':'')+(whzR&&!whzR.error?' — WHZ '+(whzR.z>=0?'+':'')+whzR.z.toFixed(2)+' SD':'')+
       ' — Enrol in SFP. Promote dietary diversity. MUAC every 2 weeks.'+
     '</div>';
@@ -3226,7 +3226,7 @@ window.calcChild2to5Tab = function() {
   var samProt5='';
   if(isSAM){
     if(samPhase==='phase1'){
-      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:#f87171">Phase 1 — Stabilisation (F-75)</strong><br>'+
         'F-75: 130 mL/kg/day = '+Math.round(130*wt)+' mL/day in '+Math.ceil(130*wt/200)+' feeds (q2–3h day+night). '+
         (starvDays>3?'<strong style="color:var(--amber)">Refeeding risk ('+starvDays+' starvation days)</strong> — start at 75 kcal/kg/day; advance by 10–15 kcal/kg/day. Monitor K, Mg, PO4 daily. ':'')+
@@ -3234,12 +3234,12 @@ window.calcChild2to5Tab = function() {
         'Rehydration: ReSoMal ONLY — not standard ORS. Antibiotics: amoxicillin 40 mg/kg/day x 5d (add gentamicin if severe). NO iron in Phase 1. No RUTF.'+
       '</div>';
     } else if(samPhase==='transition'){
-      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:var(--amber)">Transition — F-100 Introduction</strong><br>'+
         'Replace F-75 with F-100 over 2–3 days at same volume. Advance only if: good appetite, oedema resolving, no clinical deterioration. Monitor electrolytes for refeeding syndrome (↓K, ↓Mg, ↓PO4).'+
       '</div>';
     } else if(samPhase==='phase2'){
-      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.9">'+
+      samProt5='<div style="margin-top:10px;padding:10px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">'+
         '<strong style="color:var(--green)">Phase 2 — Rehabilitation (F-100 / RUTF)</strong><br>'+
         'RUTF prescription (energy-first): ' +
         (rutf5&&rutf5.rutfIndicated
@@ -3318,9 +3318,9 @@ window.calcChild2to5Tab = function() {
   out5+='<div style="background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(96,165,250,.07));border:1px solid rgba(167,139,250,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
     '<div>'+
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--purple);font-weight:900">CHILD 2–5 YEARS</div>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2006 · Malawi SAM Protocol</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2006 · Malawi SAM Protocol</div>'+
     '</div>'+
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--purple);border:1px solid rgba(167,139,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr5+' · '+wt.toFixed(1)+' kg</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--purple);border:1px solid rgba(167,139,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr5+' · '+wt.toFixed(1)+' kg</div>'+
   '</div>';
 
   out5+=banner5;
@@ -3340,7 +3340,7 @@ window.calcChild2to5Tab = function() {
         c5Mc('BMI',bmi.toFixed(1),'kg/m²','var(--purple)')+
         (muac?c5Mc('MUAC',muac+' mm',muac<115?'SAM':muac<125?'MAM':'Normal',muac<115?'#f87171':muac<125?'var(--amber)':'var(--green)'):'') +
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:8px">'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.15);border-radius:8px">'+
         '<span>Stage: <strong>'+ageGrp5+'</strong></span>'+
         '<span>Oedema: <strong style="color:'+oedCol5+'">'+oedStr5+'</strong></span>'+
         (isSAM&&samPhase!=='none'?'<span>SAM Phase: <strong style="color:#f87171">'+samPhLbl+'</strong></span>':'')+
@@ -3363,7 +3363,7 @@ window.calcChild2to5Tab = function() {
       c5ZBar('WHZ — Weight-for-Height',whzR,'whz')+
       c5ZBar('WAZ — Weight-for-Age',wazR,'waz')+
       c5ZBar('HAZ — Height-for-Age',hazR,'haz')+
-      '<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.1);border-radius:6px">'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:8px;padding:6px 10px;background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.1);border-radius:6px">'+
         'SAM: WHZ <−3 SD or MUAC <115 mm · MAM: WHZ −2 to −3 SD or MUAC 115–125 mm · Stunting: HAZ <−2 SD · Schofield 1985 · WHO 2006'+
       '</div>'+
     '</div>'+
@@ -3377,7 +3377,7 @@ window.calcChild2to5Tab = function() {
       '<div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">Schofield 1985 · WHO 2006 · IOM DRI 2005</div>'+
     '</div>'+
     '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
       p1+p2+p3+p4+
     '</div>'+
   '</div>';
@@ -3390,22 +3390,22 @@ window.calcChild2to5Tab = function() {
   // \u2500\u2500 Requirement summary badges (static, always visible) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   function c5ReqBadge(label, val, sub, col, bg, border) {
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
-      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
       '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
     '</div>';
   }
 
   var c5ReqSummary =
     '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr5+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr5+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
         c5ReqBadge('Energy',finalE+' kcal',energyKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
         c5ReqBadge('Protein',finalP+' g',protKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
         c5ReqBadge('Fluid',finalF+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
         c5ReqBadge('BMR',Math.round(bmr)+' kcal','Schofield 2\u20135yr','var(--purple)','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')+
       '</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 1.4 PAL \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+pFact.toFixed(1)+' g/kg/day'+(isSAM?' \u2014 SAM rehab':isMAM?' \u2014 MAM target':stressMult>1?' \u2191 stress-adjusted':' \u2014 IOM DRI 2005')+'</span>'+
         (isSAM&&samPhase==='phase2'&&rutf5&&rutf5.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutf5.sachets+' sachets/day (Plumpy\'Nut '+rutf5.sachetWt+'g)</span>':'')+
@@ -3423,13 +3423,13 @@ window.calcChild2to5Tab = function() {
           '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
           '<div>'+
             '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
-            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+            '<div style="font-family:var(--mono);font-size:11px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
       '<div class="card-body">'+
         (reqSummaryHtml||'')+
-        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
@@ -3660,17 +3660,17 @@ window.calcChild5to10Tab = function() {
     return '<div style="display:flex;align-items:center;gap:12px;margin:18px 0 10px;padding:10px 16px;background:'+bg+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">'+
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+L+'</div>'+
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
   }
   function c10Mc(l,v,s,c){s=s||'';c=c||'var(--teal)';
-    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:10px">'+s+'</div>':'')+'</div>';}
+    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:11px">'+s+'</div>':'')+'</div>';}
   function c10Row(l,v,n,w){n=n||'';w=w||false;
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(w?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+l+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(w?'var(--red)':'var(--text-bright)')+'">'+v+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+n+'</td></tr>';}
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+n+'</td></tr>';}
   function c10Bul(t,c){c=c||'var(--text)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+c+';line-height:1.65">'+
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+c+';line-height:1.65">'+
       '<span style="flex-shrink:0;color:var(--teal);font-weight:700">&#9658;</span><span>'+t+'</span></div>';}
   function c10ZBar(label,zObj,reverse){
     if(!zObj||zObj.error) return '';
@@ -3679,20 +3679,20 @@ window.calcChild5to10Tab = function() {
     var pct=Math.min(Math.max((z+4)/8*100,2),98);
     var interp=reverse?(z>3?'Obese':z>2?'Overweight':z<-2?'Thinness':'Normal'):(z<-3?'Severely thin':z<-2?'Thinness':z<2?'Normal':z<3?'Overweight':'Obese');
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="color:var(--text-dim);font-size:9px">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="color:var(--text-dim);font-size:11px">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.25)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">'+
         '<span>&#8722;4</span><span>&#8722;3</span><span>&#8722;2</span><span>&#8722;1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span>'+
       '</div></div>';}
   function c10Pes(problem,etiology,signs,idnt){
     return '<div style="margin-bottom:12px;padding:12px 16px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.2);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--teal);font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--teal);font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.8">'+
         '<strong style="color:var(--teal)">'+problem+'</strong><br>'+
         '<span style="color:var(--text-dim)">related to</span> '+etiology+'<br>'+
@@ -3940,25 +3940,25 @@ window.calcChild5to10Tab = function() {
   out10+='<div style="background:linear-gradient(135deg,rgba(29,233,212,.1),rgba(96,165,250,.07));border:1px solid rgba(29,233,212,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
     '<div>'+
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--teal);font-weight:900">CHILD 5–10 YEARS</div>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2007 · IOM DRI 2005</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2007 · IOM DRI 2005</div>'+
     '</div>'+
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--teal);border:1px solid rgba(29,233,212,0.3);padding:4px 12px;border-radius:16px">'+ageStr10+' · '+wt.toFixed(1)+' kg</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--teal);border:1px solid rgba(29,233,212,0.3);padding:4px 12px;border-radius:16px">'+ageStr10+' · '+wt.toFixed(1)+' kg</div>'+
   '</div>';
 
   // SAM/MAM banner
   if(samActive){
-    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>SAM — EXTENDED CMAM (5–9yr)</strong>'+(muac?' · MUAC '+muac+' mm':'')+
       (bmiazR&&!bmiazR.error?' · BMI-Z '+(bmiazR.z>=0?'+':'')+bmiazR.z.toFixed(2)+' SD':'')+
       (hasOed?' · Oedema present':'')+
       '<br>Treat per extended CMAM protocol. RUTF ad libitum. Monthly monitoring. Discharge when BMI-Z >−2 SD ×2 visits.'+
     '</div>';
   } else if(mamActive){
-    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>MAM — EXTENDED CMAM</strong>'+(muac?' · MUAC '+muac+' mm':'')+' — Supplementary feeding. Dietary diversity. BMI-Z monthly.'+
     '</div>';
   } else if(owActive){
-    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.08);border:1.5px solid rgba(240,180,41,0.4);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    out10+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.08);border:1.5px solid rgba(240,180,41,0.4);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>OVERWEIGHT / OBESITY RISK</strong> · BMI '+bmi.toFixed(1)+' kg/m²'+
       (bmiazR&&!bmiazR.error?' · BMI-Z '+(bmiazR.z>=0?'+':'')+bmiazR.z.toFixed(2)+' SD':'')+
       ' — Promote healthy diet and physical activity. Do NOT restrict calories — growth must continue. Family-based approach.'+
@@ -3980,7 +3980,7 @@ window.calcChild5to10Tab = function() {
         c10Mc('BMI',bmi.toFixed(1)+' kg/m²',bmiClass,bmiCol)+
         (muac?c10Mc('MUAC',muac+' mm',muac<115?'SAM threshold':muac<125?'MAM threshold':'Normal',muac<115?'#f87171':muac<125?'var(--amber)':'var(--green)'):'')  +
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:8px">'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(29,233,212,0.05);border:1px solid rgba(29,233,212,0.15);border-radius:8px">'+
         '<span>Stage: <strong>'+ageGrp10+'</strong></span>'+
         '<span>Sex: <strong>'+( sex==='male'?'♂ Male':'♀ Female')+'</strong></span>'+
         '<span>Physical activity: <strong>'+palLabel+'</strong></span>'+
@@ -4003,7 +4003,7 @@ window.calcChild5to10Tab = function() {
     '</div>'+
     '<div class="card-body">'+
       c10ZBar('BMI-for-age Z — WHO 2007',bmiazR,true)+
-      '<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:10px;line-height:1.8;padding:6px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:6px">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.8;padding:6px 10px;background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.1);border-radius:6px">'+
         '<span>Severely thin: BMI-Z &lt;−3 SD</span><span>Thin: −2 to −3</span>'+
         '<span>Normal: −2 to +1 SD</span><span>Overweight: +1 to +2 SD</span><span>Obese: &gt;+2 SD</span>'+
         '<span>WHO 2007 Growth Reference · de Onis et al.</span>'+
@@ -4019,7 +4019,7 @@ window.calcChild5to10Tab = function() {
       '<div class="card-badge" style="color:var(--teal);border-color:rgba(29,233,212,0.3)">Schofield 1985 · WHO 2007 · IOM DRI 2005</div>'+
     '</div>'+
     '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--teal);letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
       p1c10+p2c10+p3c10+p4c10+p5c10+
     '</div>'+
   '</div>';
@@ -4032,22 +4032,22 @@ window.calcChild5to10Tab = function() {
   // \u2500\u2500 Requirement summary badges (static, always visible) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   function c10ReqBadge(label, val, sub, col, bg, border) {
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
-      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
       '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
     '</div>';
   }
 
   var c10ReqSummary =
     '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr10+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2005 \xb7 '+ageStr10+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
         c10ReqBadge('Energy',finalE+' kcal',eKg+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
         c10ReqBadge('Protein',finalP+' g',pKg+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
         c10ReqBadge('Fluid',finalF+' mL','Holliday-Segar','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
         c10ReqBadge('BMR',Math.round(bmrVal)+' kcal','Schofield 5\u201310yr','var(--teal)','rgba(29,233,212,0.08)','rgba(29,233,212,0.3)')+
       '</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 PAL '+palFact+' \xd7 '+stressMult.toFixed(2)+' stress factor</span>'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+pKg+' g/kg/day'+(samActive?' \u2014 Extended CMAM':mamActive?' \u2014 MAM':stressMult>1?' \u2191 stress-adjusted':' \u2014 IOM DRI 2005')+'</span>'+
         (samActive&&rutf10&&rutf10.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutf10.sachets+' sachets/day (Plumpy\'Nut)</span>':'')+
@@ -4066,13 +4066,13 @@ window.calcChild5to10Tab = function() {
           '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
           '<div>'+
             '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
-            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+            '<div style="font-family:var(--mono);font-size:11px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
       '<div class="card-body">'+
         (reqSummaryHtml||'')+
-        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }
@@ -4303,7 +4303,7 @@ window.calcAdolescent10to17Tab = function() {
   // ── SAM/MAM alert HTML ────────────────────────────────────────────
   var samHtml = '';
   if (cls.status==='SAM') {
-    samHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.7">'+
+    samHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.7">'+
       '🚨 SAM IN ADOLESCENT — MUAC '+(muacMm||'—')+' mm'+(oedema?' + bilateral oedema':'')+'. Confirm phase: appetite test with RUTF. '+
       'PASSED → outpatient CMAM. FAILED or complications → inpatient NRU. '+
       'Phase 1: F-75 '+Math.round(100*wt)+' mL/day q2–3h until stable. '+
@@ -4311,7 +4311,7 @@ window.calcAdolescent10to17Tab = function() {
       (isLate?'Screen for TB, HIV, pregnancy.':'')+
     '</div>';
   } else if (cls.status==='MAM') {
-    samHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7">'+
+    samHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.7">'+
       '⚠️ MAM — SFP enrolment: RUSF or Super Cereal Plus alongside household diet. Review MUAC every 2 weeks. Escalate if MUAC <160mm or oedema develops.'+
     '</div>';
   }
@@ -4328,12 +4328,12 @@ window.calcAdolescent10to17Tab = function() {
   // ── Pregnancy / menses notes ──────────────────────────────────────
   var pregHtml = '';
   if (isLate && preg==='pregnant') {
-    pregHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(192,132,252,.08);border:1px solid rgba(192,132,252,.4);font-family:var(--mono);font-size:10.5px;color:#c084fc;line-height:1.7">'+
+    pregHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(192,132,252,.08);border:1px solid rgba(192,132,252,.4);font-family:var(--mono);font-size:11px;color:#c084fc;line-height:1.7">'+
       '🤰 ADOLESCENT PREGNANCY (dual burden): Energy +'+pregKcal+' kcal/day. Protein +25 g/day. Folate 600 µg/day. Iron 27 mg/day. Calcium 1300 mg/day. Iodine 220 µg/day. '+
       'Target weight gain 0.3–0.5 kg/week (2nd trimester). Highest nutritional risk group — weekly dietitian review recommended (WHO ANC 2016).'+
     '</div>';
   } else if (isLate && preg==='lactating') {
-    pregHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.4);font-family:var(--mono);font-size:10.5px;color:var(--green);line-height:1.7">'+
+    pregHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.4);font-family:var(--mono);font-size:11px;color:var(--green);line-height:1.7">'+
       '🍼 LACTATION: Energy +'+pregKcal+' kcal/day. Calcium 1300 mg/day. Iodine 290 µg/day. Choline 550 mg/day. Protein +25 g/day. Hydration ≥2.5 L/day.'+
     '</div>';
   }
@@ -4341,16 +4341,16 @@ window.calcAdolescent10to17Tab = function() {
   // ── Stress/illness note ───────────────────────────────────────────
   var stressHtml = '';
   if (stressLv!=='none' && !isBurn) {
-    stressHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.4);font-family:var(--mono);font-size:10.5px;color:var(--blue);line-height:1.7">'+
+    stressHtml = '<div style="padding:10px 14px;margin-bottom:10px;border-radius:9px;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.4);font-family:var(--mono);font-size:11px;color:var(--blue);line-height:1.7">'+
       '🏥 '+stressLabel+': Energy target '+tee+' kcal/day (stress ×'+sf.toFixed(2)+'). Protein '+protPerKg.toFixed(2)+' g/kg/day = '+protG+' g/day. '+
       (stressLv==='icu'?'Indirect calorimetry preferred (ASPEN PICU 2017). Permissive underfeeding (80% TEE) acceptable in acute phase.':'Initiate EN within 24–48h if oral intake <60% target.')+
     '</div>';
   }
 
   function dRow(label, val, note) {
-    return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--text)">'+
-      '<span style="color:var(--text-dim);font-size:9px">'+label+'</span><br>'+val+
-      (note?'<br><span style="font-size:9px;color:var(--text-dim)">'+note+'</span>':'')+
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text)">'+
+      '<span style="color:var(--text-dim);font-size:11px">'+label+'</span><br>'+val+
+      (note?'<br><span style="font-size:11px;color:var(--text-dim)">'+note+'</span>':'')+
     '</div>';
   }
 
@@ -4359,17 +4359,17 @@ window.calcAdolescent10to17Tab = function() {
     return '<div style="display:flex;align-items:center;gap:12px;margin:18px 0 10px;padding:10px 16px;background:'+bg+';border-left:4px solid '+col+';border-radius:0 8px 8px 0">'+
       '<div style="font-family:var(--cond);font-size:22px;font-weight:900;color:'+col+';line-height:1;min-width:28px">'+L+'</div>'+
       '<div><div style="font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:3px;color:'+col+';text-transform:uppercase">'+title+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:2px">'+sub+'</div></div></div>';
   }
   function adMc(l,v,s,c){s=s||'';c=c||'var(--blue)';
-    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:10px">'+s+'</div>':'')+'</div>';}
+    return '<div class="mc" style="min-width:110px"><div class="m-lbl">'+l+'</div><div class="m-val" style="font-size:15px;color:'+c+'">'+v+'</div>'+(s?'<div class="m-unit" style="font-size:11px">'+s+'</div>':'')+'</div>';}
   function adRow(l,v,n,w){n=n||'';w=w||false;
     return '<tr style="border-bottom:1px solid rgba(56,100,168,0.12);'+(w?'background:rgba(251,113,133,0.05)':'')+'">'+
       '<td style="padding:7px 10px;font-family:var(--sans);font-size:12px;color:var(--text)">'+l+'</td>'+
       '<td style="padding:7px 10px;font-family:var(--mono);font-size:12px;font-weight:700;color:'+(w?'var(--red)':'var(--text-bright)')+'">'+v+'</td>'+
-      '<td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">'+n+'</td></tr>';}
+      '<td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+n+'</td></tr>';}
   function adBul(t,c){c=c||'var(--text)';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:10.5px;color:'+c+';line-height:1.65">'+
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(56,100,168,0.07);font-family:var(--mono);font-size:11px;color:'+c+';line-height:1.65">'+
       '<span style="flex-shrink:0;color:var(--blue);font-weight:700">&#9658;</span><span>'+t+'</span></div>';}
   function adZBar(label,z,reverse){
     if(z===null||z===undefined) return '';
@@ -4378,20 +4378,20 @@ window.calcAdolescent10to17Tab = function() {
     var pct=Math.min(Math.max((z+4)/8*100,2),98);
     var interp=reverse?(z>3?'Obese':z>2?'Overweight':z<-2?'Thinness':'Normal'):(z<-3?'Severely thin':z<-2?'Thinness':z<2?'Normal':z<3?'Overweight':'Obese');
     return '<div style="margin-bottom:10px">'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;margin-bottom:4px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px">'+
         '<span style="color:var(--text)">'+label+'</span>'+
-        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="color:var(--text-dim);font-size:9px">'+interp+'</span></span>'+
+        '<span><strong style="color:'+col+'">'+(z>=0?'+':'')+z.toFixed(2)+' SD</strong> <span style="color:var(--text-dim);font-size:11px">'+interp+'</span></span>'+
       '</div>'+
       '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px">'+
         '<div style="position:absolute;left:50%;top:-2px;width:2px;height:12px;background:rgba(255,255,255,0.25)"></div>'+
         '<div style="position:absolute;left:'+pct+'%;top:0;width:10px;height:8px;border-radius:3px;background:'+col+';transform:translateX(-50%)"></div>'+
       '</div>'+
-      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">'+
+      '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">'+
         '<span>&#8722;4</span><span>&#8722;3</span><span>&#8722;2</span><span>&#8722;1</span><span>0</span><span>+1</span><span>+2</span><span>+3</span><span>+4</span>'+
       '</div></div>';}
   function adPes(problem,etiology,signs,idnt){
     return '<div style="margin-bottom:12px;padding:12px 16px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:8px">'+
-      '<div style="font-family:var(--mono);font-size:10px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:6px">['+idnt+']</div>'+
       '<div style="font-family:var(--sans);font-size:12px;color:var(--text-bright);line-height:1.8">'+
         '<strong style="color:#a78bfa">'+problem+'</strong><br>'+
         '<span style="color:var(--text-dim)">related to</span> '+etiology+'<br>'+
@@ -4782,45 +4782,45 @@ window.calcAdolescent10to17Tab = function() {
   outAd+='<div style="background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(167,139,250,.08));border:1px solid rgba(96,165,250,.3);border-radius:12px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'+
     '<div>'+
       '<div style="font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--blue);font-weight:900">ADOLESCENT 10-17 YEARS</div>'+
-      '<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2007 · IOM DRI 2023</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">ADIME Clinical Nutrition Record · Schofield 1985 · WHO 2007 · IOM DRI 2023</div>'+
     '</div>'+
-    '<div style="font-family:var(--mono);font-size:10px;color:var(--blue);border:1px solid rgba(96,165,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr+' · '+wt.toFixed(1)+' kg · '+sexStr+'</div>'+
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);border:1px solid rgba(96,165,250,0.3);padding:4px 12px;border-radius:16px">'+ageStr+' · '+wt.toFixed(1)+' kg · '+sexStr+'</div>'+
   '</div>';
 
   // Conditional banners
   if(samActive){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.5);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>SAM — ADOLESCENT</strong>'+(muacMm?' · MUAC '+muacMm+' mm':'')+
       (bmiazZ!==null?' · BMI-Z '+(bmiazZ>=0?'+':'')+bmiazZ.toFixed(2)+' SD':'')+(oedema?' · Oedema present':'')+
       '<br>Appetite test: RUTF accepted = outpatient CMAM. Refused or complications = inpatient Phase 1. '+
       (isLate?'Screen for TB, HIV, pregnancy in late adolescence.':'')+
     '</div>';
   } else if(mamActive){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.1);border:1.5px solid rgba(240,180,41,0.5);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>MAM — ADOLESCENT SFP</strong>'+(muacMm?' · MUAC '+muacMm+' mm':'')+' · Enrol in supplementary feeding. MUAC every 2 weeks. Graduate when MUAC >=125 mm x2 visits.'+
     '</div>';
   }
   if(isLate&&preg==='pregnant'){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(192,132,252,0.08);border:1px solid rgba(192,132,252,0.35);font-family:var(--mono);font-size:10.5px;color:#c084fc;line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(192,132,252,0.08);border:1px solid rgba(192,132,252,0.35);font-family:var(--mono);font-size:11px;color:#c084fc;line-height:1.8">'+
       '<strong>ADOLESCENT PREGNANCY</strong> — Dual nutritional burden: adolescent growth + foetal demands. Energy +'+pregKcal+' kcal/day. Protein +25 g/day. Folate 600 ug/day. Iron 27 mg/day. Weight gain 0.3-0.5 kg/week. Weekly dietitian review recommended.'+
     '</div>';
   } else if(isLate&&preg==='lactating'){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);font-family:var(--mono);font-size:10.5px;color:var(--green);line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);font-family:var(--mono);font-size:11px;color:var(--green);line-height:1.8">'+
       '<strong>LACTATION</strong> — Energy +'+pregKcal+' kcal/day. Calcium 1300 mg/day. Iodine 290 ug/day. Choline 550 mg/day. Protein +19 g/day. Minimum fluid 2.5 L/day.'+
     '</div>';
   }
   if(isFemale&&menses==='absent'&&!samActive){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);font-family:var(--mono);font-size:10.5px;color:#f87171;line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8">'+
       '<strong>AMENORRHOEA — LOW ENERGY AVAILABILITY (LEA/RED-S)</strong> · Absent menses may indicate insufficient energy intake relative to exercise load. Screen: LEAF-Q questionnaire. Bone densitometry if amenorrhoea >3 months. Increase energy intake; reduce exercise load if athletic. Endocrine review.'+
     '</div>';
   }
   if(owActive){
-    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.8">'+
+    outAd+='<div style="padding:12px 16px;margin-bottom:14px;border-radius:9px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.8">'+
       '<strong>OVERWEIGHT / OBESITY</strong> · BMI-Z '+(bmiazZ!==null?(bmiazZ>=0?'+':'')+bmiazZ.toFixed(2)+' SD':'detected')+'. Family-based approach. No calorie restriction during active growth. Physical activity >=60 min MVPA/day. Reduce ultra-processed foods. Screen for T2DM, dyslipidaemia, PCOS.'+
     '</div>';
   }
   if(stressLv!=='none'&&!isBurn){
-    outAd+='<div style="padding:10px 14px;margin-bottom:14px;border-radius:9px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);font-family:var(--mono);font-size:10.5px;color:var(--blue);line-height:1.8">'+
+    outAd+='<div style="padding:10px 14px;margin-bottom:14px;border-radius:9px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);font-family:var(--mono);font-size:11px;color:var(--blue);line-height:1.8">'+
       '<strong>'+stressLabel+'</strong> — Energy target '+fE+' kcal/day (stress x'+sf.toFixed(2)+'). Protein '+(fP/wt).toFixed(2)+' g/kg/day. '+
       (stressLv==='icu'?'Indirect calorimetry preferred (ASPEN PICU 2017). Permissive underfeeding (80% TEE) acceptable Day 1-2, advance to full target by Day 3-5.':'')+
     '</div>';
@@ -4841,7 +4841,7 @@ window.calcAdolescent10to17Tab = function() {
         adMc('BMI',bmi.toFixed(1)+' kg/m2',bmiStat,bmiCol2)+
         (muacMm?adMc('MUAC',muacMm+' mm',muacMm<115?'SAM':muacMm<125?'MAM':'Normal',muacMm<115?'#f87171':muacMm<125?'var(--amber)':'var(--green)'):'') +
       '</div>'+
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px">'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;padding:10px 12px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px">'+
         '<span>Stage: <strong>'+ageGrp+'</strong></span>'+
         '<span>Sex: <strong>'+(isFemale?'Female':'Male')+'</strong></span>'+
         '<span>PA level: <strong>'+paLabel+'</strong></span>'+
@@ -4865,7 +4865,7 @@ window.calcAdolescent10to17Tab = function() {
     '</div>'+
     '<div class="card-body">'+
       adZBar('BMI-for-age Z — WHO 2007 ('+sexStr+')',bmiazZ,true)+
-      '<div style="margin-top:10px;padding:10px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.12);border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.9">'+
+      '<div style="margin-top:10px;padding:10px 14px;background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.12);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.9">'+
         '<strong style="color:var(--blue)">Interpretation:</strong> Use WHO 2007 BMI-for-age Z throughout adolescence — adult BMI cut-offs (18.5/25/30) do not apply before age 18. '+
         (isLate?'At Tanner Stage 4-5 (late adolescence), adult parameters will apply at 18yr — document transition plan.':'Pubertal growth spurts (8-12 cm/yr peak velocity) significantly increase energy and protein requirements — ensure adequate intake during this critical window.')+
       '</div>'+
@@ -4880,7 +4880,7 @@ window.calcAdolescent10to17Tab = function() {
       '<div class="card-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">Schofield 1985 · WHO 2007 · IOM DRI 2023</div>'+
     '</div>'+
     '<div class="card-body">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:1.5px;margin-bottom:10px">PROBLEM (P) · ETIOLOGY (E) · SIGNS & SYMPTOMS (S)</div>'+
       pa1+pa2+pa3+pa4+pa5+pa6+
     '</div>'+
   '</div>';
@@ -4893,22 +4893,22 @@ window.calcAdolescent10to17Tab = function() {
   // \u2500\u2500 Nutrient Targets Summary badges \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   function adReqBadge(label, val, sub, col, bg, border) {
     return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;min-width:100px;flex:1">'+
-      '<div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:'+col+';font-weight:700;text-transform:uppercase;opacity:0.85;margin-bottom:4px">'+label+'</div>'+
       '<div style="font-family:var(--cond);font-size:20px;font-weight:900;color:'+col+';line-height:1">'+val+'</div>'+
-      '<div style="font-family:var(--mono);font-size:9px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:'+col+';opacity:0.7;margin-top:3px">'+sub+'</div>'+
     '</div>';
   }
 
   var adReqSummary =
     '<div style="margin-bottom:16px;padding:14px 16px;background:rgba(96,165,250,0.05);border:1.5px solid rgba(96,165,250,0.22);border-radius:12px">'+
-      '<div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2023 \xb7 '+ageStr+'</div>'+
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:2px;font-weight:700;margin-bottom:10px">CALCULATED NUTRIENT TARGETS \u2014 Schofield 1985 \xb7 IOM DRI 2023 \xb7 '+ageStr+'</div>'+
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+
         adReqBadge('Energy',fE+' kcal',Math.round(fE/wt)+' kcal/kg\xb7day','var(--amber)','rgba(240,180,41,0.09)','rgba(240,180,41,0.35)')+
         adReqBadge('Protein',fP+' g',(fP/wt).toFixed(2)+' g/kg\xb7day','var(--green)','rgba(52,211,153,0.09)','rgba(52,211,153,0.35)')+
         adReqBadge('Fluid',fF+' mL',isLate?(isFemale?'min 2.3 L/day':'min 3.3 L/day'):'min 2.0 L/day','var(--blue)','rgba(96,165,250,0.09)','rgba(96,165,250,0.35)')+
         adReqBadge('BMR',Math.round(bmr)+' kcal','Schofield 1985 ('+sexStr+')','#a78bfa','rgba(167,139,250,0.08)','rgba(167,139,250,0.3)')+
       '</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);color:var(--amber)">Schofield 1985 \xb7 BMR \xd7 PAL '+paFactor.toFixed(2)+' \xd7 '+sf.toFixed(2)+' stress'+(pregKcal>0?' + '+pregKcal+' kcal preg/lact':'')+'</span>'+
         '<span style="padding:2px 8px;border-radius:5px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);color:var(--green)">Protein: '+(fP/wt).toFixed(2)+' g/kg/day'+(samActive?' \u2014 SAM rehabilitation':stressLv!=='none'?' \u2191 stress-adjusted':' \u2014 IOM DRI 2023')+'</span>'+
         (samActive&&rutfAd&&rutfAd.rutfIndicated?'<span style="padding:2px 8px;border-radius:5px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);color:var(--blue)">RUTF: '+rutfAd.sachets+' sachets/day (Plumpy\'Nut)</span>':'')+
@@ -4930,13 +4930,13 @@ window.calcAdolescent10to17Tab = function() {
           '<div style="font-family:var(--cond);font-size:18px;font-weight:900;color:'+accentCol+';line-height:1;min-width:36px;padding:4px 8px;background:'+accentBg+';border:1.5px solid '+accentBorder+';border-radius:7px;text-align:center">'+domainCode+'</div>'+
           '<div>'+
             '<div style="font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:2.5px;color:'+accentCol+';text-transform:uppercase">'+domainTitle+'</div>'+
-            '<div style="font-family:var(--mono);font-size:8.5px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
+            '<div style="font-family:var(--mono);font-size:11px;color:'+accentCol+';opacity:0.6;margin-top:1px">NCP Intervention Domain</div>'+
           '</div>'+
         '</div>'+
       '</div>'+
       '<div class="card-body">'+
         (reqSummaryHtml||'')+
-        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
+        '<div id="'+bodyId+'" style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.85">'+staticFallback+'</div>'+
       '</div>'+
     '</div>';
   }

@@ -277,47 +277,47 @@ function lrGenPrescription(kcalMl, proL) {
     adminHtml = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
         <div style="background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--amber);letter-spacing:1px;margin-bottom:5px">BOLUS Q4H (×6/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber);letter-spacing:1px;margin-bottom:5px">BOLUS Q4H (×6/day)</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus6} mL</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00</div>
         </div>
         <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">BOLUS Q3H (×8/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">BOLUS Q3H (×8/day)</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus8} mL</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Alternate schedule — smaller, more frequent volumes</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Alternate schedule — smaller, more frequent volumes</div>
         </div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">Administer over 15–30 min via syringe gravity drip. Day 1–2: give 50% of bolus volume, advance as tolerated.</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Administer over 15–30 min via syringe gravity drip. Day 1–2: give 50% of bolus volume, advance as tolerated.</div>`;
   } else if (method === 'intermittent') {
     adminHtml = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
         <div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:5px">INTERMITTENT Q4H (×6/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:5px">INTERMITTENT Q4H (×6/day)</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus6} mL</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Gravity drip over 30–60 min each feed</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Gravity drip over 30–60 min each feed</div>
         </div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">Day 1–2 starter: give 50% volume (${Math.round(bolus6/2)} mL/feed). Assess tolerance before each feed — nausea, distension, vomiting. Routine GRV measurement not recommended (ASPEN/SCCM 2016).</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Day 1–2 starter: give 50% volume (${Math.round(bolus6/2)} mL/feed). Assess tolerance before each feed — nausea, distension, vomiting. Routine GRV measurement not recommended (ASPEN/SCCM 2016).</div>`;
   } else if (method === 'continuous') {
     adminHtml = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
         <div style="background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 24H</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 24H</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${rate24} mL/hr</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Day 1–2 starter: <span style="color:var(--amber)">${halfRate} mL/hr</span></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Day 1–2 starter: <span style="color:var(--amber)">${halfRate} mL/hr</span></div>
         </div>
         <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 20H</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 20H</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${rate20} mL/hr</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">4h break for procedures/positioning</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">4h break for procedures/positioning</div>
         </div>
       </div>`;
   } else {
     adminHtml = `
       <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px 12px">
-        <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">CYCLIC (16H ON / 8H OFF)</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">CYCLIC (16H ON / 8H OFF)</div>
         <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${(volDay/16).toFixed(0)} mL/hr</div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Run 07:00–23:00 (16h). Adjust to ward routine.</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Run 07:00–23:00 (16h). Adjust to ward routine.</div>
       </div>`;
   }
 
@@ -328,55 +328,55 @@ function lrGenPrescription(kcalMl, proL) {
     <div style="background:linear-gradient(90deg,rgba(240,180,41,0.18),rgba(240,180,41,0.04));padding:14px 18px;border-bottom:2px solid rgba(240,180,41,0.25);display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-family:var(--cond);font-size:16px;font-weight:800;letter-spacing:3px;color:var(--amber)"> PRESCRIPTION ORDER</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:0.5px">Low-Resource Hospital Enteral Nutrition · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px;letter-spacing:0.5px">Low-Resource Hospital Enteral Nutrition · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
       </div>
-      <div style="font-family:var(--mono);font-size:8px;padding:4px 10px;border-radius:12px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);letter-spacing:1px">ENTERAL · ${routeLabels[route]} · ${methodLabels[method].toUpperCase()}</div>
+      <div style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:12px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);letter-spacing:1px">ENTERAL · ${routeLabels[route]} · ${methodLabels[method].toUpperCase()}</div>
     </div>
 
     <!-- Section 1: Nutrition Requirements -->
     <div style="padding:16px 18px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:12px">① NUTRITION REQUIREMENTS</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--amber);margin-bottom:12px">① NUTRITION REQUIREMENTS</div>
       <div style="display:flex;flex-direction:column;gap:0;background:rgba(8,18,36,0.4);border:1px solid rgba(56,100,168,0.2);border-radius:8px;overflow:hidden">
 
         <!-- Energy row -->
         <div style="display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid rgba(56,100,168,0.12)">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0">Energy</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0">Energy</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:16px;font-weight:800;color:var(--amber)">${Math.round(adjKcal)}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">kcal/day${nonNutr > 0 ? ' (adjusted)' : ''}</span>
-            ${kcalKg ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted);padding:2px 8px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);border-radius:10px">${kcalKg} kcal/kg/day</span>` : ''}
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">kcal/day${nonNutr > 0 ? ' (adjusted)' : ''}</span>
+            ${kcalKg ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:2px 8px;background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);border-radius:10px">${kcalKg} kcal/kg/day</span>` : ''}
           </div>
         </div>
 
         <!-- Protein row -->
         <div style="display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid rgba(56,100,168,0.12)">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0">Protein</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0">Protein</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:16px;font-weight:800;color:${proMetCol}">${proDeliv}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">g/day delivered</span>
-            ${proKg ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted);padding:2px 8px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px">${proKg} g/kg/day</span>` : ''}
-            ${proMet ? `<span style="font-family:var(--mono);font-size:9px;color:${proMetCol}">(${proMet}% of ${targetPro}g target)</span>` : ''}
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">g/day delivered</span>
+            ${proKg ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:2px 8px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px">${proKg} g/kg/day</span>` : ''}
+            ${proMet ? `<span style="font-family:var(--mono);font-size:11px;color:${proMetCol}">(${proMet}% of ${targetPro}g target)</span>` : ''}
           </div>
         </div>
 
         <!-- Fluids row -->
         <div style="display:flex;align-items:center;padding:11px 14px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0"> Fluids</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:80px;flex-shrink:0"> Fluids</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:16px;font-weight:800;color:var(--teal)">${Math.round(targetFluid > 0 ? targetFluid : volDay)}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">mL/day${targetFluid > 0 ? ' (target)' : ' (formula)'}</span>
-            ${fluidKg ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted);padding:2px 8px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.2);border-radius:10px">${fluidKg} mL/kg/day</span>` : ''}
-            ${fluidGap > 0 ? `<span style="font-family:var(--mono);font-size:9px;color:var(--blue)">(+ ${fluidGap} mL flush to meet target)</span>` : ''}
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">mL/day${targetFluid > 0 ? ' (target)' : ' (formula)'}</span>
+            ${fluidKg ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:2px 8px;background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.2);border-radius:10px">${fluidKg} mL/kg/day</span>` : ''}
+            ${fluidGap > 0 ? `<span style="font-family:var(--mono);font-size:11px;color:var(--blue)">(+ ${fluidGap} mL flush to meet target)</span>` : ''}
           </div>
         </div>
       </div>
-      ${nonNutr > 0 ? `<div style="margin-top:8px;padding:7px 12px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--amber)"> ${Math.round(nonNutr)} kcal non-nutritional deducted (propofol / IV glucose)</div>` : ''}
+      ${nonNutr > 0 ? `<div style="margin-top:8px;padding:7px 12px;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--amber)"> ${Math.round(nonNutr)} kcal non-nutritional deducted (propofol / IV glucose)</div>` : ''}
     </div>
 
     <!-- Section 2: Feeding Type -->
     <div style="padding:14px 16px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">② FEEDING TYPE</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-family:var(--mono);font-size:10px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">② FEEDING TYPE</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;font-family:var(--mono);font-size:11px">
         <div style="padding:8px 12px;background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);border-radius:7px">
           <span style="color:var(--text-dim)">Type: </span><strong style="color:var(--text-bright)">Low-Resource Enteral Nutrition</strong>
         </div>
@@ -391,8 +391,8 @@ function lrGenPrescription(kcalMl, proL) {
 
     <!-- Section 3: Feed Composition -->
     <div style="padding:14px 16px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">③ FEED COMPOSITION</div>
-      <div style="font-family:var(--mono);font-size:9.5px;color:var(--text);line-height:1.9">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">③ FEED COMPOSITION</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.9">
         <strong style="color:var(--amber)">Hospital Low-Resource Formula</strong> — Locally sourced ingredients<br>
         <span style="color:var(--text-dim)">Base ingredients:</span> Full-cream milk · Likuni Phala (cooked, strained) · Vegetable oil · Sugar<br>
         <span style="color:var(--text-dim)">Formula density:</span> ${kcalMl.toFixed(2)} kcal/mL · Protein ${proL.toFixed(1)} g/L<br>
@@ -403,22 +403,22 @@ function lrGenPrescription(kcalMl, proL) {
 
     <!-- Section 4: Administration -->
     <div style="padding:14px 16px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">④ ADMINISTRATION</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">④ ADMINISTRATION</div>
       ${adminHtml}
     </div>
 
     <!-- Section 5: Water Flush -->
     <div style="padding:14px 16px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:8px">⑤ WATER FLUSH</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:8px">⑤ WATER FLUSH</div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div style="padding:8px 14px;background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.2);border-radius:7px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal)">50–100 mL</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">clean boiled water <strong style="color:var(--text)">before and after each feed</strong>${fluidGap > 0 ? ` · also add ${fluidGap} mL across the day to meet fluid target` : ''}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">clean boiled water <strong style="color:var(--text)">before and after each feed</strong>${fluidGap > 0 ? ` · also add ${fluidGap} mL across the day to meet fluid target` : ''}</div>
       </div>
     </div>
 
     <!-- Section 6: Monitoring -->
     <div style="padding:14px 16px;border-bottom:1px solid rgba(56,100,168,0.15)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">⑥ MONITORING</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-muted);margin-bottom:10px">⑥ MONITORING</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px">
         ${[
           [' Tolerance','Nausea, vomiting, diarrhoea, abdominal distension — assess clinically before each feed. Routine GRV monitoring not recommended (ASPEN/SCCM 2016). GRV checks are not applicable for patients with adequate oral intake or post-pyloric feeds. If clinically indicated (nasogastric ICU patients with suspected gastroparesis only): GRV ≥500 mL with symptoms = hold &amp; reassess; GRV &lt;500 mL alone = continue EN.'],
@@ -428,8 +428,8 @@ function lrGenPrescription(kcalMl, proL) {
           [' Nutritional response','Reassess energy & protein targets weekly or if clinical status changes significantly.'],
         ].map(([title, desc]) => `
           <div style="padding:8px 10px;background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.18);border-radius:7px">
-            <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--text-bright);margin-bottom:3px">${title}</div>
-            <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);line-height:1.6">${desc}</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright);margin-bottom:3px">${title}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6">${desc}</div>
           </div>`).join('')}
       </div>
     </div>
@@ -473,7 +473,7 @@ function blendRenderTable() {
   if (!tbody) return;
 
   if (!blendIngredients.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:18px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">No ingredients yet — add from the selector above or load a preset.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:18px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">No ingredients yet — add from the selector above or load a preset.</td></tr>`;
     if (tfoot) tfoot.style.display = 'none';
     return;
   }
@@ -486,14 +486,14 @@ function blendRenderTable() {
     const cho  = ing.cho  * ing.amount;
     totKcal += kcal; totPro += pro; totFat += fat; totCho += cho;
     return `<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text)">${ing.name}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center">${ing.amount} ${ing.unit}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--amber);text-align:right">${kcal.toFixed(0)}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--blue);text-align:right">${pro.toFixed(1)}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--red);text-align:right">${fat.toFixed(1)}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--green);text-align:right">${cho.toFixed(1)}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text)">${ing.name}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center">${ing.amount} ${ing.unit}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--amber);text-align:right">${kcal.toFixed(0)}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--blue);text-align:right">${pro.toFixed(1)}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--red);text-align:right">${fat.toFixed(1)}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--green);text-align:right">${cho.toFixed(1)}</td>
       <td style="padding:7px 8px;text-align:center">
-        <button onclick="blendRemove(${i})" style="background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.3);border-radius:4px;color:var(--red);font-size:9px;padding:2px 8px;cursor:pointer;font-family:var(--mono)">✕</button>
+        <button onclick="blendRemove(${i})" style="background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.3);border-radius:4px;color:var(--red);font-size:11px;padding:2px 8px;cursor:pointer;font-family:var(--mono)">✕</button>
       </td>
     </tr>`;
   }).join('');
@@ -676,11 +676,11 @@ function blendGenPrescription(kcalMl, proL) {
       const pct     = totalKcalBatch > 0 ? Math.round(ingKcal / totalKcalBatch * 100) : 0;
       const col     = barColors[idx % barColors.length];
       return `<div style="display:flex;align-items:center;gap:8px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ing.name}">${ing.name.split('(')[0].trim()}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ing.name}">${ing.name.split('(')[0].trim()}</div>
         <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:14px;overflow:hidden">
           <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;transition:width 0.4s ease"></div>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${col};width:36px;text-align:right;flex-shrink:0">${pct}%</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${col};width:36px;text-align:right;flex-shrink:0">${pct}%</div>
       </div>`;
     }).join('');
     if (chartWrap) chartWrap.style.display = 'block';
@@ -727,46 +727,46 @@ function blendGenPrescription(kcalMl, proL) {
     adminHtml = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
         <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">BOLUS Q4H (×6/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">BOLUS Q4H (×6/day)</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus6} mL</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">06:00 · 10:00 · 14:00 · 18:00 · 22:00 · 02:00</div>
         </div>
         <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">BOLUS Q3H (×8/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">BOLUS Q3H (×8/day)</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus8} mL</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Alternate — smaller, more frequent</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Alternate — smaller, more frequent</div>
         </div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">Administer over 20–30 min via syringe. Day 1–2: give 50% volume (${Math.round(bolus6/2)} mL), advance as tolerated. Large-bore tube ≥14 Fr mandatory.</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Administer over 20–30 min via syringe. Day 1–2: give 50% volume (${Math.round(bolus6/2)} mL), advance as tolerated. Large-bore tube ≥14 Fr mandatory.</div>`;
   } else if (method === 'intermittent') {
     adminHtml = `
       <div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 12px;display:inline-block;min-width:160px">
-        <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:5px">INTERMITTENT Q4H (×6/day)</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:5px">INTERMITTENT Q4H (×6/day)</div>
         <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${bolus6} mL</div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Gravity drip over 45–60 min each feed</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Gravity drip over 45–60 min each feed</div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">Day 1–2: 50% volume (${Math.round(bolus6/2)} mL). Always strain before administration. Tube ≥14 Fr only.</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">Day 1–2: 50% volume (${Math.round(bolus6/2)} mL). Always strain before administration. Tube ≥14 Fr only.</div>`;
   } else if (method === 'continuous') {
     adminHtml = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
         <div style="background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 24H</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 24H</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${rate24} mL/hr</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">Starter: <span style="color:var(--amber)">${halfRate} mL/hr</span> × 24–48h</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Starter: <span style="color:var(--amber)">${halfRate} mL/hr</span> × 24–48h</div>
         </div>
         <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px 12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 20H</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:5px">CONTINUOUS 20H</div>
           <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${rate20} mL/hr</div>
-          <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">4h rest break recommended</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">4h rest break recommended</div>
         </div>
       </div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:9px;color:var(--red)"> Blenderized feeds are NOT recommended for continuous pump delivery — high blockage risk. Use bolus or intermittent if possible.</div>`;
+      <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--red)"> Blenderized feeds are NOT recommended for continuous pump delivery — high blockage risk. Use bolus or intermittent if possible.</div>`;
   } else {
     adminHtml = `
       <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:10px 12px;display:inline-block">
-        <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">CYCLIC (16H ON / 8H OFF)</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;margin-bottom:5px">CYCLIC (16H ON / 8H OFF)</div>
         <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--text-bright)">${(volDay/16).toFixed(0)} mL/hr</div>
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">07:00–23:00. Tube ≥14 Fr.</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">07:00–23:00. Tube ≥14 Fr.</div>
       </div>`;
   }
 
@@ -781,51 +781,51 @@ function blendGenPrescription(kcalMl, proL) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
         <div>
           <div style="font-family:var(--cond);font-size:17px;font-weight:800;letter-spacing:3px;color:var(--green)">PRESCRIPTION ORDER</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px;letter-spacing:0.5px">Blenderized Enteral Nutrition · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px;letter-spacing:0.5px">Blenderized Enteral Nutrition · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
-          <div style="font-family:var(--mono);font-size:9px;padding:4px 12px;border-radius:12px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);color:var(--green);letter-spacing:1px">BLENDERIZED EN · ${routeLabels[route] || route} · ${(methodLabels[method] || method).toUpperCase()}</div>
-          ${weight ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">Body weight: <strong style="color:var(--text-bright)">${weight} kg</strong></div>` : ''}
-          ${R.patientName ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">Patient: <strong style="color:var(--text-bright)">${R.patientName}</strong></div>` : ''}
+          <div style="font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:12px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);color:var(--green);letter-spacing:1px">BLENDERIZED EN · ${routeLabels[route] || route} · ${(methodLabels[method] || method).toUpperCase()}</div>
+          ${weight ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Body weight: <strong style="color:var(--text-bright)">${weight} kg</strong></div>` : ''}
+          ${R.patientName ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">Patient: <strong style="color:var(--text-bright)">${R.patientName}</strong></div>` : ''}
         </div>
       </div>
     </div>
 
     <!-- ① Nutrition Requirements -->
     <div style="padding:16px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:14px;text-transform:uppercase">① Nutrition Requirements</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:14px;text-transform:uppercase">① Nutrition Requirements</div>
       <div style="display:flex;flex-direction:column;gap:0;background:rgba(8,18,36,0.45);border:1px solid rgba(52,211,153,0.15);border-radius:10px;overflow:hidden">
 
         <!-- Energy row -->
         <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(56,100,168,0.12)">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Energy</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Energy</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:var(--amber)">${Math.round(adjKcal)}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">kcal/day</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">kcal/day</span>
             ${kcalKg ? `<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber);background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:2px 10px">${kcalKg} kcal/kg/day</span>` : ''}
-            ${nonNutr > 0 ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">(adjusted −${Math.round(nonNutr)} kcal non-nutritional)</span>` : ''}
+            ${nonNutr > 0 ? `<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">(adjusted −${Math.round(nonNutr)} kcal non-nutritional)</span>` : ''}
           </div>
         </div>
 
         <!-- Protein row -->
         <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(56,100,168,0.12)">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Protein</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Protein</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:${proMetCol}">${proDeliv}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">g/day delivered</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">g/day delivered</span>
             ${proKg ? `<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:2px 10px">${proKg} g/kg/day</span>` : ''}
-            ${proMet !== null ? `<span style="font-family:var(--mono);font-size:9px;color:${proMetCol}">${proMet}% of ${targetPro}g/day target</span>` : ''}
+            ${proMet !== null ? `<span style="font-family:var(--mono);font-size:11px;color:${proMetCol}">${proMet}% of ${targetPro}g/day target</span>` : ''}
           </div>
         </div>
 
         <!-- Fluids row -->
         <div style="display:flex;align-items:center;padding:12px 16px">
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Fluids</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-dim);width:70px;flex-shrink:0">Fluids</div>
           <div style="flex:1;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
             <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:var(--teal)">${Math.round(targetFluid > 0 ? targetFluid : volDay)}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">mL/day${targetFluid > 0 ? ' target' : ' (formula vol)'}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">mL/day${targetFluid > 0 ? ' target' : ' (formula vol)'}</span>
             ${fluidKg ? `<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);background:rgba(29,233,212,0.08);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:2px 10px">${fluidKg} mL/kg/day</span>` : ''}
-            ${fluidGap > 0 ? `<span style="font-family:var(--mono);font-size:9px;color:var(--blue)">(+ ${fluidGap} mL additional flush needed)</span>` : ''}
+            ${fluidGap > 0 ? `<span style="font-family:var(--mono);font-size:11px;color:var(--blue)">(+ ${fluidGap} mL additional flush needed)</span>` : ''}
           </div>
         </div>
       </div>
@@ -833,8 +833,8 @@ function blendGenPrescription(kcalMl, proL) {
 
     <!-- ② Feeding Type -->
     <div style="padding:14px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">② Feeding Type</div>
-      <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;background:rgba(8,18,36,0.4);border:1px solid rgba(52,211,153,0.12);border-radius:8px;padding:12px 16px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">② Feeding Type</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;background:rgba(8,18,36,0.4);border:1px solid rgba(52,211,153,0.12);border-radius:8px;padding:12px 16px">
         <div><span style="color:var(--text-dim);width:80px;display:inline-block">Type:</span> <strong style="color:var(--text-bright)">Blenderized Enteral Nutrition</strong></div>
         <div><span style="color:var(--text-dim);width:80px;display:inline-block">Route:</span> <strong style="color:var(--green)">${routeLabels[route] || route}</strong></div>
         <div><span style="color:var(--text-dim);width:80px;display:inline-block">Method:</span> <strong style="color:var(--green)">${methodLabels[method] || method}</strong></div>
@@ -843,52 +843,52 @@ function blendGenPrescription(kcalMl, proL) {
 
     <!-- ③ Feed Composition -->
     <div style="padding:14px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">③ Feed Composition</div>
-      <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:2;background:rgba(8,18,36,0.4);border:1px solid rgba(52,211,153,0.12);border-radius:8px;padding:12px 16px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">③ Feed Composition</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:2;background:rgba(8,18,36,0.4);border:1px solid rgba(52,211,153,0.12);border-radius:8px;padding:12px 16px">
         <div><strong style="color:var(--green)">Locally available foods</strong> (e.g. nsima, beans, milk, egg, oil, vegetables)</div>
-        ${ingList ? `<div style="color:var(--text-dim);font-size:9.5px">Ingredients used: <span style="color:var(--text)">${ingList}${ingMore}</span></div>` : ''}
+        ${ingList ? `<div style="color:var(--text-dim);font-size:11px">Ingredients used: <span style="color:var(--text)">${ingList}${ingMore}</span></div>` : ''}
         <div style="margin-top:4px">Blended, strained through fine mesh, and diluted to appropriate consistency</div>
         <div>Formula density: <strong style="color:var(--amber)">${kcalMl.toFixed(2)} kcal/mL</strong> &nbsp;·&nbsp; Protein: <strong style="color:var(--blue)">${proL.toFixed(1)} g/L</strong></div>
-        <div style="color:var(--text-dim);font-size:9.5px;margin-top:4px">Adjust ingredient quantities to achieve target energy and protein — see ingredient table above</div>
-        <div style="color:var(--amber);font-size:9.5px;margin-top:2px">Large-bore tube ≥14 Fr mandatory — do NOT use fine-bore tubes</div>
+        <div style="color:var(--text-dim);font-size:11px;margin-top:4px">Adjust ingredient quantities to achieve target energy and protein — see ingredient table above</div>
+        <div style="color:var(--amber);font-size:11px;margin-top:2px">Large-bore tube ≥14 Fr mandatory — do NOT use fine-bore tubes</div>
       </div>
     </div>
 
     <!-- ④ Administration -->
     <div style="padding:14px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">④ Administration</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">④ Administration</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
         ${method === 'bolus' || method === 'intermittent' ? `
         <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px">BOLUS SCHEDULE</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:6px">BOLUS SCHEDULE</div>
           <div style="font-family:var(--mono);font-size:22px;font-weight:800;color:var(--text-bright)">${bolus6} mL</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">every 3–4 hours (×6/day)</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:4px">Administer over 20–30 min via syringe or gravity drip<br>Day 1–2: give 50% volume (${Math.round(bolus6/2)} mL), advance as tolerated</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">every 3–4 hours (×6/day)</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px">Administer over 20–30 min via syringe or gravity drip<br>Day 1–2: give 50% volume (${Math.round(bolus6/2)} mL), advance as tolerated</div>
         </div>
         ` : ''}
         ${method === 'continuous' || method === 'cyclic' ? `
         <div style="background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:6px">CONTINUOUS RATE</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:6px">CONTINUOUS RATE</div>
           <div style="font-family:var(--mono);font-size:22px;font-weight:800;color:var(--text-bright)">${rate24} mL/hr</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">${method === 'cyclic' ? `cyclic ${(volDay/16).toFixed(0)} mL/hr × 16h` : '24-hour continuous'}</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:4px">Starter: <span style="color:var(--amber)">${halfRate} mL/hr × 24–48h</span><br>Blenderized feeds: high blockage risk on continuous — use bolus if possible</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">${method === 'cyclic' ? `cyclic ${(volDay/16).toFixed(0)} mL/hr × 16h` : '24-hour continuous'}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px">Starter: <span style="color:var(--amber)">${halfRate} mL/hr × 24–48h</span><br>Blenderized feeds: high blockage risk on continuous — use bolus if possible</div>
         </div>
         ` : ''}
         <div style="background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px;padding:12px">
-          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px">TYPICAL RANGE</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px">TYPICAL RANGE</div>
           <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright)">250–300 mL / feed</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:3px">or 50–70 mL/hr (continuous)</div>
-          <div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:4px">Adjust based on tolerance and daily target volume of <strong>${Math.round(volDay)} mL/day</strong></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">or 50–70 mL/hr (continuous)</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px">Adjust based on tolerance and daily target volume of <strong>${Math.round(volDay)} mL/day</strong></div>
         </div>
       </div>
     </div>
 
     <!-- ⑤ Water Flush -->
     <div style="padding:14px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑤ Water Flush</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑤ Water Flush</div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div style="font-family:var(--mono);font-size:22px;font-weight:800;color:var(--teal);background:rgba(29,233,212,0.07);border:1px solid rgba(29,233,212,0.2);border-radius:8px;padding:8px 18px">50–100 mL</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
           Clean boiled water <strong style="color:var(--text)">before and after each feed</strong><br>
           ${fluidGap > 0 ? `<span style="color:var(--blue)">Additional ${fluidGap} mL distributed through the day to meet daily fluid target</span>` : 'Flushes count towards total daily fluid intake'}
         </div>
@@ -897,7 +897,7 @@ function blendGenPrescription(kcalMl, proL) {
 
     <!-- ⑥ Monitoring -->
     <div style="padding:14px 20px;border-bottom:1px solid rgba(52,211,153,0.12)">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑥ Monitoring</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑥ Monitoring</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px">
         ${[
           ['Tolerance', 'Nausea, vomiting, diarrhoea, abdominal distension — assess clinically before each feed. Routine GRV measurement not recommended (ASPEN/SCCM 2016). Hold feed if patient vomits or reports significant abdominal discomfort; reassess and resume when resolved.'],
@@ -907,16 +907,16 @@ function blendGenPrescription(kcalMl, proL) {
           ['Nutritional response', 'Reassess energy and protein targets weekly. Adjust recipe as needed.'],
         ].map(([title, desc]) => `
           <div style="padding:10px 12px;background:rgba(8,18,36,0.45);border:1px solid rgba(56,100,168,0.15);border-radius:8px">
-            <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text-bright);margin-bottom:4px">${title}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.6">${desc}</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-bright);margin-bottom:4px">${title}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6">${desc}</div>
           </div>`).join('')}
       </div>
     </div>
 
     <!-- ⑦ Special Instructions -->
     <div style="padding:14px 20px">
-      <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑦ Special Instructions</div>
-      <div style="display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.6">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--green);margin-bottom:12px;text-transform:uppercase">⑦ Special Instructions</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.6">
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Maintain strict hygiene during preparation — wash hands, use clean sterilised blender and utensils</span></div>
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Use within <strong>24 hours if refrigerated (4°C)</strong> — discard within <strong>2 hours at room temperature</strong></span></div>
         <div style="display:flex;gap:10px"><span style="color:var(--green);flex-shrink:0;font-weight:700">•</span><span>Strain well through fine mesh sieve to prevent tube blockage</span></div>

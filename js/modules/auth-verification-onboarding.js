@@ -37,8 +37,8 @@ function _ntUpdateVerifyStatusUI(verified) {
   const badge = document.getElementById('pdr-email-verify-badge');
   if (badge) {
     badge.innerHTML = verified
-      ? `<span style="color:var(--green,#34d399);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">✓ Verified</span>`
-      : `<span style="color:var(--amber,#f0b429);font-family:var(--mono);font-size:9px;letter-spacing:0.5px">⚠ Unverified</span>`;
+      ? `<span style="color:var(--green,#34d399);font-family:var(--mono);font-size:11px;letter-spacing:0.5px">✓ Verified</span>`
+      : `<span style="color:var(--amber,#f0b429);font-family:var(--mono);font-size:11px;letter-spacing:0.5px">⚠ Unverified</span>`;
   }
   // Inline notice card — visible only when unverified
   const notice = document.getElementById('pdr-verify-notice');

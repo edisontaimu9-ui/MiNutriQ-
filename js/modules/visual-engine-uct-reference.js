@@ -21,26 +21,26 @@ const VisualEngine = {
         <span style="flex-shrink:0;font-size:13px">${severityIcon[d.severity]||'•'}</span>
         <div>
           <div style="font-family:var(--cond);font-size:11px;font-weight:700;color:${severityColor[d.severity]||'var(--text)'};">${d.label}</div>
-          <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-top:2px">${d.detail}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px">${d.detail}</div>
         </div>
       </div>`).join('');
 
     const riskHtml = risks.length ? `
-      <div style="margin-top:10px;font-family:var(--cond);font-size:9px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Clinical Risks</div>
+      <div style="margin-top:10px;font-family:var(--cond);font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Clinical Risks</div>
       ${risks.map(r => `<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px dotted rgba(56,100,168,0.1)">
         <span style="flex-shrink:0;font-size:11px">${severityIcon[r.severity]||'•'}</span>
         <div>
-          <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${severityColor[r.severity]||'var(--text)'};">${r.label}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">${r.detail}</div>
+          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${severityColor[r.severity]||'var(--text)'};">${r.label}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${r.detail}</div>
         </div>
       </div>`).join('')}` : '';
 
     return `<div style="padding:14px 16px;border-radius:12px;background:${action.bg};border:2px solid ${action.color}44;margin-bottom:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-dim)">CLINICAL ASSESSMENT</div>
-        <div style="font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 12px;border-radius:6px;background:${action.color}20;color:${action.color}">${action.label}</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim)">CLINICAL ASSESSMENT</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;background:${action.color}20;color:${action.color}">${action.label}</div>
       </div>
-      <div style="font-family:var(--cond);font-size:9px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Diagnoses</div>
+      <div style="font-family:var(--cond);font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Diagnoses</div>
       ${diagHtml}
       ${riskHtml}
     </div>`;
@@ -54,7 +54,7 @@ const VisualEngine = {
     const color   = z < -3 ? '#fb7185' : z < -2 ? '#f0b429' : z < -1 ? '#60a5fa' : z < 2 ? '#34d399' : '#f0b429';
     const sign    = z >= 0 ? '+' : '';
     return `<div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:4px">
         <span>${label}</span>
         <span style="color:${color};font-weight:700">${sign}${z.toFixed(2)} SD</span>
       </div>
@@ -70,7 +70,7 @@ const VisualEngine = {
           background:${color};border:2px solid var(--bg);box-shadow:0 0 8px ${color}88;
           left:calc(${pct}% - 7px);transition:left .4s ease"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">
         <span>−5</span><span>−3</span><span>−2</span><span>0</span><span>+2</span><span>+3</span><span>+5</span>
       </div>
     </div>`;
@@ -82,9 +82,9 @@ const VisualEngine = {
     if (!entries.length) return '';
     const bars = entries.map(([label, z]) => this.renderZBar(z, label)).join('');
     return `<div style="padding:14px 16px;border-radius:10px;background:rgba(8,18,36,0.5);border:1px solid rgba(56,100,168,0.2);margin-bottom:14px">
-      <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:12px;text-transform:uppercase">Z-Score Indicators</div>
+      <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--teal);margin-bottom:12px;text-transform:uppercase">Z-Score Indicators</div>
       ${bars}
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px;display:flex;gap:12px;flex-wrap:wrap">
         <span><span style="color:#fb7185">■</span> &lt;−3 Severe</span>
         <span><span style="color:#f0b429">■</span> −3 to −2 Moderate</span>
         <span><span style="color:#34d399">■</span> −2 to +2 Normal</span>
@@ -139,7 +139,7 @@ const VisualEngine = {
     // Get reference data from WHO_LMS
     const tableRef = (typeof WHO_LMS !== 'undefined') ? WHO_LMS[tableKey] : null;
     if (!tableRef || !tableRef.length) {
-      return `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:10px">WHO reference data not available for this indicator.</div>`;
+      return `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:10px">WHO reference data not available for this indicator.</div>`;
     }
 
     // Build percentile curves from LMS data: 3rd(−2SD), 15th(−1SD), 50th, 85th(+1SD), 97th(+2SD)
@@ -221,7 +221,7 @@ const VisualEngine = {
   renderFentonChart(canvasId, { sex, gaDec, wtG }) {
     _destroyChart(canvasId);
     const tableRef = (typeof FENTON_LMS !== 'undefined') ? FENTON_LMS[sex]?.weight : null;
-    if (!tableRef) return `<div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:10px">Fenton data unavailable.</div>`;
+    if (!tableRef) return `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:10px">Fenton data unavailable.</div>`;
 
     const zToValue = (lms, z) => { const {L,M,S} = lms; return L===0 ? M*Math.exp(S*z) : M*Math.pow(1+L*S*z,1/L); };
     const labels = tableRef.map(r => r[0]);
@@ -281,7 +281,7 @@ const VisualEngine = {
       background:${cfg.color}12;border:1px solid ${cfg.color}44;margin-bottom:14px">
       <span style="font-size:18px">${cfg.icon}</span>
       <div>
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:${cfg.color}">RISK LEVEL: ${cfg.label}</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${cfg.color}">RISK LEVEL: ${cfg.label}</div>
       </div>
       <div style="display:flex;gap:5px;margin-left:auto">${dots}</div>
     </div>`;
@@ -299,7 +299,7 @@ const VisualEngine = {
     const label  = muacMm < sam ? `SAM (<${sam}mm)` : muacMm < mam ? `MAM (${sam}–${mam-1}mm)` : `Normal (≥${mam}mm)`;
 
     return `<div style="margin-top:8px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:5px">
         <span style="color:var(--text-dim)">MUAC</span>
         <span style="color:${color};font-weight:700">${muacMm} mm — ${label}</span>
       </div>
@@ -309,7 +309,7 @@ const VisualEngine = {
         <div style="position:absolute;left:${((mam-sam+20)/(max-sam+20)*100).toFixed(1)}%;right:0;height:100%;background:rgba(52,211,153,0.35)"></div>
         <div style="position:absolute;top:1px;width:10px;height:10px;border-radius:50%;background:${color};border:1.5px solid #fff;box-shadow:0 0 6px ${color};left:calc(${pct.toFixed(1)}% - 5px)"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">
         <span>SAM &lt;${sam}</span><span>MAM ${sam}–${mam-1}</span><span>Normal ≥${mam}</span>
       </div>
     </div>`;
@@ -320,7 +320,7 @@ const VisualEngine = {
     const pct = Math.min(100, actual / target * 100);
     const color = pct < 60 ? '#fb7185' : pct < 90 ? '#f0b429' : '#34d399';
     return `<div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--text-dim);margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:4px">
         <span>${label}</span>
         <span style="color:${color};font-weight:700">${actual} / ${target} ${unit} (${pct.toFixed(0)}%)</span>
       </div>
@@ -372,27 +372,27 @@ function renderUctRef(foods) {
     const cho = f.cho[0]  ?? (m.cho||'—');
     const pro = f.pro[0]  ?? (m.pro||'—');
     const fat = f.fat[0]  ?? (m.fat||'—');
-    const noteHtml = f.note ? `<div style="font-size:8.5px;color:var(--text-dim);margin-top:2px">${f.note}</div>` : '';
+    const noteHtml = f.note ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">${f.note}</div>` : '';
     return `<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">
-      <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;color:var(--text)">${f.name}${noteHtml}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:9px;font-weight:700;color:${col};white-space:nowrap">${lbl}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">${f.portions[0]}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:10px;color:var(--amber);text-align:right">${kcal}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:10px;color:var(--blue);text-align:right">${cho}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:10px;color:var(--green);text-align:right">${pro}</td>
-      <td style="padding:6px 8px;font-family:var(--mono);font-size:10px;color:var(--red);text-align:right">${fat}</td>
+      <td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--text)">${f.name}${noteHtml}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;font-weight:700;color:${col};white-space:nowrap">${lbl}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">${f.portions[0]}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--amber);text-align:right">${kcal}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--blue);text-align:right">${cho}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--green);text-align:right">${pro}</td>
+      <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;color:var(--red);text-align:right">${fat}</td>
     </tr>`;
   }).join('');
 
-  tbl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:10px">
+  tbl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px">
     <thead><tr style="border-bottom:2px solid rgba(56,100,168,0.3);background:rgba(8,18,36,0.8);position:sticky;top:0;z-index:1">
-      <th style="padding:7px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Food Item</th>
-      <th style="padding:7px 8px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Exchange Type</th>
-      <th style="padding:7px 8px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:9px">Household Measure</th>
-      <th style="padding:7px 8px;text-align:right;color:var(--amber);font-family:var(--mono);font-size:9px">kcal</th>
-      <th style="padding:7px 8px;text-align:right;color:var(--blue);font-family:var(--mono);font-size:9px">CHO g</th>
-      <th style="padding:7px 8px;text-align:right;color:var(--green);font-family:var(--mono);font-size:9px">Pro g</th>
-      <th style="padding:7px 8px;text-align:right;color:var(--red);font-family:var(--mono);font-size:9px">Fat g</th>
+      <th style="padding:7px 10px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Food Item</th>
+      <th style="padding:7px 8px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Exchange Type</th>
+      <th style="padding:7px 8px;text-align:left;color:var(--text-dim);font-family:var(--mono);font-size:11px">Household Measure</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--amber);font-family:var(--mono);font-size:11px">kcal</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--blue);font-family:var(--mono);font-size:11px">CHO g</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--green);font-family:var(--mono);font-size:11px">Pro g</th>
+      <th style="padding:7px 8px;text-align:right;color:var(--red);font-family:var(--mono);font-size:11px">Fat g</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;

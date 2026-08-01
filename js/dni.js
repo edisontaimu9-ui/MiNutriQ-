@@ -2364,8 +2364,8 @@ function _renderFDACard(parsed, index) {
     color = color || 'var(--text-dim)';
     return `
       <div style="margin-bottom:8px">
-        <div style="font-family:var(--mono);font-size:8px;color:#818cf8;font-weight:700;letter-spacing:1px;margin-bottom:4px">${label}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:${color};line-height:1.65;background:rgba(0,0,0,0.12);border-radius:6px;padding:7px 9px">${text}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:#818cf8;font-weight:700;letter-spacing:1px;margin-bottom:4px">${label}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:${color};line-height:1.65;background:rgba(0,0,0,0.12);border-radius:6px;padding:7px 9px">${text}</div>
       </div>`;
   }
 
@@ -2391,20 +2391,20 @@ function _renderFDACard(parsed, index) {
     <!-- FDA Card Header -->
     <div style="background:rgba(129,140,248,0.08);border-bottom:1px solid rgba(129,140,248,0.2);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <div>
-        <span style="font-size:9px;background:rgba(129,140,248,0.15);color:#818cf8;border:1px solid rgba(129,140,248,0.3);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-weight:700;letter-spacing:1px;margin-right:8px">FDA LIVE</span>
+        <span style="font-size:11px;background:rgba(129,140,248,0.15);color:#818cf8;border:1px solid rgba(129,140,248,0.3);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-weight:700;letter-spacing:1px;margin-right:8px">FDA LIVE</span>
         <span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:var(--text-bright)">${parsed.name}</span>
       </div>
-      <span style="font-family:var(--mono);font-size:7.5px;color:var(--text-dim)">${index + 1} of label results</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${index + 1} of label results</span>
     </div>
 
     <!-- Meta row -->
-    ${metaRow ? `<div style="padding:6px 14px;font-family:var(--mono);font-size:8px;color:var(--text-dim);border-bottom:1px solid rgba(129,140,248,0.1);line-height:1.8">${metaRow}</div>` : ''}
+    ${metaRow ? `<div style="padding:6px 14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);border-bottom:1px solid rgba(129,140,248,0.1);line-height:1.8">${metaRow}</div>` : ''}
 
     <!-- Substance tags -->
     ${parsed.substanceNames.length ? `
     <div style="padding:7px 14px 2px;display:flex;flex-wrap:wrap;gap:4px">
       ${parsed.substanceNames.map(function(s){
-        return `<span style="font-family:var(--mono);font-size:7.5px;background:rgba(129,140,248,0.08);color:#818cf8;border:1px solid rgba(129,140,248,0.2);border-radius:4px;padding:2px 7px">${s}</span>`;
+        return `<span style="font-family:var(--mono);font-size:11px;background:rgba(129,140,248,0.08);color:#818cf8;border:1px solid rgba(129,140,248,0.2);border-radius:4px;padding:2px 7px">${s}</span>`;
       }).join('')}
     </div>` : ''}
 
@@ -2414,7 +2414,7 @@ function _renderFDACard(parsed, index) {
     </div>
 
     <!-- Footer -->
-    <div style="padding:4px 14px 10px;font-family:var(--mono);font-size:7.5px;color:var(--text-dim);opacity:0.65">
+    <div style="padding:4px 14px 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim);opacity:0.65">
       Source: U.S. FDA OpenFDA Drug Label API · openfda.hhs.gov
     </div>
   </div>`;
@@ -2432,11 +2432,11 @@ function _injectFDAResults(query, localCount) {
   container.innerHTML = `
     <div id="dni-fda-header" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px">
       <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(129,140,248,0.4),transparent)"></div>
-      <span style="font-family:var(--mono);font-size:8.5px;color:#818cf8;font-weight:700;letter-spacing:1.5px">FDA LIVE DATA</span>
+      <span style="font-family:var(--mono);font-size:11px;color:#818cf8;font-weight:700;letter-spacing:1.5px">FDA LIVE DATA</span>
       <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(129,140,248,0.4))"></div>
     </div>
     <div id="dni-fda-cards">
-      <div style="text-align:center;padding:16px;font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+      <div style="text-align:center;padding:16px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">
         ⟳ Fetching FDA drug label data…
       </div>
     </div>`;
@@ -2460,7 +2460,7 @@ function _injectFDAResults(query, localCount) {
         return;
       }
       cardsEl.innerHTML = `
-        <div style="font-family:var(--mono);font-size:8.5px;color:#f0b429;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:9px 12px;line-height:1.7">
+        <div style="font-family:var(--mono);font-size:11px;color:#f0b429;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:9px 12px;line-height:1.7">
           ℹ FDA live data unavailable — ${errMsg}
         </div>`;
       return;
@@ -2536,21 +2536,21 @@ function _renderEntry(e) {
     <div style="background:${sv.bg};border-bottom:1px solid ${sv.border};padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <div>
         <span style="font-family:var(--cond,var(--mono));font-size:13px;font-weight:800;color:var(--text-bright)">${e.drug}</span>
-        <span style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-left:8px">${e.subcategory}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:8px">${e.subcategory}</span>
       </div>
-      <span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1.5px;color:${sv.color};background:${sv.bg};border:1px solid ${sv.border};border-radius:4px;padding:3px 8px">${sv.label}</span>
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:${sv.color};background:${sv.bg};border:1px solid ${sv.border};border-radius:4px;padding:3px 8px">${sv.label}</span>
     </div>
 
     <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
 
       <!-- Drug effects -->
       <div>
-        <div style="font-family:var(--mono);font-size:8.5px;color:${sv.color};font-weight:700;letter-spacing:1px;margin-bottom:5px">DRUG / NUTRIENT EFFECTS</div>
+        <div style="font-family:var(--mono);font-size:11px;color:${sv.color};font-weight:700;letter-spacing:1px;margin-bottom:5px">DRUG / NUTRIENT EFFECTS</div>
         <div style="display:flex;flex-direction:column;gap:3px">
           ${e.effects.map(function(ef){
             return `<div style="display:flex;gap:7px;background:rgba(0,0,0,0.1);border-radius:5px;padding:5px 8px">
-              <span style="color:${sv.color};flex-shrink:0;font-size:10px">●</span>
-              <span style="font-family:var(--mono);font-size:9.5px;color:var(--text);line-height:1.6">${ef}</span>
+              <span style="color:${sv.color};flex-shrink:0;font-size:11px">●</span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.6">${ef}</span>
             </div>`;
           }).join('')}
         </div>
@@ -2558,14 +2558,14 @@ function _renderEntry(e) {
 
       <!-- Nutritional implications -->
       <div>
-        <div style="font-family:var(--mono);font-size:8.5px;color:#34d399;font-weight:700;letter-spacing:1px;margin-bottom:5px">NUTRITIONAL IMPLICATIONS & CAUTIONS</div>
+        <div style="font-family:var(--mono);font-size:11px;color:#34d399;font-weight:700;letter-spacing:1px;margin-bottom:5px">NUTRITIONAL IMPLICATIONS & CAUTIONS</div>
         <div style="display:flex;flex-direction:column;gap:3px">
           ${e.implications.map(function(im){
             var isAvoid = im.toUpperCase().startsWith('AVOID') || im.toUpperCase().startsWith('DO NOT');
             var c = isAvoid ? '#fb7185' : 'var(--text-dim)';
             return `<div style="display:flex;gap:7px;background:rgba(52,211,153,0.04);border-radius:5px;padding:5px 8px">
-              <span style="color:#34d399;flex-shrink:0;font-size:10px">→</span>
-              <span style="font-family:var(--mono);font-size:9.5px;color:${c};line-height:1.6">${im}</span>
+              <span style="color:#34d399;flex-shrink:0;font-size:11px">→</span>
+              <span style="font-family:var(--mono);font-size:11px;color:${c};line-height:1.6">${im}</span>
             </div>`;
           }).join('')}
         </div>
@@ -2576,7 +2576,7 @@ function _renderEntry(e) {
     <!-- Footer tags -->
     <div style="padding:0 12px 10px;display:flex;flex-wrap:wrap;gap:4px">
       ${e.tags.map(function(t){
-        return `<span style="font-family:var(--mono);font-size:7.5px;background:rgba(148,163,184,0.1);color:var(--text-dim);border:1px solid rgba(148,163,184,0.15);border-radius:4px;padding:2px 6px">${t}</span>`;
+        return `<span style="font-family:var(--mono);font-size:11px;background:rgba(148,163,184,0.1);color:var(--text-dim);border:1px solid rgba(148,163,184,0.15);border-radius:4px;padding:2px 6px">${t}</span>`;
       }).join('')}
     </div>
 
@@ -2599,7 +2599,7 @@ function _renderResults(query) {
   // ── Header with clear button ────────────────────────────────────────
   var clearBtn = `
     <button onclick="dniClear()"
-      style="font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
+      style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--text-dim);cursor:pointer">
       ✕ Clear
     </button>`;
 
@@ -2608,16 +2608,16 @@ function _renderResults(query) {
     var isMaybeDrug = _isDrugQuery(query);
     resultsEl.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">
           No local results for "<strong style="color:var(--text)">${query}</strong>"${isMaybeDrug ? ' — searching FDA…' : ''}
         </div>
         ${clearBtn}
       </div>
       <div style="text-align:center;padding:14px;background:rgba(251,113,133,0.05);border:1px solid rgba(251,113,133,0.15);border-radius:10px;margin-bottom:12px">
         <div style="font-size:18px;margin-bottom:6px">📚</div>
-        <div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim)">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">
           Not found in local Krause &amp; Mahan database.<br>
-          <span style="font-size:8.5px;opacity:0.8">${isMaybeDrug ? 'FDA live label data shown below (if available).' : 'Try a specific drug name for FDA live data.'}</span>
+          <span style="font-size:11px;opacity:0.8">${isMaybeDrug ? 'FDA live label data shown below (if available).' : 'Try a specific drug name for FDA live data.'}</span>
         </div>
       </div>
       <div id="dni-fda-section"></div>`;
@@ -2630,14 +2630,14 @@ function _renderResults(query) {
   var localSection = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <div style="height:1px;flex:1;background:linear-gradient(90deg,rgba(56,189,248,0.4),transparent)"></div>
-      <span style="font-family:var(--mono);font-size:8.5px;color:#38bdf8;font-weight:700;letter-spacing:1.5px">LOCAL DATABASE</span>
+      <span style="font-family:var(--mono);font-size:11px;color:#38bdf8;font-weight:700;letter-spacing:1.5px">LOCAL DATABASE</span>
       <div style="height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(56,189,248,0.4))"></div>
     </div>
     ${results.map(_renderEntry).join('')}`;
 
   var headerHtml = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">
         <span style="color:#38bdf8;font-weight:700">${results.length}</span> local result${results.length===1?'':'s'}
         ${isDrug ? '+ <span style="color:#818cf8;font-weight:700">FDA live</span>' : ''}
         for "<strong style="color:var(--text)">${query}</strong>"
@@ -2674,7 +2674,7 @@ var QUICK_TAGS = [
 function _renderQuickTags() {
   return QUICK_TAGS.map(function(t){
     return `<button onclick="dniQuickSearch('${t}')"
-      style="font-family:var(--mono);font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.25);background:rgba(56,189,248,0.06);color:#38bdf8;cursor:pointer;white-space:nowrap">
+      style="font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(56,189,248,0.25);background:rgba(56,189,248,0.06);color:#38bdf8;cursor:pointer;white-space:nowrap">
       ${t}
     </button>`;
   }).join('');
@@ -2760,15 +2760,15 @@ function _buildDNITab() {
       <span style="font-size:26px">💊</span>
       <div>
         <div style="font-family:var(--cond,var(--mono));font-size:18px;font-weight:800;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase">Drug-Nutrient Interactions</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:1px">SEARCH · EFFECTS · IMPLICATIONS · CAUTIONS</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px">SEARCH · EFFECTS · IMPLICATIONS · CAUTIONS</div>
       </div>
     </div>
     <div style="height:2px;background:linear-gradient(90deg,#38bdf8,rgba(56,189,248,0));border-radius:2px;margin:10px 0 14px"></div>
   </div>
 
   <!-- Intro -->
-  <div style="margin:0 16px 12px;background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.18);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--text-dim);line-height:1.8">
-    <div style="color:#38bdf8;font-weight:700;font-size:10px;margin-bottom:6px">DNI Reference</div>
+  <div style="margin:0 16px 12px;background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.18);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.8">
+    <div style="color:#38bdf8;font-weight:700;font-size:11px;margin-bottom:6px">DNI Reference</div>
     <div style="margin-bottom:7px">Search by drug name, brand name, drug class, or nutrient/food keyword.</div>
     <div style="color:var(--text);font-weight:700;margin-bottom:3px">Local Data Sources</div>
     <div style="padding-left:8px;border-left:2px solid rgba(56,189,248,0.3);margin-bottom:7px">
@@ -2788,7 +2788,7 @@ function _buildDNITab() {
   <!-- Search bar -->
   <div style="padding:0 16px;margin-bottom:10px">
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      <div style="background:rgba(56,189,248,0.07);border-bottom:1px solid rgba(56,189,248,0.13);padding:9px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
+      <div style="background:rgba(56,189,248,0.07);border-bottom:1px solid rgba(56,189,248,0.13);padding:9px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8">
         🔍 SEARCH INTERACTIONS
       </div>
       <div style="padding:12px;display:flex;gap:8px">
@@ -2796,13 +2796,13 @@ function _buildDNITab() {
           onkeyup="dniInputKeyup(event)"
           style="flex:1;background:var(--input-bg,var(--surface3));border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
         <button onclick="dniSearch()"
-          style="padding:10px 16px;background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;border:none;border-radius:7px;cursor:pointer;white-space:nowrap">
+          style="padding:10px 16px;background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border:none;border-radius:7px;cursor:pointer;white-space:nowrap">
           SEARCH
         </button>
       </div>
       <!-- Quick-search tags -->
       <div style="padding:0 12px 12px">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">QUICK SEARCH</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">QUICK SEARCH</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">
           ${_renderQuickTags()}
         </div>

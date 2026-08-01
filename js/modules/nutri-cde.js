@@ -570,10 +570,10 @@ const NutriCDE = (() => {
       };
       return `
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-        <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#ff4060;text-transform:uppercase;margin-bottom:4px"> CLINICAL SAFETY — ${flags.length} ALERT${flags.length>1?'S':''}</div>
+        <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#ff4060;text-transform:uppercase;margin-bottom:4px"> CLINICAL SAFETY — ${flags.length} ALERT${flags.length>1?'S':''}</div>
         ${flags.map(f => {
           const s = sevMap[f.severity] || sevMap.INFO;
-          return `<div style="background:${s.bg};border:1px solid ${s.border};border-left:4px solid ${s.col};border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:10px;line-height:1.7">
+          return `<div style="background:${s.bg};border:1px solid ${s.border};border-left:4px solid ${s.col};border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:1.7">
             <div style="color:${s.col};font-weight:700;margin-bottom:5px">${s.icon} [${f.code}] ${f.severity} — ${f.message}</div>
             <div style="color:var(--text-dim)">⟶ ${f.action}</div>
           </div>`;
@@ -584,16 +584,16 @@ const NutriCDE = (() => {
     // Energy-protein coupling badge
     renderCouplingBadge(coupling) {
       if (coupling.status === 'OK')
-        return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:var(--green);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:4px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — Adequate energy-protein coupling</div>`;
+        return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--green);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:4px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — Adequate energy-protein coupling</div>`;
       const col = coupling.severity === 'CRITICAL' ? '#ff4060' : '#ffb830';
-      return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:9px;color:${col};background:rgba(255,184,48,.09);border:1px solid rgba(255,184,48,.35);border-radius:5px;padding:5px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — ${coupling.severity}: protein may be oxidised for energy</div>`;
+      return `<div style="display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:11px;color:${col};background:rgba(255,184,48,.09);border:1px solid rgba(255,184,48,.35);border-radius:5px;padding:5px 10px"> NPC:N ${coupling.npCalNRatio} kcal/g N — ${coupling.severity}: protein may be oxidised for energy</div>`;
     },
 
     // Macro contextual notes
     renderMacroNotes(notes) {
       if (!notes || !notes.length) return '';
       return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-        ${notes.map(n => `<div style="font-family:var(--mono);font-size:10px;color:var(--text);background:rgba(29,233,212,.05);border:1px solid rgba(29,233,212,.15);border-radius:5px;padding:8px 12px;line-height:1.6"> ${n}</div>`).join('')}
+        ${notes.map(n => `<div style="font-family:var(--mono);font-size:11px;color:var(--text);background:rgba(29,233,212,.05);border:1px solid rgba(29,233,212,.15);border-radius:5px;padding:8px 12px;line-height:1.6"> ${n}</div>`).join('')}
       </div>`;
     },
 
@@ -613,7 +613,7 @@ const NutriCDE = (() => {
 
       // Frequency tag renderer
       const freqTag = (f) =>
-        `<span style="font-family:var(--mono);font-size:8px;font-weight:700;color:#ffffff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;white-space:nowrap;flex-shrink:0">${f}</span>`;
+        `<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#ffffff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;white-space:nowrap;flex-shrink:0">${f}</span>`;
 
       // Build each domain section
       const domainHtml = domainDefs.map(({ key, label, col, icon }) => {
@@ -623,8 +623,8 @@ const NutriCDE = (() => {
         <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid ${col};border-radius:10px;overflow:hidden">
           <div style="padding:10px 14px;background:rgba(0,0,0,.15);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
             <span style="font-size:13px">${icon}</span>
-            <span style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:${col};text-transform:uppercase">${label}</span>
-            <span style="font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-left:auto">${rows.length} parameter${rows.length>1?'s':''}</span>
+            <span style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:${col};text-transform:uppercase">${label}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto">${rows.length} parameter${rows.length>1?'s':''}</span>
           </div>
           <div style="display:flex;flex-direction:column;divide-y:var(--border)">
             ${rows.map((r, i) => `
@@ -633,7 +633,7 @@ const NutriCDE = (() => {
                 <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-bright);flex:1;line-height:1.4">${r.param}</span>
                 ${freqTag(r.freq)}
               </div>
-              ${r.note ? `<div style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);line-height:1.6">${r.note}</div>` : ''}
+              ${r.note ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.6">${r.note}</div>` : ''}
             </div>`).join('')}
           </div>
         </div>`;
@@ -645,11 +645,11 @@ const NutriCDE = (() => {
         <!-- Frequency + Setting header -->
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:rgba(251,113,133,.06);border:1px solid rgba(251,113,133,.2);border-radius:8px">
           <div>
-            <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#fb7185;text-transform:uppercase;margin-bottom:3px">Reassessment Frequency</div>
+            <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#fb7185;text-transform:uppercase;margin-bottom:3px">Reassessment Frequency</div>
             <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text-bright)">${frequency}</div>
           </div>
           <div style="margin-left:auto;text-align:right">
-            <div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:#fb7185;text-transform:uppercase;margin-bottom:3px">Clinical Setting</div>
+            <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#fb7185;text-transform:uppercase;margin-bottom:3px">Clinical Setting</div>
             <div style="font-family:var(--mono);font-size:11px;font-weight:600;color:#ddeeff">${setting}</div>
           </div>
         </div>
@@ -661,10 +661,10 @@ const NutriCDE = (() => {
 
         <!-- Nutrition Therapy Goals -->
         <div style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:14px 16px">
-          <div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:#34d399;text-transform:uppercase;margin-bottom:10px">Nutrition Therapy Goals</div>
+          <div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:#34d399;text-transform:uppercase;margin-bottom:10px">Nutrition Therapy Goals</div>
           <div style="display:flex;flex-direction:column;gap:6px">
             ${goals.map(g => `
-            <div style="display:flex;gap:8px;align-items:flex-start;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.55">
+            <div style="display:flex;gap:8px;align-items:flex-start;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.55">
               <span style="color:#34d399;flex-shrink:0;margin-top:1px">✓</span>
               <span>${g}</span>
             </div>`).join('')}

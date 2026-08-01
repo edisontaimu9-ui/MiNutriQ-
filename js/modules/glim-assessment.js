@@ -152,19 +152,19 @@ function glimAutoAssess() {
   liveDiv.style.borderColor = bdColor;
   liveDiv.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">'
     + '<div style="flex:1;min-width:180px">'
-    + '<div style="font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:2px;color:' + diagColor + ';text-transform:uppercase;margin-bottom:4px">GLIM Diagnosis</div>'
+    + '<div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:' + diagColor + ';text-transform:uppercase;margin-bottom:4px">GLIM Diagnosis</div>'
     + '<div style="font-size:13.5px;font-weight:700;color:' + diagColor + '">' + diagIcon + ' ' + diagnosis + '</div>'
     + '</div>'
     + '<div style="min-width:200px">'
-    + '<div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase;margin-bottom:4px">Phenotypic (' + (d.phenotypicMet ? '≥1 MET' : 'NOT MET') + ')</div>'
-    + '<div style="font-size:10px;line-height:1.8">' + phenoRows.join('<br>') + '</div>'
+    + '<div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase;margin-bottom:4px">Phenotypic (' + (d.phenotypicMet ? '≥1 MET' : 'NOT MET') + ')</div>'
+    + '<div style="font-size:11px;line-height:1.8">' + phenoRows.join('<br>') + '</div>'
     + '</div>'
     + '<div style="min-width:200px">'
-    + '<div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:4px">Etiologic (' + (d.etiologicMet ? '≥1 MET' : 'NOT MET') + ')</div>'
-    + '<div style="font-size:10px;line-height:1.8">' + etioRows.join('<br>') + '</div>'
+    + '<div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase;margin-bottom:4px">Etiologic (' + (d.etiologicMet ? '≥1 MET' : 'NOT MET') + ')</div>'
+    + '<div style="font-size:11px;line-height:1.8">' + etioRows.join('<br>') + '</div>'
     + '</div>'
     + '</div>'
-    + '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);margin-top:8px"> Cederholm T et al. GLIM criteria for the diagnosis of malnutrition. Clin Nutr 2019;38:1–9. Screen first with MNA / NRS-2002 / MUST before applying GLIM.</div>';
+    + '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px"> Cederholm T et al. GLIM criteria for the diagnosis of malnutrition. Clin Nutr 2019;38:1–9. Screen first with MNA / NRS-2002 / MUST before applying GLIM.</div>';
 }
 
 function renderGLIMResult() {
@@ -214,44 +214,44 @@ function renderGLIMResult() {
   var wlStatus = d.p1Sev ? 'Severe' : d.p1Mod ? 'Moderate' : 'Not met';
   var wlColor  = d.p1Sev ? '#ef4444' : d.p1Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Weight Loss</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">' + wlText + '</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + wlColor + '">' + wlStatus + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px"> Weight Loss</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">' + wlText + '</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + wlColor + '">' + wlStatus + '</td>'
     + '</tr>';
 
   var bmiText   = d.bmi > 0 ? d.bmi.toFixed(1) + ' kg/m² (threshold ' + bmiThresh + ')' : 'Not calculated';
   var bmiStatus = d.p2Sev ? 'Severe' : d.p2Mod ? 'Moderate' : 'Not met';
   var bmiColor  = d.p2Sev ? '#ef4444' : d.p2Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Low BMI</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">' + bmiText + '</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + bmiColor + '">' + bmiStatus + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px"> Low BMI</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">' + bmiText + '</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + bmiColor + '">' + bmiStatus + '</td>'
     + '</tr>';
 
   var mmStatus = d.p3Sev ? 'Severe' : d.p3Mod ? 'Moderate' : 'Not reported';
   var mmColor  = d.p3Sev ? '#ef4444' : d.p3Mod ? '#f0b429' : '#a8c8e8';
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Muscle Mass</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">BIA / DEXA / anthropometry</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + mmColor + '">' + mmStatus + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px"> Muscle Mass</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">BIA / DEXA / anthropometry</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + mmColor + '">' + mmStatus + '</td>'
     + '</tr>';
 
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px"> Reduced Intake</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">≤50% EER &gt;1 wk or GI malabsorption</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + (d.e1 ? '#34d399' : '#a8c8e8') + '">' + (d.e1 ? '✓ Met' : '✗ Not ticked') + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px"> Reduced Intake</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">≤50% EER &gt;1 wk or GI malabsorption</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + (d.e1 ? '#34d399' : '#a8c8e8') + '">' + (d.e1 ? '✓ Met' : '✗ Not ticked') + '</td>'
     + '</tr>';
 
   rows += '<tr style="border-bottom:1px solid rgba(56,100,168,0.1)">'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">Acute Disease</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">ICU, surgery, trauma, severe infection</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + (d.e2acute ? '#34d399' : '#a8c8e8') + '">' + (d.e2acute ? '✓ Met' : '✗ Not ticked') + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px">Acute Disease</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">ICU, surgery, trauma, severe infection</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + (d.e2acute ? '#34d399' : '#a8c8e8') + '">' + (d.e2acute ? '✓ Met' : '✗ Not ticked') + '</td>'
     + '</tr>';
 
   rows += '<tr>'
-    + '<td style="padding:6px 12px;color:#ddeeff;font-size:10px">Chronic Disease</td>'
-    + '<td style="padding:6px 12px;color:#fff;font-size:10px">Cancer, CKD, COPD, CVD, liver disease</td>'
-    + '<td style="padding:6px 12px;font-size:10px;font-weight:700;color:' + (d.e2chron ? '#34d399' : '#a8c8e8') + '">' + (d.e2chron ? '✓ Met' : '✗ Not ticked') + '</td>'
+    + '<td style="padding:6px 12px;color:#ddeeff;font-size:11px">Chronic Disease</td>'
+    + '<td style="padding:6px 12px;color:#fff;font-size:11px">Cancer, CKD, COPD, CVD, liver disease</td>'
+    + '<td style="padding:6px 12px;font-size:11px;font-weight:700;color:' + (d.e2chron ? '#34d399' : '#a8c8e8') + '">' + (d.e2chron ? '✓ Met' : '✗ Not ticked') + '</td>'
     + '</tr>';
 
   card.style.display = 'block';
@@ -260,22 +260,22 @@ function renderGLIMResult() {
     + '<div style="display:flex;align-items:center;gap:10px">'
     + '<span style="font-size:20px"></span>'
     + '<div>'
-    + '<div style="font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:2px;color:' + iconCol + ';text-transform:uppercase">GLIM 2019 — Nutrition Assessment</div>'
+    + '<div style="font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2px;color:' + iconCol + ';text-transform:uppercase">GLIM 2019 — Nutrition Assessment</div>'
     + '<div style="font-family:-apple-system,system-ui,sans-serif;font-size:19px;font-weight:800;color:' + iconCol + ';letter-spacing:0.5px">' + diagLabel + '</div>'
-    + '<div style="font-family:var(--mono);font-size:10px;color:rgba(168,200,232,0.8);margin-top:2px">' + stage + '</div>'
+    + '<div style="font-family:var(--mono);font-size:11px;color:rgba(168,200,232,0.8);margin-top:2px">' + stage + '</div>'
     + '</div></div>'
-    + '<div style="background:' + borderCol + ';color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:20px">' + stageBadge + '</div>'
+    + '<div style="background:' + borderCol + ';color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;padding:6px 14px;border-radius:20px">' + stageBadge + '</div>'
     + '</div>'
     + '<div style="padding:0">'
     + '<table style="width:100%;border-collapse:collapse;font-family:var(--mono)">'
     + '<thead><tr style="background:#0d1e3a">'
-    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:8px;letter-spacing:1.5px;text-transform:uppercase">Criterion</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:8px;letter-spacing:1.5px;text-transform:uppercase">Detail</th>'
-    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:8px;letter-spacing:1.5px;text-transform:uppercase">Status</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:11px;letter-spacing:1.5px;text-transform:uppercase">Criterion</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:11px;letter-spacing:1.5px;text-transform:uppercase">Detail</th>'
+    + '<th style="padding:7px 12px;text-align:left;color:#ddeeff;font-size:11px;letter-spacing:1.5px;text-transform:uppercase">Status</th>'
     + '</tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table></div>'
-    + '<div style="padding:10px 18px;font-family:var(--mono);font-size:8.5px;color:var(--text-dim);border-top:1px solid rgba(56,100,168,0.2)">'
+    + '<div style="padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--text-dim);border-top:1px solid rgba(56,100,168,0.2)">'
     + ' Cederholm T, Jensen GL, Correia MITD, et al. GLIM criteria for the diagnosis of malnutrition. <em>JPEN J Parenter Enteral Nutr.</em> 2019;43(1):32–40. &nbsp;|&nbsp; Screen first with NRS-2002, MNA, or MUST → diagnose with GLIM → grade severity → plan intervention.'
     + '</div></div>';
 }

@@ -511,12 +511,12 @@ function _injectStyles() {
     .bs-badge {
       position: absolute; top: -6px; right: -4px;
       background: #EF4444; color: #fff;
-      font-size: 8px; font-weight: 800;
+      font-size: 11px; font-weight: 800;
       padding: 2px 5px; border-radius: 99px;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .bs-card-emoji { font-size: 24px; line-height: 1.2; display: inline-block; }
-    .bs-card-name  { font-size: 10px; font-weight: 700; color: #374151; line-height: 1.2; }
+    .bs-card-name  { font-size: 11px; font-weight: 700; color: #374151; line-height: 1.2; }
     .bs-card-price { font-size: 11px; font-weight: 700; color: #6b7280; transition: color 0.15s; }
 
     /* ── Emoji click animations ── */

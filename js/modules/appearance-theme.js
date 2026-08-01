@@ -417,8 +417,8 @@ function _populateProfileDrawer(){
     }
     compEl.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">' +
-        '<span style="font-family:var(--mono);font-size:9px;letter-spacing:0.8px;color:var(--text-dim);text-transform:uppercase">Profile Completion</span>' +
-        '<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:' + barColor + '">' + pct + '%</span>' +
+        '<span style="font-family:var(--mono);font-size:11px;letter-spacing:0.8px;color:var(--text-dim);text-transform:uppercase">Profile Completion</span>' +
+        '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + barColor + '">' + pct + '%</span>' +
       '</div>' +
       '<div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden">' +
         '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:2px;transition:width .4s"></div>' +
@@ -426,8 +426,8 @@ function _populateProfileDrawer(){
       (noPhoto
         ? '<div style="margin-top:10px;padding:9px 11px;background:rgba(29,233,212,0.06);border:1px solid rgba(29,233,212,0.18);border-radius:7px;display:flex;align-items:center;gap:9px">' +
             '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(29,233,212,0.7)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-            '<span style="font-family:var(--mono);font-size:9px;color:var(--text-dim);flex:1">Add a profile photo to complete your profile</span>' +
-            '<button onclick="closeProfile();openProfileEdit()" style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.5px;background:var(--teal);color:#020617;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;white-space:nowrap">ADD PHOTO</button>' +
+            '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);flex:1">Add a profile photo to complete your profile</span>' +
+            '<button onclick="closeProfile();openProfileEdit()" style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.5px;background:var(--teal);color:#020617;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;white-space:nowrap">ADD PHOTO</button>' +
           '</div>'
         : '');
   } else {
@@ -558,13 +558,13 @@ function _renderMyFeedback(docs) {
     html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">';
     html +=   '<div style="display:flex;align-items:center;gap:6px">';
     html +=     '<span style="font-size:14px;line-height:1">' + emoji + '</span>';
-    html +=     '<span style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.8px;' +
+    html +=     '<span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.8px;' +
                   'color:var(--blue,#60a5fa);background:rgba(96,165,250,0.08);' +
                   'border:1px solid rgba(96,165,250,0.22);border-radius:4px;padding:2px 7px">' +
                   _escHtml(typeLabel) + '</span>';
     html +=   '</div>';
     if (sentStr) {
-      html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted);flex-shrink:0">' +
+      html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);flex-shrink:0">' +
                 _escHtml(sentStr) + '</span>';
     }
     html += '</div>';
@@ -593,10 +593,10 @@ function _renderMyFeedback(docs) {
 
       /* reply label row */
       html += '<div style="display:flex;align-items:center;gap:6px">';
-      html +=   '<span style="font-family:var(--mono);font-size:9px;font-weight:700;' +
+      html +=   '<span style="font-family:var(--mono);font-size:11px;font-weight:700;' +
                   'letter-spacing:0.8px;color:var(--teal,#1de9d4)">↩ Reply from Admin</span>';
       if (isUnread) {
-        html += '<span style="font-family:var(--mono);font-size:7.5px;font-weight:700;' +
+        html += '<span style="font-family:var(--mono);font-size:11px;font-weight:700;' +
                   'color:var(--teal,#1de9d4);background:rgba(29,233,212,0.12);' +
                   'border:1px solid rgba(29,233,212,0.3);border-radius:10px;padding:1px 6px">NEW</span>';
       }
@@ -609,11 +609,11 @@ function _renderMyFeedback(docs) {
       /* reply meta: admin name + timestamp */
       html += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:1px">';
       if (doc.adminReply.adminName) {
-        html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted)">— ' +
+        html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">— ' +
                   _escHtml(doc.adminReply.adminName) + '</span>';
       }
       if (replyTs) {
-        html += '<span style="font-family:var(--mono);font-size:8px;color:var(--text-muted)">' +
+        html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">' +
                   _escHtml(replyTs) + '</span>';
       }
       html += '</div>';
@@ -1006,14 +1006,14 @@ function rfAutoAssess() {
       <div>⟶ Fluid restrict to <strong>≤1 L/day</strong> above maintenance</div>
       <div>⟶ Increase calories by <strong>max 33% every 2 days</strong> toward target</div>
       <div>⟶ Cardiac monitoring; watch for arrhythmia, oedema, encephalopathy</div>
-      <div style="color:var(--text-dim);margin-top:6px;font-size:10px">Reference: NICE CG32 (2006), ASPEN 2020 Refeeding Consensus</div>`,
+      <div style="color:var(--text-dim);margin-top:6px;font-size:11px">Reference: NICE CG32 (2006), ASPEN 2020 Refeeding Consensus</div>`,
     'MODERATE RISK': `<div style="color:var(--amber);font-weight:700;margin-bottom:8px">${riskText}</div>
       <div>⟶ <strong>Start at 10 kcal/kg/day</strong>, advance cautiously over 3–5 days</div>
       <div>⟶ Oral/IV Thiamine <strong>100–200 mg/day</strong> for minimum 10 days</div>
       <div>⟶ Monitor electrolytes <strong>daily × 5 days</strong></div>
       <div>⟶ Supplement K⁺, PO₄, Mg²⁺ prophylactically if borderline</div>
       <div>⟶ Reassess nutritional intake and electrolytes every 48h</div>
-      <div style="color:var(--text-dim);margin-top:6px;font-size:10px">Reference: NICE CG32 (2006)</div>`,
+      <div style="color:var(--text-dim);margin-top:6px;font-size:11px">Reference: NICE CG32 (2006)</div>`,
     'LOW–MODERATE': `<div style="color:#7aA0c8;font-weight:700;margin-bottom:8px">${riskText}</div>
       <div>⟶ Initiate feeding cautiously; consider slower advancement</div>
       <div>⟶ Oral thiamine supplement recommended</div>

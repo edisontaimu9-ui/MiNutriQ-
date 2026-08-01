@@ -377,7 +377,7 @@
             patP:    patP,
             pc:      pc,
           })
-        : '<div style="text-align:center;padding:40px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">LMS data unavailable</div>';
+        : '<div style="text-align:center;padding:40px;font-family:var(--mono);font-size:11px;color:var(--text-dim)">LMS data unavailable</div>';
 
       return '<div id="' + grpId + 'p' + i + '" style="display:' + (i === 0 ? 'block' : 'none') + '">' +
         svgStr +
@@ -389,7 +389,7 @@
       var active = i === 0;
       return '<button id="' + grpId + 'b' + i + '"' +
         ' onclick="window._gcFentonTab(\'' + grpId + '\',' + i + ')"' +
-        ' style="font-family:var(--mono);font-size:10px;padding:5px 13px;' +
+        ' style="font-family:var(--mono);font-size:11px;padding:5px 13px;' +
         'border-radius:6px;cursor:pointer;transition:all .15s;' +
         'border:1px solid rgba(29,233,212,' + (active ? '0.5' : '0.2') + ');' +
         'background:rgba(29,233,212,' + (active ? '0.14' : '0.03') + ');' +
@@ -406,7 +406,7 @@
       '<div style="background:rgba(5,12,24,0.50);border:1px solid rgba(29,233,212,0.22);' +
            'border-radius:12px;padding:14px 16px">' +
         '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">' +
-          '<span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;' +
+          '<span style="font-family:var(--mono);font-size:11px;letter-spacing:2px;' +
                'color:var(--teal);font-weight:700">' +
             'FENTON 2013 · ' + (R.sex === 'male' ? '♂' : '♀') + ' ' +
             R.sex.toUpperCase() + ' · GA ' + gaFmt +
@@ -415,7 +415,7 @@
         '</div>' +
         panels +
         '<div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;' +
-             'font-family:var(--mono);font-size:8.5px">' +
+             'font-family:var(--mono);font-size:11px">' +
           legendRow +
         '</div>' +
       '</div>'
@@ -505,7 +505,7 @@
     return (
       '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(96,165,250,0.18);' +
            'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-        '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+        '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
              'color:var(--blue);font-weight:700;margin-bottom:8px">' +
           '📊 ' + title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
           (pctLabel
@@ -515,7 +515,7 @@
         '<canvas id="' + canvasId + '" height="240"' +
           ' style="width:100%;max-height:260px;display:block"></canvas>' +
         '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-             'font-family:var(--mono);font-size:8.5px">' +
+             'font-family:var(--mono);font-size:11px">' +
           legendRow +
         '</div>' +
       '</div>'
@@ -618,7 +618,7 @@
         '</div>' +
         '<div class="card-body">' +
           inner.join('') +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8">' +
             '📚 WHO Child Growth Standards 2006 · WHO Reference 2007 · ' +
             'Lines: 3rd · 10th · 50th · 90th · 97th percentile' +
@@ -787,7 +787,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(96,165,250,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:var(--blue);font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -795,7 +795,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -809,7 +809,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.10);' +
                'border-radius:6px">' +
@@ -944,7 +944,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(96,165,250,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:var(--blue);font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -952,7 +952,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -966,7 +966,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.10);' +
                'border-radius:6px">' +
@@ -1093,7 +1093,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(96,165,250,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:var(--blue);font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -1101,7 +1101,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -1115,7 +1115,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.10);' +
                'border-radius:6px">' +
@@ -1231,7 +1231,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(167,139,250,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:#a78bfa;font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -1239,7 +1239,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -1253,7 +1253,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.10);' +
                'border-radius:6px">' +
@@ -1344,7 +1344,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(29,233,212,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:var(--teal);font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -1352,7 +1352,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -1366,7 +1366,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(29,233,212,0.04);border:1px solid rgba(29,233,212,0.10);' +
                'border-radius:6px">' +
@@ -1457,7 +1457,7 @@
 
       return '<div style="background:rgba(5,12,24,0.40);border:1px solid rgba(96,165,250,0.18);' +
                'border-radius:10px;padding:12px 14px;margin-top:10px">' +
-               '<div style="font-family:var(--mono);font-size:9px;letter-spacing:1.8px;' +
+               '<div style="font-family:var(--mono);font-size:11px;letter-spacing:1.8px;' +
                     'color:var(--blue);font-weight:700;margin-bottom:8px">' +
                  '📊 ' + s.title + ' · ' + (sex === 'male' ? '♂ MALE' : '♀ FEMALE') +
                  (pctLbl ? '<span style="color:var(--teal);font-weight:400;margin-left:10px">' + pctLbl + '</span>' : '') +
@@ -1465,7 +1465,7 @@
                '<canvas id="' + s.canvasId + '" height="240"' +
                  ' style="width:100%;max-height:260px;display:block"></canvas>' +
                '<div style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;' +
-                    'font-family:var(--mono);font-size:8.5px">' + legendRow + '</div>' +
+                    'font-family:var(--mono);font-size:11px">' + legendRow + '</div>' +
              '</div>';
     }).join('');
 
@@ -1479,7 +1479,7 @@
         '</div>' +
         '<div class="card-body">' +
           canvasBlocks +
-          '<div style="font-family:var(--mono);font-size:8.5px;color:var(--text-dim);' +
+          '<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);' +
                'margin-top:12px;line-height:1.8;padding:8px 10px;' +
                'background:rgba(96,165,250,0.04);border:1px solid rgba(96,165,250,0.10);' +
                'border-radius:6px">' +
