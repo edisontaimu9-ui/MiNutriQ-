@@ -303,11 +303,17 @@ document.addEventListener('keydown',function(e){
   }
 });
 function _kebabUpdateLabels(){
-  var el=document.getElementById('kebab-theme-label');
-  if(!el)return;
   var t=(typeof currentSettings!=='undefined'&&currentSettings.theme)||'ocean';
   if(!(t in THEMES)) t='ocean';
-  el.textContent=t.charAt(0).toUpperCase()+t.slice(1);
+  var name=t.charAt(0).toUpperCase()+t.slice(1);
+  // Legacy kebab-menu label, if a build still has it — safe to leave as a no-op otherwise
+  var legacyEl=document.getElementById('kebab-theme-label');
+  if(legacyEl) legacyEl.textContent=name;
+  // Header theme-toggle button (bell-adjacent) — dot color + tooltip
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn) btn.title='Theme: '+name;
+  var dot=document.getElementById('theme-toggle-dot');
+  if(dot) dot.style.background=(THEMES[t]&&THEMES[t].teal)||'#1de9d4';
 }
 function _kebabShowSignOut(){
   var btn=document.getElementById('kebab-signout-btn');
