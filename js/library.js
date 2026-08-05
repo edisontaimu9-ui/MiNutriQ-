@@ -4318,32 +4318,6 @@
       document.body.appendChild(wrap);
     }
 
-    // ── 2. Bottom-nav tab ──────────────────────────────
-    if (!document.getElementById('bnav-library')) {
-      var nav = document.getElementById('bottom-nav-scroll');
-      if (nav) {
-        var btn = document.createElement('div');
-        btn.id        = 'bnav-library';
-        btn.className = 'tab tab-support';
-        btn.setAttribute('onclick',  "switchTab('library')");
-        btn.setAttribute('role',     'button');
-        btn.setAttribute('tabindex', '0');
-        btn.setAttribute('aria-label', 'Resource Library');
-        btn.innerHTML =
-          '<span class="tab-icon" style="position:relative">'+
-            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
-              '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>'+
-              '<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'+
-              '<line x1="9" y1="8" x2="15" y2="8" opacity="0.6"/>'+
-              '<line x1="9" y1="12" x2="13" y2="12" opacity="0.4"/>'+
-            '</svg>'+
-            '<span class="lib-dot" id="lib-nav-dot"></span>'+
-          '</span>'+
-          '<span class="tab-label">Library</span>';
-        nav.appendChild(btn);
-      }
-    }
-
     // ── 3. Home-screen Information card ──────────────
     // NOTE: this used to target ".hp-refs", a class that no longer exists
     // anywhere in the page (leftover from an earlier layout) — the card
