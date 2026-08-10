@@ -5835,19 +5835,24 @@ var photoCropper = (function () {
        ENTERAL FEED MODE SELECTOR
        ════════════════════════════════════════════════════ -->
   <div style="display:flex;gap:6px;margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px">
-    <button id="enmode-btn-commercial" onclick="switchEnMode('commercial')"
+    <button id="enmode-btn-commercial" class="enmode-btn" onclick="switchEnMode('commercial')"
       style="flex:1;padding:9px 6px;font-family:var(--mono);font-size:11px;letter-spacing:1px;border-radius:7px;border:2px solid rgba(29,233,212,0.6);background:rgba(29,233,212,0.08);color:var(--teal);cursor:pointer;transition:all .2s;font-weight:700">
       COMMERCIAL FORMULA
     </button>
-    <button id="enmode-btn-lowres" onclick="switchEnMode('lowres')"
+    <button id="enmode-btn-lowres" class="enmode-btn" onclick="switchEnMode('lowres')"
       style="flex:1;padding:9px 6px;font-family:var(--mono);font-size:11px;letter-spacing:1px;border-radius:7px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;font-weight:700">
-      LOW-RESOURCE (MALAWI)
+      LOW-RESOURCE
     </button>
-    <button id="enmode-btn-blend" onclick="switchEnMode('blend')"
+    <button id="enmode-btn-blend" class="enmode-btn" onclick="switchEnMode('blend')"
       style="flex:1;padding:9px 6px;font-family:var(--mono);font-size:11px;letter-spacing:1px;border-radius:7px;border:2px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;font-weight:700">
       BLENDERIZED FEED
     </button>
   </div>
+  <style>
+    @media (max-width: 420px) {
+      .enmode-btn { font-size: 9.5px !important; letter-spacing: 0.4px !important; padding: 9px 3px !important; }
+    }
+  </style>
 
   <div id="en-commercial-section">
 
@@ -6062,7 +6067,7 @@ var photoCropper = (function () {
 
   <!-- ════════════════════════════════════════════════════════════
        LOW-RESOURCE ENTERAL FEED MODULE
-       Malawi Standard Practice · Milk + Likuni Phala
+       Milk + Likuni Phala
        ════════════════════════════════════════════════════════════ -->
   <div id="en-lowres-section" style="display:none">
 
@@ -6070,10 +6075,10 @@ var photoCropper = (function () {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div>
         <div style="font-family:var(--cond);font-size:17px;font-weight:700;letter-spacing:2px;color:var(--amber)">Low-Resource Hospital Formula</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Malawi Standard Practice · Milk + Likuni Phala · Real-time nutrition calculation · Works offline</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:3px">Milk + Likuni Phala · Real-time nutrition calculation · Works offline</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <span style="font-family:var(--mono);font-size:11px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);padding:3px 12px;border-radius:12px;letter-spacing:1.5px;font-weight:700">MALAWI CONTEXT</span>
+        <span style="font-family:var(--mono);font-size:11px;background:rgba(240,180,41,0.12);border:1px solid rgba(240,180,41,0.35);color:var(--amber);padding:3px 12px;border-radius:12px;letter-spacing:1.5px;font-weight:700">LOW-RESOURCE</span>
         <button onclick="syncLRFromCalc()" style="font-family:var(--mono);font-size:11px;color:var(--teal);background:rgba(0,212,184,.1);border:1px solid rgba(0,212,184,.3);border-radius:5px;padding:6px 12px;cursor:pointer;letter-spacing:1px;white-space:nowrap">↻ SYNC FROM CALCULATOR</button>
         <div id="lr-header-sync-status" style="font-family:var(--mono);font-size:11px;color:var(--text-dim)"> Sync or enter weight manually below</div>
       </div>
@@ -13323,7 +13328,7 @@ function ntClear(scopeId, resultIds) {
           <div class="ug-table-wrap">
             <table class="ug-table"><thead><tr><th>Mode</th><th>Description</th></tr></thead><tbody>
               <tr><td>Commercial Formula</td><td>Auto-selects from Fresenius Kabi/Nutricia database; continuous/cyclic/bolus delivery modes</td></tr>
-              <tr><td>Low-Resource (Malawi)</td><td>Hospital formula from milk, Likuni Phala, oil, sugar with Standard/High-Energy/High-Protein presets</td></tr>
+              <tr><td>Low-Resource</td><td>Hospital formula from milk, Likuni Phala, oil, sugar with Standard/High-Energy/High-Protein presets</td></tr>
               <tr><td>Blenderized Feed</td><td>Tube-feed recipe from local Malawian foods with preset recipes and clinical warnings</td></tr>
             </tbody></table>
           </div>
