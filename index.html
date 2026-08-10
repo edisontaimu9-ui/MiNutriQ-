@@ -98,7 +98,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://*.cloudflare.com https://www.googleapis.com https://identitytoolkit.googleapis.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://sgp.cloud.appwrite.io wss://sgp.cloud.appwrite.io https://*.appwrite.run https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev https://oasis-ai-proxy-worker.edisontaimu9.workers.dev https://paychangu-payment-gateway.edisontaimu9.workers.dev;
+  connect-src 'self' blob: https://api.groq.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://*.firebaseapp.com wss://*.firebaseio.com https://api.fda.gov https://id.gs1.org https://eutils.ncbi.nlm.nih.gov https://api.openalex.org https://search-api.frontiersin.org https://api.elsevier.com https://iris.who.int https://openknowledge.fao.org https://oasis-nutrition-api.onrender.com https://chakudya-api.edisontaimu9.workers.dev https://oasis-ai-proxy-worker.edisontaimu9.workers.dev https://paychangu-payment-gateway.edisontaimu9.workers.dev;
   img-src 'self' blob: data:;
   worker-src 'self' blob:;
   manifest-src blob: 'self';
@@ -12494,12 +12494,6 @@ function ntClear(scopeId, resultIds) {
 
 <script src="js/pes.js" defer></script>
 
-<!-- Appwrite Web SDK — required by library.js (Storage + Databases).
-     Firebase Auth is NOT replaced; only library Storage/DB use Appwrite. -->
-<script src="https://cdn.jsdelivr.net/npm/appwrite@15/dist/iife/sdk.js" defer></script>
-<script src="js/appwriteClient.js" defer></script>
-
-<script src="js/library.js" defer></script>
 <script src="js/assessment.js" defer></script>
 <script src="js/recipeCalculator.js" defer></script>
 
@@ -13801,7 +13795,7 @@ window.igSwitchTab = function(tab) {
     <!-- Body -->
     <div style="overflow-y:auto;padding:18px 20px;flex:1">
       <p style="margin:0 0 14px;font-family:var(--sans);font-size:12.5px;line-height:1.7;color:var(--text,#c8d3e0)">
-        Oasis is currently available as a cross-platform Progressive Web App (PWA), installable on Android, iOS, and desktop directly from the browser. Beyond the PWA, the following platforms are on the roadmap:
+        Oasis is available as a cross-platform Progressive Web App (PWA), installable on Android, iOS, and desktop directly from the browser — and native apps are now available on every major platform:
       </p>
 
       <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
@@ -13810,9 +13804,9 @@ window.igSwitchTab = function(tab) {
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text-bright,#f0f4f8)">Native Desktop App</div>
-          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Windows, macOS &amp; Linux. Planned — not yet in active development.</div>
+          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Windows, macOS &amp; Linux.</div>
         </div>
-        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--amber,#f0b429);background:rgba(240,180,41,0.10);border:1px solid rgba(240,180,41,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">PLANNED</span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal,#1de9d4);background:rgba(29,233,212,0.10);border:1px solid rgba(29,233,212,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">AVAILABLE</span>
       </div>
 
       <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
@@ -13821,9 +13815,9 @@ window.igSwitchTab = function(tab) {
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text-bright,#f0f4f8)">iOS App</div>
-          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Native iPhone &amp; iPad app. Planned — not yet in active development.</div>
+          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Native iPhone &amp; iPad app.</div>
         </div>
-        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--amber,#f0b429);background:rgba(240,180,41,0.10);border:1px solid rgba(240,180,41,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">PLANNED</span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal,#1de9d4);background:rgba(29,233,212,0.10);border:1px solid rgba(29,233,212,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">AVAILABLE</span>
       </div>
 
       <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06)">
@@ -13832,13 +13826,13 @@ window.igSwitchTab = function(tab) {
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text-bright,#f0f4f8)">Android App</div>
-          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Native Android app (Google Play). Planned — not yet in active development.</div>
+          <div style="font-family:var(--sans);font-size:11.5px;color:var(--text-dim,#8892a0);line-height:1.6;margin-top:2px">Native Android app (Google Play).</div>
         </div>
-        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--amber,#f0b429);background:rgba(240,180,41,0.10);border:1px solid rgba(240,180,41,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">PLANNED</span>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--teal,#1de9d4);background:rgba(29,233,212,0.10);border:1px solid rgba(29,233,212,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;flex-shrink:0">AVAILABLE</span>
       </div>
 
       <p style="margin:14px 0 0;font-family:var(--sans);font-size:11.5px;line-height:1.7;color:var(--text-dim,#8892a0);font-style:italic">
-        These platforms are still at the planning stage and timelines aren't confirmed yet. In the meantime, the installable PWA already provides an offline-capable, full-screen app experience on every device.
+        The installable PWA remains the fastest way to get started and stays fully offline-capable — native apps are ideal if you prefer an app-store install or a dedicated desktop shortcut.
       </p>
     </div>
     <!-- Footer -->
