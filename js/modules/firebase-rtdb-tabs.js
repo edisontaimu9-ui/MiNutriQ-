@@ -16,6 +16,22 @@ let db = null;
 /** Global Realtime Database instance — set by initFirebase() */
 let rtdb = null;
 
+/** Global Firebase Analytics instance — set by initFirebase() */
+let analytics = null;
+
+/**
+ * Fire-and-forget Analytics event logger. Safe to call even before
+ * analytics has finished initialising, or if the user has opted out
+ * via the "tog-analytics" setting — in both cases it silently no-ops.
+ * @param {string} name
+ * @param {Object} [params]
+ */
+function logAnalyticsEvent(name, params) {
+  try {
+    if (analytics) analytics.logEvent(name, params || {});
+  } catch (e) {}
+}
+
 /**
  * Update the header status pill and bottom status bar.
  * @param {'online'|'offline'|'connecting'} state
@@ -57,6 +73,23 @@ async function initFirebase() {
       firebase.initializeApp(FIREBASE_CONFIG);
     }
     db = firebase.firestore();
+
+    // ── Analytics init ─────────────────────────────────────────────
+    // Respects the existing "tog-analytics" privacy toggle in Settings
+    // (defaults to true, same default the settings UI already uses).
+    try {
+      if (typeof firebase.analytics === 'function') {
+        const s = (typeof DataService !== 'undefined' && DataService.get('settings')) || {};
+        const analyticsAllowed = s['tog-analytics'] !== undefined ? s['tog-analytics'] : true;
+        analytics = firebase.analytics();
+        analytics.setAnalyticsCollectionEnabled(analyticsAllowed);
+        if (analyticsAllowed) {
+          logAnalyticsEvent('app_open', { app_version: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown') });
+        }
+      }
+    } catch (e) {
+      console.warn('[Oasis] Analytics init failed:', e);
+    }
 
     // NOTE: We deliberately do NOT decide here whether to show the sign-in
     // overlay. Immediately after firebase.initializeApp(), auth.currentUser
@@ -722,6 +755,8 @@ function _updateTabTopbar(tab) {
 function switchTab(tab) {
   // Track active module for Firestore presence
   window._activeModule = tab;
+  // Track screen view for Firebase Analytics (SPA — no real page loads)
+  logAnalyticsEvent('screen_view', { firebase_screen: tab, firebase_screen_class: 'Oasis' });
   // Track tab navigation history for Back button
   if (typeof _tabHistory !== 'undefined' && _tabHistory[_tabHistory.length-1] !== tab) {
     _tabHistory.push(tab);

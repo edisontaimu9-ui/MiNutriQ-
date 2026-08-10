@@ -537,6 +537,8 @@ function checkOnboarding() {
         // comes back positive, without blocking startup.
         _obResolveProfile(user);
 
+        try { if (typeof analytics !== 'undefined' && analytics) analytics.setUserId(user.uid); } catch (e) {}
+
         if (typeof db !== 'undefined' && db) {
           db.collection('session_revocations').doc(user.uid).get()
             .then(rSnap => {

@@ -779,6 +779,12 @@ function autoSaveSettings() {
       currentSettings = s;
       // Apply behaviour settings immediately
       if (typeof applyCompact !== 'undefined') applyCompact(!!s['tog-compact']);
+      // Apply analytics opt-in/out immediately (no restart needed)
+      try {
+        if (typeof analytics !== 'undefined' && analytics) {
+          analytics.setAnalyticsCollectionEnabled(s['tog-analytics'] !== undefined ? s['tog-analytics'] : true);
+        }
+      } catch (e) {}
       // Save profile fields too
       if (typeof saveProfileFromSettings !== 'undefined') {
         saveProfileFromSettings();
