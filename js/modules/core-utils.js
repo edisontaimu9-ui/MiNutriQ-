@@ -504,8 +504,13 @@ const appState = {
   }
 
   // ── Home-page banner ───────────────────────────────────────
+  const _BANNER_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
   function _showInstallBanner() {
-    try { if (localStorage.getItem('pwa-banner-dismissed')) return; } catch(e) {}
+    try {
+      const dismissedAt = parseInt(localStorage.getItem('pwa-banner-dismissed-at') || '0', 10);
+      if (dismissedAt && (Date.now() - dismissedAt) < _BANNER_SNOOZE_MS) return;
+    } catch(e) {}
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.classList.add('visible');
   }
@@ -514,7 +519,7 @@ const appState = {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.classList.remove('visible');
     if (persist) {
-      try { localStorage.setItem('pwa-banner-dismissed', '1'); } catch(e) {}
+      try { localStorage.setItem('pwa-banner-dismissed-at', String(Date.now())); } catch(e) {}
     }
   }
 
