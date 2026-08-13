@@ -551,9 +551,16 @@ const appState = {
   // ── Manual guide modal (iOS + fallback) ────────────────────
   function _showInstallModal() {
     if (document.getElementById('pwa-install-modal')) return;
-    const isIOS     = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isAndroid = /android/i.test(navigator.userAgent);
-    const isSafari  = /safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isIOS     = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    const isSafari  = /safari/i.test(ua) && !/chrome/i.test(ua);
+    // WebViews that genuinely strip PWA install support (Facebook, Instagram, Line,
+    // Snapchat, TikTok, WeChat, or a bare in-app WebView with no Custom Tabs UI).
+    // Chrome Custom Tabs — used by the Google app, Gmail, and most "open link in app"
+    // flows — is real Chrome under the hood and DOES support installation, so it's
+    // deliberately excluded here.
+    const isBrokenWebView = /FBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|TikTok|MicroMessenger|; ?wv\)/i.test(ua);
     // Can we offer a direct install button? Only if the deferred prompt is still available.
     const canPrompt = !isIOS && !!_deferredPrompt;
 
@@ -586,7 +593,19 @@ const appState = {
            Open this page in <strong>Safari</strong> to install on iPhone/iPad.<br>
           Chrome on iOS does not support web app installation.
         </div>`;
-    } else if (isAndroid && !canPrompt) {
+    } else if (isAndroid && !canPrompt && !isBrokenWebView) {
+      // Real Chrome, including Chrome Custom Tabs opened from the Google app,
+      // Gmail, Search, etc. — installable right here, no need to leave the tab.
+      stepsHtml = `
+        <div id="_pwa-modal-waiting" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2;margin-bottom:14px">You can install directly from this browser:</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${stepRow(1, `Tap <strong style="color:var(--teal)">Install</strong> below`)}
+          ${stepRow(2, `No response? Wait a few seconds and tap it again — Chrome needs a moment to register the page as installable on a first visit`)}
+        </div>
+        <div style="font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:12px;margin-top:10px">
+           Still nothing after a couple of tries? Tap <strong>⋮</strong> → <strong>Add to Home screen</strong> if you see it, or <strong>Open in Chrome</strong> as a last resort.
+        </div>`;
+    } else if (isAndroid && !canPrompt && isBrokenWebView) {
       stepsHtml = `
         <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2;margin-bottom:14px">Install on Android:</div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -594,7 +613,7 @@ const appState = {
           ${stepRow(2, `Tap <strong style="color:var(--teal)">Install app</strong> or <strong style="color:var(--teal)">Add to Home screen</strong>`)}
         </div>
         <div style="font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:12px;margin-top:10px">
-           Opened this from WhatsApp, Instagram, or another app? Its built-in browser doesn't support installing. Tap <strong>⋮</strong> → <strong>Open in Chrome</strong> first, then try installing again.
+           This app's built-in browser doesn't support installing PWAs at all. Tap <strong>⋮</strong> → <strong>Open in Chrome</strong> first, then try installing again.
         </div>`;
     } else {
       stepsHtml = `
@@ -635,6 +654,26 @@ const appState = {
         modal.remove();
         await window.pwaInstall();
       });
+    } else if (isAndroid && !isBrokenWebView) {
+      // Real Chrome / Custom Tab without a captured prompt yet — beforeinstallprompt
+      // can still fire while the modal is open, so poll briefly and swap in a live
+      // INSTALL NOW button the moment it does, instead of leaving the user stuck
+      // with only the wait-and-retry instructions.
+      const actionsRow = modal.querySelector('div[style*="display:flex;gap:8px;margin-top:18px"]');
+      let ticks = 0;
+      const poll = setInterval(() => {
+        ticks++;
+        if (_deferredPrompt && actionsRow && !document.getElementById('_pwa-modal-install-btn')) {
+          const btn = document.createElement('button');
+          btn.id = '_pwa-modal-install-btn';
+          btn.style.cssText = 'flex:1;padding:12px;background:linear-gradient(135deg,rgba(29,233,212,0.2),rgba(96,165,250,0.15));border:1.5px solid rgba(29,233,212,0.5);border-radius:var(--r-md);color:var(--teal);font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer';
+          btn.textContent = '⬇ INSTALL NOW';
+          btn.addEventListener('click', async () => { modal.remove(); await window.pwaInstall(); });
+          actionsRow.insertBefore(btn, actionsRow.firstChild);
+          clearInterval(poll);
+        }
+        if (ticks > 20 || !document.body.contains(modal)) clearInterval(poll); // stop after ~10s or if closed
+      }, 500);
     }
   }
 
