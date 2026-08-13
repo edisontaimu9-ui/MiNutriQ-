@@ -547,6 +547,7 @@ const appState = {
   function _showInstallModal() {
     if (document.getElementById('pwa-install-modal')) return;
     const isIOS     = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isAndroid = /android/i.test(navigator.userAgent);
     const isSafari  = /safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent);
     // Can we offer a direct install button? Only if the deferred prompt is still available.
     const canPrompt = !isIOS && !!_deferredPrompt;
@@ -579,6 +580,16 @@ const appState = {
         <div style="font-family:var(--mono);font-size:11px;color:var(--amber);line-height:1.7;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:14px">
            Open this page in <strong>Safari</strong> to install on iPhone/iPad.<br>
           Chrome on iOS does not support web app installation.
+        </div>`;
+    } else if (isAndroid && !canPrompt) {
+      stepsHtml = `
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2;margin-bottom:14px">Install on Android:</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${stepRow(1, `Tap the <strong style="color:var(--teal)">⋮</strong> menu (top-right of your browser)`)}
+          ${stepRow(2, `Tap <strong style="color:var(--teal)">Install app</strong> or <strong style="color:var(--teal)">Add to Home screen</strong>`)}
+        </div>
+        <div style="font-family:var(--mono);font-size:10.5px;color:var(--amber);line-height:1.7;background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:12px;margin-top:10px">
+           Opened this from WhatsApp, Instagram, or another app? Its built-in browser doesn't support installing. Tap <strong>⋮</strong> → <strong>Open in Chrome</strong> first, then try installing again.
         </div>`;
     } else {
       stepsHtml = `
@@ -622,9 +633,16 @@ const appState = {
     }
   }
 
-  // ── iOS: trigger banner + chip (beforeinstallprompt never fires on iOS) ──
+  // ── Mobile: proactively show banner + chip, don't wait solely on
+  //    beforeinstallprompt. That event never fires on iOS, and on Android
+  //    it can be withheld by Chrome's engagement heuristic or suppressed
+  //    entirely inside in-app browsers (WhatsApp, Instagram, etc.) — in
+  //    both cases the install entry point would otherwise never appear.
+  //    Clicking Install still uses the native prompt when available and
+  //    falls back to the manual guide modal when it isn't. ──
   const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (_isIOS) {
+  const _isAndroid = /android/i.test(navigator.userAgent);
+  if (_isIOS || _isAndroid) {
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         _showInstallChip();
