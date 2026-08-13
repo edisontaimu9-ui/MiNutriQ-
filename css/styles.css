@@ -2666,7 +2666,7 @@ header [onclick] {
 /* ── BOTTOM NAVIGATION BAR — horizontally scrollable ── */
 .bottom-nav {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   align-items: stretch;
   background: #060b18;
   border-top: 1px solid var(--border);

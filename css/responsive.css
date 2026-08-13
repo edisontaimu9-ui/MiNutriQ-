@@ -53,7 +53,7 @@
 
   /* ── Bottom nav: taller on tablet ───────────────────────────── */
   .bottom-nav-wrap { height: calc(66px + var(--sab, 0px)); }
-  .bottom-nav { grid-template-columns: repeat(4, 1fr); }
+  .bottom-nav { grid-template-columns: repeat(5, 1fr); }
   .bottom-nav .tab { padding: 10px 8px 8px; font-size: 10px; gap: 4px; }
   .bottom-nav .tab .tab-icon  { font-size: 18px; }
   .bottom-nav .tab .tab-label { font-size: 9.5px; letter-spacing: 0.5px; }
