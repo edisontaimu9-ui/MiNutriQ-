@@ -2503,16 +2503,19 @@ var photoCropper = (function () {
   <!-- ── USER PROFILE CARD ── -->
   <div id="hp-profile-card-wrap" data-sr="fade-up" data-sr-delay="80"></div>
 
-  <!-- ── PWA INSTALL BANNER (shown when installable, hidden once installed or dismissed) ── -->
-  <div id="pwa-install-banner" role="region" aria-label="Install Oasis">
-    <div class="pwa-banner-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:inline-block;vertical-align:middle;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-    <div class="pwa-banner-text">
-      <div class="pwa-banner-title">Install Oasis</div>
-      <div class="pwa-banner-sub">Works offline · No app store · Instant access</div>
+  <!-- ── PWA INSTALL PROMPT (floating card, shown when installable, hidden once installed or dismissed) ── -->
+  <div id="pwa-install-banner" role="dialog" aria-modal="false" aria-label="Install Oasis">
+    <button class="pwa-banner-dismiss" onclick="window.pwaHideBanner(true)" title="Dismiss" aria-label="Dismiss install prompt">✕</button>
+    <div class="pwa-banner-top">
+      <div class="pwa-banner-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div class="pwa-banner-text">
+        <div class="pwa-banner-title">Install Oasis</div>
+        <div class="pwa-banner-sub">Add Oasis to your home screen for quick access — works offline, like a native app.</div>
+      </div>
     </div>
     <div class="pwa-banner-actions">
-      <button class="pwa-banner-install" onclick="window.pwaInstall?window.pwaInstall():openInstallGuide()">⬇ Install</button>
-      <button class="pwa-banner-dismiss" onclick="window.pwaHideBanner(true)" title="Dismiss" aria-label="Dismiss install banner">✕</button>
+      <button class="pwa-banner-install" onclick="window.pwaInstall?window.pwaInstall():openInstallGuide()">Install</button>
+      <button class="pwa-banner-notnow" onclick="window.pwaHideBanner(true)">Not now</button>
     </div>
   </div>
 
