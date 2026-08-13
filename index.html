@@ -148,7 +148,7 @@
   const USE_FIREBASE = true;
 
   // ── App Version — bump to force SW cache refresh ──────
-  const APP_VERSION = '1.5.1';
+  const APP_VERSION = '1.5.2';
 
   // ── Display version shown on splash — only this needs updating on each deploy ──
   const APP_DISPLAY_VERSION = APP_VERSION;
@@ -14021,6 +14021,24 @@ document.addEventListener('keydown', function(e){
     return _loadDismissed().indexOf(id) !== -1;
   }
 
+  // ── Mirror a new in-app notification as a system (OS-level) notification.
+  // Respects the user's Settings toggle (nt_push_pref) — only fires when
+  // they've explicitly enabled push, and only when the browser permission
+  // is actually granted. Silently no-ops on unsupported browsers or when
+  // the app is in the foreground tab the user is already looking at is
+  // fine too — showNotification() still surfaces it via the OS tray.
+  function _fireSystemNotification(notif) {
+    try {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+      if (typeof _ntPushPref !== 'function' || !_ntPushPref().enabled) return;
+      if (typeof window.ntShowNotification !== 'function') return;
+      window.ntShowNotification(notif.title, notif.message, {
+        tag:  'oasis-notif-' + notif.id,
+        data: { url: location.href }
+      });
+    } catch (e) {}
+  }
+
   // ── Push a new notification ────────────────────────────────────
   window.notifPush = function(notif) {
     if (_isDismissed(notif.id)) return; // permanently dismissed — don't resurrect
@@ -14029,6 +14047,7 @@ document.addEventListener('keydown', function(e){
     if (existing === -1) {
       list.unshift(notif);
       _save(list);
+      _fireSystemNotification(notif);   // OS-level notification for genuinely new items only
     }
     _renderPanel();
     _updateBadge();

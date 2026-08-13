@@ -1966,6 +1966,19 @@
           _toast(msg, r.status === 'approved' ? 'success' : 'warning', 5500);
           var dot = document.getElementById('lib-nav-dot');
           if (dot) dot.classList.add('show');
+          /* Also land it in the bell panel + fire a system notification
+             (notifPush mirrors to OS-level via ntShowNotification when the
+             user has push enabled — see index.html notification panel). */
+          if (typeof window.notifPush === 'function') {
+            window.notifPush({
+              id:      'lib-status-' + r.id + '-' + r.status,
+              type:    r.status === 'approved' ? 'update' : 'alert',
+              title:   r.status === 'approved' ? 'Resource approved' : 'Resource not approved',
+              message: msg,
+              time:    Date.now(),
+              read:    false
+            });
+          }
         }
       });
       _myResources.forEach(function(r){ prevStatuses[r.id] = r.status; });
