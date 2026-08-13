@@ -1,0 +1,30 @@
+# Oasis CNST
+
+> Oasis CNST (Clinical Nutrition Support Tool) is a free, offline-capable clinical nutrition web app for dietitians and nutrition students in Malawi. It provides evidence-based calculators, growth charts, and decision-support tools for adult and pediatric nutrition care.
+
+Oasis CNST is a Progressive Web App — installable on Android, iOS, and desktop directly from the browser, no app store required. It works fully offline once installed and syncs data when back online.
+
+## Core modules
+
+- Adult nutrition: Schofield energy equations, malnutrition screening, GLIM assessment
+- Pediatric nutrition: Fenton 2013 growth charts, WHO z-scores, pediatric burns calculator
+- Parenteral & enteral nutrition (PN): TPN and enteral feed calculators
+- Nutrition Screening: 5-tool screening suite (SCREEN tab)
+- Drug-Nutrient Interaction (DNI) checker
+- CMAM protocol support, per Malawi Ministry of Health 2016 guidelines
+- Malawi Food Composition Table (FCT) meal planner and recipe calculator
+- Library: clinical references and nutrition news feed
+
+## Key links
+
+- [Home](https://oasiscnst.app/): App home and calculator hub
+- [User Guide](https://oasiscnst.app/#userguide): How to use Oasis CNST
+- [About Oasis](https://oasiscnst.app/#about): Project background
+- [Terms of Use](https://oasiscnst.app/#terms): Legal terms
+- [Privacy Policy](https://oasiscnst.app/#privacy): Data handling and privacy
+
+## Notes
+
+- Built and maintained by Edison Taimu, a self-taught developer with a clinical dietetics background.
+- Intended for dietitians, nutrition students, and clinicians working in low-resource settings.
+- Not a substitute for professional clinical judgment; calculators support, not replace, clinical decision-making.
