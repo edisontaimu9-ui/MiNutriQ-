@@ -278,7 +278,7 @@
   letter-spacing: 1px;
   color: var(--text-bright);
   line-height: 1.15;
-  margin-bottom: 0.625rem;
+  margin: 0 0 0.625rem;
   animation: hero-fade-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hp-tagline em {
@@ -356,7 +356,7 @@
   letter-spacing: 0.1562rem;
   color: var(--teal);
   text-transform: uppercase;
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
   padding: 0 1.25rem;
 }
 
