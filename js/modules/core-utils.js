@@ -505,10 +505,14 @@ const appState = {
 
   // ── Home-page banner ───────────────────────────────────────
   const _BANNER_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  // Versioned dismiss key: bumping this gives a redesigned banner a fresh
+  // chance to show even if the user dismissed an older-looking version —
+  // old dismissals under a different key no longer suppress it.
+  const _BANNER_DISMISS_KEY = 'pwa-banner-dismissed-at-v2';
 
   function _showInstallBanner() {
     try {
-      const dismissedAt = parseInt(localStorage.getItem('pwa-banner-dismissed-at') || '0', 10);
+      const dismissedAt = parseInt(localStorage.getItem(_BANNER_DISMISS_KEY) || '0', 10);
       if (dismissedAt && (Date.now() - dismissedAt) < _BANNER_SNOOZE_MS) return;
     } catch(e) {}
     const banner = document.getElementById('pwa-install-banner');
@@ -519,7 +523,7 @@ const appState = {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.classList.remove('visible');
     if (persist) {
-      try { localStorage.setItem('pwa-banner-dismissed-at', String(Date.now())); } catch(e) {}
+      try { localStorage.setItem(_BANNER_DISMISS_KEY, String(Date.now())); } catch(e) {}
     }
   }
 
