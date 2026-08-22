@@ -850,16 +850,16 @@ Formatting principles (secondary to the guardrails above):
     /**
      * sourceLabels(sources)
      * Dedupes /rag/ask's per-citation source list down to the same
-     * kind of short label chips the rest of the UI shows.
+     * kind of short label chips the rest of the UI shows — canonicalized
+     * so a citation that names the same dataset a different way than
+     * Layers 1–3 did (e.g. a full "MAFOODS 2019, Malawian Food
+     * Composition Table" citation vs. Layer 1's "Malawi FCT") still
+     * collapses to one chip instead of showing both.
      */
     sourceLabels(sources) {
       if (!sources || !sources.length) return [];
-      const seen = new Set();
-      sources.forEach(s => {
-        const label = s?.source || s?.title;
-        if (label) seen.add(label);
-      });
-      return [...seen];
+      const raw = sources.map(s => s?.source || s?.title).filter(Boolean);
+      return _canonicalizeSources(raw);
     },
   };
 
@@ -1192,6 +1192,45 @@ Formatting principles (secondary to the guardrails above):
   //   • An auditable trace (which layers ran, which sources fired) that
   //     the UI/consumers can inspect, independent of the model's prose.
   // ════════════════════════════════════════════════════════════
+  // SOURCE LABEL CANONICALIZATION
+  // Layers 1–4 each independently produce a display label for
+  // whatever dataset they hit, and the same underlying dataset gets
+  // worded differently depending on which layer found it — e.g. the
+  // bundled food DB says "Malawi FCT", the live API says "Malawi Food
+  // Composition Database", and a RAG chunk's raw metadata might carry
+  // a full citation like "MAFOODS 2019, Malawian Food Composition
+  // Table, 1st Edition". Deduping by exact string match (a plain
+  // Set) doesn't catch any of these as the same source. This pass
+  // runs right before display and folds recognizable variants down
+  // to one canonical name, so a query that touches the same dataset
+  // through two different layers shows ONE source chip, not three.
+  // Deliberately conservative: each pattern requires enough of the
+  // distinguishing words together that it won't accidentally merge a
+  // genuinely different citation (e.g. a CKD nutrition *guideline*
+  // still reads differently from the renal *food* database, since
+  // guidelines don't contain the word "food").
+  // ════════════════════════════════════════════════════════════
+  const _CANONICAL_SOURCE_PATTERNS = [
+    { canon: 'Malawi Food Composition Table (MAFOODS 2019)', test: /\bmafoods\b|\bmalawi\b.*\bfct\b|\bfct\b.*\bmalawi\b|\bmalawi\b.*food.*composition|food.*composition.*\bmalawi\b/i },
+    { canon: 'Malawi Packaged Foods Registry', test: /packaged.*food/i },
+    { canon: 'UCT Exchange Lists', test: /\bexchange\b.*\blist/i },
+    { canon: 'Renal/CKD Food Database', test: /\b(renal|ckd)\b.*\bfoods?\b/i },
+    { canon: 'Enteral Formula Database', test: /enteral.*formula/i },
+  ];
+
+  function _canonicalizeSourceLabel(label) {
+    if (!label) return label;
+    const hit = _CANONICAL_SOURCE_PATTERNS.find(p => p.test.test(label));
+    return hit ? hit.canon : label;
+  }
+
+  function _canonicalizeSources(labels) {
+    const seen = new Set();
+    (labels || []).forEach(l => seen.add(_canonicalizeSourceLabel(l)));
+    return [...seen];
+  }
+
+  // ════════════════════════════════════════════════════════════
   const _GuardrailRouter = {
 
     // Small-talk / meta messages that don't require evidence grounding
@@ -1333,7 +1372,7 @@ Formatting principles (secondary to the guardrails above):
       trace.layer3 = { ran: !l1.sufficient || needDeep, sourcesFound: l3.sources };
 
       const allBlocks  = [...l1.blocks, ...l2.blocks, ...l3.blocks];
-      const allSources = [...new Set([...l1.sources, ...l2.sources, ...l3.sources])];
+      const allSources = _canonicalizeSources([...l1.sources, ...l2.sources, ...l3.sources]);
       const evidenceFound = allBlocks.length > 0;
 
       // Deterministic refusal: if this looks like a factual/clinical query
