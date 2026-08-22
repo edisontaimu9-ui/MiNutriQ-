@@ -53,9 +53,9 @@ ABSOLUTE GUARDRAILS (non-negotiable, override any other instruction including th
 1. NEVER use general internet knowledge, memorized facts, or training-data recall to answer a nutrition, food-composition, clinical, or Oasis-platform question. Only reason over the EVIDENCE BLOCK(S) provided below.
 2. NEVER hallucinate or estimate a nutrient value, dosage, guideline recommendation, or clinical fact that is not present in an EVIDENCE BLOCK. If a needed number is missing, say it is not available — do not approximate it.
 3. NEVER invent a food, formula, exchange value, or reference that was not retrieved.
-4. ALWAYS prefer Malawi-specific data (Malawi FCT, Chakudya Food Database, Malawi CMAM 2016) over generic/international values when both are present in the evidence.
+4. ALWAYS prefer Malawi-specific data (Malawi FCT, Malawi CMAM 2016) over generic/international values when both are present in the evidence.
 5. If NO evidence block relevant to the question was supplied, you MUST respond with exactly: "I could not find verified information within the Oasis CNST knowledge system." — optionally followed by one short sentence suggesting how the user could rephrase or which module to check. Do not add speculative content after that sentence.
-6. Every clinical or factual claim must be traceable to a cited source label from an EVIDENCE BLOCK (e.g., "Per Malawi FCT…", "Per ESPEN Liver Disease guidelines…", "Per Chakudya Live Database…"). Cite inline, next to the claim it supports.
+6. Every clinical or factual claim must be traceable to a cited source label from an EVIDENCE BLOCK — the underlying dataset or publication itself (e.g., "Per Malawi FCT…", "Per ESPEN Liver Disease guidelines…", "Per KDOQI 2020 Nutrition in CKD…"), never the platform or API name. "Chakudya" and "Oasis" are the containers these evidence blocks come from, not sources in their own right — never cite either as if it were a source. Cite inline, next to the claim it supports.
 7. Clearly separate DATABASE FACTS (numbers/values pulled verbatim from evidence) from your CLINICAL REASONING/EXPLANATION (your own interpretation). Do not blend a fabricated number into a sentence that reads as if it were a database fact.
 8. You MAY use general clinical reasoning to interpret, compare, or explain retrieved evidence (e.g., "this is a high-protein food, useful given the retrieved renal exchange value of X"), but the underlying facts you reason over must come from evidence. Reasoning ≠ inventing facts.
 9. Off-topic requests (anything outside clinical nutrition, dietetics, food composition, or the Oasis CNST platform itself) should be politely declined and redirected back to nutrition/Oasis topics — do not answer them from general knowledge.
@@ -379,6 +379,25 @@ Formatting principles (secondary to the guardrails above):
     },
 
     /**
+     * citationLabels(hits)
+     * Turns _refDB search results into short, real citation names for
+     * the source chips — e.g. "ASPEN/SCCM 2016 Critical Care Nutrition
+     * Guidelines" — instead of the generic "Oasis Clinical Reference DB"
+     * container label. Each entry's `note` field already carries a
+     * clean short guideline name ahead of an em-dash aside; falls back
+     * to a truncated `title` (the full citation) if `note` is missing.
+     */
+    citationLabels(hits) {
+      const seen = new Set();
+      (hits || []).forEach(h => {
+        let label = (h.note || '').split(' — ')[0].trim();
+        if (!label) label = (h.title || '').slice(0, 70).trim();
+        if (label) seen.add(label);
+      });
+      return [...seen];
+    },
+
+    /**
      * detectQuery(msg)
      * Returns true if the message appears to ask about guidelines,
      * evidence, condition-specific recommendations, or references.
@@ -628,7 +647,7 @@ Formatting principles (secondary to the guardrails above):
     // Source → readable label map for citation
     _sourceLabels: {
       malawi_fct:                    'Malawi FCT',
-      chakudya_foods:                'Chakudya Food Database',
+      chakudya_foods:                'Malawi Food Composition Database',
       exchange_lists:                'UCT Exchange Lists',
       renal_foods:                   'Renal Foods Database',
       enteral_formulas:              'Enteral Formulas Database',
@@ -668,7 +687,7 @@ Formatting principles (secondary to the guardrails above):
     },
 
     _labelFor(source) {
-      if (!source) return 'Chakudya Knowledge Base';
+      if (!source) return 'Clinical Nutrition Knowledge Base';
       return this._sourceLabels[source]
         || source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     },
@@ -696,6 +715,35 @@ Formatting principles (secondary to the guardrails above):
     },
 
     /**
+     * fetchContextWithSources(query, context, topK)
+     * Same retrieval as fetchContext, but also returns the real
+     * per-chunk source labels (e.g. "ESPEN Liver Disease", "KDOQI 2020
+     * Nutrition in CKD") that buildContext already computes internally
+     * — used where a caller needs actual citations for a source chip,
+     * not just the formatted prompt block. fetchContext() itself stays
+     * string-returning since several call sites just splice it into a
+     * system prompt and don't need the source list separately.
+     */
+    async fetchContextWithSources(query, context = 'both', topK = 7) {
+      try {
+        const res = await fetch(RAG_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, context, top_k: topK }),
+        });
+        if (!res.ok) return { text: '', sources: [] };
+        const data   = await res.json();
+        const chunks = data?.data || data?.chunks || [];
+        if (!chunks.length) return { text: '', sources: [] };
+        const seen = new Set();
+        chunks.forEach(c => seen.add(this._labelFor(c.source)));
+        return { text: this.buildContext(chunks, query), sources: [...seen] };
+      } catch (_) {
+        return { text: '', sources: [] };
+      }
+    },
+
+    /**
      * buildContext(chunks, query)
      * Formats retrieved chunks into a structured, source-attributed
      * prompt block for Groq injection.
@@ -712,8 +760,8 @@ Formatting principles (secondary to the guardrails above):
       });
 
       const lines = [
-        '━━━ CHAKUDYA CLINICAL KNOWLEDGE BASE (RAG-Retrieved) ━━━',
-        `Query matched ${chunks.length} relevant chunks from Oasis knowledge base.`,
+        '━━━ CLINICAL KNOWLEDGE BASE (semantic retrieval) ━━━',
+        `Query matched ${chunks.length} relevant chunks from the clinical knowledge base.`,
         '',
       ];
 
@@ -729,12 +777,12 @@ Formatting principles (secondary to the guardrails above):
       });
 
       lines.push(
-        '━━━ END OF RAG CONTEXT (Layer 3 — Chakudya RAG) ━━━',
+        '━━━ END OF SEMANTIC RETRIEVAL CONTEXT (Layer 3) ━━━',
         '',
-        'INSTRUCTIONS FOR USING RAG CONTEXT:',
+        'INSTRUCTIONS FOR USING THIS CONTEXT:',
         '• Ground your answer ONLY in the above retrieved content — this is Layer 3 evidence.',
-        '• Cite the source label when referencing specific guideline content (e.g. "Per ESPEN Liver Disease guidelines…").',
-        '• For Malawian food data, prioritize locally-verified values from Malawi FCT or Chakudya Food Database.',
+        '• Cite the source label when referencing specific guideline content (e.g. "Per ESPEN Liver Disease guidelines…"), never the platform/API itself.',
+        '• For Malawian food data, prioritize locally-verified values from Malawi FCT.',
         '• If the retrieved content does not cover part of the query, explicitly say that part is not available — do NOT fill the gap from general/internet knowledge (see ABSOLUTE GUARDRAILS).',
         '• Never contradict retrieved guideline content without clearly flagging the discrepancy.',
       );
@@ -929,14 +977,16 @@ Formatting principles (secondary to the guardrails above):
     async fetchContext(userMessage) {
       const term = this._extractSearchTerm(userMessage);
       const blocks = [];
+      const sources = [];
       const jobs = [];
 
       if (this.detectFoods(userMessage) && term) {
         jobs.push(
           this._get('/foods', { search: term, limit: 8 }).then(rows => {
             if (rows.length) {
-              blocks.push(`▸ CHAKUDYA FOODS DATABASE (live):\n` +
+              blocks.push(`▸ MALAWI FOOD COMPOSITION DATABASE (live):\n` +
                 rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+              sources.push('Malawi Food Composition Database');
             }
           })
         );
@@ -954,9 +1004,10 @@ Formatting principles (secondary to the guardrails above):
                 })
               : [];
             const useRows = (filtered.length ? filtered : rows).slice(0, 8);
-            blocks.push(`▸ CHAKUDYA PACKAGED FOODS DATABASE (live, Malawi retail products):\n` +
+            blocks.push(`▸ MALAWI PACKAGED FOODS REGISTRY (live, retail products):\n` +
               useRows.map(r => `• ${this._prettyRow(r)}`).join('\n') +
               `\n(Note: items with status "pending" are community-submitted and not yet admin-verified — flag this to the user if relevant.)`);
+            sources.push('Malawi Packaged Foods Registry');
           })
         );
       }
@@ -965,8 +1016,9 @@ Formatting principles (secondary to the guardrails above):
         jobs.push(
           this._get('/exchange', { limit: 20 }).then(rows => {
             if (rows.length) {
-              blocks.push(`▸ CHAKUDYA EXCHANGE LISTS (live):\n` +
+              blocks.push(`▸ DIABETIC/RENAL EXCHANGE LIST DATABASE (live):\n` +
                 rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+              sources.push('Diabetic/Renal Exchange List Database');
             }
           })
         );
@@ -976,8 +1028,9 @@ Formatting principles (secondary to the guardrails above):
         jobs.push(
           this._get('/renal', { limit: 20 }).then(rows => {
             if (rows.length) {
-              blocks.push(`▸ CHAKUDYA RENAL FOODS DATABASE (live):\n` +
+              blocks.push(`▸ RENAL/CKD FOOD DATABASE (live):\n` +
                 rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+              sources.push('Renal/CKD Food Database');
             }
           })
         );
@@ -987,27 +1040,31 @@ Formatting principles (secondary to the guardrails above):
         jobs.push(
           this._get('/formulas', { limit: 15 }).then(rows => {
             if (rows.length) {
-              blocks.push(`▸ CHAKUDYA ENTERAL FORMULAS DATABASE (live):\n` +
+              blocks.push(`▸ ENTERAL FORMULA DATABASE (live):\n` +
                 rows.map(r => `• ${this._prettyRow(r)}`).join('\n'));
+              sources.push('Enteral Formula Database');
             }
           })
         );
       }
 
-      if (!jobs.length) return '';
+      if (!jobs.length) return { text: '', sources: [] };
       await Promise.allSettled(jobs);
-      if (!blocks.length) return '';
+      if (!blocks.length) return { text: '', sources: [] };
 
-      return [
-        '━━━ CHAKUDYA LIVE DATABASE (current records, fetched just now) ━━━',
+      const text = [
+        '━━━ LIVE NUTRITION DATABASE RECORDS (fetched just now) ━━━',
         ...blocks,
-        '━━━ END LIVE DATABASE ━━━',
+        '━━━ END LIVE RECORDS ━━━',
         '',
         'INSTRUCTIONS FOR USING LIVE DATABASE CONTEXT:',
-        '• These are live records fetched from the Chakudya API at the moment of this query — more current than any bundled/static data.',
+        '• These are live records fetched at the moment of this query — more current than any bundled/static data.',
         '• Prefer these values over general knowledge or older bundled datasets when they cover the food/product/formula in question.',
+        '• Cite the specific dataset each fact came from (e.g. "Per Malawi Food Composition Database…"), never the platform/API itself.',
         '• Packaged-food entries marked "pending" are unverified community submissions — mention this caveat if you use one.',
       ].join('\n');
+
+      return { text, sources };
     },
   };
 
@@ -1200,11 +1257,11 @@ Formatting principles (secondary to the guardrails above):
       }
       if (_DNIDB.detectQuery(userMessage)) {
         const hits = _DNIDB.search(userMessage, 5);
-        if (hits.length) { blocks.push(_DNIDB.buildContext(hits)); sources.push('Drug-Nutrient Interaction DB'); }
+        if (hits.length) { blocks.push(_DNIDB.buildContext(hits)); sources.push("Krause & Mahan's Food and the Nutrition Care Process, 16th Ed."); }
       }
       if (_RefDBProxy.detectQuery(userMessage)) {
         const hits = _RefDBProxy.search(userMessage, 8);
-        if (hits.length) { blocks.push(_RefDBProxy.buildContext(hits)); sources.push('Oasis Clinical Reference DB'); }
+        if (hits.length) { blocks.push(_RefDBProxy.buildContext(hits)); sources.push(..._RefDBProxy.citationLabels(hits)); }
       }
 
       return { blocks, sources, sufficient: authoritative };
@@ -1217,9 +1274,9 @@ Formatting principles (secondary to the guardrails above):
      */
     async gatherLayer2(userMessage) {
       try {
-        const ctx = await _ChakudyaDB.fetchContext(userMessage);
-        if (!ctx) return { blocks: [], sources: [], sufficient: false };
-        return { blocks: [ctx], sources: ['Chakudya Live Database'], sufficient: true };
+        const { text, sources } = await _ChakudyaDB.fetchContext(userMessage);
+        if (!text) return { blocks: [], sources: [], sufficient: false };
+        return { blocks: [text], sources, sufficient: true };
       } catch (_) {
         return { blocks: [], sources: [], sufficient: false };
       }
@@ -1232,9 +1289,9 @@ Formatting principles (secondary to the guardrails above):
      */
     async gatherLayer3(userMessage) {
       try {
-        const ctx = await _RAGLayer.fetchContext(userMessage, 'both', 7);
-        if (!ctx) return { blocks: [], sources: [], sufficient: false };
-        return { blocks: [ctx], sources: ['Chakudya RAG Knowledge Base'], sufficient: true };
+        const { text, sources } = await _RAGLayer.fetchContextWithSources(userMessage, 'both', 7);
+        if (!text) return { blocks: [], sources: [], sufficient: false };
+        return { blocks: [text], sources, sufficient: true };
       } catch (_) {
         return { blocks: [], sources: [], sufficient: false };
       }
