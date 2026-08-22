@@ -1371,6 +1371,35 @@ Formatting principles (secondary to the guardrails above):
   // pathological case can't loop forever.
   const _MAX_CONTINUATIONS = 2;
 
+  // Groq's per-org tokens-per-minute limit is shared across every
+  // request in the same minute — a burst of chat turns (or a reply
+  // that needed a continuation call) can trip it even mid-conversation.
+  // This is a normal, temporary, retryable condition, not a real
+  // failure, so it gets its own handling rather than surfacing Groq's
+  // raw error text (org id, TPM numbers, billing upsell link) to a
+  // clinician mid-consult.
+  const _MAX_RATE_LIMIT_RETRIES = 2;
+
+  class _RateLimitError extends Error {
+    constructor(retryAfterSeconds) {
+      super('rate_limited');
+      this.retryAfterSeconds = retryAfterSeconds;
+    }
+  }
+
+  // Groq's 429 body includes "Please try again in 12.34s" — pull the
+  // actual suggested wait out of it instead of guessing; fall back to
+  // a short default if the message format ever changes server-side.
+  function _parseRetryAfterSeconds(message) {
+    const m = /try again in ([\d.]+)s/i.exec(message || '');
+    const secs = m ? parseFloat(m[1]) : 2;
+    return Math.min(Math.max(secs, 0.5), 15); // clamp to 0.5–15s
+  }
+
+  function _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async function _groqChatOnce(messages, maxTokens) {
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -1387,7 +1416,11 @@ Formatting principles (secondary to the guardrails above):
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Groq API error ${res.status}`);
+      const rawMsg = err.error?.message || `Groq API error ${res.status}`;
+      if (res.status === 429) {
+        throw new _RateLimitError(_parseRetryAfterSeconds(rawMsg));
+      }
+      throw new Error(rawMsg);
     }
 
     const data = await res.json();
@@ -1398,12 +1431,35 @@ Formatting principles (secondary to the guardrails above):
     };
   }
 
+  // Wraps _groqChatOnce with automatic rate-limit retry: waits the
+  // server-suggested delay and tries again, up to _MAX_RATE_LIMIT_RETRIES
+  // times, before giving up. Every other error (network, 4xx/5xx) still
+  // surfaces immediately — only 429s are worth silently retrying.
+  async function _groqChatOnceWithRetry(messages, maxTokens) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await _groqChatOnce(messages, maxTokens);
+      } catch (e) {
+        if (e instanceof _RateLimitError && attempt < _MAX_RATE_LIMIT_RETRIES) {
+          await _sleep(e.retryAfterSeconds * 1000);
+          continue;
+        }
+        if (e instanceof _RateLimitError) {
+          // Retries exhausted — replace Groq's raw upsell-laden error
+          // text with a short, human message before it reaches the UI.
+          throw new Error('The AI assistant is momentarily at capacity — please wait a few seconds and try again.');
+        }
+        throw e;
+      }
+    }
+  }
+
   async function _groqChat(messages, maxTokens = MAX_TOKENS) {
     let combined = '';
     let convo = messages;
 
     for (let attempt = 0; attempt <= _MAX_CONTINUATIONS; attempt++) {
-      const { content, truncated } = await _groqChatOnce(convo, maxTokens);
+      const { content, truncated } = await _groqChatOnceWithRetry(convo, maxTokens);
       combined += content;
 
       if (!truncated || attempt === _MAX_CONTINUATIONS) {
