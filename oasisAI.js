@@ -23,7 +23,7 @@
 
   // ── Configuration ────────────────────────────────────────────
   const GROQ_API_URL  = 'https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/groq';
-  const GROQ_MODEL    = 'llama-3.3-70b-versatile';
+  const GROQ_MODEL    = 'openai/gpt-oss-120b';
   const MAX_TOKENS    = 900;
   const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
   // RAG Knowledge Base: ~6,100 chunks — ESPEN/ASPEN guidelines, Malawi CMAM 2016,
@@ -2545,7 +2545,7 @@ Rules:
       const res = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 120, temperature: 0.1, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: 'openai/gpt-oss-120b', max_tokens: 120, temperature: 0.1, messages: [{ role: 'user', content: prompt }] })
       });
       if (!res.ok) return;
       const data = await res.json();
