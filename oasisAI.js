@@ -24,7 +24,7 @@
   // ── Configuration ────────────────────────────────────────────
   const GROQ_API_URL  = 'https://oasis-ai-proxy-worker.edisontaimu9.workers.dev/groq';
   const GROQ_MODEL    = 'openai/gpt-oss-120b';
-  const MAX_TOKENS    = 900;
+  const MAX_TOKENS    = 1400;
   const RAG_URL       = 'https://chakudya-api.edisontaimu9.workers.dev/rag/retrieve';
   // RAG Knowledge Base: ~6,100 chunks — ESPEN/ASPEN guidelines, Malawi CMAM 2016,
   // Malawi FCT, Exchange Lists, Renal Foods, Enteral Formulas, Burns, Oncology,
@@ -1306,7 +1306,15 @@ Formatting principles (secondary to the guardrails above):
     'I could not find verified information within the Oasis CNST knowledge system.';
 
   // ── Core API call ─────────────────────────────────────────────
-  async function _groqChat(messages, maxTokens = MAX_TOKENS) {
+  // If Groq stops purely because it hit max_tokens (finish_reason
+  // "length" — not because it actually finished), we ask it to
+  // continue from exactly where it left off and stitch the pieces
+  // together, instead of silently handing back a reply that stops
+  // mid-sentence. Bounded to a couple of extra round-trips so a
+  // pathological case can't loop forever.
+  const _MAX_CONTINUATIONS = 2;
+
+  async function _groqChatOnce(messages, maxTokens) {
     const res = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
@@ -1326,7 +1334,36 @@ Formatting principles (secondary to the guardrails above):
     }
 
     const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() || '';
+    const choice = data.choices?.[0];
+    return {
+      content: choice?.message?.content?.trim() || '',
+      truncated: choice?.finish_reason === 'length',
+    };
+  }
+
+  async function _groqChat(messages, maxTokens = MAX_TOKENS) {
+    let combined = '';
+    let convo = messages;
+
+    for (let attempt = 0; attempt <= _MAX_CONTINUATIONS; attempt++) {
+      const { content, truncated } = await _groqChatOnce(convo, maxTokens);
+      combined += content;
+
+      if (!truncated || attempt === _MAX_CONTINUATIONS) {
+        return combined;
+      }
+
+      // Ask for a continuation, not a fresh answer — append what we
+      // already have as the assistant's turn so the model picks up
+      // exactly where the cutoff happened.
+      convo = [
+        ...convo,
+        { role: 'assistant', content },
+        { role: 'user', content: 'Continue exactly where you left off — do not repeat anything already written and do not add a new preamble or heading.' },
+      ];
+    }
+
+    return combined;
   }
 
   // ════════════════════════════════════════════════════════════
@@ -1412,7 +1449,7 @@ Be specific, concise, and clinically relevant. Use eNCPT language.`;
     const response = await _groqChat([
       { role: 'system', content: adimeSystem },
       { role: 'user',   content: userMsg }
-    ], 1000);
+    ], 1500);
 
     return { raw: response, type: 'adime' };
   }
@@ -1509,7 +1546,7 @@ Keep it under 200 words. Use professional clinical language.`;
     const response = await _groqChat([
       { role: 'system', content: summarySystem },
       { role: 'user',   content: userMsg }
-    ], 700);
+    ], 1000);
 
     return { raw: response, type: 'summary' };
   }
@@ -1747,7 +1784,7 @@ Keep it under 200 words. Use professional clinical language.`;
     const response = await _groqChat([
       { role: 'system', content: systemPrompt },
       { role: 'user',   content: userMsg },
-    ], 1100);
+    ], 1600);
 
     return {
       raw:        response,
@@ -1832,7 +1869,7 @@ Keep it under 200 words. Use professional clinical language.`;
       { role: 'user',   content: userMessage }
     ];
 
-    const response = await _groqChat(messages, 900);
+    const response = await _groqChat(messages, 1500);
 
     return {
       raw: response,
@@ -1931,7 +1968,7 @@ RECOMMENDATIONS: [≤3 concise, actionable points]`;
     const response = await _groqChat([
       { role: 'system', content: BASE_SYSTEM },
       { role: 'user',   content: userMsg },
-    ], 900);
+    ], 1200);
 
     return {
       raw:     response,
@@ -2019,7 +2056,7 @@ Keep it concise. Do not add unsupported diagnoses. Do not change NCP domain unle
     const response = await _groqChat([
       { role: 'system', content: BASE_SYSTEM },
       { role: 'user',   content: userMsg },
-    ], 900);
+    ], 1200);
 
     return { raw: response, type: 'refine_pes' };
   }
@@ -2109,7 +2146,7 @@ RC (Coordination of Care): Referrals, team communication, discharge planning, fo
     const response = await _groqChat([
       { role: 'system', content: BASE_SYSTEM },
       { role: 'user',   content: userMsg },
-    ], 800);
+    ], 1100);
 
     // Parse JSON response
     try {
@@ -2194,7 +2231,7 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     const response = await _groqChat([
       { role: 'system', content: BASE_SYSTEM },
       { role: 'user',   content: userMsg },
-    ], 600);
+    ], 900);
 
     try {
       const clean  = response.replace(/```json|```/gi, '').trim();
