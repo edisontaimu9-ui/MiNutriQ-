@@ -3142,6 +3142,32 @@ Rules:
   color: rgba(240,230,200,0.92);
 }
 
+/* ── Markdown tables in message bubbles ── */
+/* The bubble itself can't scroll (it would clip the message), so the
+   scroll container is the table wrapper only — a wide table scrolls
+   horizontally inside the bubble instead of forcing the whole page
+   to scroll sideways. */
+.oai-table-wrap {
+  max-width: 100%; overflow-x: auto; margin: 8px 0;
+  border: 1px solid rgba(255,255,255,0.09); border-radius: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.oai-table-wrap table {
+  border-collapse: collapse; width: 100%; min-width: max-content;
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.5;
+}
+.oai-table-wrap th, .oai-table-wrap td {
+  padding: 6px 10px; text-align: left; white-space: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.oai-table-wrap th {
+  background: rgba(29,233,212,0.08); color: var(--teal, #1de9d4);
+  font-weight: 700; letter-spacing: 0.3px;
+  border-bottom: 1px solid rgba(29,233,212,0.25);
+}
+.oai-table-wrap tr:last-child td { border-bottom: none; }
+.oai-table-wrap td:first-child, .oai-table-wrap th:first-child { padding-left: 12px; }
+
 /* ── Source attribution chips ── */
 .oai-sources-row {
   display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
@@ -3473,9 +3499,71 @@ Rules:
   }
 
   // ── Format message text ───────────────────────────────────
+  // ── Markdown table support ──────────────────────────────────
+  // Detects GFM-style pipe tables (header row, |---|---| separator,
+  // body rows) and converts each block to a real <table> wrapped in
+  // a horizontally-scrollable container — instead of leaving raw
+  // "|" characters to spill off the edge of the bubble unreadable.
+  const _TABLE_ROW_RE = /^\s*\|.*\|\s*$/;
+  const _TABLE_SEP_RE = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/;
+
+  function _fmtInline(s) {
+    return (s || '')
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-bright,#f0f6fc)">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:11px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:var(--teal,#1de9d4)">$1</code>');
+  }
+
+  function _parseTableRow(line) {
+    let cells = line.trim().split('|');
+    if (cells[0] === '') cells.shift();
+    if (cells[cells.length - 1] === '') cells.pop();
+    return cells.map(c => c.trim());
+  }
+
+  function _tableBlockToHtml(lines) {
+    const header = _parseTableRow(lines[0]);
+    const body = lines.slice(2).map(_parseTableRow);
+    const th = header.map(c => `<th>${_fmtInline(_escHtml(c))}</th>`).join('');
+    const rows = body.map(cells =>
+      `<tr>${cells.map(c => `<td>${_fmtInline(_escHtml(c))}</td>`).join('')}</tr>`
+    ).join('');
+    return `<div class="oai-table-wrap"><table><thead><tr>${th}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  // Pulls every table block out of the text and replaces it with a
+  // placeholder token (no \n, *, `, #, or - in it) so the later
+  // line-based markdown replacements in _fmt can't mangle it. The
+  // placeholders are swapped back for the real table HTML last.
+  function _extractTables(text) {
+    const lines = text.split('\n');
+    const placeholders = [];
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      if (_TABLE_ROW_RE.test(lines[i]) && lines[i + 1] && _TABLE_SEP_RE.test(lines[i + 1])) {
+        const block = [lines[i], lines[i + 1]];
+        let j = i + 2;
+        while (j < lines.length && _TABLE_ROW_RE.test(lines[j])) {
+          block.push(lines[j]);
+          j++;
+        }
+        const token = `\u0000TBL${placeholders.length}\u0000`;
+        placeholders.push(_tableBlockToHtml(block));
+        out.push(token);
+        i = j;
+      } else {
+        out.push(lines[i]);
+        i++;
+      }
+    }
+    return { text: out.join('\n'), placeholders };
+  }
+
   function _fmt(text) {
     if (!text) return '';
-    return text
+    const { text: withoutTables, placeholders } = _extractTables(text);
+    let html = withoutTables
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-bright,#f0f6fc)">$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:11px;background:rgba(29,233,212,0.1);padding:1px 5px;border-radius:4px;color:var(--teal,#1de9d4)">$1</code>')
@@ -3483,6 +3571,11 @@ Rules:
       .replace(/^[•▸]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:var(--teal,#1de9d4)">▸</span>$1</div>')
       .replace(/^[-]\s(.+)$/gm, '<div style="padding-left:12px;position:relative"><span style="position:absolute;left:2px;color:rgba(29,233,212,0.5)">–</span>$1</div>')
       .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+
+    placeholders.forEach((tableHtml, idx) => {
+      html = html.replace(`\u0000TBL${idx}\u0000`, tableHtml);
+    });
+    return html;
   }
 
   // ── Typewriter effect ───────────────────────────────────────
@@ -3499,8 +3592,19 @@ Rules:
       .replace(/^-\s/gm, '– ');
   }
 
+  const _HAS_TABLE_RE = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/m;
+
   function _typeIntoBubble(bubbleEl, rawContent, onDone) {
     if (!bubbleEl) { if (onDone) onDone(); return; }
+    // Tables read as raw "|" pipes during the plain-text typewriter
+    // reveal and only look right once fully rendered — for content
+    // containing a table, skip the animation and show it formatted
+    // immediately instead of animating garbled pipe characters.
+    if (_HAS_TABLE_RE.test(rawContent)) {
+      bubbleEl.innerHTML = _fmt(rawContent);
+      if (onDone) onDone();
+      return;
+    }
     const plain = _stripMdForType(rawContent);
     const CHARS_PER_TICK = 3;
     const TICK_MS = 12;
