@@ -744,6 +744,78 @@ Formatting principles (secondary to the guardrails above):
   };
 
   // ════════════════════════════════════════════════════════════
+  // RAG SEARCH ORCHESTRATOR — /rag/ask (Layer 4, last-resort only)
+  //
+  // /rag/ask is the API's full pipeline: intent detection (Groq) →
+  // fan-out search across the semantic KB, Malawi FCT, packaged/OCR
+  // foods, exchange/renal/formula DBs, barcode lookup, and USDA/OFF/
+  // FatSecret fallback → rerank (Cohere) → grounded LLM answer with
+  // [n] citations. It is heavier and slower than Layers 1–3 (which is
+  // why it's Layer 4, not Layer 1), but it is also the ONE endpoint
+  // that already fans out across every data source the API exposes —
+  // so rather than declaring GUARDRAIL_FALLBACK the moment L1–L3 come
+  // back empty (e.g. broad clinical asks like "meal plan for a
+  // diabetic patient" that don't cleanly hit a single live-DB filter
+  // or a narrow RAG chunk), we give this one last, more expensive shot
+  // before refusing. It returns an already-grounded, already-cited
+  // answer — so on success we use it directly instead of round-
+  // tripping through our own Groq call.
+  // ════════════════════════════════════════════════════════════
+  // RAG_URL is defined above as `${base}/rag/retrieve`; derive /rag/ask
+  // from it rather than hardcoding the base again.
+  const RAG_ASK_URL = RAG_URL.replace(/\/rag\/retrieve$/, '/rag/ask');
+
+  const _RAGAskLayer = {
+    /**
+     * ask(query, sessionId)
+     * Calls /rag/ask. Returns { answer, sources, intent } on success,
+     * or null on failure / no groundable answer (non-fatal — caller
+     * falls through to the fixed guardrail refusal).
+     */
+    async ask(query, sessionId) {
+      try {
+        const res = await fetch(RAG_ASK_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query,
+            context: 'clinical',
+            top_k: 6,
+            session_id: sessionId || undefined,
+          }),
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        const data = json?.data;
+        const answer = data?.answer;
+        if (!answer || !answer.trim()) return null;
+        return {
+          answer: answer.trim(),
+          intent: data?.intent || null,
+          sources: Array.isArray(data?.sources) ? data.sources : [],
+        };
+      } catch (_) {
+        return null;
+      }
+    },
+
+    /**
+     * sourceLabels(sources)
+     * Dedupes /rag/ask's per-citation source list down to the same
+     * kind of short label chips the rest of the UI shows.
+     */
+    sourceLabels(sources) {
+      if (!sources || !sources.length) return [];
+      const seen = new Set();
+      sources.forEach(s => {
+        const label = s?.source || s?.title;
+        if (label) seen.add(label);
+      });
+      return [...seen];
+    },
+  };
+
+  // ════════════════════════════════════════════════════════════
   // CHAKUDYA LIVE DATABASE ACCESS LAYER
   // Queries the live Chakudya Nutrition Registry API's GET endpoints —
   // /foods, /packaged, /exchange, /renal, /formulas — so Oasis AI can
@@ -818,6 +890,10 @@ Formatting principles (secondary to the guardrails above):
         'protein exchange', 'fruit exchange', 'milk exchange', 'fat exchange',
         'carb exchange', 'carbohydrate exchange', '1 exchange', 'one exchange',
         'diabetic exchange', 'exchange system', 'exchange value',
+        // Broader clinical phrasing that should also pull the live
+        // exchange-list DB (diabetic/renal meal planning is exchange-
+        // based practice even when the user never says "exchange").
+        'diabetic', 'diabetes', 'meal plan', 'meal planning', 'diet plan',
       ];
       return triggers.some(t => m.includes(t));
     },
@@ -1709,13 +1785,32 @@ Keep it under 200 words. Use professional clinical language.`;
     // LLM. This guarantees guardrail compliance regardless of model
     // behavior, and saves a token round-trip.
     if (routed.requiresFallback) {
+      // Layer 4, last resort: L1–L3 found nothing narrow enough to cite,
+      // but the query may still be answerable by /rag/ask's own fan-out
+      // across every endpoint (semantic KB + FCT + packaged + exchange/
+      // renal/formula + barcode + USDA/OFF/FatSecret). Try it before
+      // giving up — it returns its own grounded, cited answer, so on
+      // success we return that directly rather than making a second
+      // Groq call ourselves.
+      const asked = await _RAGAskLayer.ask(userMessage, _MemoryLayer._sessionId());
+      if (asked) {
+        return {
+          raw: asked.answer,
+          type: 'chat',
+          evidenceFound: true,
+          fallback: false,
+          sourcesUsed: _RAGAskLayer.sourceLabels(asked.sources),
+          auditTrace: { ...auditTrace, layer4: { ran: true, endpoint: '/rag/ask', intent: asked.intent } },
+        };
+      }
+
       return {
         raw: GUARDRAIL_FALLBACK,
         type: 'chat',
         evidenceFound: false,
         fallback: true,
         sourcesUsed: [],
-        auditTrace,
+        auditTrace: { ...auditTrace, layer4: { ran: true, endpoint: '/rag/ask', intent: null } },
       };
     }
 
@@ -2187,6 +2282,11 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     queryRAG(query, context = 'both', topK = 7) {
       return _RAGLayer.fetchContext(query, context, topK);
     },
+    // RAG Search Orchestrator — /rag/ask (Layer 4, full fan-out + grounded answer)
+    ragAskLayer: _RAGAskLayer, // ← direct access for custom integrations
+    askRAG(query, sessionId) {
+      return _RAGAskLayer.ask(query, sessionId);
+    },
     // Session Memory (Write → Consolidate → Recall → Apply)
     memoryDB: _MemoryLayer, // ← direct access for custom integrations
     writeMemory(content, kind = 'fact') {
@@ -2200,7 +2300,7 @@ Rules: professional clinical language; evidence-based; each field ≤ 55 words; 
     },
   };
 
-  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG + Session Memory access enabled');
+  console.log('[OasisAI] Module loaded — Oasis Clinical Intelligence ready | Food DB + DNI DB + Reference DB + About KB + Enteral Calculator + Chakudya Live DB (foods/packaged/exchange/renal/formulas) + RAG (retrieve) + RAG Ask (Layer 4 orchestrator) + Session Memory access enabled');
 })();
 
 
